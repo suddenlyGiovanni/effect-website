@@ -1,0 +1,81 @@
+---
+import "../styles/global.css";
+
+import { Font } from "astro:assets"
+import { SEO } from "astro-seo"
+import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/constants"
+
+interface Props {
+	readonly title?: string | undefined;
+	readonly description?: string | undefined;
+}
+
+const { title = "Effect | Production Grade TypeScript", description } = Astro.props
+
+const getOgImagePath = () => {
+  const pathname = Astro.url.pathname
+  let slug = pathname.replace(/^\//, "").replace(/\/$/, "")
+  if (slug.length === 0) slug = "index"
+  return `/og/${slug}.png`
+}
+
+const ogImagePath = getOgImagePath()
+const ogImageUrl = new URL(ogImagePath, Astro.site)
+
+const pagePathname = Astro.url.pathname.replace(/\/$/, "")
+const canonicalUrl = new URL(pagePathname, Astro.site)
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+
+    <!-- FONTS -->
+    <Font cssVariable="--font-inter" preload />
+    <Font cssVariable="--font-jetbrains-mono" preload />
+
+    <!-- SEO -->
+    <SEO 
+      title={title}
+      description={description}
+      canonical={canonicalUrl}
+      openGraph={{
+        basic: {
+          type: "website",
+          url: canonicalUrl,
+          title,
+          image: ogImageUrl.toString(),
+        },
+        image: {
+          height: OPENGRAPH_IMAGE_HEIGHT,
+          width: OPENGRAPH_IMAGE_WIDTH
+        },
+        optional: {
+          siteName: "Effect",
+          description,
+        }
+      }}
+      twitter={{
+        card: "summary_large_image",
+        title,
+        description,
+        image: ogImageUrl
+      }}
+      extend={{
+        link: [
+          { rel: "icon", type: "image/png", href: "/favicon.png" }
+        ],
+        // <!-- Remix Icon -->
+        // <!-- <link -->
+        // <!--   href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css" -->
+        // <!--   rel="stylesheet" -->
+        // <!-- /> -->
+      }}
+    />
+  </head>
+  <body class="min-h-screen bg-zinc-950 text-white antialiased">
+    <slot />
+  </body>
+</html>

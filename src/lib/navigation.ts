@@ -1,0 +1,134 @@
+export type NavigationSurface = "desktop" | "mobile"
+
+export type NavigationGroup = "primary" | "secondary" | "social"
+
+export type NavigationCta = "none" | "solid"
+
+interface NavigationLinkBase {
+  readonly id: string
+  readonly label: string
+  readonly group: NavigationGroup
+  readonly surfaces: ReadonlyArray<NavigationSurface>
+  readonly cta: NavigationCta
+  readonly icon?: "discord" | "github" | "twitter"
+}
+
+export interface InternalNavigationLink extends NavigationLinkBase {
+  readonly kind: "internal"
+  readonly href: `/${string}`
+}
+
+export interface ExternalNavigationLink extends NavigationLinkBase {
+  readonly kind: "external"
+  readonly href: `https://${string}`
+  readonly target: "_blank"
+  readonly rel: "noopener noreferrer"
+}
+
+export type NavigationLink = InternalNavigationLink | ExternalNavigationLink
+
+export const LANDING_NAVIGATION_LINKS: ReadonlyArray<NavigationLink> = [
+  {
+    id: "docs",
+    kind: "internal",
+    label: "Docs",
+    href: "/docs/",
+    group: "primary",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+  },
+  {
+    id: "blog",
+    kind: "internal",
+    label: "Blog",
+    href: "/blog/",
+    group: "primary",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+  },
+  {
+    id: "podcasts",
+    kind: "internal",
+    label: "Podcasts",
+    href: "/podcasts/",
+    group: "primary",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+  },
+  {
+    id: "playground",
+    kind: "internal",
+    label: "Playground",
+    href: "/play/",
+    group: "primary",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+  },
+  {
+    id: "llm-guide",
+    kind: "external",
+    label: "LLM Guide",
+    href: "https://www.effect.solutions/",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    group: "primary",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+  },
+  {
+    id: "learn",
+    kind: "external",
+    label: "Learn",
+    href: "https://www.effect.institute/",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    group: "primary",
+    surfaces: ["desktop", "mobile"],
+    cta: "solid",
+  },
+  {
+    id: "github",
+    kind: "external",
+    label: "GitHub",
+    href: "https://github.com/Effect-TS/effect",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    group: "social",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+    icon: "github",
+  },
+  {
+    id: "discord",
+    kind: "external",
+    label: "Discord",
+    href: "https://discord.gg/effect-ts",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    group: "social",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+    icon: "discord",
+  },
+  {
+    id: "twitter",
+    kind: "external",
+    label: "X / Twitter",
+    href: "https://twitter.com/EffectTS_",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    group: "social",
+    surfaces: ["desktop", "mobile"],
+    cta: "none",
+    icon: "twitter",
+  },
+]
+
+export const getNavigationLinks = (
+  surface: NavigationSurface,
+  group: NavigationGroup,
+): ReadonlyArray<NavigationLink> => {
+  return LANDING_NAVIGATION_LINKS.filter((link) => {
+    return link.group === group && link.surfaces.includes(surface)
+  })
+}

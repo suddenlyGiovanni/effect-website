@@ -1,0 +1,44 @@
+---
+import SearchTriggerIsland from "@/components/navigation/SearchTriggerIsland"
+import NavigationAnchor from "@/components/navigation/NavigationAnchor.astro"
+import { getNavigationLinks } from "@/lib/navigation"
+import Discord from "@/assets/logos/discord/Discord.svg"
+import GitHub from "@/assets/logos/github/GitHub.svg"
+import Twitter from "@/assets/logos/twitter/Twitter.svg"
+
+interface Props {
+  readonly transparent?: boolean
+}
+
+const { transparent = false } = Astro.props
+
+
+const socialLinks = getNavigationLinks("desktop", "social")
+const socialClass = `transition-colors ${transparent ? "text-white hover:text-white/80" : "text-zinc-400 hover:text-white"}`
+---
+
+<div class="flex items-center gap-4">
+  {
+    socialLinks.map((link) => (
+      <NavigationAnchor
+        link={link}
+        ariaLabel={link.label}
+        class={socialClass}
+      >
+        {
+          link.icon === "discord" ? (
+            <Discord class="h-5 w-5 translate-y-0.5" fill="currentColor" aria-hidden="true" />
+          ) : link.icon === "github" ? (
+            <GitHub class="h-5 w-5 translate-y-0.5" fill="currentColor" aria-hidden="true" />
+          ) : link.icon === "twitter" ? (
+            <Twitter class="h-4 w-4 translate-y-0.5" fill="currentColor" aria-hidden="true" />
+          ) : null
+        }
+      </NavigationAnchor>
+    ))
+  }
+</div>
+
+<div class={`h-4.5 w-px ${transparent ? "bg-white/50" : "bg-zinc-700"}`} />
+
+<SearchTriggerIsland client:load mode="desktop" transparent={transparent} />

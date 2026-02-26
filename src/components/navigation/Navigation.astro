@@ -1,0 +1,48 @@
+---
+import NavigationMobileMenu from "@/components/navigation/NavigationMobileMenu.astro"
+import NavigationLogo from "@/components/navigation/NavigationLogo.astro"
+import NavigationDesktopActions from "@/components/navigation/NavigationDesktopActions.astro"
+import NavigationLinks from "@/components/navigation/NavigationLinks.astro"
+import SearchDialogIsland from "@/components/navigation/SearchDialogIsland"
+import { getNavigationLinks } from "@/lib/navigation"
+
+interface Props {
+  readonly transparent?: boolean | undefined
+}
+
+const { transparent = false } = Astro.props
+
+const mobilePrimaryLinks = getNavigationLinks("mobile", "primary")
+const mobileSocialLinks = getNavigationLinks("mobile", "social")
+---
+
+<div
+  class:list={[
+    "fixed top-0 right-0 left-0 z-100 w-full backdrop-blur-sm",
+    transparent ? "" : "border-b border-zinc-800 bg-zinc-950/85"
+  ]}
+>
+  <div class="w-full">
+    <header class="relative mx-auto w-full max-w-295 px-4">
+      <nav class="flex h-16 items-center">
+        <NavigationLogo />
+
+        <div class="ml-8 hidden items-center gap-6 md:flex">
+          <NavigationLinks transparent={transparent} />
+        </div>
+
+        <NavigationMobileMenu
+          transparent={transparent}
+          primaryLinks={mobilePrimaryLinks}
+          socialLinks={mobileSocialLinks}
+        />
+
+        <div class="ml-auto hidden items-center gap-4.5 md:flex">
+          <NavigationDesktopActions transparent={transparent} />
+        </div>
+      </nav>
+    </header>
+  </div>
+</div>
+
+<SearchDialogIsland client:load />

@@ -1,0 +1,14 @@
+---
+import { Image } from "astro:assets"
+import EffectLogoWhite from "@/assets/logos/effect/combination-mark/svg/effect-logo-white.svg"
+
+interface Props {
+  readonly href?: `/${string}`
+}
+
+const { href = "/" } = Astro.props
+---
+
+<a href={href} class="flex items-center" aria-label="Effect homepage">
+  <Image src={EffectLogoWhite} alt="Effect Logo" class="h-7 w-auto" />
+</a>

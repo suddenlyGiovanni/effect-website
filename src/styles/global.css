@@ -1,0 +1,222 @@
+@layer base, starlight, theme, components, utilities;
+
+@import "@astrojs/starlight-tailwind";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@plugin "@tailwindcss/typography";
+
+/* -------------------------------------------------------------------------- */
+/*  Light mode (inverted Effect palette)                                      */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --radius: 0.5rem;
+
+  /* Surfaces */
+  --background: oklch(1 0 0); /* white */
+  --foreground: oklch(0.141 0.004 285.766); /* zinc-950 */
+
+  --card: oklch(0.985 0 0); /* zinc-50 */
+  --card-foreground: oklch(0.141 0.004 285.766); /* zinc-950 */
+
+  --popover: oklch(1 0 0); /* white */
+  --popover-foreground: oklch(0.141 0.004 285.766); /* zinc-950 */
+
+  /* Primary — Emerald */
+  --primary: oklch(0.696 0.149 162.505); /* emerald-500 */
+  --primary-foreground: oklch(1 0 0); /* white */
+
+  /* Secondary — Zinc */
+  --secondary: oklch(0.967 0.001 285.035); /* zinc-100 */
+  --secondary-foreground: oklch(0.21 0.006 285.82); /* zinc-900 */
+
+  /* Muted — Zinc */
+  --muted: oklch(0.967 0.001 285.035); /* zinc-100 */
+  --muted-foreground: oklch(0.552 0.014 285.866); /* zinc-500 */
+
+  /* Accent — Violet */
+  --accent: oklch(0.967 0.001 285.035); /* zinc-100 */
+  --accent-foreground: oklch(0.606 0.219 292.716); /* violet-500 */
+
+  /* Destructive — Red */
+  --destructive: oklch(0.577 0.245 27.325); /* red-500 (shadcn default) */
+  --destructive-foreground: oklch(0.985 0 0); /* zinc-50 */
+
+  /* Edges */
+  --border: oklch(0.92 0.004 285.888); /* zinc-200 */
+  --input: oklch(0.92 0.004 285.888); /* zinc-200 */
+  --ring: oklch(0.696 0.149 162.505); /* emerald-500 */
+
+  /* Charts — Effect color palette */
+  --chart-1: oklch(0.696 0.149 162.505); /* emerald-500 */
+  --chart-2: oklch(0.606 0.219 292.716); /* violet-500 */
+  --chart-3: oklch(0.623 0.188 259.821); /* blue-500 */
+  --chart-4: oklch(0.837 0.164 84.431); /* amber-400 */
+  --chart-5: oklch(0.637 0.208 25.322); /* red-500 */
+
+  /* Sidebar */
+  --sidebar: oklch(0.985 0 0); /* zinc-50 */
+  --sidebar-foreground: oklch(0.141 0.004 285.766); /* zinc-950 */
+  --sidebar-primary: oklch(0.696 0.149 162.505); /* emerald-500 */
+  --sidebar-primary-foreground: oklch(1 0 0); /* white */
+  --sidebar-accent: oklch(0.967 0.001 285.035); /* zinc-100 */
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.82); /* zinc-900 */
+  --sidebar-border: oklch(0.92 0.004 285.888); /* zinc-200 */
+  --sidebar-ring: oklch(0.696 0.149 162.505); /* emerald-500 */
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Dark mode — the authentic Effect look                                     */
+/* -------------------------------------------------------------------------- */
+
+.dark {
+  /* Surfaces */
+  --background: oklch(0.141 0.004 285.766); /* zinc-950: #09090b */
+  --foreground: oklch(0.985 0 0); /* zinc-50 / near-white */
+
+  --card: oklch(0.21 0.006 285.82 / 50%); /* zinc-900/50 — translucent cards */
+  --card-foreground: oklch(0.985 0 0); /* near-white */
+
+  --popover: oklch(0.21 0.006 285.82); /* zinc-900 */
+  --popover-foreground: oklch(0.985 0 0); /* near-white */
+
+  /* Primary — Emerald (the "With Effect" accent) */
+  --primary: oklch(0.773 0.153 163.251); /* emerald-400: #34d399 */
+  --primary-foreground: oklch(0.141 0.004 285.766); /* zinc-950 */
+
+  /* Secondary — Zinc */
+  --secondary: oklch(0.274 0.005 285.941); /* zinc-800 */
+  --secondary-foreground: oklch(0.985 0 0); /* near-white */
+
+  /* Muted — Zinc */
+  --muted: oklch(0.274 0.005 285.941); /* zinc-800 */
+  --muted-foreground: oklch(0.712 0.013 285.965); /* zinc-400 */
+
+  /* Accent — Violet */
+  --accent: oklch(0.274 0.005 285.941); /* zinc-800 */
+  --accent-foreground: oklch(0.709 0.159 293.534); /* violet-400: #a78bfa */
+
+  /* Destructive — Red */
+  --destructive: oklch(0.704 0.191 22.216); /* red-500 adjusted for dark */
+  --destructive-foreground: oklch(0.985 0 0); /* near-white */
+
+  /* Edges */
+  --border: oklch(0.274 0.005 285.941); /* zinc-800: #27272a */
+  --input: oklch(0.274 0.005 285.941); /* zinc-800 */
+  --ring: oklch(0.773 0.153 163.251); /* emerald-400 */
+
+  /* Charts — Effect visualization palette */
+  --chart-1: oklch(0.773 0.153 163.251); /* emerald-400 ("With Effect") */
+  --chart-2: oklch(0.709 0.159 293.534); /* violet-400 */
+  --chart-3: oklch(0.623 0.188 259.821); /* blue-500 */
+  --chart-4: oklch(0.837 0.164 84.431); /* amber-400 */
+  --chart-5: oklch(0.637 0.208 25.322); /* red-500 ("Without Effect") */
+
+  /* Sidebar */
+  --sidebar: oklch(0.21 0.006 285.82); /* zinc-900 */
+  --sidebar-foreground: oklch(0.985 0 0); /* near-white */
+  --sidebar-primary: oklch(0.773 0.153 163.251); /* emerald-400 */
+  --sidebar-primary-foreground: oklch(0.141 0.004 285.766); /* zinc-950 */
+  --sidebar-accent: oklch(0.274 0.005 285.941); /* zinc-800 */
+  --sidebar-accent-foreground: oklch(0.985 0 0); /* near-white */
+  --sidebar-border: oklch(1 0 0 / 10%); /* white 10% */
+  --sidebar-ring: oklch(0.552 0.014 285.866); /* zinc-500 */
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Register theme colors with Tailwind CSS v4                                */
+/* -------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-lg: var(--radius);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Base styles                                                               */
+/* -------------------------------------------------------------------------- */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-inter);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html[data-mobile-menu-open],
+  body[data-mobile-menu-open],
+  html[data-search-open],
+  body[data-search-open] {
+    overflow: hidden;
+  }
+
+  code,
+  pre,
+  kbd,
+  .font-mono {
+    font-family: --var(--font-jetbrains-mono);
+  }
+}

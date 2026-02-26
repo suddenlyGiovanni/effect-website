@@ -1,0 +1,16 @@
+---
+import { PAGE_TITLE_ID } from "@/lib/constants"
+---
+
+<a
+  href={`#${PAGE_TITLE_ID}`}
+  class:list={[
+    "fixed top-3 inset-s-3",
+    "[clip:rect(0,0,0,0)] focus:[clip:unset]",
+    "focus:fixed focus:block",
+    "focus:z-20 focus:px-4 focus:py-2 focus:no-underline",
+    "bg-accent text-white"
+  ]}
+>
+  Skip to content
+</a>

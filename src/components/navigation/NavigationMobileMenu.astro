@@ -1,0 +1,277 @@
+---
+import { Menu, Search, X } from "@lucide/astro"
+import type { NavigationLink } from "@/lib/navigation"
+import DiscordIcon from "@/assets/logos/discord/Discord.svg"
+import GitHubIcon from "@/assets/logos/github/GitHub.svg"
+import TwitterIcon from "@/assets/logos/twitter/Twitter.svg"
+import { cn } from "@/lib/utils"
+
+interface Props {
+  readonly primaryLinks: ReadonlyArray<NavigationLink>
+  readonly socialLinks: ReadonlyArray<NavigationLink>
+  readonly transparent?: boolean | undefined
+}
+
+const { transparent = false, primaryLinks, socialLinks } = Astro.props
+
+const actionButtonClass = cn(
+  "flex h-10 w-10 appearance-none items-center justify-center",
+  "rounded-lg border border-transparent bg-transparent transition-colors hover:bg-zinc-800 md:hidden",
+  transparent ? "text-white/85 hover:text-white" : "text-zinc-300/90 hover:text-white"
+)
+---
+
+<effect-mobile-menu class="ml-auto">
+  <div class="flex items-center gap-1.5 md:hidden">
+    <button
+      type="button"
+      data-role="search-button"
+      aria-label="Open search"
+      aria-keyshortcuts="Control+K Meta+K"
+      class={actionButtonClass}
+    >
+      <Search class="h-5 w-5" aria-hidden="true" />
+    </button>
+
+    <button
+      type="button"
+      data-role="menu-button"
+      aria-label="Open navigation menu"
+      aria-controls="landing-mobile-menu"
+      aria-expanded="false"
+      class={actionButtonClass}
+    >
+      <Menu data-role="icon-open" class="h-6 w-6" />
+      <X data-role="icon-close" class="hidden h-6 w-6" />
+    </button>
+  </div>
+
+  <div data-role="menu-root" class="fixed inset-x-0 top-16 bottom-0 z-95 hidden md:hidden">
+    <nav id="landing-mobile-menu" class="h-full w-full overflow-y-auto border-t border-zinc-800 bg-zinc-950 px-6 py-6">
+      <div class="space-y-1">
+        {primaryLinks.map((link) => (
+          <a
+            href={link.href}
+            target={link.kind === "external" ? link.target : undefined}
+            rel={link.kind === "external" ? link.rel : undefined}
+            data-role="menu-link"
+            class:list={[
+              "block rounded-md px-3 py-2.5 text-[15px] no-underline transition-colors hover:bg-zinc-800 hover:text-white",
+              link.cta === "solid" ? "font-medium text-white" : "text-zinc-300",
+            ]}
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+
+      <div class="my-4 h-px bg-zinc-800"></div>
+
+      <div class="space-y-1">
+        {socialLinks.map((link) => (
+          <a
+            href={link.href}
+            target={link.kind === "external" ? link.target : undefined}
+            rel={link.kind === "external" ? link.rel : undefined}
+            data-role="menu-link"
+            class="flex items-center gap-3 rounded-md px-3 py-2.5 text-[15px] text-zinc-300 no-underline transition-colors hover:bg-zinc-800 hover:text-white"
+          >
+            {link.icon === "discord" ? (
+              <DiscordIcon class="h-4.5 w-4.5" fill="currentColor" aria-hidden="true" />
+            ) : link.icon === "github" ? (
+              <GitHubIcon class="h-4.5 w-4.5" fill="currentColor" aria-hidden="true" />
+            ) : (
+              <TwitterIcon class="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />
+            )}
+            <span>{link.label}</span>
+          </a>
+        ))}
+      </div>
+    </nav>
+  </div>
+</effect-mobile-menu>
+
+<script>
+  import { NAVIGATION_EVENTS } from "@/lib/constants"
+
+  const MOBILE_BREAKPOINT = 768
+
+  const syncScrollLock = (open: boolean) => {
+    const body = document.body
+    const html = document.documentElement
+
+    if (open) {
+      body.setAttribute("data-mobile-menu-open", "true")
+      html.setAttribute("data-mobile-menu-open", "true")
+      return
+    }
+
+    body.removeAttribute("data-mobile-menu-open")
+    html.removeAttribute("data-mobile-menu-open")
+  }
+
+  class EffectMobileMenuElement extends HTMLElement {
+    #open: boolean = false
+    #menuRoot: HTMLDivElement | null = null
+    #menuButton: HTMLButtonElement | null = null
+    #searchButton: HTMLButtonElement | null = null
+    #iconOpen: SVGElement | null = null
+    #iconClose: SVGElement | null = null
+    #shouldRestoreFocus: boolean = false
+
+    connectedCallback() {
+      const menuButton = this.querySelector("[data-role='menu-button']")
+      const searchButton = this.querySelector("[data-role='search-button']")
+      const iconOpen = this.querySelector("[data-role='icon-open']")
+      const iconClose = this.querySelector("[data-role='icon-close']")
+      const menuRoot = this.querySelector("[data-role='menu-root']")
+
+      if (!(menuButton instanceof HTMLButtonElement)) {
+        return
+      }
+
+      if (!(searchButton instanceof HTMLButtonElement)) {
+        return
+      }
+
+      if (!(iconOpen instanceof SVGElement)) {
+        return
+      }
+
+      if (!(iconClose instanceof SVGElement)) {
+        return
+      }
+
+      if (!(menuRoot instanceof HTMLDivElement)) {
+        return
+      }
+
+      this.#menuButton = menuButton
+      this.#searchButton = searchButton
+      this.#iconOpen = iconOpen
+      this.#iconClose = iconClose
+      this.#menuRoot = menuRoot
+
+      const menuLinks = menuRoot.querySelectorAll("[data-role='menu-link']")
+
+      menuLinks.forEach((link) => {
+        link.addEventListener("click", this.#onLinkClick)
+      })
+
+      document.body.append(menuRoot)
+
+      this.#menuButton.addEventListener("click", this.#onMenuClick)
+      this.#searchButton.addEventListener("click", this.#onSearchClick)
+      document.addEventListener("keydown", this.#onKeyDown)
+      window.addEventListener("resize", this.#onResize)
+    }
+
+    disconnectedCallback() {
+      if (this.#menuButton) {
+        this.#menuButton.removeEventListener("click", this.#onMenuClick)
+      }
+
+      if (this.#searchButton) {
+        this.#searchButton.removeEventListener("click", this.#onSearchClick)
+      }
+
+      document.removeEventListener("keydown", this.#onKeyDown)
+      window.removeEventListener("resize", this.#onResize)
+
+      if (this.#menuRoot) {
+        const menuLinks = this.#menuRoot.querySelectorAll("[data-role='menu-link']")
+
+        menuLinks.forEach((link) => {
+          link.removeEventListener("click", this.#onLinkClick)
+        })
+
+        this.#menuRoot.remove()
+        this.#menuRoot = null
+      }
+
+      syncScrollLock(false)
+    }
+
+    #setOpen = (nextOpen: boolean, shouldRestoreFocus: boolean) => {
+      if (!this.#menuRoot || !this.#menuButton || !this.#iconOpen || !this.#iconClose) {
+        return
+      }
+
+      this.#open = nextOpen
+      this.#shouldRestoreFocus = shouldRestoreFocus
+
+      this.#menuRoot.classList.toggle("hidden", !nextOpen)
+      this.#iconOpen.classList.toggle("hidden", nextOpen)
+      this.#iconClose.classList.toggle("hidden", !nextOpen)
+      this.#menuButton.setAttribute("aria-expanded", nextOpen ? "true" : "false")
+      this.#menuButton.setAttribute(
+        "aria-label",
+        nextOpen ? "Close navigation menu" : "Open navigation menu",
+      )
+
+      syncScrollLock(nextOpen)
+
+      if (!nextOpen && this.#shouldRestoreFocus) {
+        this.#menuButton.focus()
+        this.#shouldRestoreFocus = false
+      }
+    }
+
+    #openMenu = () => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
+
+      window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_CLOSE))
+      window.dispatchEvent(new Event(NAVIGATION_EVENTS.MOBILE_MENU_OPEN))
+      this.#setOpen(true, false)
+    }
+
+    #closeMenu = (shouldRestoreFocus = true) => {
+      this.#setOpen(false, shouldRestoreFocus)
+    }
+
+    #onMenuClick = () => {
+      if (this.#open) {
+        this.#closeMenu(true)
+        return
+      }
+
+      this.#openMenu()
+    }
+
+    #onSearchClick = () => {
+      window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_CLOSE))
+
+      if (this.#open) {
+        this.#closeMenu(false)
+        window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPEN))
+        return
+      }
+
+      window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPEN))
+    }
+
+    #onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && this.#open) {
+        this.#closeMenu(true)
+      }
+    }
+
+    #onResize = () => {
+      if (window.innerWidth < MOBILE_BREAKPOINT || !this.#open) {
+        return
+      }
+
+      this.#closeMenu(false)
+    }
+
+    #onLinkClick = () => {
+      this.#closeMenu(true)
+    }
+  }
+
+  if (!customElements.get("effect-mobile-menu")) {
+    customElements.define("effect-mobile-menu", EffectMobileMenuElement)
+  }
+</script>

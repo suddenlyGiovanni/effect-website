@@ -1,0 +1,29 @@
+---
+import type { NavigationLink } from "@/lib/navigation"
+
+interface Props {
+  readonly link: NavigationLink
+  readonly class: string
+  readonly ariaLabel?: string
+}
+
+const { link, class: className, ariaLabel } = Astro.props
+---
+
+{
+  link.kind === "external" ? (
+    <a
+      href={link.href}
+      target={link.target}
+      rel={link.rel}
+      class={className}
+      aria-label={ariaLabel}
+    >
+      <slot>{link.label}</slot>
+    </a>
+  ) : (
+    <a href={link.href} class={className} aria-label={ariaLabel}>
+      <slot>{link.label}</slot>
+    </a>
+  )
+}
