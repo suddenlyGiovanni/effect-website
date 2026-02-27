@@ -25,23 +25,51 @@ interface IndicatorRect {
 const TAB_CONFIGS: Readonly<Record<TabId, TabConfig>> = {
   concurrency: {
     label: "Concurrency",
+    subTabs: [
+      { id: "effect-all", label: ["Effect.all"] },
+      { id: "effect-race", label: ["Effect.race"] },
+      { id: "effect-raceall", label: ["Effect.raceAll"] },
+      { id: "effect-foreach", label: ["Effect.forEach"] },
+    ],
   },
   constructors: {
     label: "Constructors",
+    subTabs: [
+      { id: "effect-succeed", label: ["Effect.succeed"] },
+      { id: "effect-die", label: ["Effect.die"] },
+      { id: "effect-fail", label: ["Effect.fail"] },
+      { id: "effect-sync", label: ["Effect.sync"] },
+      { id: "effect-promise", label: ["Effect.promise"] },
+      { id: "effect-sleep", label: ["Effect.sleep"] },
+    ],
   },
   "error-handling": {
     label: "Error Handling",
+    subTabs: [
+      { id: "effect-all-short-circuit", label: ["Effect.all", "short-circuit"] },
+      { id: "effect-orelse", label: ["Effect.orElse"] },
+      { id: "effect-timeout", label: ["Effect.timeout"] },
+      { id: "effect-eventually", label: ["Effect.eventually"] },
+      { id: "effect-partition", label: ["Effect.partition"] },
+      { id: "effect-validate", label: ["Effect.validate"] },
+    ],
   },
   "ref-scope": {
     label: "Ref & Scope",
+    subTabs: [
+      { id: "ref-make", label: ["Ref.make"] },
+      { id: "ref-update-and-get", label: ["Ref.updateAndGet"] },
+      { id: "effect-add-finalizer", label: ["Effect.addFinalizer"] },
+      { id: "effect-acquire-release", label: ["Effect.acquireRelease"] },
+    ],
   },
   schedule: {
     label: "Schedule",
     subTabs: [
-      {
-        id: "effect-retry-recurs",
-        label: ["Effect.retry", "times"],
-      },
+      { id: "effect-retry-recurs", label: ["Effect.retry", "times"] },
+      { id: "effect-retry-exponential", label: ["Effect.retry", "exponential"] },
+      { id: "effect-repeat-spaced", label: ["Effect.repeat", "spaced"] },
+      { id: "effect-repeat-while-output", label: ["Effect.repeat", "whileOutput"] },
     ],
   },
 }
@@ -228,6 +256,9 @@ export function InteractiveExamples() {
           className={cn(
             "relative isolate w-full p-0 overflow-x-auto no-scrollbar",
             "group-data-horizontal/tabs:h-auto",
+            "border-b border-zinc-800 bg-zinc-950/90",
+            "snap-x snap-mandatory",
+            "justify-start md:justify-center",
           )}
         >
           <TabsListContent indicatorRect={indicatorRect} />
@@ -267,7 +298,7 @@ function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorR
         <div
           style={indicatorStyle}
           className={cn(
-            "pointer-events-none absolute bottom-0 z-0 h-0.5 rounded-full bg-zinc-200",
+            "pointer-events-none absolute bottom-0 z-0 h-px bg-zinc-100",
             "transition-[left,width] duration-200 ease-out motion-reduce:transition-none",
           )}
           aria-hidden="true"
@@ -282,12 +313,16 @@ function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorR
             key={tabId}
             value={tabId}
             className={cn(
-              "relative z-10",
-              "h-auto min-w-0 flex-1 basis-0",
+              "relative z-10 text-zinc-400",
+              // Mobile: horizontal scrolling tabs. Desktop: equal-width tabs.
+              "h-auto flex-none min-w-40 md:min-w-0 md:flex-1 md:basis-0",
               "px-4 py-5 md:px-6",
-              "text-sm md:text-base font-mono uppercase tracking-wide whitespace-nowrap",
+              "font-mono text-sm md:text-base uppercase tracking-wide whitespace-nowrap",
               "justify-center text-center",
+              "snap-start",
               "cursor-pointer transition-colors",
+              "data-active:text-white hover:text-zinc-200",
+              "data-active:font-medium",
               "group-data-[variant=line]/tabs-list:data-active:after:opacity-0",
             )}
           >
@@ -320,10 +355,11 @@ function SubTabsContent({
   return (
     <Tabs defaultValue={firstSubTab.id} className="gap-0">
       <TabsList
+        variant="line"
         className={cn(
           "w-full overflow-x-auto no-scrollbar",
           "group-data-horizontal/tabs:h-auto",
-          "justify-start gap-1 border-y border-zinc-800 px-4 py-3",
+          "justify-start gap-1 border-b border-zinc-800 px-4 py-3",
           "rounded-none bg-zinc-950",
         )}
       >
@@ -337,8 +373,13 @@ function SubTabsContent({
               className={cn(
                 "h-auto flex-none px-3 py-1.5",
                 "rounded-md font-mono text-sm whitespace-nowrap",
-                "group-data-[variant=line]/tabs-list:data-active:bg-zinc-900",
-                "group-data-[variant=line]/tabs-list:data-active:after:opacity-0",
+                "text-zinc-400 hover:text-white",
+                "cursor-pointer transition-colors",
+                "data-active:!bg-zinc-900 data-active:!text-white",
+                "group-data-[variant=line]/tabs-list:data-active:!bg-zinc-900",
+                "group-data-[variant=line]/tabs-list:data-active:!text-white",
+                "hover:bg-zinc-800/50",
+                "group-data-[variant=line]/tabs-list:data-active:after:opacity-0 after:opacity-0",
               )}
             >
               <span>{subTab.label[0]}</span>
