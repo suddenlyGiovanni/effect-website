@@ -1,6 +1,6 @@
 import { ArrowRight, Play, RotateCcw, Square } from "lucide-react"
-import { CodePane } from "@/components/landing/interactive-examples/CodePane"
-import { EffectNodeLite } from "@/components/landing/interactive-examples/EffectNodeLite"
+import { CodePane } from "@/components/landing/examples/CodePane"
+import { EffectNodeLite } from "@/components/landing/examples/EffectNodeLite"
 import {
   interactiveTaskIsTerminal,
   type InteractiveTaskState,

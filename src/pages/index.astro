@@ -1,12 +1,12 @@
 ---
 import SkipLink from "@/components/SkipLink.astro"
-import HeroSection from "@/components/landing/HeroSection.astro"
-import InteractiveExamplesSection from "@/components/landing/InteractiveExamplesSection.astro"
-import LandingRails from "@/components/landing/LandingRails.astro"
-import MentalModelSection from "@/components/landing/MentalModelSection.astro"
-import ProblemSection from "@/components/landing/ProblemSection.astro"
-import SectionDivider from "@/components/landing/SectionDivider.astro"
-import TestimonialsSection from "@/components/landing/TestimonialsSection.astro"
+import Hero from "@/components/landing/sections/Hero.astro"
+import InteractiveExamples from "@/components/landing/sections/InteractiveExamples.astro"
+import MentalModel from "@/components/landing/sections/MentalModel.astro"
+import Problem from "@/components/landing/sections/Problem.astro"
+import Testimonials from "@/components/landing/sections/Testimonials.astro"
+import LandingRails from "@/components/landing/layout/LandingRails.astro"
+import SectionDivider from "@/components/landing/layout/SectionDivider.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
 ---
@@ -27,15 +27,15 @@ import BaseLayout from "@/layouts/BaseLayout.astro"
     <LandingRails />
 
     <main class="pt-16">
-      <HeroSection />
+      <Hero />
       <SectionDivider />
-      <ProblemSection />
+      <Problem />
       <SectionDivider />
-      <TestimonialsSection />
+      <Testimonials />
       <SectionDivider />
-      <MentalModelSection />
+      <MentalModel />
       <SectionDivider />
-      <InteractiveExamplesSection />
+      <InteractiveExamples />
       <SectionDivider />
     </main>
   </div>

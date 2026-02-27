@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import {
   ExampleCard,
   type ExampleNodeSpec,
-} from "@/components/landing/interactive-examples/ExampleCard"
+} from "@/components/landing/examples/ExampleCard"
 import {
   type SoundName,
   useInteractionSounds,
-} from "@/components/landing/interactive-examples/use-interaction-sounds"
+} from "@/components/landing/examples/use-interaction-sounds"
 import { formatResultForNode, truncateResultLabel } from "@/lib/interactive-examples/format-result"
 import {
   getInteractiveExampleMeta,
