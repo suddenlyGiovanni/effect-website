@@ -31,13 +31,16 @@ src/
 ## Reference Repos (`.repos`)
 
 - `.repos/` is a local, gitignored workspace for reference codebases.
-- Use it to compare old implementations/patterns before changing UI.
-- The old landing site should exist at `.repos/landing`.
-- If missing, clone it first: `git clone git@github.com:mirelaprifti/landing.git .repos/landing`
+- The old website should exist at `.repos/landing`.
+  - If missing, clone it first: `git clone git@github.com:mirelaprifti/landing.git .repos/landing`
+  - Use it to reference previous implementations of website components / logic
+- Effect v4 reference examples should exist at `.repos/effect-smol`.
+  - If missing, clone it first: `git clone https://github.com/Effect-TS/effect-smol .repos/effect-smol`
+  - Use it to reference how to work with Effect v4, in particular the `./repos/effect-smol/LLMS.md`
 
 ## Interactive UI Components
 
-High-interactivity React components use **Shadcn** (`base-nova` style) with **Base UI** (`@base-ui/react`) as the headless primitive layer. Components live in `src/components/ui/` and are generated via `npx shadcn add`.
+High-interactivity React components use **Shadcn** (`base-nova` style) with **Base UI** (`@base-ui/react`) as the headless primitive layer. Components live in `src/components/ui/` and are generated via `pnpm dlx shadcn@latest add <component>`.
 
 - `components.json` configures Shadcn with `"style": "base-nova"`
 - Variants use `class-variance-authority` (CVA)
