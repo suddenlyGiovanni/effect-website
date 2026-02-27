@@ -1,0 +1,30 @@
+---
+import { InteractiveExamples } from "@/components/landing/InteractiveExamples"
+---
+
+<section id="interactive-examples" class="relative w-full py-24 md:pt-40 md:pb-24">
+  <div class="mx-auto w-full max-w-295 px-4">
+    <!-- Header  -->
+    <div class="mx-auto w-full max-w-295 px-4 mb-12">
+      <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
+        // Interactive Examples
+      </p>
+      <h2 class="text-3xl font-semibold text-white md:text-4xl">
+        See Effect in action
+      </h2>
+    </div>
+
+    <!-- Interactive Examples Container -->
+    <div class="max-w-295 mx-auto">
+      <InteractiveExamples client:load />
+    </div>
+
+  <!--   <InteractiveExamplesIsland client:visible /> -->
+
+  <!--   <noscript> -->
+  <!--     <div class="mt-6 border border-zinc-800 bg-zinc-950/70 p-4 text-sm text-zinc-400"> -->
+  <!--       Interactive examples require JavaScript. -->
+  <!--     </div> -->
+  <!--   </noscript> -->
+  </div>
+</section>

@@ -1,0 +1,42 @@
+---
+import SkipLink from "@/components/SkipLink.astro"
+import Navigation from "@/components/navigation/Navigation.astro"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import { PAGE_TITLE_ID } from "@/lib/constants"
+import { FEATURED_EPISODES, type FeaturedEpisode } from "@/lib/podcast/featured-episodes"
+
+export const getStaticPaths = () => {
+  return FEATURED_EPISODES.map((featuredEpisode) => {
+    return {
+      params: { episode: featuredEpisode.slug },
+      props: { featuredEpisode },
+    }
+  })
+}
+
+interface Props {
+  readonly featuredEpisode: FeaturedEpisode
+}
+
+const { featuredEpisode }: Props = Astro.props
+---
+
+<BaseLayout description={`Episode page for ${featuredEpisode.guest} at ${featuredEpisode.company}`}>
+  <div class="relative z-10">
+    <SkipLink />
+    <Navigation />
+
+    <main class="mx-auto w-full max-w-295 px-4 pt-32 pb-24">
+      <p class="mb-3 font-mono text-sm uppercase tracking-wider text-zinc-400">// Cause & Effect</p>
+      <h1 id={PAGE_TITLE_ID} class="text-3xl font-semibold tracking-tight text-white md:text-5xl">
+        Episode Page Coming Soon
+      </h1>
+      <p class="mt-4 max-w-3xl text-zinc-400">
+        We are preparing a full episode page for {featuredEpisode.guest} at {featuredEpisode.company}.
+      </p>
+      <a href="/" class="mt-8 inline-flex items-center rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300">
+        Back to homepage
+      </a>
+    </main>
+  </div>
+</BaseLayout>

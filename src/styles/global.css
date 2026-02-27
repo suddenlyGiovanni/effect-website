@@ -181,6 +181,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
+
+  --leading-tighter: 1.15;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -188,6 +190,34 @@
 /* -------------------------------------------------------------------------- */
 
 @layer base {
+  /* Minimal reset */
+  :where(html, body) {
+    margin: 0;
+    padding: 0;
+  }
+
+  :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd) {
+    margin: 0;
+  }
+
+  :where(ul[role="list"], ol[role="list"]) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  :where(fieldset) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-inline-size: 0;
+  }
+
+  :where(button, input, select, textarea) {
+    color: inherit;
+    font: inherit;
+  }
+
   *,
   *::before,
   *::after {

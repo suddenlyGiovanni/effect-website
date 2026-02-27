@@ -91,9 +91,9 @@ export default function SearchTriggerIsland({
         aria-label="Open search"
         aria-keyshortcuts={shortcut.aria}
         onClick={onClick}
-        className="mt-6 flex w-full appearance-none items-center gap-3 rounded-md border border-zinc-500 bg-transparent px-3 py-2.5 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-white"
+        className="mt-6 flex w-full cursor-pointer appearance-none items-center gap-3 rounded-md border border-zinc-500 bg-transparent px-3 py-2.5 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-white"
       >
-        <Search className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
+        <Search className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="text-sm">Search</span>
         <kbd className="ml-auto inline-flex items-center justify-center gap-0.5 text-xs leading-none text-zinc-300">
           <span>{shortcut.label}</span>
@@ -110,13 +110,13 @@ export default function SearchTriggerIsland({
       aria-keyshortcuts={shortcut.aria}
       onClick={onClick}
       className={cn(
-        "flex h-8 appearance-none items-center gap-2 rounded-md border bg-transparent px-2.5 py-1 text-sm transition-colors",
+        "flex h-8 cursor-pointer appearance-none items-center gap-2 rounded-md border bg-transparent px-2.5 py-1 text-sm transition-colors",
         transparent
           ? "border-white/50 text-white hover:border-white hover:bg-zinc-800"
           : "border-zinc-600 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900 hover:text-white",
       )}
     >
-      <Search className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
+      <Search className="h-4.5 w-4.5" aria-hidden="true" />
       <kbd
         className={cn(
           "inline-flex items-center justify-center gap-0.5 text-[12px] leading-none",

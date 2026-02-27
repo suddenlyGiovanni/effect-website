@@ -2,7 +2,6 @@ import react from "@astrojs/react"
 import starlight from "@astrojs/starlight"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig, fontProviders } from "astro/config"
-import svgr from "vite-plugin-svgr"
 
 const GoogleFontProvider = fontProviders.google()
 
@@ -54,17 +53,6 @@ export default defineConfig({
     svgo: true,
   },
   vite: {
-    plugins: [
-      svgr({
-        include: "**/*.svg?react",
-        svgrOptions: {
-          plugins: ["@svgr/plugin-svgo", "@svgr/plugin-jsx"],
-          svgoConfig: {
-            plugins: ["preset-default", "removeTitle", "removeDesc", "removeDoctype", "cleanupIds"],
-          },
-        },
-      }),
-      tailwindcss(),
-    ],
+    plugins: [tailwindcss()],
   },
 })

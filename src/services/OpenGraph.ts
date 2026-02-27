@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import { Resvg } from "@resvg/resvg-js"
 import * as Effect from "effect/Effect"
 import * as Encoding from "effect/Encoding"
@@ -5,7 +6,6 @@ import * as FileSystem from "effect/FileSystem"
 import * as Layer from "effect/Layer"
 import * as Path from "effect/Path"
 import * as ServiceMap from "effect/ServiceMap"
-import type { CSSProperties } from "react"
 import satori, { type SatoriOptions } from "satori"
 import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/constants"
 

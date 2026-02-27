@@ -1,0 +1,72 @@
+---
+import { Image } from "astro:assets"
+import { ArrowUpRight, Play } from "@lucide/astro"
+import { FEATURED_EPISODES, getPodcastEpisodeHref } from "@/lib/podcast/featured-episodes"
+---
+
+<section id="testimonials" class="relative w-full py-24 md:pt-40 md:pb-24">
+  <div class="relative mx-auto w-full max-w-295 px-4">
+    <div class="mb-12">
+      <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
+        // Who uses Effect
+      </p>
+      <h2 class="text-3xl font-semibold text-white md:text-4xl">Real-world production systems</h2>
+
+      <div class="mt-8 flex flex-wrap items-center gap-6">
+        <a href="/podcast/" class="inline-flex items-center gap-1 text-base font-medium text-zinc-300 no-underline transition-colors hover:text-white hover:no-underline">
+          Cause & Effect Podcast
+          <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+        </a>
+        <a
+          href="https://www.youtube.com/watch?v=CfbR-1XRlTA&list=PLDf3uQLaK2B9a4tbMgGd9wFeEnMA50z4w"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 text-base font-medium text-zinc-300 no-underline transition-colors hover:text-white hover:no-underline"
+        >
+          Effect Days 2024
+          <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+        </a>
+        <a
+          href="https://www.youtube.com/watch?v=0dIC1IwlaQc&list=PLDf3uQLaK2B9bEBZbwMv04e_zSbRNPKH6"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 text-base font-medium text-zinc-300 no-underline transition-colors hover:text-white hover:no-underline"
+        >
+          Effect Days 2025
+          <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {FEATURED_EPISODES.map((episode) => (
+        <a
+          href={getPodcastEpisodeHref(episode.slug)}
+          class="group relative flex flex-col overflow-hidden no-underline transition-all hover:border-zinc-500 hover:no-underline"
+        >
+          <div class="relative aspect-video w-full overflow-hidden rounded-md border border-zinc-800 bg-zinc-900">
+            <Image
+              src={episode.thumbnail}
+              alt={`${episode.company} podcast episode with ${episode.guest}`}
+              class="h-full w-full object-cover"
+              loading="lazy"
+            />
+
+            <div class="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/20">
+              <div class="flex h-12 w-12 scale-0 items-center justify-center rounded-full bg-white/90 transition-transform duration-300 group-hover:scale-100">
+                <Play class="ml-0.5 h-5 w-5 text-zinc-900" fill="currentColor" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between px-0 py-2">
+            <span class="font-mono text-[13px] uppercase text-zinc-400 group-hover:text-zinc-200">
+              {episode.useCase}
+            </span>
+            <ArrowUpRight class="h-4 w-4 text-zinc-500 transition-colors group-hover:text-zinc-200" aria-hidden="true" />
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

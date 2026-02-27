@@ -1,0 +1,33 @@
+---
+import SkipLink from "@/components/SkipLink.astro"
+import Navigation from "@/components/navigation/Navigation.astro"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import { PAGE_TITLE_ID } from "@/lib/constants"
+import { FEATURED_EPISODES, getPodcastEpisodeHref } from "@/lib/podcast/featured-episodes"
+---
+
+<BaseLayout description="Cause & Effect podcast episodes">
+  <div class="relative z-10">
+    <SkipLink />
+    <Navigation />
+
+    <main class="mx-auto w-full max-w-295 px-4 pt-32 pb-24">
+      <p class="mb-3 font-mono text-sm uppercase tracking-wider text-zinc-400">// The Podcast</p>
+      <h1 id={PAGE_TITLE_ID} class="text-3xl font-semibold tracking-tight text-white md:text-5xl">
+        Cause & Effect
+      </h1>
+      <p class="mt-4 max-w-3xl text-zinc-400">
+        Episode pages are being migrated. Browse currently linked episodes below.
+      </p>
+
+      <div class="mt-10 grid gap-4 md:grid-cols-2">
+        {FEATURED_EPISODES.map((episode) => (
+          <a href={getPodcastEpisodeHref(episode.slug)} class="rounded-md border border-zinc-800 bg-zinc-950/70 p-4 transition-colors hover:border-zinc-700">
+            <p class="font-mono text-xs uppercase tracking-wider text-zinc-500">{episode.company}</p>
+            <p class="mt-2 text-sm text-zinc-300">{episode.guest}</p>
+          </a>
+        ))}
+      </div>
+    </main>
+  </div>
+</BaseLayout>

@@ -1,9 +1,9 @@
+import type { APIContext, APIRoute, GetStaticPaths } from "astro"
+import * as NodeServices from "@effect/platform-node/NodeServices"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
-import * as NodeServices from "@effect/platform-node/NodeServices"
 import { OpenGraph } from "@/services/OpenGraph"
-import type { APIContext, APIRoute, GetStaticPaths } from "astro"
 
 interface OgPageDefinition {
   readonly slug: string

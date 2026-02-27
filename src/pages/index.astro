@@ -1,5 +1,12 @@
 ---
 import SkipLink from "@/components/SkipLink.astro"
+import HeroSection from "@/components/landing/HeroSection.astro"
+import InteractiveExamplesSection from "@/components/landing/InteractiveExamplesSection.astro"
+import LandingRails from "@/components/landing/LandingRails.astro"
+import MentalModelSection from "@/components/landing/MentalModelSection.astro"
+import ProblemSection from "@/components/landing/ProblemSection.astro"
+import SectionDivider from "@/components/landing/SectionDivider.astro"
+import TestimonialsSection from "@/components/landing/TestimonialsSection.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
 ---
@@ -17,11 +24,19 @@ import BaseLayout from "@/layouts/BaseLayout.astro"
   <div class="relative z-10">
     <SkipLink />
     <Navigation />
+    <LandingRails />
 
-    <main class="mx-auto w-full max-w-295 px-4 pt-28 pb-20">
-      <h1 id="_top" class="text-3xl font-semibold tracking-tight text-white md:text-5xl">
-        Effect website v4
-      </h1>
+    <main class="pt-16">
+      <HeroSection />
+      <SectionDivider />
+      <ProblemSection />
+      <SectionDivider />
+      <TestimonialsSection />
+      <SectionDivider />
+      <MentalModelSection />
+      <SectionDivider />
+      <InteractiveExamplesSection />
+      <SectionDivider />
     </main>
   </div>
 </BaseLayout>

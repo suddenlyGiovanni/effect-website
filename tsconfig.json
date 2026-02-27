@@ -1,28 +1,18 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [
-    ".astro/types.d.ts",
-    "**/*"
-  ],
-  "exclude": [
-    "dist"
-  ],
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "plugins": [
       {
         "name": "@effect/language-service",
-        "namespaceImportPackages": [
-          "effect",
-          "@effect/*"
-        ]
+        "namespaceImportPackages": ["effect", "@effect/*"]
       }
     ]
   }

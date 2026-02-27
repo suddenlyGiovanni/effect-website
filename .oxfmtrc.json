@@ -15,8 +15,9 @@
       "unknown"
     ]
   },
+  "sortPackageJson": false,
   "sortTailwindcss": {
-    "stylesheet": "./path/to/stylesheet.css",
+    "stylesheet": "./src/styles/global.css",
     "functions": ["clsx", "cn"],
     "preserveWhitespace": true
   }
