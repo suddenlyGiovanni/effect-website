@@ -118,6 +118,7 @@ const actionButtonClass = cn(
     #iconOpen: SVGElement | null = null
     #iconClose: SVGElement | null = null
     #shouldRestoreFocus: boolean = false
+    #pendingSearchTransition: boolean = false
 
     connectedCallback() {
       const menuButton = this.querySelector("[data-role='menu-button']")
@@ -164,6 +165,7 @@ const actionButtonClass = cn(
       this.#searchButton.addEventListener("click", this.#onSearchClick)
       document.addEventListener("keydown", this.#onKeyDown)
       window.addEventListener("resize", this.#onResize)
+      window.addEventListener(NAVIGATION_EVENTS.SEARCH_OPENED, this.#onSearchOpened)
     }
 
     disconnectedCallback() {
@@ -177,6 +179,7 @@ const actionButtonClass = cn(
 
       document.removeEventListener("keydown", this.#onKeyDown)
       window.removeEventListener("resize", this.#onResize)
+      window.removeEventListener(NAVIGATION_EVENTS.SEARCH_OPENED, this.#onSearchOpened)
 
       if (this.#menuRoot) {
         const menuLinks = this.#menuRoot.querySelectorAll("[data-role='menu-link']")
@@ -200,6 +203,10 @@ const actionButtonClass = cn(
       this.#open = nextOpen
       this.#shouldRestoreFocus = shouldRestoreFocus
 
+      if (!nextOpen) {
+        this.#pendingSearchTransition = false
+      }
+
       this.#menuRoot.classList.toggle("hidden", !nextOpen)
       this.#iconOpen.classList.toggle("hidden", nextOpen)
       this.#iconClose.classList.toggle("hidden", !nextOpen)
@@ -218,6 +225,8 @@ const actionButtonClass = cn(
     }
 
     #openMenu = () => {
+      this.#pendingSearchTransition = false
+
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur()
       }
@@ -241,15 +250,25 @@ const actionButtonClass = cn(
     }
 
     #onSearchClick = () => {
-      window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_CLOSE))
-
       if (this.#open) {
-        this.#closeMenu(false)
+        // Keep scroll lock while we swap menu -> search dialog.
+        document.documentElement.setAttribute("data-search-open", "true")
+        document.body.setAttribute("data-search-open", "true")
+        this.#pendingSearchTransition = true
         window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPEN))
         return
       }
 
       window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPEN))
+    }
+
+    #onSearchOpened = () => {
+      if (!this.#pendingSearchTransition || !this.#open) {
+        return
+      }
+
+      this.#pendingSearchTransition = false
+      this.#closeMenu(false)
     }
 
     #onKeyDown = (event: KeyboardEvent) => {

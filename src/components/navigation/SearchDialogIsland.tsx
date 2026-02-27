@@ -5,6 +5,20 @@ import { getNavigationLinks } from "@/lib/navigation"
 
 type SearchDialogState = { readonly tag: "closed" } | { readonly tag: "open" }
 
+const syncSearchScrollLock = (open: boolean) => {
+  const html = document.documentElement
+  const body = document.body
+
+  if (open) {
+    html.setAttribute("data-search-open", "true")
+    body.setAttribute("data-search-open", "true")
+    return
+  }
+
+  html.removeAttribute("data-search-open")
+  body.removeAttribute("data-search-open")
+}
+
 export default function SearchDialogIsland() {
   const [state, setState] = useState<SearchDialogState>({ tag: "closed" })
   const [query, setQuery] = useState("")
@@ -67,13 +81,14 @@ export default function SearchDialogIsland() {
 
   useEffect(() => {
     if (!isOpen) {
-      document.body.removeAttribute("data-search-open")
+      syncSearchScrollLock(false)
       return
     }
 
-    document.body.setAttribute("data-search-open", "true")
+    syncSearchScrollLock(true)
     setQuery("")
     inputRef.current?.focus()
+    window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPENED))
   }, [isOpen])
 
   if (!isOpen) {

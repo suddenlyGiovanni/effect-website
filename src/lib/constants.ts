@@ -6,6 +6,7 @@ export const PAGE_TITLE_ID = "_top"
 
 export const NAVIGATION_EVENTS = {
   SEARCH_OPEN: "effect-search:open",
+  SEARCH_OPENED: "effect-search:opened",
   SEARCH_CLOSE: "effect-search:close",
   MOBILE_MENU_OPEN: "effect-mobile-menu:open",
 }
