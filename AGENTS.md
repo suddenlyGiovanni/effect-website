@@ -45,5 +45,6 @@ High-interactivity React components use **Shadcn** (`base-nova` style) with **Ba
 - `components.json` configures Shadcn with `"style": "base-nova"`
 - Variants use `class-variance-authority` (CVA)
 - `cn()` from `@/lib/utils` merges classes via `clsx` + `tailwind-merge`
+- Prefer `cn()` over template literal interpolation when composing Tailwind classes with conditional or dynamic values
 
 Reference: [Shadcn llms.txt](https://ui.shadcn.com/llms.txt)
