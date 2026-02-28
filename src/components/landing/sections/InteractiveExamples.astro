@@ -1,5 +1,6 @@
 ---
-import { InteractiveExamples } from "@/components/landing/examples/InteractiveExamples"
+// import { InteractiveExamples } from "@/components/landing/examples/InteractiveExamples" 
+import { VisualEffectDemo } from "@/components/VisualEffectDemo"
 ---
 
 <section id="interactive-examples" class="relative w-full py-24 md:pt-40 md:pb-24">
@@ -16,7 +17,8 @@ import { InteractiveExamples } from "@/components/landing/examples/InteractiveEx
 
     <!-- Interactive Examples Container -->
     <div class="max-w-295 mx-auto">
-      <InteractiveExamples client:load />
+      <VisualEffectDemo client:load />
+      <!-- <InteractiveExamples client:load /> -->
 
       <noscript>
         <div class="mt-6 border border-zinc-800 bg-zinc-950/70 p-4 text-sm text-zinc-400">

@@ -247,6 +247,6 @@
   pre,
   kbd,
   .font-mono {
-    font-family: --var(--font-jetbrains-mono);
+    font-family: var(--font-jetbrains-mono);
   }
 }
