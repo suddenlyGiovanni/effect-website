@@ -183,6 +183,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
 
   --leading-tighter: 1.15;
+
+  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-inter);
 }
 
 /* -------------------------------------------------------------------------- */

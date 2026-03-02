@@ -4,7 +4,7 @@
 // Children are independently observable via their own atoms.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Cause, Effect, type Fiber, pipe } from "effect"
+import { Cause, Effect, type Fiber, pipe, Schedule } from "effect"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
@@ -12,6 +12,7 @@ import { RegistryProvider, useAtomValue } from "@effect/atom-react"
 import { RegistryContext } from "@effect/atom-react/RegistryContext"
 import { useCallback, useContext, useEffect, useRef, useState } from "react"
 import { ChevronDownIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 // ─── Core types ──────────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ export interface VisualEffect<out A, out E = never> {
   /** Read-only view of the result atom. Covariant so collections work. */
   readonly atom: Atom.Atom<AsyncResult.AsyncResult<A, E>>
   readonly children: ReadonlyArray<VisualEffect<unknown, unknown>>
+  /** When "schedule", renders a step log instead of child nodes. */
+  readonly variant: "default" | "schedule"
   /** Returns the effect wrapped with lifecycle hooks that update the atom. */
   asEffect(): Effect.Effect<A, E, AtomRegistry.AtomRegistry>
   /** Reset this effect and all children to idle. */
@@ -43,6 +46,7 @@ export interface VisualEffect<out A, out E = never> {
 export const make = <A, E = never>(
   label: string,
   effect: Effect.Effect<A, E>,
+  options?: { readonly onReset?: () => void },
 ): VisualEffect<A, E> => {
   type VisualEffectResult = AsyncResult.AsyncResult<A, E>
 
@@ -51,23 +55,19 @@ export const make = <A, E = never>(
 
   const atom = Atom.make<VisualEffectResult>(initialIdle)
 
-  // When the observed effect is about to start execution, transition the atom
-  // to the waiting state to mark the visual state as "running"
-  const run = Atom.set(atom, initialWaiting)
-
-  const observed: Effect.Effect<A, E, AtomRegistry.AtomRegistry> = run.pipe(
-    Effect.andThen(effect),
-    // On any exit: transition to terminal state
-    Effect.onExit((exit) => Atom.set(atom, AsyncResult.fromExit(exit))),
-  )
-
   return {
     label,
     atom,
     children: [],
-    asEffect: () => observed,
+    variant: "default",
+    asEffect: () =>
+      Atom.set(atom, initialWaiting).pipe(
+        Effect.andThen(effect),
+        Effect.onExit((exit) => Atom.set(atom, AsyncResult.fromExit(exit))),
+      ),
     resetAll(registry) {
-      registry.set(atom, AsyncResult.initial<A, E>())
+      registry.set(atom, initialIdle)
+      options?.onReset?.()
     },
   }
 }
@@ -94,26 +94,50 @@ export const group = <A, E = never>(
   children: ReadonlyArray<VisualEffect<unknown, unknown>>,
   combinator: Effect.Effect<A, E, AtomRegistry.AtomRegistry>,
 ): VisualEffect<A, E> => {
-  const atom = Atom.make<AsyncResult.AsyncResult<A, E>>(AsyncResult.initial<A, E>())
+  const initialIdle = AsyncResult.initial<A, E>()
+  const atom = Atom.make<AsyncResult.AsyncResult<A, E>>(initialIdle)
 
   return {
     label,
     atom,
     children,
+    variant: "default",
     asEffect: () =>
       pipe(
-        // On start: transition parent to running BEFORE children execute
         Atom.set(atom, AsyncResult.initial<A, E>(true)),
         Effect.andThen(combinator),
         Effect.onExit((exit) => Atom.set(atom, AsyncResult.fromExit(exit))),
       ),
     resetAll(registry) {
-      registry.set(atom, AsyncResult.initial<A, E>())
+      registry.set(atom, initialIdle)
       for (const child of children) {
         child.resetAll(registry)
       }
     },
   }
+}
+
+/**
+ * Create a schedule-variant VisualEffect. The single child is the base task
+ * that gets repeated/retried. The UI shows a step log tracking each cycle.
+ *
+ * @example
+ * ```ts
+ * const baseTask = make("attempt", Effect.sleep("500 millis"))
+ * const demoRetry = schedule(
+ *   "Effect.retry",
+ *   baseTask,
+ *   baseTask.asEffect().pipe(Effect.retry({ times: 3, schedule: Schedule.spaced("1 second") })),
+ * )
+ * ```
+ */
+export const schedule = <A, E = never>(
+  label: string,
+  baseTask: VisualEffect<unknown, unknown>,
+  combinator: Effect.Effect<A, E, AtomRegistry.AtomRegistry>,
+): VisualEffect<A, E> => {
+  const ve = group(label, [baseTask], combinator)
+  return { ...ve, variant: "schedule" }
 }
 
 // ─── State derivation ────────────────────────────────────────────────────────
@@ -184,17 +208,48 @@ const STATE_CLASSES: Record<
 
 // ─── React hooks ─────────────────────────────────────────────────────────────
 
+/** Which action the single control button should perform. */
+type Action = "run" | "stop" | "reset"
+
 interface UseVisualEffectResult {
   readonly state: VisualState
   readonly result: AsyncResult.AsyncResult<unknown, unknown>
-  readonly run: () => void
-  readonly stop: () => void
-  readonly reset: () => void
+  /** The action the control button should perform given current state. */
+  readonly action: Action
+  /** Execute the current action. */
+  readonly dispatch: () => void
+}
+
+/**
+ * Derive the control action from visual state.
+ * idle → run, running → stop, any terminal → reset.
+ */
+const actionOf = (state: VisualState): Action => {
+  switch (state) {
+    case "idle":
+      return "run"
+    case "running":
+      return "stop"
+    default:
+      return "reset"
+  }
+}
+
+/** Button label for each action. */
+const ACTION_LABEL: Record<Action, string> = {
+  run: "▶",
+  stop: "■",
+  reset: "↺",
 }
 
 /**
  * Hook that connects a VisualEffect to React. Owns the fiber lifecycle —
  * run forks the observed effect, stop interrupts it, reset clears all atoms.
+ *
+ * The fiber's onExit unconditionally writes terminal state to atoms. To avoid
+ * races, stop does NOT null fiberRef — the fiber's observer does it after
+ * onExit completes. run guards on fiberRef so it can't proceed until the
+ * old fiber is fully dead.
  *
  * Must be used inside a `<RegistryProvider>`.
  */
@@ -203,31 +258,33 @@ export const useVisualEffect = (ve: VisualEffect<unknown, unknown>): UseVisualEf
   const registry = useContext(RegistryContext)
   const fiberRef = useRef<Fiber.Fiber<unknown, unknown> | null>(null)
   const state = stateOf(result)
+  const action = actionOf(state)
 
-  const run = useCallback(() => {
-    // Guard against double-invocation before React re-renders
-    if (fiberRef.current !== null) return
-    const program = ve.asEffect().pipe(Effect.provideService(AtomRegistry.AtomRegistry, registry))
-    const fiber = Effect.runFork(program)
-    fiberRef.current = fiber
-    // Clear ref when fiber completes so re-run is possible
-    fiber.addObserver(() => {
-      fiberRef.current = null
-    })
-  }, [ve, registry])
-
-  const stop = useCallback(() => {
-    fiberRef.current?.interruptUnsafe()
-    fiberRef.current = null
-  }, [])
-
-  const reset = useCallback(() => {
-    // Interrupt any running fiber
-    fiberRef.current?.interruptUnsafe()
-    fiberRef.current = null
-    // Reset all atoms (parent + children recursively)
-    ve.resetAll(registry)
-  }, [ve, registry])
+  const dispatch = useCallback(() => {
+    switch (actionOf(stateOf(result))) {
+      case "run": {
+        if (fiberRef.current !== null) return
+        const program = ve.asEffect().pipe(
+          Effect.provideService(AtomRegistry.AtomRegistry, registry),
+        )
+        const fiber = Effect.runFork(program)
+        fiberRef.current = fiber
+        fiber.addObserver(() => {
+          fiberRef.current = null
+        })
+        return
+      }
+      case "stop": {
+        fiberRef.current?.interruptUnsafe()
+        return
+      }
+      case "reset": {
+        if (fiberRef.current !== null) return
+        ve.resetAll(registry)
+        return
+      }
+    }
+  }, [ve, registry, result])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -236,13 +293,153 @@ export const useVisualEffect = (ve: VisualEffect<unknown, unknown>): UseVisualEf
     }
   }, [])
 
-  return { state, result, run, stop, reset }
+  return { state, result, action, dispatch }
 }
 
 /** Read-only hook for observing a child VisualEffect's state. No controls. */
 const useObservedChild = (child: VisualEffect<unknown, unknown>) => {
   const result = useAtomValue(child.atom)
   return { state: stateOf(result), result }
+}
+
+// ─── Schedule step tracking ──────────────────────────────────────────────────
+
+/** One attempt/iteration in a schedule-driven effect. */
+interface ScheduleStep {
+  readonly attempt: number
+  readonly outcome: "completed" | "failed"
+  /** Duration of the attempt in ms. */
+  readonly durationMs: number
+  /** Delay before this attempt (0 for the first). */
+  readonly delayMs: number
+}
+
+/**
+ * Track schedule steps by watching a child VisualEffect's state transitions.
+ * Each running→terminal cycle is recorded as one step. The gap between
+ * a terminal state and the next running state is the schedule delay.
+ */
+function useScheduleLog(child: VisualEffect<unknown, unknown>) {
+  const { state } = useObservedChild(child)
+  const [steps, setSteps] = useState<ReadonlyArray<ScheduleStep>>([])
+  const prevStateRef = useRef<VisualState>(state)
+  const attemptStartRef = useRef<number | null>(null)
+  const lastTerminalRef = useRef<number | null>(null)
+  const attemptCountRef = useRef(0)
+
+  useEffect(() => {
+    const prev = prevStateRef.current
+    prevStateRef.current = state
+
+    if (prev === state) return
+
+    // idle = reset occurred → clear the log
+    if (state === "idle") {
+      setSteps([])
+      attemptStartRef.current = null
+      lastTerminalRef.current = null
+      attemptCountRef.current = 0
+      delayRef.current = 0
+      return
+    }
+
+    // running started → record attempt start time
+    if (state === "running") {
+      const now = Date.now()
+      const delayMs =
+        lastTerminalRef.current !== null ? now - lastTerminalRef.current : 0
+      attemptStartRef.current = now
+      attemptCountRef.current += 1
+      // Store delay for when this attempt finishes
+      // We capture it in a ref so the terminal handler can read it
+      delayRef.current = delayMs
+    }
+
+    // terminal state reached → record the step
+    if (
+      prev === "running" &&
+      (state === "completed" || state === "failed")
+    ) {
+      const now = Date.now()
+      const durationMs =
+        attemptStartRef.current !== null ? now - attemptStartRef.current : 0
+      lastTerminalRef.current = now
+
+      setSteps((prev) => [
+        ...prev,
+        {
+          attempt: attemptCountRef.current,
+          outcome: state,
+          durationMs,
+          delayMs: delayRef.current,
+        },
+      ])
+    }
+  }, [state])
+
+  // Mutable ref for delay — captured when running starts, read when terminal
+  const delayRef = useRef(0)
+
+  const clear = useCallback(() => {
+    setSteps([])
+    attemptStartRef.current = null
+    lastTerminalRef.current = null
+    attemptCountRef.current = 0
+    delayRef.current = 0
+    prevStateRef.current = "idle"
+  }, [])
+
+  return { steps, clear, childState: state }
+}
+
+/** Render a list of schedule steps. */
+function ScheduleLog({
+  steps,
+  childState,
+}: {
+  readonly steps: ReadonlyArray<ScheduleStep>
+  readonly childState: VisualState
+}) {
+  if (steps.length === 0 && childState !== "running") {
+    return null
+  }
+
+  return (
+    <div className="border-t border-border px-4 py-2">
+      <div className="mb-1 text-xs text-muted-foreground">Schedule Steps</div>
+      <div className="flex flex-col gap-0.5 text-xs">
+        {steps.map((step) => (
+          <div key={step.attempt} className="flex items-center gap-2">
+            <span className="w-6 shrink-0 text-right tabular-nums text-muted-foreground">
+              #{step.attempt}
+            </span>
+            <span
+              className={cn(
+                "w-16 shrink-0",
+                step.outcome === "completed" ? "text-primary" : "text-destructive",
+              )}
+            >
+              {step.outcome === "completed" ? "✓ pass" : "✗ fail"}
+            </span>
+            <span className="tabular-nums text-muted-foreground">{formatMs(step.durationMs)}</span>
+            {step.delayMs > 0 && (
+              <span className="text-muted-foreground/60">
+                (delay: {formatMs(step.delayMs)})
+              </span>
+            )}
+          </div>
+        ))}
+        {childState === "running" && (
+          <div className="flex items-center gap-2">
+            <span className="w-6 shrink-0 text-right tabular-nums text-muted-foreground">
+              #{steps.length + 1}
+            </span>
+            <span className="w-16 shrink-0 text-blue-400">⋯ running</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 // ─── UI Components ───────────────────────────────────────────────────────────
@@ -262,6 +459,12 @@ function useStateLog(state: VisualState) {
     if (state === prevRef.current) return
     const prev = prevRef.current
     prevRef.current = state
+    // idle = reset occurred → clear the log
+    if (state === "idle") {
+      setLog([])
+      startRef.current = null
+      return
+    }
     if (startRef.current === null) {
       startRef.current = Date.now()
     }
@@ -294,11 +497,14 @@ function ChildNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
 
   return (
     <div
-      className={`flex items-center gap-2 rounded border bg-card/50 px-3 py-2 font-mono transition-all duration-300 ${cls.border}`}
+      className={cn(
+        "flex items-center gap-2 rounded border bg-card/50 px-3 py-2 font-mono transition-all duration-300",
+        cls.border,
+      )}
     >
-      <div className={`size-2 shrink-0 rounded-full transition-colors duration-300 ${cls.dot}`} />
+      <div className={cn("size-2 shrink-0 rounded-full transition-colors duration-300", cls.dot)} />
       <span className="text-xs text-foreground">{ve.label}</span>
-      <span className={`ml-auto text-xs font-medium uppercase tracking-wider ${cls.label}`}>
+      <span className={cn("ml-auto text-xs font-medium uppercase tracking-wider", cls.label)}>
         {state}
       </span>
     </div>
@@ -307,57 +513,44 @@ function ChildNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
 
 /** A single node representing one VisualEffect with controls + debug log. */
 function EffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
-  const { state, run, stop, reset } = useVisualEffect(ve)
-  const cls = STATE_CLASSES[state]
-  const { log, clear } = useStateLog(state)
-  const [open, setOpen] = useState(false)
+  if (ve.variant === "schedule") {
+    return <ScheduleEffectNode ve={ve} />
+  }
+  return <DefaultEffectNode ve={ve} />
+}
 
-  const handleReset = useCallback(() => {
-    reset()
-    clear()
-  }, [reset, clear])
+function DefaultEffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
+  const { state, action, dispatch } = useVisualEffect(ve)
+  const cls = STATE_CLASSES[state]
+  const { log } = useStateLog(state)
+  const [open, setOpen] = useState(false)
 
   return (
     <div
-      className={`overflow-hidden rounded-lg border-2 bg-card font-mono transition-all duration-300 ${cls.border}`}
+      className={cn(
+        "overflow-hidden rounded-lg border-2 bg-card font-mono transition-all duration-300",
+        cls.border,
+      )}
     >
       {/* Main row */}
       <div className="flex items-center gap-3 px-4 py-3">
         {/* State indicator dot */}
-        <div className={`size-3 shrink-0 rounded-full transition-colors duration-300 ${cls.dot}`} />
+        <div className={cn("size-3 shrink-0 rounded-full transition-colors duration-300", cls.dot)} />
 
         {/* Label + state */}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-foreground">{ve.label}</div>
-          <div className={`text-xs font-medium uppercase tracking-wider ${cls.label}`}>{state}</div>
+          <div className={cn("text-xs font-medium uppercase tracking-wider", cls.label)}>{state}</div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={run}
-            disabled={state === "running"}
-            className="rounded border border-border bg-secondary px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-            title="Run"
-          >
-            ▶
-          </button>
-          <button
-            onClick={stop}
-            disabled={state !== "running"}
-            className="rounded border border-border bg-secondary px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-            title="Stop"
-          >
-            ■
-          </button>
-          <button
-            onClick={handleReset}
-            className="rounded border border-border bg-secondary px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted"
-            title="Reset"
-          >
-            ↺
-          </button>
-        </div>
+        {/* Single cycling control button */}
+        <button
+          onClick={dispatch}
+          className="rounded border border-border bg-secondary px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted"
+          title={action}
+        >
+          {ACTION_LABEL[action]}
+        </button>
 
         {/* Disclosure chevron */}
         <button
@@ -367,7 +560,10 @@ function EffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
           aria-expanded={open}
         >
           <ChevronDownIcon
-            className={`size-4 translate-y-0.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            className={cn(
+              "size-4 translate-y-0.5 transition-transform duration-200",
+              open && "rotate-180",
+            )}
           />
         </button>
       </div>
@@ -379,6 +575,86 @@ function EffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
             <ChildNode key={child.label} ve={child} />
           ))}
         </div>
+      )}
+
+      {/* Transition log panel */}
+      {open && (
+        <div className="border-t border-border px-4 py-2 text-xs">
+          {log.length === 0 ? (
+            <span className="text-muted-foreground">No transitions yet — press ▶ to run</span>
+          ) : (
+            <div className="flex flex-col gap-0.5">
+              {log.map((entry, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="w-14 shrink-0 text-right tabular-nums text-muted-foreground">
+                    {formatMs(entry.time)}
+                  </span>
+                  <span className={STATE_CLASSES[entry.state].label}>{entry.state}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Schedule-variant node: shows a step log tracking each cycle of the base task. */
+function ScheduleEffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
+  const { state, action, dispatch } = useVisualEffect(ve)
+  const cls = STATE_CLASSES[state]
+  const [open, setOpen] = useState(false)
+  const { log } = useStateLog(state)
+
+  // The first (and only) child is the base task
+  const baseTask = ve.children[0]
+  const scheduleLog = useScheduleLog(baseTask ?? ve)
+
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-lg border-2 bg-card font-mono transition-all duration-300",
+        cls.border,
+      )}
+    >
+      {/* Main row */}
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className={cn("size-3 shrink-0 rounded-full transition-colors duration-300", cls.dot)} />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-foreground">{ve.label}</div>
+          <div className={cn("text-xs font-medium uppercase tracking-wider", cls.label)}>
+            {state}
+          </div>
+        </div>
+
+        {/* Single cycling control button */}
+        <button
+          onClick={dispatch}
+          className="rounded border border-border bg-secondary px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted"
+          title={action}
+        >
+          {ACTION_LABEL[action]}
+        </button>
+
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="rounded border border-border bg-secondary px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          title="Toggle transition log"
+          aria-expanded={open}
+        >
+          <ChevronDownIcon
+            className={cn(
+              "size-4 translate-y-0.5 transition-transform duration-200",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+      </div>
+
+      {/* Schedule step log — always visible when there are steps */}
+      {baseTask && (
+        <ScheduleLog steps={scheduleLog.steps} childState={scheduleLog.childState} />
       )}
 
       {/* Transition log panel */}
@@ -444,6 +720,47 @@ const demoAll = group(
   Effect.all([allBranchA.asEffect(), allBranchB.asEffect()]),
 )
 
+// Schedule: Effect.retry — a flaky task that fails 3 times then succeeds
+let retryAttempt = 0
+const retryBaseTask = make(
+  "attempt",
+  Effect.gen(function* () {
+    yield* Effect.sleep("500 millis")
+    retryAttempt++
+    if (retryAttempt < 4) {
+      return yield* Effect.fail(`Error #${retryAttempt}`)
+    }
+    return "Success!"
+  }),
+  { onReset: () => { retryAttempt = 0 } },
+)
+const demoRetry = schedule(
+  "Effect.retry",
+  retryBaseTask,
+  retryBaseTask.asEffect().pipe(
+    Effect.retry(Schedule.both(Schedule.spaced("1 second"), Schedule.recurs(4))),
+  ),
+)
+
+// Schedule: Effect.repeat — a succeeding task repeated 4 times with spacing
+let repeatCount = 0
+const repeatBaseTask = make(
+  "tick",
+  Effect.gen(function* () {
+    yield* Effect.sleep("400 millis")
+    repeatCount++
+    return `Tick #${repeatCount}`
+  }),
+  { onReset: () => { repeatCount = 0 } },
+)
+const demoRepeat = schedule(
+  "Effect.repeat",
+  repeatBaseTask,
+  repeatBaseTask.asEffect().pipe(
+    Effect.repeat(Schedule.both(Schedule.spaced("800 millis"), Schedule.recurs(3))),
+  ),
+)
+
 const demoEffects: ReadonlyArray<VisualEffect<unknown, unknown>> = [
   demoSucceed,
   demoFail,
@@ -451,6 +768,8 @@ const demoEffects: ReadonlyArray<VisualEffect<unknown, unknown>> = [
   demoDie,
   demoRace,
   demoAll,
+  demoRetry,
+  demoRepeat,
 ]
 
 // ─── Demo shell ──────────────────────────────────────────────────────────────
