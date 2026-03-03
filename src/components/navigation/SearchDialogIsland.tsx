@@ -1,7 +1,6 @@
 import { Search, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { NAVIGATION_EVENTS } from "@/lib/constants"
-import { getNavigationLinks } from "@/lib/navigation"
+import { getNavigationLinks, NAVIGATION_EVENTS } from "@/lib/navigation"
 
 type SearchDialogState = { readonly tag: "closed" } | { readonly tag: "open" }
 

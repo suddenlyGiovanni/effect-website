@@ -1,60 +1,22 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
+import { useAtom, useAtomSet } from "@effect/atom-react"
+import { currentExampleAtom, currentExampleCategoryAtom } from "@/atoms/visual-effect"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  TAB_CONFIGS,
-  TAB_ORDER,
-  isTabId,
-  type ExampleId,
-  type SubTabConfig,
-  type TabId,
-} from "@/lib/examples/ids"
+import { type ExampleCategory, EXAMPLES_CATALOG } from "@/lib/examples/catalog"
+import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { cn } from "@/lib/utils"
 import { Example } from "./Example"
 
-interface IndicatorRect {
-  readonly left: number
-  readonly top: number
-  readonly width: number
-  readonly height: number
-}
-
-const rectMatches = (nextRect: IndicatorRect, currentRect: IndicatorRect | undefined) => {
-  if (currentRect === undefined) {
-    return false
-  }
-
-  return (
-    nextRect.left === currentRect.left &&
-    nextRect.top === currentRect.top &&
-    nextRect.width === currentRect.width &&
-    nextRect.height === currentRect.height
-  )
-}
-
-const getTabListElement = (root: HTMLElement): HTMLDivElement | undefined => {
-  const tabListCandidate = root.querySelector('[data-slot="tabs-list"]')
-
-  if (tabListCandidate instanceof HTMLDivElement) {
-    return tabListCandidate
-  }
-
-  return undefined
-}
-
-const getActiveTriggerElement = (tabListElement: HTMLDivElement): HTMLButtonElement | undefined => {
-  const activeTriggerCandidate = tabListElement.querySelector(
-    '[data-slot="tabs-trigger"][aria-selected="true"]',
-  )
-
-  if (activeTriggerCandidate instanceof HTMLButtonElement) {
-    return activeTriggerCandidate
-  }
-
-  return undefined
-}
+const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
+  "concurrency",
+  "schedule",
+  "error-handling",
+  "constructors",
+  "ref-scope",
+]
 
 export function InteractiveExamples() {
-  const [activeTab, setActiveTab] = useState<TabId>("schedule")
+  const [category, setCategory] = useAtom(currentExampleCategoryAtom)
   const [indicatorRect, setIndicatorRect] = useState<IndicatorRect | undefined>(undefined)
   const rootElementReference = useRef<HTMLElement | undefined>(undefined)
   const resizeObserverReference = useRef<ResizeObserver | undefined>(undefined)
@@ -144,7 +106,7 @@ export function InteractiveExamples() {
 
   useEffect(() => {
     scheduleIndicatorUpdate()
-  }, [activeTab, scheduleIndicatorUpdate])
+  }, [category, scheduleIndicatorUpdate])
 
   useEffect(() => {
     const fontsApi = document.fonts
@@ -171,18 +133,12 @@ export function InteractiveExamples() {
     }
   }, [])
 
-  const handleTabValueChange = (nextValue: string) => {
-    if (isTabId(nextValue)) {
-      setActiveTab(nextValue)
-    }
-  }
-
   return (
     <div
       ref={rootReference}
       className={cn("border-t border-r border-zinc-800", "shadow-2xl shadow-black/20")}
     >
-      <Tabs value={activeTab} onValueChange={handleTabValueChange} className="gap-0">
+      <Tabs value={category} onValueChange={(category) => setCategory(category)} className="gap-0">
         <TabsList
           variant="line"
           className={cn(
@@ -196,16 +152,11 @@ export function InteractiveExamples() {
           <TabsListContent indicatorRect={indicatorRect} />
         </TabsList>
 
-        {TAB_ORDER.map((tabId) => {
-          const tabConfig = TAB_CONFIGS[tabId]
-
+        {ORDERED_CATEGORIES.map((category) => {
+          const entry = EXAMPLES_CATALOG[category]
           return (
-            <TabsContent key={tabId} value={tabId} className="mt-0">
-              {tabConfig.subTabs ? (
-                <SubTabsContent subTabs={tabConfig.subTabs} />
-              ) : (
-                <GridContent tabId={tabId} examples={tabConfig.examples} />
-              )}
+            <TabsContent key={category} value={category} className="mt-0">
+              <SubTabsContent examples={entry.examples} />
             </TabsContent>
           )
         })}
@@ -237,13 +188,13 @@ function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorR
         />
       )}
 
-      {TAB_ORDER.map((tabId) => {
-        const tabConfig = TAB_CONFIGS[tabId]
+      {ORDERED_CATEGORIES.map((category) => {
+        const entry = EXAMPLES_CATALOG[category]
 
         return (
           <TabsTrigger
-            key={tabId}
-            value={tabId}
+            key={category}
+            value={category}
             className={cn(
               "relative z-10 text-zinc-400",
               // Mobile: horizontal scrolling tabs. Desktop: equal-width tabs.
@@ -252,13 +203,13 @@ function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorR
               "font-mono text-sm tracking-wide whitespace-nowrap uppercase md:text-base",
               "justify-center text-center",
               "snap-start",
-              "cursor-pointer transition-colors overscroll-none",
+              "cursor-pointer overscroll-none transition-colors",
               "hover:text-zinc-200 data-active:text-white",
               "data-active:font-medium",
               "group-data-[variant=line]/tabs-list:data-active:after:opacity-0",
             )}
           >
-            {tabConfig.label}
+            {entry.label}
           </TabsTrigger>
         )
       })}
@@ -266,13 +217,19 @@ function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorR
   )
 }
 
-function SubTabsContent({ subTabs }: { readonly subTabs: ReadonlyArray<SubTabConfig> }) {
-  if (subTabs.length === 0) {
+function SubTabsContent({ examples }: { readonly examples: ReadonlyArray<ExampleDefinition> }) {
+  const setCurrentExample = useAtomSet(currentExampleAtom)
+
+  if (examples.length === 0) {
     return null
   }
 
   return (
-    <Tabs defaultValue={subTabs[0].id} className="gap-0">
+    <Tabs
+      defaultValue={examples[0]}
+      onValueChange={(example) => setCurrentExample(example)}
+      className="gap-0"
+    >
       <TabsList
         variant="line"
         className={cn(
@@ -282,13 +239,13 @@ function SubTabsContent({ subTabs }: { readonly subTabs: ReadonlyArray<SubTabCon
           "rounded-none bg-zinc-950",
         )}
       >
-        {subTabs.map((subTab) => {
-          const subtitle = subTab.label[1]
-
+        {examples.map((example) => {
+          const title = example.label.title
+          const subtitle = example.label.subtitle
           return (
             <TabsTrigger
-              key={subTab.id}
-              value={subTab.id}
+              key={example.key}
+              value={example}
               className={cn(
                 "h-auto flex-none px-3 py-1.5",
                 "rounded-md font-mono text-sm whitespace-nowrap",
@@ -301,21 +258,21 @@ function SubTabsContent({ subTabs }: { readonly subTabs: ReadonlyArray<SubTabCon
                 "after:opacity-0 group-data-[variant=line]/tabs-list:data-active:after:opacity-0",
               )}
             >
-              <span>{subTab.label[0]}</span>
-              {subtitle === undefined ? null : <span className="text-zinc-500">({subtitle})</span>}
+              <span>{title}</span>
+              {subtitle && <span className="text-zinc-500">({subtitle})</span>}
             </TabsTrigger>
           )
         })}
       </TabsList>
 
-      {subTabs.map((subTab) => {
+      {examples.map((example) => {
         return (
           <TabsContent
-            key={subTab.id}
-            value={subTab.id}
-            className="mt-0 border-b border-zinc-800 p-4 overflow-x-auto"
+            key={example.key}
+            value={example}
+            className="mt-0 overflow-x-auto border-b border-zinc-800 p-4"
           >
-            <Example id={subTab.id} />
+            <Example />
           </TabsContent>
         )
       })}
@@ -323,18 +280,44 @@ function SubTabsContent({ subTabs }: { readonly subTabs: ReadonlyArray<SubTabCon
   )
 }
 
-function GridContent({
-  tabId,
-  examples,
-}: {
-  readonly tabId: TabId
-  readonly examples?: ReadonlyArray<ExampleId> | undefined
-}) {
+interface IndicatorRect {
+  readonly left: number
+  readonly top: number
+  readonly width: number
+  readonly height: number
+}
+
+const rectMatches = (nextRect: IndicatorRect, currentRect: IndicatorRect | undefined) => {
+  if (currentRect === undefined) {
+    return false
+  }
+
   return (
-    <div className="border-y border-zinc-800 p-6">
-      <p className="font-mono text-sm text-zinc-200">Grid examples stub</p>
-      <p className="mt-2 text-sm text-zinc-400">Tab: {tabId}</p>
-      <p className="mt-1 text-sm text-zinc-500">Configured examples: {examples?.length ?? 0}</p>
-    </div>
+    nextRect.left === currentRect.left &&
+    nextRect.top === currentRect.top &&
+    nextRect.width === currentRect.width &&
+    nextRect.height === currentRect.height
   )
+}
+
+const getTabListElement = (root: HTMLElement): HTMLDivElement | undefined => {
+  const tabListCandidate = root.querySelector('[data-slot="tabs-list"]')
+
+  if (tabListCandidate instanceof HTMLDivElement) {
+    return tabListCandidate
+  }
+
+  return undefined
+}
+
+const getActiveTriggerElement = (tabListElement: HTMLDivElement): HTMLButtonElement | undefined => {
+  const activeTriggerCandidate = tabListElement.querySelector(
+    '[data-slot="tabs-trigger"][aria-selected="true"]',
+  )
+
+  if (activeTriggerCandidate instanceof HTMLButtonElement) {
+    return activeTriggerCandidate
+  }
+
+  return undefined
 }

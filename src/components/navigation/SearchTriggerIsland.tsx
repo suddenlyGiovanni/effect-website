@@ -1,6 +1,6 @@
 import { Search } from "lucide-react"
 import { useEffect, useState } from "react"
-import { NAVIGATION_EVENTS } from "@/lib/constants"
+import { NAVIGATION_EVENTS } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 
 interface SearchTriggerIslandProps {

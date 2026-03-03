@@ -7,7 +7,7 @@ import * as Layer from "effect/Layer"
 import * as Path from "effect/Path"
 import * as ServiceMap from "effect/ServiceMap"
 import satori, { type SatoriOptions } from "satori"
-import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/constants"
+import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/open-graph"
 
 export interface OgTemplateProps {
   title: string

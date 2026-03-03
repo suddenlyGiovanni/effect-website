@@ -1,0 +1,3 @@
+export const OPENGRAPH_IMAGE_WIDTH = 1200
+
+export const OPENGRAPH_IMAGE_HEIGHT = 630

@@ -4,6 +4,13 @@ export type NavigationGroup = "primary" | "secondary" | "social"
 
 export type NavigationCta = "none" | "solid"
 
+export const NAVIGATION_EVENTS = {
+  SEARCH_OPEN: "effect-search:open",
+  SEARCH_OPENED: "effect-search:opened",
+  SEARCH_CLOSE: "effect-search:close",
+  MOBILE_MENU_OPEN: "effect-mobile-menu:open",
+}
+
 interface NavigationLinkBase {
   readonly id: string
   readonly label: string
