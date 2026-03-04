@@ -6,7 +6,7 @@ import {
   type TargetAndTransition,
   type Transition,
 } from "motion/react"
-import { VisualEffectState } from "@/atoms/visual-effect"
+import type { VisualEffectState } from "@/lib/examples/domain"
 
 export function VisualEffectControlsIcon({
   isHovered,
@@ -54,7 +54,7 @@ export function VisualEffectControlsIcon({
 
   return (
     <motion.span
-      className="size-10 shrink-0 flex justify-center items-center border border-zinc-500 text-white rounded-md"
+      className="flex size-10 shrink-0 items-center justify-center rounded-md border border-zinc-500 text-white"
       initial={false}
       animate={{
         background: getBackgroundColor(state),
@@ -94,10 +94,10 @@ const getIcon = (state: VisualEffectState): React.ReactNode => {
     case "Failed":
     case "Died":
     case "Interrupted": {
-      return <RotateCcw className="size-5 -mr-px stroke-3" />
+      return <RotateCcw className="-mr-px size-5 stroke-3" />
     }
     default: {
-      return <Play className="size-5 -mr-px stroke-1" fill="currentColor" />
+      return <Play className="-mr-px size-5 stroke-1" fill="currentColor" />
     }
   }
 }

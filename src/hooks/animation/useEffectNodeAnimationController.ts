@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef } from "react"
 import {
   animate,
   type AnimationPlaybackControls,
   type AnimationScope,
   useReducedMotion,
 } from "motion/react"
+import { useCallback, useEffect, useRef } from "react"
 import type { VisualEffectState } from "@/atoms/visual-effect"
 import { SPRINGS, TIMINGS } from "@/lib/animation"
 import type { EffectMotionValues } from "./useEffectMotionValues"

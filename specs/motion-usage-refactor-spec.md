@@ -434,7 +434,12 @@ export function useNodeTransitionFlags(state: VisualEffectState): TransitionFlag
 
 ```ts
 import * as React from "react"
-import { animate, type AnimationPlaybackControls, type AnimationScope, useReducedMotion } from "motion/react"
+import {
+  animate,
+  type AnimationPlaybackControls,
+  type AnimationScope,
+  useReducedMotion,
+} from "motion/react"
 import type { EffectMotionValues } from "./useEffectMotionValues"
 import type { TransitionFlags } from "./useNodeTransitionFlags"
 import type { VisualEffectState } from "@/atoms/visual-effect"
@@ -605,37 +610,61 @@ export const effectNodeVariants: Record<VisualEffectState["_tag"], Variants[stri
     backgroundColor: COLORS.task.idle,
     opacity: 0.6,
     scale: 1,
-    transition: { backgroundColor: { duration: 0.1 }, opacity: SPRINGS.default, scale: SPRINGS.default },
+    transition: {
+      backgroundColor: { duration: 0.1 },
+      opacity: SPRINGS.default,
+      scale: SPRINGS.default,
+    },
   },
   Running: {
     backgroundColor: COLORS.task.running,
     opacity: 1,
     scale: 0.95,
-    transition: { backgroundColor: { duration: 0.1 }, opacity: SPRINGS.default, scale: SPRINGS.default },
+    transition: {
+      backgroundColor: { duration: 0.1 },
+      opacity: SPRINGS.default,
+      scale: SPRINGS.default,
+    },
   },
   Succeeded: {
     backgroundColor: COLORS.task.success,
     opacity: 1,
     scale: 1,
-    transition: { backgroundColor: { duration: 0.1 }, opacity: SPRINGS.contentScale, scale: SPRINGS.contentScale },
+    transition: {
+      backgroundColor: { duration: 0.1 },
+      opacity: SPRINGS.contentScale,
+      scale: SPRINGS.contentScale,
+    },
   },
   Failed: {
     backgroundColor: COLORS.task.error,
     opacity: 1,
     scale: 1,
-    transition: { backgroundColor: { duration: 0.1 }, opacity: SPRINGS.default, scale: SPRINGS.default },
+    transition: {
+      backgroundColor: { duration: 0.1 },
+      opacity: SPRINGS.default,
+      scale: SPRINGS.default,
+    },
   },
   Interrupted: {
     backgroundColor: COLORS.task.interrupted,
     opacity: 1,
     scale: 1,
-    transition: { backgroundColor: { duration: 0.1 }, opacity: SPRINGS.default, scale: SPRINGS.default },
+    transition: {
+      backgroundColor: { duration: 0.1 },
+      opacity: SPRINGS.default,
+      scale: SPRINGS.default,
+    },
   },
   Died: {
     backgroundColor: COLORS.task.death,
     opacity: 1,
     scale: 1,
-    transition: { backgroundColor: { duration: 0.1 }, opacity: SPRINGS.default, scale: SPRINGS.default },
+    transition: {
+      backgroundColor: { duration: 0.1 },
+      opacity: SPRINGS.default,
+      scale: SPRINGS.default,
+    },
   },
 }
 ```
@@ -648,7 +677,9 @@ import { cn } from "@/lib/utils"
 import { COLORS, SHADOW_COLORS, VFX } from "@/lib/animation"
 
 function EffectNode({ definition }: { readonly definition: StepDefinition }) {
-  const state = useAtomValue(stepStateAtom(definition.label)).pipe(AsyncResult.getOrElse(() => InitialState))
+  const state = useAtomValue(stepStateAtom(definition.label)).pipe(
+    AsyncResult.getOrElse(() => InitialState),
+  )
   const motion = useEffectMotionValues()
   const transition = useNodeTransitionFlags(state)
   const [scope] = useAnimate()

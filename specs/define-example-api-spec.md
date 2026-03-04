@@ -362,10 +362,9 @@ Service errors must use `Schema.TaggedErrorClass`.
 ```ts
 import { Schema } from "effect"
 
-export class RunNotFound extends Schema.TaggedErrorClass<RunNotFound>()(
-  "RunNotFound",
-  { runId: RunIdSchema },
-) {}
+export class RunNotFound extends Schema.TaggedErrorClass<RunNotFound>()("RunNotFound", {
+  runId: RunIdSchema,
+}) {}
 
 export class DuplicateStepNodeId extends Schema.TaggedErrorClass<DuplicateStepNodeId>()(
   "DuplicateStepNodeId",
@@ -468,8 +467,9 @@ export interface WithExampleRunOptions<A, E> {
 }
 
 export declare const withExampleRun: {
-  <A, E>(options: WithExampleRunOptions<A, E>):
-    <R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R | VisualEffectManager>
+  <A, E>(
+    options: WithExampleRunOptions<A, E>,
+  ): <R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R | VisualEffectManager>
 }
 ```
 
@@ -503,7 +503,10 @@ export class VisualEffectManager extends ServiceMap.Service<
     readonly tracer: Tracer.Tracer
     readonly events: Stream.Stream<Event>
     readonly eventsFromSeq: (fromSeq: number) => Stream.Stream<Event>
-    readonly cancelRun: (runId: RunId, reason?: "user" | "parent" | "runtime") => Effect.Effect<boolean>
+    readonly cancelRun: (
+      runId: RunId,
+      reason?: "user" | "parent" | "runtime",
+    ) => Effect.Effect<boolean>
     readonly runSnapshot: (runId: RunId) => Effect.Effect<RunSnapshot, RunNotFound>
     readonly clearCompleted: (olderThanMs: number) => Effect.Effect<number>
   }
@@ -698,7 +701,10 @@ import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
 
 interface ExampleRuntimeState {
-  readonly statusByNodeId: ReadonlyMap<StepNodeId, "idle" | "running" | "succeeded" | "failed" | "interrupted">
+  readonly statusByNodeId: ReadonlyMap<
+    StepNodeId,
+    "idle" | "running" | "succeeded" | "failed" | "interrupted"
+  >
   readonly latestRunId: RunId | undefined
   readonly startedAtMs: number | undefined
   readonly endedAtMs: number | undefined
@@ -732,8 +738,8 @@ const reduceEvent = (state: ExampleRuntimeState, event: Event): ExampleRuntimeSt
         event._tag === "StepSucceeded"
           ? "succeeded"
           : event._tag === "StepFailed"
-          ? "failed"
-          : "interrupted"
+            ? "failed"
+            : "interrupted"
       const next = new Map(state.statusByNodeId)
       next.set(event.nodeId, status)
       return { ...state, statusByNodeId: next }
@@ -749,15 +755,17 @@ const managerLayer = VisualEffectManager.layer
 const uiRuntime = Atom.runtime(managerLayer)
 
 const runtimeStateAtom = Atom.family((key: ExampleKey) =>
-  uiRuntime.atom(
-    VisualEffectManager.use((manager) =>
-      manager.events.pipe(
-        Stream.filter((event) => event._tag === "DroppedEvents" || event.key === key),
-        Stream.scan(initialRuntimeState, reduceEvent),
-      )
-    ),
-    { initialValue: initialRuntimeState },
-  ).pipe(Atom.keepAlive),
+  uiRuntime
+    .atom(
+      VisualEffectManager.use((manager) =>
+        manager.events.pipe(
+          Stream.filter((event) => event._tag === "DroppedEvents" || event.key === key),
+          Stream.scan(initialRuntimeState, reduceEvent),
+        ),
+      ),
+      { initialValue: initialRuntimeState },
+    )
+    .pipe(Atom.keepAlive),
 )
 
 const exampleByKey = new Map<ExampleKey, ExampleDefinition<unknown, unknown, unknown>>([
@@ -767,9 +775,8 @@ const exampleByKey = new Map<ExampleKey, ExampleDefinition<unknown, unknown, unk
 const viewModelAtom = Atom.family((key: ExampleKey) =>
   Atom.make((get) => {
     const runtimeStateResult = get(runtimeStateAtom(key))
-    const runtimeState = runtimeStateResult._tag === "Success"
-      ? runtimeStateResult.value
-      : initialRuntimeState
+    const runtimeState =
+      runtimeStateResult._tag === "Success" ? runtimeStateResult.value : initialRuntimeState
 
     const example = exampleByKey.get(key)
     if (example === undefined) {
@@ -804,11 +811,12 @@ Notes:
 import * as React from "react"
 import { RegistryProvider, useAtomValue } from "@effect/atom-react"
 
-function ExamplePanel({ example }: { readonly example: ExampleDefinition<unknown, unknown, unknown> }) {
-  const atom = React.useMemo(
-    () => viewModelAtom(example.key),
-    [example.key],
-  )
+function ExamplePanel({
+  example,
+}: {
+  readonly example: ExampleDefinition<unknown, unknown, unknown>
+}) {
+  const atom = React.useMemo(() => viewModelAtom(example.key), [example.key])
   const view = useAtomValue(atom)
 
   return (

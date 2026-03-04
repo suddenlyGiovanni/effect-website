@@ -1,5 +1,5 @@
-import { useMemo } from "react"
 import { MotionValue, useMotionValue, useSpring, useTransform, useVelocity } from "motion/react"
+import { useMemo } from "react"
 import { COLORS, SPRINGS } from "@/lib/animation"
 
 export interface EffectMotionValues {

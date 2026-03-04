@@ -1,5 +1,5 @@
 import type { Variants } from "motion/react"
-import type { VisualEffectState } from "@/atoms/visual-effect"
+import type { VisualEffectState } from "@/lib/examples/domain"
 import { COLORS, SPRINGS } from "@/lib/animation"
 
 export const effectNodeVariants: Record<VisualEffectState["_tag"], Variants[string]> = {

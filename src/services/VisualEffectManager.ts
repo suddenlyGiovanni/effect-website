@@ -1,292 +1,225 @@
 import * as Cause from "effect/Cause"
+import * as Clock from "effect/Clock"
 import * as DateTime from "effect/DateTime"
-import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Exit from "effect/Exit"
+import * as FiberMap from "effect/FiberMap"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
-import * as PubSub from "effect/PubSub"
-import * as Schema from "effect/Schema"
+import * as Result from "effect/Result"
 import * as ServiceMap from "effect/ServiceMap"
-import * as Stream from "effect/Stream"
 import * as Tracer from "effect/Tracer"
+import * as Atom from "effect/unstable/reactivity/Atom"
+import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import {
-  PROGRAM_KIND,
-  STEP_KIND,
-  ATTR_KIND,
-  ATTR_EXAMPLE_KEY,
-  ATTR_STEP_LABEL,
-} from "@/lib/examples/constants"
-import { Event, ExampleKey, ProgramLabel, StepLabel } from "@/lib/examples/domain"
+  ExampleStep,
+  type ExampleDefinition,
+  type StepDefinition,
+} from "@/lib/examples/constructors"
+import { InitialState, VisualEffectState } from "@/lib/examples/domain"
 
-const EVENT_CAPACITY = 2_048
+export const exampleStateAtom = Atom.family((_definition: ExampleDefinition) =>
+  Atom.make<VisualEffectState>(InitialState),
+)
 
-const ProgramSpanAttributes = Schema.Struct({
-  kind: Schema.Literal(PROGRAM_KIND),
-  key: ExampleKey,
-  timestamp: Schema.DateTimeUtcFromMillis,
-})
-type ProgramSpanAttributes = typeof ProgramSpanAttributes.Type
-
-const StepSpanAttributes = Schema.Struct({
-  kind: Schema.Literal(STEP_KIND),
-  key: ExampleKey,
-  label: StepLabel,
-  timestamp: Schema.DateTimeUtcFromMillis,
-})
-type StepSpanAttributes = typeof StepSpanAttributes.Type
-
-const ExampleSpanAttributes = Schema.Union([ProgramSpanAttributes, StepSpanAttributes])
-type ExampleSpanAttributes = typeof ExampleSpanAttributes.Type
-
-const decodeSpanAttributes = Schema.decodeUnknownOption(ExampleSpanAttributes)
-
-interface PendingSpanAttributes {
-  kind?: typeof PROGRAM_KIND | typeof STEP_KIND | undefined
-  key?: ExampleKey | undefined
-  label?: StepLabel | undefined
-  timestamp?: number | undefined
-  started: boolean
-}
+export const stepStateAtom = Atom.family((_definition: StepDefinition) =>
+  Atom.make<VisualEffectState>(InitialState),
+)
 
 export class VisualEffectManager extends ServiceMap.Service<
   VisualEffectManager,
   {
-    readonly events: Stream.Stream<Event>
+    start(example: ExampleDefinition): Effect.Effect<void>
+    stop(example: ExampleDefinition): Effect.Effect<void>
+    reset(example: ExampleDefinition): Effect.Effect<void>
   }
->()("VisualEffectManager") {}
+>()("website-v4/services/VisualEffectManager") {
+  static readonly layer = Layer.effectServices(
+    Effect.gen(function* () {
+      const registry = yield* AtomRegistry.AtomRegistry
+      const tracer = yield* Effect.tracer
+      const fiberMap = yield* FiberMap.make<ExampleDefinition>()
 
-const make = Effect.gen(function* () {
-  const tracer = yield* Effect.tracer
-  const pubsub = yield* PubSub.sliding<Event>(EVENT_CAPACITY)
+      const startVisualSpan = (details: ExampleStep["Service"], startedAt: DateTime.Utc): void => {
+        registry.set(
+          stepStateAtom(details.step),
+          VisualEffectState.Running({
+            notification: Option.none(),
+            startedAt,
+          }),
+        )
+      }
 
-  const pendingSpanAttributes = new Map<string, PendingSpanAttributes>()
+      const endVisualSpan = (
+        details: ExampleStep["Service"],
+        startedAt: DateTime.Utc,
+        endedAt: DateTime.Utc,
+        exit: Exit.Exit<unknown, unknown>,
+      ): void => {
+        registry.set(stepStateAtom(details.step), exitToState(exit, startedAt, endedAt))
+      }
 
-  const emitUnsafe = (event: Event): void => {
-    PubSub.publishUnsafe(pubsub, event)
-  }
+      const visualEffectTracer = Tracer.make({
+        span(options) {
+          const span = tracer.span(options)
+          const details = ServiceMap.getOrUndefined(span.annotations, ExampleStep)
+          if (!details) return span
+          const startTime = dateTimeFromNanos(options.startTime)
+          startVisualSpan(details, startTime)
+          return {
+            _tag: span._tag,
+            name: span.name,
+            spanId: span.spanId,
+            traceId: span.traceId,
+            parent: span.parent,
+            annotations: span.annotations,
+            get status() {
+              return span.status
+            },
+            get attributes() {
+              return span.attributes
+            },
+            links: span.links,
+            sampled: span.sampled,
+            kind: span.kind,
+            end(endTime, exit) {
+              span.end(endTime, exit)
+              const endedAt = dateTimeFromNanos(endTime)
+              endVisualSpan(details, startTime, endedAt, exit)
+            },
+            attribute(key, value) {
+              span.attribute(key, value)
+            },
+            event(name, startTime, attributes) {
+              span.event(name, startTime, attributes)
+              registry.update(stepStateAtom(details.step), (state) => {
+                if (state._tag !== "Running") return state
+                return VisualEffectState.Running({
+                  startedAt: state.startedAt,
+                  notification: Option.some(name),
+                })
+              })
+            },
+            addLinks(links) {
+              span.addLinks(links)
+            },
+          }
+        },
+        context: tracer.context,
+      })
 
-  const addSpanAttribute = (span: Tracer.Span, key: string, value: unknown): void => {
-    let pending = pendingSpanAttributes.get(span.spanId)
+      const clock = yield* Clock.Clock
+      const newClock: Clock.Clock = {
+        currentTimeMillis: clock.currentTimeMillis,
+        currentTimeNanos: clock.currentTimeNanos,
+        sleep(duration) {
+          return Effect.withFiber((fiber) => {
+            const span = fiber.currentSpan
+            const eff = clock.sleep(duration)
+            if (!span) return eff
+            if (span._tag !== "Span") return eff
 
-    if (!pending) {
-      pending = { started: false }
-      pendingSpanAttributes.set(span.spanId, pending)
-    }
+            const details = ServiceMap.getOrUndefined(span.annotations, ExampleStep)
+            if (!details) return eff
 
-    if (pending.started) {
-      return
-    }
+            registry.update(stepStateAtom(details.step), (state) => {
+              if (state._tag !== "Running") return state
+              return VisualEffectState.Running({
+                startedAt: state.startedAt,
+                notification: Option.some(`😴`),
+              })
+            })
 
-    pending.timestamp = getSpanStartTime(span)
-
-    if (key === ATTR_KIND) {
-      pending.kind = value as any
-    }
-
-    if (key === ATTR_EXAMPLE_KEY) {
-      pending.key = value as any
-    }
-
-    if (key === ATTR_STEP_LABEL) {
-      pending.label = value as any
-    }
-
-    startVisualSpan(span, pending)
-  }
-
-  const startVisualSpan = (span: Tracer.Span, pending: PendingSpanAttributes): void => {
-    if (pending.started) {
-      return
-    }
-
-    const option = decodeSpanAttributes(pending)
-
-    if (Option.isSome(option)) {
-      pending.started = true
-
-      const attributes = option.value
-
-      switch (attributes.kind) {
-        case PROGRAM_KIND: {
-          emitUnsafe({
-            _tag: "ProgramStarted",
-            key: attributes.key,
-            label: ProgramLabel.makeUnsafe(span.name, { disableValidation: true }),
-            timestamp: attributes.timestamp,
+            return eff
           })
-
-          break
-        }
-
-        case STEP_KIND: {
-          emitUnsafe({
-            _tag: "StepStarted",
-            key: attributes.key,
-            label: attributes.label,
-            timestamp: attributes.timestamp,
-          })
-
-          break
-        }
-      }
-    }
-  }
-
-  const endVisualSpan = (
-    span: Tracer.Span,
-    endTime: bigint,
-    exit: Exit.Exit<unknown, unknown>,
-  ): void => {
-    const pending = pendingSpanAttributes.get(span.spanId)
-
-    if (!pending || !pending.timestamp) {
-      return
-    }
-
-    const option = decodeSpanAttributes(pending)
-
-    if (Option.isSome(option)) {
-      pendingSpanAttributes.delete(span.spanId)
-
-      const attributes = option.value
-      const startTimestamp = pending.timestamp
-      const endTimestamp = getSpanEndTime(endTime)
-      const elapsed = endTimestamp - startTimestamp
-      const duration = Duration.millis(Math.max(0, elapsed))
-
-      switch (attributes.kind) {
-        case PROGRAM_KIND: {
-          const commonFields = {
-            key: attributes.key,
-            label: ProgramLabel.makeUnsafe(span.name, { disableValidation: true }),
-            timestamp: DateTime.makeUnsafe(endTimestamp),
-            duration,
-          }
-          if (Exit.isSuccess(exit)) {
-            emitUnsafe({
-              ...commonFields,
-              _tag: "ProgramSucceeded",
-              value: exit.value,
-            })
-          } else if (Cause.hasInterruptsOnly(exit.cause)) {
-            emitUnsafe({
-              ...commonFields,
-              _tag: "ProgramInterrupted",
-            })
-          } else if (Cause.hasDies(exit.cause)) {
-            const reason = exit.cause.reasons.find(Cause.isDieReason)!
-            emitUnsafe({
-              ...commonFields,
-              _tag: "ProgramDied",
-              defect: reason.defect,
-            })
-          } else {
-            emitUnsafe({
-              ...commonFields,
-              _tag: "ProgramFailed",
-              error: Cause.squash(exit.cause),
-            })
-          }
-          break
-        }
-        case STEP_KIND: {
-          const commonFields = {
-            key: attributes.key,
-            label: attributes.label,
-            timestamp: DateTime.makeUnsafe(endTimestamp),
-            duration,
-          }
-          if (Exit.isSuccess(exit)) {
-            emitUnsafe({
-              ...commonFields,
-              _tag: "StepSucceeded",
-              value: exit.value,
-            })
-          } else if (Cause.hasInterruptsOnly(exit.cause)) {
-            emitUnsafe({
-              ...commonFields,
-              _tag: "StepInterrupted",
-            })
-          } else if (Cause.hasDies(exit.cause)) {
-            const reason = exit.cause.reasons.find(Cause.isDieReason)!
-            emitUnsafe({
-              ...commonFields,
-              _tag: "StepDied",
-              defect: reason.defect,
-            })
-          } else {
-            emitUnsafe({
-              ...commonFields,
-              _tag: "StepFailed",
-              error: Cause.squash(exit.cause),
-            })
-          }
-
-          break
-        }
-      }
-    }
-  }
-
-  const visualEffectTracer = Tracer.make({
-    span(options) {
-      const span = tracer.span(options)
-      return {
-        _tag: span._tag,
-        name: span.name,
-        spanId: span.spanId,
-        traceId: span.traceId,
-        parent: span.parent,
-        annotations: span.annotations,
-        get status() {
-          return span.status
         },
-        get attributes() {
-          return span.attributes
+        currentTimeMillisUnsafe() {
+          return clock.currentTimeMillisUnsafe()
         },
-        links: span.links,
-        sampled: span.sampled,
-        kind: span.kind,
-        end(endTime, exit) {
-          span.end(endTime, exit)
-          endVisualSpan(span, endTime, exit)
-        },
-        attribute(key, value) {
-          span.attribute(key, value)
-          addSpanAttribute(span, key, value)
-        },
-        event(name, startTime, attributes) {
-          span.event(name, startTime, attributes)
-        },
-        addLinks(links) {
-          span.addLinks(links)
+        currentTimeNanosUnsafe() {
+          return clock.currentTimeNanosUnsafe()
         },
       }
-    },
-    context: tracer.context,
-  })
 
-  return ServiceMap.make(VisualEffectManager, { events: Stream.fromPubSub(pubsub) }).pipe(
-    ServiceMap.add(Tracer.Tracer, visualEffectTracer),
+      const manager = VisualEffectManager.of({
+        start: Effect.fnUntraced(function* (example) {
+          const atom = exampleStateAtom(example)
+          const startedAt = yield* DateTime.now
+          yield* FiberMap.run(
+            fiberMap,
+            example,
+            Effect.suspend(() => {
+              registry.set(
+                atom,
+                VisualEffectState.Running({ startedAt, notification: Option.none() }),
+              )
+              return Effect.onExit(
+                example.program,
+                Effect.fnUntraced(function* (exit) {
+                  const endedAt = yield* DateTime.now
+                  registry.set(atom, exitToState(exit, startedAt, endedAt))
+                }),
+              )
+            }),
+            { startImmediately: true, onlyIfMissing: true },
+          )
+        }),
+        stop: Effect.fnUntraced(function* (example) {
+          yield* FiberMap.remove(fiberMap, example)
+        }),
+        reset: Effect.fnUntraced(function* (example) {
+          yield* FiberMap.remove(fiberMap, example)
+          registry.set(exampleStateAtom(example), InitialState)
+          for (const step of example.steps) {
+            registry.set(stepStateAtom(step), InitialState)
+          }
+        }),
+      })
+
+      return Tracer.Tracer.serviceMap(visualEffectTracer).pipe(
+        ServiceMap.add(Clock.Clock, newClock),
+        ServiceMap.add(VisualEffectManager, manager),
+      )
+    }),
   )
-})
-
-export const layer = Layer.effectServices(make)
-
-const getSpanStartTime = (span: Tracer.Span): number => {
-  const startTime = span.status.startTime
-  if (startTime === 0n) {
-    return Date.now()
-  }
-  return nanosToMilliseconds(startTime)
 }
 
-const getSpanEndTime = (endTime: bigint): number => {
-  if (endTime === 0n) {
-    return Date.now()
-  }
-  return nanosToMilliseconds(endTime)
+const dateTimeFromNanos = (nanos: bigint): DateTime.Utc => {
+  return DateTime.makeUnsafe(nanosToMilliseconds(nanos))
 }
 
 const nanosToMilliseconds = (nanos: bigint): number => Number(nanos / 1_000_000n)
+
+const exitToState = <E, A>(
+  exit: Exit.Exit<E, A>,
+  startedAt: DateTime.Utc,
+  endedAt: DateTime.Utc,
+): VisualEffectState => {
+  const duration = DateTime.distance(startedAt, endedAt)
+  if (Exit.isSuccess(exit)) {
+    return VisualEffectState.Succeeded({
+      duration,
+      endedAt,
+      value: exit.value,
+    })
+  }
+  if (Cause.hasInterruptsOnly(exit.cause)) {
+    return VisualEffectState.Interrupted({
+      duration,
+      endedAt,
+    })
+  }
+  const defect = Cause.findDefect(exit.cause)
+  if (Result.isSuccess(defect)) {
+    return VisualEffectState.Died({
+      defect: defect.success,
+      duration,
+      endedAt,
+    })
+  }
+  return VisualEffectState.Failed({
+    duration,
+    endedAt,
+    error: Cause.squash(exit.cause),
+  })
+}
