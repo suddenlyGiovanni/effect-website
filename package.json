@@ -4,11 +4,14 @@
   "type": "module",
   "packageManager": "pnpm@10.30.2+sha512.36cdc707e7b7940a988c9c1ecf88d084f8514b5c3f085f53a2e244c2921d3b2545bc20dd4ebe1fc245feec463bb298aecea7a63ed1f7680b877dc6379d8d0cb4",
   "scripts": {
+    "prepare": "effect-language-service patch",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "check": "tspc -b tsconfig.json",
+    "check:tsgo": "tsgo -b tsconfig.json",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
@@ -45,9 +48,11 @@
   },
   "devDependencies": {
     "@effect/language-service": "^0.77.0",
+    "@typescript/native-preview": "7.0.0-dev.20260304.1",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "shadcn": "^3.8.5",
+    "ts-patch": "^3.3.0",
     "typescript": "^5.9.3"
   }
 }

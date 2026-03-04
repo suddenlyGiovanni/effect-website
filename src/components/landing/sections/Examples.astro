@@ -1,11 +1,9 @@
 ---
-import { InteractiveExamples } from "@/components/landing/examples/InteractiveExamples" 
-// import { VisualEffectDemo } from "@/components/VisualEffectDemo"
+import { VisualEffects } from "@/components/landing/examples/VisualEffects" 
 ---
 
 <section id="interactive-examples" class="relative w-full py-24 md:pt-40 md:pb-24">
   <div class="mx-auto w-full max-w-295">
-    <!-- Header  -->
     <div class="mx-auto w-full max-w-295 px-4 mb-12">
       <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
         // Interactive Examples
@@ -14,12 +12,8 @@ import { InteractiveExamples } from "@/components/landing/examples/InteractiveEx
         See Effect in action
       </h2>
     </div>
-
-    <!-- Interactive Examples Container -->
     <div class="max-w-295 mx-auto">
-      <!-- <VisualEffectDemo client:load /> -->
-      <InteractiveExamples client:load />
-
+      <VisualEffects client:load />
       <noscript>
         <div class="mt-6 border border-zinc-800 bg-zinc-950/70 p-4 text-sm text-zinc-400">
           Interactive examples require JavaScript.

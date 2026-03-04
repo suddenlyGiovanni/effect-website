@@ -15,7 +15,7 @@ const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
   "ref-scope",
 ]
 
-export function InteractiveExamples() {
+export function VisualEffects() {
   const [category, setCategory] = useAtom(currentExampleCategoryAtom)
   const [indicatorRect, setIndicatorRect] = useState<IndicatorRect | undefined>(undefined)
   const rootElementReference = useRef<HTMLElement | undefined>(undefined)
