@@ -1,9 +1,9 @@
+import { useAtom } from "@effect/atom-react"
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
-import { useAtom, useAtomSet } from "@effect/atom-react"
-import { currentExampleAtom, currentExampleCategoryAtom } from "@/atoms/visual-effect"
+import type { ExampleDefinition } from "@/lib/examples/constructors"
+import { currentExampleCategoryAtom } from "@/atoms/visual-effect"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type ExampleCategory, EXAMPLES_CATALOG } from "@/lib/examples/catalog"
-import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { cn } from "@/lib/utils"
 import { VisualEffect } from "./VisualEffect"
 
@@ -218,18 +218,12 @@ function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorR
 }
 
 function SubTabsContent({ examples }: { readonly examples: ReadonlyArray<ExampleDefinition> }) {
-  const setCurrentExample = useAtomSet(currentExampleAtom)
-
   if (examples.length === 0) {
     return null
   }
 
   return (
-    <Tabs
-      defaultValue={examples[0]}
-      onValueChange={(example) => setCurrentExample(example)}
-      className="gap-0"
-    >
+    <Tabs defaultValue={examples[0]} className="gap-0">
       <TabsList
         variant="line"
         className={cn(
@@ -240,8 +234,8 @@ function SubTabsContent({ examples }: { readonly examples: ReadonlyArray<Example
         )}
       >
         {examples.map((example) => {
-          const title = example.label.title
-          const subtitle = example.label.subtitle
+          const title = example.title
+          const subtitle = example.subtitle
           return (
             <TabsTrigger
               key={example.key}
@@ -272,7 +266,7 @@ function SubTabsContent({ examples }: { readonly examples: ReadonlyArray<Example
             value={example}
             className="mt-0 overflow-x-auto border-b border-zinc-800 p-4"
           >
-            <VisualEffect />
+            <VisualEffect example={example} />
           </TabsContent>
         )
       })}

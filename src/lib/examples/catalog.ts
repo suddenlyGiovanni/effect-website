@@ -2,7 +2,6 @@ import * as Effect from "effect/Effect"
 import * as Ref from "effect/Ref"
 import * as Schedule from "effect/Schedule"
 import { defineExample, type ExampleDefinition } from "@/lib/examples/constructors"
-import { ExampleKey } from "@/lib/examples/domain"
 
 export type ExampleCategory =
   | "concurrency"
@@ -16,12 +15,11 @@ export interface ExampleCatalogEntry {
   readonly examples: ReadonlyArray<ExampleDefinition>
 }
 
-const delayedLabel = (city: string, temperature: number, delayMs: number): Effect.Effect<string> =>
+const delayedLabel = (_city: string, temperature: number, delayMs: number): Effect.Effect<string> =>
   Effect.sleep(`${delayMs} millis`).pipe(Effect.andThen(Effect.succeed(` ${temperature}°C`)))
 
 export const allExample = defineExample({
-  key: ExampleKey.makeUnsafe("examples/concurrency/all"),
-  label: { title: "Effect.all" },
+  label: "Effect.all",
   description: "Combine multiple effects into one, returning results based on input structure",
   build: ({ addStep }) =>
     Effect.all([
@@ -43,8 +41,7 @@ export const allExample = defineExample({
 })
 
 export const raceExample = defineExample({
-  key: ExampleKey.makeUnsafe("examples/concurrency/race"),
-  label: { title: "Effect.race" },
+  label: "Effect.race",
   build: ({ addStep }) =>
     Effect.race(
       addStep(Effect.sleep("1200 millis").pipe(Effect.andThen(Effect.succeed("branch-a"))), {
@@ -60,8 +57,7 @@ export const raceExample = defineExample({
 })
 
 export const retryExample = defineExample({
-  key: ExampleKey.makeUnsafe("examples/schedule/retry"),
-  label: { title: "Effect.retry", subtitle: "times" },
+  label: "Effect.retry",
   build: ({ addStep }) =>
     Effect.gen(function* () {
       const attempts = yield* Ref.make(0)

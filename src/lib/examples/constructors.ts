@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect"
+import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
-import { STEP_KIND, ATTR_KIND, ATTR_EXAMPLE_KEY, ATTR_STEP_LABEL } from "@/lib/examples/constants"
-import { type ExampleKey, DuplicateStepNodeId, StepLabel } from "@/lib/examples/domain"
+import * as ServiceMap from "effect/ServiceMap"
 
 export interface AddStepOptions {
   readonly id?: string
@@ -16,44 +16,30 @@ export interface BuildContext {
 }
 
 export interface StepDefinition {
-  readonly label: StepLabel
+  readonly label: string
 }
 
 export interface ExampleDefinition {
-  readonly key: ExampleKey
-  readonly label: ExampleLabel
-  readonly description?: string | undefined
+  readonly key: string
+  readonly title: string
+  readonly subtitle: string | undefined
+  readonly description: string | undefined
   readonly steps: ReadonlyArray<StepDefinition>
   readonly program: Effect.Effect<unknown, unknown>
 }
 
-export interface ExampleLabel {
-  readonly title: string
-  readonly subtitle?: string | undefined
-}
-
 export const defineExample = (input: {
-  readonly key: ExampleKey
-  readonly label: ExampleLabel
+  readonly label: string
+  readonly subtitle?: string | undefined
   readonly description?: string | undefined
   readonly build: (ctx: BuildContext) => Effect.Effect<unknown, unknown>
 }): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
-  const seenLabels = new Set<StepLabel>()
 
   const registerStep = (options: AddStepOptions): StepDefinition => {
-    const label = options.id
-      ? StepLabel.makeUnsafe(options.id, { disableValidation: true })
-      : StepLabel.makeUnsafe(options.label, { disableValidation: true })
-    if (seenLabels.has(label)) {
-      throw new DuplicateStepNodeId({
-        key: input.key,
-        nodeId: label,
-      })
-    }
-    const step: StepDefinition = { label: label }
-    seenLabels.add(label)
+    const step: StepDefinition = { label: options.label }
     steps.push(step)
+    Equal.byReferenceUnsafe(step)
     return step
   }
 
@@ -61,25 +47,38 @@ export const defineExample = (input: {
     2,
     <A, E>(self: Effect.Effect<A, E>, options: AddStepOptions): Effect.Effect<A, E> => {
       const step = registerStep(options)
-      return self.pipe(
-        Effect.withSpan(step.label, {
-          attributes: {
-            [ATTR_KIND]: STEP_KIND,
-            [ATTR_EXAMPLE_KEY]: input.key,
-            [ATTR_STEP_LABEL]: step.label,
-          },
-        }),
+      return Effect.suspend(() =>
+        self.pipe(
+          Effect.withSpan(step.label, {
+            annotations: ExampleStep.serviceMap({
+              definition,
+              step,
+            }),
+          }),
+        ),
       )
     },
   )
 
   const program = input.build({ addStep })
 
-  return {
-    key: input.key,
-    label: input.label,
+  const definition: ExampleDefinition = {
+    key: crypto.randomUUID(),
+    title: input.label,
+    subtitle: input.subtitle,
     description: input.description,
     steps,
     program,
   }
+  Equal.byReferenceUnsafe(definition)
+
+  return definition
 }
+
+export class ExampleStep extends ServiceMap.Service<
+  ExampleStep,
+  {
+    readonly definition: ExampleDefinition
+    readonly step: StepDefinition
+  }
+>()("ExampleStep") {}

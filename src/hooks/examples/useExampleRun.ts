@@ -1,7 +1,7 @@
-import { useCallback } from "react"
 import { useAtomValue } from "@effect/atom-react"
 import * as Effect from "effect/Effect"
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
+import { useCallback } from "react"
 import type { AnyExampleDefinition } from "@/lib/examples/catalog"
 import type { RunId } from "@/lib/examples/domain"
 import { managerAtom } from "@/lib/examples/ui-state"

@@ -1,43 +1,48 @@
-import * as React from "react"
 import { MotionConfig, motion, useAnimate, useTransform, type AnimationScope } from "motion/react"
-import { useAtomValue } from "@effect/atom-react"
-import { currentExampleAtom, VisualEffectState } from "@/atoms/visual-effect"
+import * as React from "react"
+import type { ExampleDefinition } from "@/lib/examples/constructors"
 import {
   useEffectMotionValues,
   type EffectMotionValues,
 } from "@/hooks/animation/useEffectMotionValues"
 import { useEffectNodeAnimationController } from "@/hooks/animation/useEffectNodeAnimationController"
 import { useNodeTransitionFlags } from "@/hooks/animation/useNodeTransitionFlags"
-import type { StepDefinition } from "@/lib/examples/constructors"
-import { cn } from "@/lib/utils"
 import { COLORS, SHADOW_COLORS, VFX } from "@/lib/animation"
+import { VisualEffectState } from "@/lib/examples/domain"
+import { cn } from "@/lib/utils"
 import { effectNodeVariants } from "./effectNodeVariants"
 import { VisualEffectControls } from "./VisualEffectControls"
-import { useStepState, VisualEffectProvider } from "./VisualEffectProvider"
+import {
+  ExampleContext,
+  StepContext,
+  useExampleDefinition,
+  useStepDefinition,
+  useStepState,
+} from "./VisualEffectProvider"
 
-export function VisualEffect() {
+export function VisualEffect({ example }: { readonly example: ExampleDefinition }) {
   return (
-    <React.Suspense>
-      <VisualEffectProvider>
-        <div className="w-fit min-w-full flex flex-col border shadow-2xl">
-          <MotionConfig reducedMotion="user">
-            <VisualEffectControls />
-            <ExampleEffects />
-          </MotionConfig>
-        </div>
-      </VisualEffectProvider>
-    </React.Suspense>
+    <ExampleContext.Provider value={example}>
+      <div className="flex w-fit min-w-full flex-col border shadow-2xl">
+        <MotionConfig reducedMotion="user">
+          <VisualEffectControls />
+          <ExampleEffects />
+        </MotionConfig>
+      </div>
+    </ExampleContext.Provider>
   )
 }
 
 function ExampleEffects() {
-  const example = useAtomValue(currentExampleAtom)
+  const example = useExampleDefinition()
   return (
-    <div className="p-6 border-b">
-      <div className="flex justify-start items-center gap-6">
+    <div className="border-b p-6">
+      <div className="flex items-center justify-start gap-6">
         <div className="flex flex-wrap justify-center gap-6">
           {example.steps.map((step) => (
-            <EffectNode key={step.label} definition={step} />
+            <StepContext.Provider key={step.label} value={step}>
+              <EffectNode key={step.label} />
+            </StepContext.Provider>
           ))}
         </div>
       </div>
@@ -45,9 +50,10 @@ function ExampleEffects() {
   )
 }
 
-function EffectNode({ definition }: { readonly definition: StepDefinition }) {
+function EffectNode() {
   const [scope] = useAnimate()
-  const stepState = useStepState(definition.label)
+  const definition = useStepDefinition()
+  const stepState = useStepState()
   const motionValues = useEffectMotionValues()
   const transition = useNodeTransitionFlags(stepState)
 
@@ -61,7 +67,7 @@ function EffectNode({ definition }: { readonly definition: StepDefinition }) {
   return (
     <div>
       <motion.div
-        className="h-14 relative"
+        className="relative h-14"
         style={{
           width: motionValues.nodeWidth,
           height: motionValues.nodeHeight,
@@ -200,7 +206,7 @@ function EffectContent({
 
 function EffectLabel({ label }: { readonly label: string }) {
   return (
-    <motion.div className="mt-2 text-xs text-center font-semibold text-muted-foreground">
+    <motion.div className="mt-2 text-center text-xs font-semibold text-muted-foreground">
       <span>{label}</span>
     </motion.div>
   )

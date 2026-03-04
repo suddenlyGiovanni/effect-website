@@ -4,14 +4,14 @@
 // Children are independently observable via their own atoms.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Cause, Effect, type Fiber, pipe, Schedule } from "effect"
-import * as Atom from "effect/unstable/reactivity/Atom"
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
-import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import { RegistryProvider, useAtomValue } from "@effect/atom-react"
 import { RegistryContext } from "@effect/atom-react/RegistryContext"
-import { useCallback, useContext, useEffect, useRef, useState } from "react"
+import { Cause, Effect, type Fiber, pipe, Schedule } from "effect"
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
+import * as Atom from "effect/unstable/reactivity/Atom"
+import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import { ChevronDownIcon } from "lucide-react"
+import { useCallback, useContext, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 // ─── Core types ──────────────────────────────────────────────────────────────
@@ -264,9 +264,9 @@ export const useVisualEffect = (ve: VisualEffect<unknown, unknown>): UseVisualEf
     switch (actionOf(stateOf(result))) {
       case "run": {
         if (fiberRef.current !== null) return
-        const program = ve.asEffect().pipe(
-          Effect.provideService(AtomRegistry.AtomRegistry, registry),
-        )
+        const program = ve
+          .asEffect()
+          .pipe(Effect.provideService(AtomRegistry.AtomRegistry, registry))
         const fiber = Effect.runFork(program)
         fiberRef.current = fiber
         fiber.addObserver(() => {
@@ -346,8 +346,7 @@ function useScheduleLog(child: VisualEffect<unknown, unknown>) {
     // running started → record attempt start time
     if (state === "running") {
       const now = Date.now()
-      const delayMs =
-        lastTerminalRef.current !== null ? now - lastTerminalRef.current : 0
+      const delayMs = lastTerminalRef.current !== null ? now - lastTerminalRef.current : 0
       attemptStartRef.current = now
       attemptCountRef.current += 1
       // Store delay for when this attempt finishes
@@ -356,13 +355,9 @@ function useScheduleLog(child: VisualEffect<unknown, unknown>) {
     }
 
     // terminal state reached → record the step
-    if (
-      prev === "running" &&
-      (state === "completed" || state === "failed")
-    ) {
+    if (prev === "running" && (state === "completed" || state === "failed")) {
       const now = Date.now()
-      const durationMs =
-        attemptStartRef.current !== null ? now - attemptStartRef.current : 0
+      const durationMs = attemptStartRef.current !== null ? now - attemptStartRef.current : 0
       lastTerminalRef.current = now
 
       setSteps((prev) => [
@@ -410,7 +405,7 @@ function ScheduleLog({
       <div className="flex flex-col gap-0.5 text-xs">
         {steps.map((step) => (
           <div key={step.attempt} className="flex items-center gap-2">
-            <span className="w-6 shrink-0 text-right tabular-nums text-muted-foreground">
+            <span className="w-6 shrink-0 text-right text-muted-foreground tabular-nums">
               #{step.attempt}
             </span>
             <span
@@ -421,17 +416,15 @@ function ScheduleLog({
             >
               {step.outcome === "completed" ? "✓ pass" : "✗ fail"}
             </span>
-            <span className="tabular-nums text-muted-foreground">{formatMs(step.durationMs)}</span>
+            <span className="text-muted-foreground tabular-nums">{formatMs(step.durationMs)}</span>
             {step.delayMs > 0 && (
-              <span className="text-muted-foreground/60">
-                (delay: {formatMs(step.delayMs)})
-              </span>
+              <span className="text-muted-foreground/60">(delay: {formatMs(step.delayMs)})</span>
             )}
           </div>
         ))}
         {childState === "running" && (
           <div className="flex items-center gap-2">
-            <span className="w-6 shrink-0 text-right tabular-nums text-muted-foreground">
+            <span className="w-6 shrink-0 text-right text-muted-foreground tabular-nums">
               #{steps.length + 1}
             </span>
             <span className="w-16 shrink-0 text-blue-400">⋯ running</span>
@@ -504,7 +497,7 @@ function ChildNode({ ve }: { readonly ve: VisualEffect<unknown, unknown> }) {
     >
       <div className={cn("size-2 shrink-0 rounded-full transition-colors duration-300", cls.dot)} />
       <span className="text-xs text-foreground">{ve.label}</span>
-      <span className={cn("ml-auto text-xs font-medium uppercase tracking-wider", cls.label)}>
+      <span className={cn("ml-auto text-xs font-medium tracking-wider uppercase", cls.label)}>
         {state}
       </span>
     </div>
@@ -535,12 +528,16 @@ function DefaultEffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown>
       {/* Main row */}
       <div className="flex items-center gap-3 px-4 py-3">
         {/* State indicator dot */}
-        <div className={cn("size-3 shrink-0 rounded-full transition-colors duration-300", cls.dot)} />
+        <div
+          className={cn("size-3 shrink-0 rounded-full transition-colors duration-300", cls.dot)}
+        />
 
         {/* Label + state */}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-foreground">{ve.label}</div>
-          <div className={cn("text-xs font-medium uppercase tracking-wider", cls.label)}>{state}</div>
+          <div className={cn("text-xs font-medium tracking-wider uppercase", cls.label)}>
+            {state}
+          </div>
         </div>
 
         {/* Single cycling control button */}
@@ -586,7 +583,7 @@ function DefaultEffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown>
             <div className="flex flex-col gap-0.5">
               {log.map((entry, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-right tabular-nums text-muted-foreground">
+                  <span className="w-14 shrink-0 text-right text-muted-foreground tabular-nums">
                     {formatMs(entry.time)}
                   </span>
                   <span className={STATE_CLASSES[entry.state].label}>{entry.state}</span>
@@ -620,10 +617,12 @@ function ScheduleEffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown
     >
       {/* Main row */}
       <div className="flex items-center gap-3 px-4 py-3">
-        <div className={cn("size-3 shrink-0 rounded-full transition-colors duration-300", cls.dot)} />
+        <div
+          className={cn("size-3 shrink-0 rounded-full transition-colors duration-300", cls.dot)}
+        />
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-foreground">{ve.label}</div>
-          <div className={cn("text-xs font-medium uppercase tracking-wider", cls.label)}>
+          <div className={cn("text-xs font-medium tracking-wider uppercase", cls.label)}>
             {state}
           </div>
         </div>
@@ -653,9 +652,7 @@ function ScheduleEffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown
       </div>
 
       {/* Schedule step log — always visible when there are steps */}
-      {baseTask && (
-        <ScheduleLog steps={scheduleLog.steps} childState={scheduleLog.childState} />
-      )}
+      {baseTask && <ScheduleLog steps={scheduleLog.steps} childState={scheduleLog.childState} />}
 
       {/* Transition log panel */}
       {open && (
@@ -666,7 +663,7 @@ function ScheduleEffectNode({ ve }: { readonly ve: VisualEffect<unknown, unknown
             <div className="flex flex-col gap-0.5">
               {log.map((entry, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-right tabular-nums text-muted-foreground">
+                  <span className="w-14 shrink-0 text-right text-muted-foreground tabular-nums">
                     {formatMs(entry.time)}
                   </span>
                   <span className={STATE_CLASSES[entry.state].label}>{entry.state}</span>
@@ -732,14 +729,18 @@ const retryBaseTask = make(
     }
     return "Success!"
   }),
-  { onReset: () => { retryAttempt = 0 } },
+  {
+    onReset: () => {
+      retryAttempt = 0
+    },
+  },
 )
 const demoRetry = schedule(
   "Effect.retry",
   retryBaseTask,
-  retryBaseTask.asEffect().pipe(
-    Effect.retry(Schedule.both(Schedule.spaced("1 second"), Schedule.recurs(4))),
-  ),
+  retryBaseTask
+    .asEffect()
+    .pipe(Effect.retry(Schedule.both(Schedule.spaced("1 second"), Schedule.recurs(4)))),
 )
 
 // Schedule: Effect.repeat — a succeeding task repeated 4 times with spacing
@@ -751,14 +752,18 @@ const repeatBaseTask = make(
     repeatCount++
     return `Tick #${repeatCount}`
   }),
-  { onReset: () => { repeatCount = 0 } },
+  {
+    onReset: () => {
+      repeatCount = 0
+    },
+  },
 )
 const demoRepeat = schedule(
   "Effect.repeat",
   repeatBaseTask,
-  repeatBaseTask.asEffect().pipe(
-    Effect.repeat(Schedule.both(Schedule.spaced("800 millis"), Schedule.recurs(3))),
-  ),
+  repeatBaseTask
+    .asEffect()
+    .pipe(Effect.repeat(Schedule.both(Schedule.spaced("800 millis"), Schedule.recurs(3)))),
 )
 
 const demoEffects: ReadonlyArray<VisualEffect<unknown, unknown>> = [

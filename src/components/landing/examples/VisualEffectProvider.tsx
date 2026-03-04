@@ -1,51 +1,62 @@
+import { useAtomSet, useAtomValue } from "@effect/atom-react"
+import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
-import { useAtomSet, useAtomSuspense, useAtomValue } from "@effect/atom-react"
-import type * as Atom from "effect/unstable/reactivity/Atom"
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
-import { InitialState, visualEffectAtom } from "@/atoms/visual-effect"
-import type { StepLabel } from "@/lib/examples/domain"
+import type { ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
+import {
+  exampleStateAtom,
+  stepStateAtom,
+  VisualEffectManager,
+} from "@/services/VisualEffectManager"
 
-const VisualEffectContext = React.createContext<Atom.Success<typeof visualEffectAtom>>(null as any)
+export const ExampleContext = React.createContext<ExampleDefinition>(null as any)
 
-export const useVisualEffect = () => React.useContext(VisualEffectContext)
+export const useExampleDefinition = () => React.useContext(ExampleContext)
+
+const runtime = Atom.runtime(VisualEffectManager.layer)
+
+const startAtom = runtime.fn<ExampleDefinition>()(
+  (example) => VisualEffectManager.use((_) => _.start(example)),
+  { concurrent: true },
+)
+const stopAtom = runtime.fn<ExampleDefinition>()(
+  (example) => VisualEffectManager.use((_) => _.stop(example)),
+  { concurrent: true },
+)
+const resetAtom = runtime.fn<ExampleDefinition>()(
+  (example) => VisualEffectManager.use((_) => _.reset(example)),
+  { concurrent: true },
+)
 
 export const useExampleControls = () => {
-  const visualEffect = useVisualEffect()
+  const example = useExampleDefinition()
 
-  const startExample = useAtomSet(visualEffect.startExampleAtom)
-  const stopExample = useAtomSet(visualEffect.stopExampleAtom)
-  const resetExample = useAtomSet(visualEffect.resetExampleAtom)
+  const start = useAtomSet(startAtom)
+  const stop = useAtomSet(stopAtom)
+  const reset = useAtomSet(resetAtom)
 
   return {
-    startExample,
-    stopExample,
-    resetExample,
+    start() {
+      start(example)
+    },
+    stop() {
+      stop(example)
+    },
+    reset() {
+      reset(example)
+    },
   } as const
 }
 
-export const useProgramState = () => {
-  const visualEffect = useVisualEffect()
-
-  const programState = useAtomValue(visualEffect.programStateAtom).pipe(
-    AsyncResult.getOrElse(() => InitialState),
-  )
-
-  return programState
+export const useExampleState = () => {
+  const example = useExampleDefinition()
+  return useAtomValue(exampleStateAtom(example))
 }
 
-export const useStepState = (label: StepLabel) => {
-  const visualEffect = useVisualEffect()
+export const StepContext = React.createContext<StepDefinition>(null as any)
 
-  const stepState = useAtomValue(visualEffect.stepStateAtom(label)).pipe(
-    AsyncResult.getOrElse(() => InitialState),
-  )
+export const useStepDefinition = () => React.useContext(StepContext)
 
-  return stepState
-}
-
-export function VisualEffectProvider({ children }: React.PropsWithChildren) {
-  const visualEffect = useAtomSuspense(visualEffectAtom).value
-  return (
-    <VisualEffectContext.Provider value={visualEffect}>{children}</VisualEffectContext.Provider>
-  )
+export const useStepState = () => {
+  const step = useStepDefinition()
+  return useAtomValue(stepStateAtom(step))
 }

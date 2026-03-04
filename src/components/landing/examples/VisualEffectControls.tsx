@@ -1,36 +1,34 @@
-import * as React from "react"
 import { motion } from "motion/react"
-import * as Atom from "effect/unstable/reactivity/Atom"
-import { useAtomValue } from "@effect/atom-react"
-import { canReset, currentExampleAtom, VisualEffectState } from "@/atoms/visual-effect"
+import * as React from "react"
+import { canReset, VisualEffectState } from "@/lib/examples/domain"
 import { VisualEffectControlsIcon } from "./VisualEffectControlsIcon"
-import { useExampleControls, useProgramState } from "./VisualEffectProvider"
+import { useExampleControls, useExampleDefinition, useExampleState } from "./VisualEffectProvider"
 
 export function VisualEffectControls() {
-  const example = useAtomValue(currentExampleAtom)
-  const programState = useProgramState()
-  const { startExample, stopExample, resetExample } = useExampleControls()
+  const example = useExampleDefinition()
+  const programState = useExampleState()
+  const controls = useExampleControls()
   const [isHovered, setIsHovered] = React.useState(false)
   const [isPressed, setIsPressed] = React.useState(false)
   const isRunning = VisualEffectState.$is("Running")(programState)
 
   const handleClick = () => {
     if (isRunning) {
-      stopExample()
+      controls.stop()
     } else if (canReset(programState)) {
-      resetExample(Atom.Reset)
+      controls.reset()
     } else {
-      startExample()
+      controls.start()
     }
   }
 
-  const title = example.label.title
-  const subtitle = example.label.subtitle
+  const title = example.title
+  const subtitle = example.subtitle
 
   return (
-    <div className="flex px-6 py-4 bg-zinc-800 border-b">
+    <div className="flex border-b bg-zinc-800 px-6 py-4">
       <motion.button
-        className="flex items-start gap-3 flex-1 -m-2 p-2 bg-zinc-950 rounded-lg whitespace-nowrap cursor-pointer"
+        className="-m-2 flex flex-1 cursor-pointer items-start gap-3 rounded-lg bg-zinc-950 p-2 whitespace-nowrap"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onMouseDown={() => setIsPressed(true)}
@@ -51,13 +49,13 @@ export function VisualEffectControls() {
 
         <span className="flex flex-1 justify-between gap-4 text-neutral-400">
           <span className="flex flex-col gap-1">
-            <span className="flex items-baseline gap-2 text-base font-mono font-semibold leading-tighter">
+            <span className="flex items-baseline gap-2 font-mono text-base leading-tighter font-semibold">
               <span className="text-white">{title}</span>
               {subtitle && <span className="font-medium">{subtitle}</span>}
             </span>
             <span className="text-sm leading-4">{example.description}</span>
           </span>
-          <span className="-mt-1 text-xs font-mono">
+          <span className="-mt-1 font-mono text-xs">
             {isRunning ? "Click to stop" : "Click to run an Effect"}
           </span>
         </span>
