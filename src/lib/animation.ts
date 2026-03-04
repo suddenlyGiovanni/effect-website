@@ -53,10 +53,13 @@ export const SPRINGS = {
 } as const satisfies Record<string, SpringOptions>
 
 export const TIMINGS = {
-  borderPulse: {
-    duration: 1.5,
-    values: [1, 0.3, 1],
-  },
+  runningBorderPulseDurationSec: 1.5,
+  runningGlowPulseDurationSec: 0.6,
+  runningJitterDurationSec: 0.4,
+  failureShakeDurationSec: 0.36,
+  flashInDurationSec: 0.02,
+  flashOutDurationSec: 0.8,
+  resetDurationSec: 0.2,
 } as const
 
 export const VFX = {

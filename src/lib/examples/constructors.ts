@@ -1,13 +1,7 @@
 import * as Effect from "effect/Effect"
 import { dual } from "effect/Function"
 import { STEP_KIND, ATTR_KIND, ATTR_EXAMPLE_KEY, ATTR_STEP_LABEL } from "@/lib/examples/constants"
-import {
-  type ExampleKey,
-  DuplicateStepNodeId,
-  ProgramLabel,
-  StepLabel,
-} from "@/lib/examples/domain"
-import { VisualEffectManager } from "@/services/VisualEffectManager"
+import { type ExampleKey, DuplicateStepNodeId, StepLabel } from "@/lib/examples/domain"
 
 export interface AddStepOptions {
   readonly id?: string
@@ -30,7 +24,7 @@ export interface ExampleDefinition {
   readonly label: ExampleLabel
   readonly description?: string | undefined
   readonly steps: ReadonlyArray<StepDefinition>
-  readonly effect: Effect.Effect<unknown, unknown, VisualEffectManager>
+  readonly program: Effect.Effect<unknown, unknown>
 }
 
 export interface ExampleLabel {
@@ -79,22 +73,13 @@ export const defineExample = (input: {
     },
   )
 
-  const built = input.build({ addStep })
-
-  const program = Effect.gen(function* () {
-    const manager = yield* VisualEffectManager
-    const label = typeof input.label === "string" ? input.label : input.label.title
-    yield* manager.start(built, {
-      key: input.key,
-      label: ProgramLabel.makeUnsafe(label, { disableValidation: true }),
-    })
-  })
+  const program = input.build({ addStep })
 
   return {
     key: input.key,
     label: input.label,
     description: input.description,
     steps,
-    effect: program,
+    program,
   }
 }

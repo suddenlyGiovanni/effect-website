@@ -17,7 +17,7 @@ export interface ExampleCatalogEntry {
 }
 
 const delayedLabel = (city: string, temperature: number, delayMs: number): Effect.Effect<string> =>
-  Effect.sleep(`${delayMs} millis`).pipe(Effect.andThen(Effect.succeed(`${city}: ${temperature}C`)))
+  Effect.sleep(`${delayMs} millis`).pipe(Effect.andThen(Effect.succeed(` ${temperature}°C`)))
 
 export const allExample = defineExample({
   key: ExampleKey.makeUnsafe("examples/concurrency/all"),

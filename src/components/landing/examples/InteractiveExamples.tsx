@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type ExampleCategory, EXAMPLES_CATALOG } from "@/lib/examples/catalog"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { cn } from "@/lib/utils"
-import { Example } from "./Example"
+import { VisualEffect } from "./VisualEffect"
 
 const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
   "concurrency",
@@ -272,7 +272,7 @@ function SubTabsContent({ examples }: { readonly examples: ReadonlyArray<Example
             value={example}
             className="mt-0 overflow-x-auto border-b border-zinc-800 p-4"
           >
-            <Example />
+            <VisualEffect />
           </TabsContent>
         )
       })}

@@ -1,13 +1,18 @@
+import * as Data from "effect/Data"
 import * as DateTime from "effect/DateTime"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
+import * as FiberHandle from "effect/FiberHandle"
+import { constFalse, constTrue, identity } from "effect/Function"
+import * as Result from "effect/Result"
 import * as Stream from "effect/Stream"
+import * as SubscriptionRef from "effect/SubscriptionRef"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import { EXAMPLES_CATALOG, type ExampleCategory } from "@/lib/examples/catalog"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import type { Event, StepLabel } from "@/lib/examples/domain"
-import { VisualEffectManager } from "@/services/VisualEffectManager"
-import * as Data from "effect/Data"
+import * as VisualEffectManager from "@/services/VisualEffectManager"
+import { PROGRAM_KIND, ATTR_KIND, ATTR_EXAMPLE_KEY } from "@/lib/examples/constants"
 
 export const currentExampleCategoryAtom = Atom.make("concurrency" as ExampleCategory)
 
@@ -20,20 +25,6 @@ export const currentExampleAtom = Atom.writable<ExampleDefinition, ExampleDefini
 )
 
 const runtime = Atom.runtime(VisualEffectManager.layer)
-
-export const startExampleAtom = runtime.fn(
-  Effect.fnUntraced(function* (_: void, get: Atom.FnContext) {
-    const example = get(currentExampleAtom)
-    yield* example.effect
-  }),
-)
-
-export const stopExampleAtom = runtime.fn(
-  Effect.fnUntraced(function* () {
-    const manager = yield* VisualEffectManager
-    yield* manager.cancel
-  }),
-)
 
 export type VisualEffectState = Data.TaggedEnum<{
   readonly Idle: {}
@@ -69,29 +60,71 @@ export const VisualEffectState = Data.taggedEnum<VisualEffectState>()
 
 export const InitialState: VisualEffectState = VisualEffectState.Idle()
 
-export const programStateAtom = runtime.atom(
-  Effect.gen(function* () {
-    const manager = yield* VisualEffectManager
-    return manager.events.pipe(
-      Stream.filter((event) => {
-        console.log(event)
-        return event._tag.startsWith("Program")
-      }),
-      Stream.map(eventToState),
-    )
-  }).pipe(Stream.unwrap),
-)
+export const canReset = VisualEffectState.$match({
+  Idle: constFalse,
+  Running: constFalse,
+  Succeeded: constTrue,
+  Interrupted: constTrue,
+  Failed: constTrue,
+  Died: constTrue,
+})
 
-export const stepStateAtom = Atom.family((label: StepLabel) =>
-  runtime.atom(
-    Effect.gen(function* () {
-      const manager = yield* VisualEffectManager
-      return manager.events.pipe(
-        Stream.filter((event) => "label" in event && event.label === label),
+export const visualEffectAtom = runtime.atom(
+  Effect.fnUntraced(function* (get) {
+    const manager = yield* VisualEffectManager.VisualEffectManager
+    const ref = yield* SubscriptionRef.make<Result.Result<Event, void>>(Result.failVoid)
+    const handle = yield* FiberHandle.make()
+
+    const example = get(currentExampleAtom)
+
+    yield* manager.events.pipe(
+      Stream.runForEach((event) => SubscriptionRef.set(ref, Result.succeed(event))),
+      Effect.forkScoped,
+    )
+
+    const start = example.program.pipe(
+      Effect.withSpan(example.label.title, {
+        attributes: {
+          [ATTR_KIND]: PROGRAM_KIND,
+        },
+      }),
+      Effect.annotateSpans(ATTR_EXAMPLE_KEY, example.key),
+      FiberHandle.run(handle, { startImmediately: true }),
+    )
+
+    const stop = FiberHandle.clear(handle)
+
+    const reset = Effect.gen(function* () {
+      yield* SubscriptionRef.set(ref, Result.failVoid)
+      yield* stop
+    })
+
+    const programStateAtom = Atom.make(
+      SubscriptionRef.changes(ref).pipe(
+        Stream.filterMap(identity),
+        Stream.filter((event) => event._tag.startsWith("Program")),
         Stream.map(eventToState),
-      )
-    }).pipe(Stream.unwrap),
-  ),
+      ),
+    )
+
+    const stepStateAtom = Atom.family((label: StepLabel) =>
+      Atom.make(
+        SubscriptionRef.changes(ref).pipe(
+          Stream.filterMap(identity),
+          Stream.filter((event) => "label" in event && event.label === label),
+          Stream.map(eventToState),
+        ),
+      ),
+    )
+
+    return {
+      programStateAtom,
+      stepStateAtom,
+      startExampleAtom: runtime.fn(() => start),
+      stopExampleAtom: runtime.fn(() => stop),
+      resetExampleAtom: runtime.fn(() => reset),
+    }
+  }),
 )
 
 const eventToState = (event: Event): VisualEffectState => {
