@@ -26,13 +26,31 @@ const RUNNING_OFFSET_Y_BASE = 0.1
 const RUNNING_DURATION_MIN_SEC = 0.1
 const RUNNING_DURATION_MAX_SEC = 0.2
 
-const FAILURE_ROTATION = [0, 5, -5, 4, -4, 0]
-const FAILURE_X = [0, 4, -4, 3, -3, 0]
-const FAILURE_Y = [0, -2, 2, -1, 1, 0]
+const FAILURE_SHAKE_INTENSITY = 8
+const FAILURE_SHAKE_STEP_DURATION_SEC = 0.08
+const FAILURE_SHAKE_COUNT = 6
+const FAILURE_SHAKE_ROTATION_RANGE = 8
+const FAILURE_SHAKE_RETURN_DURATION_SEC = 0.3
+
+const GLITCH_INITIAL_COUNT = 3
+const GLITCH_INITIAL_DELAY_MIN_MS = 20
+const GLITCH_INITIAL_DELAY_MAX_MS = 70
+const GLITCH_PAUSE_MIN_MS = 50
+const GLITCH_PAUSE_MAX_MS = 150
+const GLITCH_SUBTLE_DELAY_MIN_MS = 300
+const GLITCH_SUBTLE_DELAY_MAX_MS = 800
+
+const GLITCH_SCALE_RANGE = 0.2
+const GLITCH_GLOW_MIN = 3
+const GLITCH_GLOW_MAX = 7
+const GLITCH_INTENSE_PULSE_MAX = 10
 
 const BASE_NODE_SIZE = 56
 const RUNNING_NODE_HEIGHT = BASE_NODE_SIZE * 0.4
 const BASE_BORDER_RADIUS = 8
+
+const randomBetween = (minimum: number, maximum: number): number =>
+  minimum + Math.random() * Math.max(0, maximum - minimum)
 
 export const useEffectNodeAnimationController = ({
   motion,
@@ -65,6 +83,7 @@ export const useEffectNodeAnimationController = ({
     let runningJitterCancelled = false
     let runningJitterFrame: number | null = null
     let runningJitterControls: Array<AnimationPlaybackControls> = []
+    let deathGlitchTimer: ReturnType<typeof setTimeout> | undefined
 
     const stopRunningJitter = () => {
       runningJitterCancelled = true
@@ -77,6 +96,12 @@ export const useEffectNodeAnimationController = ({
         control.stop()
       }
       runningJitterControls = []
+    }
+
+    const clearDeathGlitchTimer = () => {
+      if (deathGlitchTimer === undefined) return
+      clearTimeout(deathGlitchTimer)
+      deathGlitchTimer = undefined
     }
 
     stopAll()
@@ -112,6 +137,7 @@ export const useEffectNodeAnimationController = ({
       return () => {
         runIdRef.current += 1
         stopRunningJitter()
+        clearDeathGlitchTimer()
         stopAll()
       }
     }
@@ -123,6 +149,9 @@ export const useEffectNodeAnimationController = ({
           ease: "easeOut",
         }),
       )
+    }
+
+    if (tag !== "Running" && tag !== "Died") {
       registerControl(
         animate(motion.glowIntensity, 0, {
           duration: TIMINGS.resetDurationSec,
@@ -196,9 +225,11 @@ export const useEffectNodeAnimationController = ({
       runningJitterFrame = requestAnimationFrame(runRunningJitter)
     }
 
-    if (transition.justCompleted) {
-      motion.contentScale.set(0)
-      registerControl(animate(motion.contentScale, [1.3, 1], SPRINGS.contentScale))
+    if (transition.justCompleted || transition.justStarted) {
+      if (transition.justCompleted) {
+        motion.contentScale.set(0)
+        registerControl(animate(motion.contentScale, [1.3, 1], SPRINGS.contentScale))
+      }
 
       const flashIn = registerControl(
         animate(motion.flashOpacity, 0.6, {
@@ -221,24 +252,113 @@ export const useEffectNodeAnimationController = ({
     }
 
     if (transition.justFailed || transition.justDied) {
-      registerControl(
-        animate(motion.rotation, FAILURE_ROTATION, {
-          duration: TIMINGS.failureShakeDurationSec,
-          ease: "easeInOut",
-        }),
-      )
-      registerControl(
-        animate(motion.shakeX, FAILURE_X, {
-          duration: TIMINGS.failureShakeDurationSec,
-          ease: "easeInOut",
-        }),
-      )
-      registerControl(
-        animate(motion.shakeY, FAILURE_Y, {
-          duration: TIMINGS.failureShakeDurationSec,
-          ease: "easeInOut",
-        }),
-      )
+      const runFailureShake = async (): Promise<void> => {
+        for (let step = 0; step < FAILURE_SHAKE_COUNT; step += 1) {
+          if (!isActive()) return
+
+          const shakeX = (Math.random() - 0.5) * FAILURE_SHAKE_INTENSITY
+          const shakeY = (Math.random() - 0.5) * FAILURE_SHAKE_INTENSITY
+          const rotation = (Math.random() - 0.5) * FAILURE_SHAKE_ROTATION_RANGE
+
+          const shakeXControl = registerControl(
+            animate(motion.shakeX, shakeX, {
+              duration: FAILURE_SHAKE_STEP_DURATION_SEC,
+              ease: "easeInOut",
+            }),
+          )
+          const shakeYControl = registerControl(
+            animate(motion.shakeY, shakeY, {
+              duration: FAILURE_SHAKE_STEP_DURATION_SEC,
+              ease: "easeInOut",
+            }),
+          )
+          const rotationControl = registerControl(
+            animate(motion.rotation, rotation, {
+              duration: FAILURE_SHAKE_STEP_DURATION_SEC,
+              ease: "easeInOut",
+            }),
+          )
+
+          await Promise.all([
+            shakeXControl.finished.catch(() => undefined),
+            shakeYControl.finished.catch(() => undefined),
+            rotationControl.finished.catch(() => undefined),
+          ])
+        }
+
+        if (!isActive()) return
+
+        const settleXControl = registerControl(
+          animate(motion.shakeX, 0, {
+            duration: FAILURE_SHAKE_RETURN_DURATION_SEC,
+            ease: "easeOut",
+          }),
+        )
+        const settleYControl = registerControl(
+          animate(motion.shakeY, 0, {
+            duration: FAILURE_SHAKE_RETURN_DURATION_SEC,
+            ease: "easeOut",
+          }),
+        )
+        const settleRotationControl = registerControl(
+          animate(motion.rotation, 0, {
+            duration: FAILURE_SHAKE_RETURN_DURATION_SEC,
+            ease: "easeOut",
+          }),
+        )
+
+        await Promise.all([
+          settleXControl.finished.catch(() => undefined),
+          settleYControl.finished.catch(() => undefined),
+          settleRotationControl.finished.catch(() => undefined),
+        ])
+      }
+
+      void runFailureShake()
+    }
+
+    if (tag === "Died") {
+      const schedule = (callback: () => void, delayMs: number) => {
+        clearDeathGlitchTimer()
+        deathGlitchTimer = setTimeout(() => {
+          deathGlitchTimer = undefined
+          if (!isActive()) return
+          callback()
+        }, delayMs)
+      }
+
+      const wait = (delayMs: number): Promise<void> =>
+        new Promise((resolve) => {
+          schedule(resolve, delayMs)
+        })
+
+      const runDeathGlitch = async (): Promise<void> => {
+        for (let pulse = 0; pulse < GLITCH_INITIAL_COUNT; pulse += 1) {
+          if (!isActive()) return
+
+          motion.contentScale.set(1 + Math.random() * GLITCH_SCALE_RANGE)
+          motion.glowIntensity.set(Math.random() * GLITCH_INTENSE_PULSE_MAX)
+
+          await wait(randomBetween(GLITCH_INITIAL_DELAY_MIN_MS, GLITCH_INITIAL_DELAY_MAX_MS))
+          if (!isActive()) return
+
+          motion.contentScale.set(1)
+          motion.glowIntensity.set(GLITCH_GLOW_MAX)
+
+          await wait(randomBetween(GLITCH_PAUSE_MIN_MS, GLITCH_PAUSE_MAX_MS))
+        }
+
+        const runSubtleLoop = () => {
+          if (!isActive()) return
+
+          motion.glowIntensity.set(randomBetween(GLITCH_GLOW_MIN, GLITCH_GLOW_MAX))
+          schedule(runSubtleLoop, randomBetween(GLITCH_SUBTLE_DELAY_MIN_MS, GLITCH_SUBTLE_DELAY_MAX_MS))
+        }
+
+        runSubtleLoop()
+      }
+
+      void runDeathGlitch()
     }
 
     if (tag === "Interrupted") {
@@ -265,7 +385,10 @@ export const useEffectNodeAnimationController = ({
     return () => {
       runIdRef.current += 1
       stopRunningJitter()
+      clearDeathGlitchTimer()
       stopAll()
+      motion.glowIntensity.set(0)
+      motion.contentScale.set(1)
       motion.rotation.set(0)
       motion.shakeX.set(0)
       motion.shakeY.set(0)
@@ -275,6 +398,7 @@ export const useEffectNodeAnimationController = ({
     prefersReducedMotion,
     stopAll,
     tag,
+    transition.justStarted,
     transition.justCompleted,
     transition.justDied,
     transition.justFailed,
