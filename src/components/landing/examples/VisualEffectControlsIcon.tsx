@@ -29,7 +29,7 @@ export function VisualEffectControlsIcon({
       case "Succeeded":
         return "var(--color-green-700)"
       case "Failed":
-        return "var(--color-red-700)"
+        return "var(--color-red-500)"
       case "Interrupted":
         return "var(--color-orange-500)"
       case "Died": {

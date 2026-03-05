@@ -4,7 +4,7 @@ import { canReset, VisualEffectState } from "@/lib/examples/domain"
 import { VisualEffectControlsIcon } from "./VisualEffectControlsIcon"
 import { useExampleControls, useExampleDefinition, useExampleState } from "./VisualEffectProvider"
 
-export function VisualEffectControls() {
+export function VisualEffectControls({ isDied }: { readonly isDied: boolean }) {
   const example = useExampleDefinition()
   const exampleState = useExampleState()
   const controls = useExampleControls()
@@ -31,8 +31,22 @@ export function VisualEffectControls() {
       ? "Click to reset"
       : "Click to run an Effect"
 
+  const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
+  const headerBackground = isDied ? "rgba(0, 0, 0, 0.5)" : "rgba(39, 39, 42, 0.9)"
+
   return (
-    <div className="flex border-b bg-zinc-800 px-6 py-4">
+    <motion.div
+      className="flex border-b px-6 py-4"
+      initial={false}
+      animate={{
+        borderColor,
+        backgroundColor: headerBackground,
+      }}
+      transition={{
+        borderColor: { duration: 0.2, ease: "easeInOut" },
+        backgroundColor: { duration: 0.2, ease: "easeInOut" },
+      }}
+    >
       <motion.button
         className="-m-2 flex flex-1 cursor-pointer items-start gap-3 rounded-lg bg-zinc-950 p-2 whitespace-nowrap"
         onMouseEnter={() => setIsHovered(true)}
@@ -64,6 +78,6 @@ export function VisualEffectControls() {
           <span className="-mt-1 font-mono text-xs">{cta}</span>
         </span>
       </motion.button>
-    </div>
+    </motion.div>
   )
 }

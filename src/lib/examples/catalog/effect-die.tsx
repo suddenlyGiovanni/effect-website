@@ -2,8 +2,8 @@ import * as Effect from "effect/Effect"
 import { defineExample } from "../constructors"
 
 export const dieExample = defineExample({
-  label: "Effect.all",
-  description: "Combine multiple effects into one, returning results based on input structure",
+  label: "Effect.die",
+  description: "Create an effect that terminates with an unrecoverable defect",
   build: ({ addStep }) =>
     addStep(Effect.die(new Error("FATAL: System corrupted")), {
       label: "death",

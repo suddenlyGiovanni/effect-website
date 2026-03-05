@@ -100,7 +100,7 @@ export const VISUAL_EFFECT_NODE_VARIANTS: Record<VisualEffectState["_tag"], Vari
   Idle: {
     scale: 1,
     opacity: 0.6,
-    backgroundColor: COLORS.task.idle,
+    backgroundColor: "var(--color-black)",
     transition: {
       backgroundColor: { duration: 0.1, ease: "easeInOut" },
       scale: SPRINGS.default,
@@ -110,7 +110,7 @@ export const VISUAL_EFFECT_NODE_VARIANTS: Record<VisualEffectState["_tag"], Vari
   Running: {
     scale: 0.95,
     opacity: 1,
-    backgroundColor: COLORS.task.running,
+    backgroundColor: "var(--color-blue-500)",
     transition: {
       backgroundColor: { duration: 0.1, ease: "easeInOut" },
       scale: SPRINGS.default,
@@ -120,7 +120,7 @@ export const VISUAL_EFFECT_NODE_VARIANTS: Record<VisualEffectState["_tag"], Vari
   Succeeded: {
     scale: 1,
     opacity: 1,
-    backgroundColor: COLORS.task.success,
+    backgroundColor: "var(--color-green-700)",
     transition: {
       backgroundColor: { duration: 0.1, ease: "easeInOut" },
       scale: SPRINGS.contentScale,
@@ -128,7 +128,7 @@ export const VISUAL_EFFECT_NODE_VARIANTS: Record<VisualEffectState["_tag"], Vari
     },
   },
   Failed: {
-    backgroundColor: COLORS.task.error,
+    backgroundColor: "var(--color-red-500)",
     scale: 1,
     opacity: 1,
     transition: {
@@ -138,7 +138,7 @@ export const VISUAL_EFFECT_NODE_VARIANTS: Record<VisualEffectState["_tag"], Vari
     },
   },
   Died: {
-    backgroundColor: COLORS.task.death,
+    backgroundColor: "var(--color-red-800)",
     scale: 1,
     opacity: 1,
     transition: {
@@ -148,7 +148,7 @@ export const VISUAL_EFFECT_NODE_VARIANTS: Record<VisualEffectState["_tag"], Vari
     },
   },
   Interrupted: {
-    backgroundColor: COLORS.task.interrupted,
+    backgroundColor: "var(--color-orange-500)",
     opacity: 1,
     scale: 1,
     transition: {
@@ -317,7 +317,7 @@ function VisualEffectNodeIcon({
   const iconSize = size * 0.5
   switch (state._tag) {
     case "Failed":
-      return <Skull size={iconSize} />
+      return <Skull className="text-red-500 fill-white" size={iconSize * 1.2} />
     case "Died":
       return <Skull className="text-red-800 fill-red-600" size={iconSize * 1.2} />
     case "Interrupted":

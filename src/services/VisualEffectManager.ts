@@ -16,7 +16,7 @@ import {
   type ExampleDefinition,
   type StepDefinition,
 } from "@/lib/examples/constructors"
-import { InitialState, VisualEffectState } from "@/lib/examples/domain"
+import { InitialState, RenderableResult, VisualEffectState } from "@/lib/examples/domain"
 
 export const exampleStateAtom = Atom.family((_definition: ExampleDefinition) =>
   Atom.make<VisualEffectState>(InitialState),
@@ -54,7 +54,7 @@ export class VisualEffectManager extends ServiceMap.Service<
         details: ExampleStep["Service"],
         startedAt: DateTime.Utc,
         endedAt: DateTime.Utc,
-        exit: Exit.Exit<unknown, unknown>,
+        exit: Exit.Exit<RenderableResult, RenderableResult>,
       ): void => {
         registry.set(stepStateAtom(details.step), exitToState(exit, startedAt, endedAt))
       }
@@ -85,7 +85,12 @@ export class VisualEffectManager extends ServiceMap.Service<
             end(endTime, exit) {
               span.end(endTime, exit)
               const endedAt = dateTimeFromNanos(endTime)
-              endVisualSpan(details, startTime, endedAt, exit)
+              endVisualSpan(
+                details,
+                startTime,
+                endedAt,
+                exit as Exit.Exit<RenderableResult, RenderableResult>,
+              )
             },
             attribute(key, value) {
               span.attribute(key, value)
@@ -190,7 +195,7 @@ const dateTimeFromNanos = (nanos: bigint): DateTime.Utc => {
 
 const nanosToMilliseconds = (nanos: bigint): number => Number(nanos / 1_000_000n)
 
-const exitToState = <E, A>(
+const exitToState = <E extends RenderableResult, A extends RenderableResult>(
   exit: Exit.Exit<E, A>,
   startedAt: DateTime.Utc,
   endedAt: DateTime.Utc,
@@ -212,7 +217,7 @@ const exitToState = <E, A>(
   const defect = Cause.findDefect(exit.cause)
   if (Result.isSuccess(defect)) {
     return VisualEffectState.Died({
-      defect: defect.success,
+      defect: defect.success as RenderableResult,
       duration,
       endedAt,
     })
@@ -220,6 +225,6 @@ const exitToState = <E, A>(
   return VisualEffectState.Failed({
     duration,
     endedAt,
-    error: Cause.squash(exit.cause),
+    error: Cause.squash(exit.cause) as RenderableResult,
   })
 }

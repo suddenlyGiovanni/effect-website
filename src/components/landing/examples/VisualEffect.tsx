@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react"
-import { MotionConfig, useAnimate } from "motion/react"
+import { MotionConfig, motion, useAnimate } from "motion/react"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { useEffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { useNodeTransitionFlags } from "@/hooks/animation/useNodeTransitionFlags"
@@ -18,20 +18,48 @@ import {
 export function VisualEffect({ example }: { readonly example: ExampleDefinition }) {
   return (
     <ExampleContext.Provider value={example}>
-      <div className="flex w-fit min-w-full flex-col border shadow-2xl">
-        <MotionConfig reducedMotion="user">
-          <VisualEffectControls />
-          <VisualEffectNodes />
-        </MotionConfig>
-      </div>
+      <VisualEffectSurface />
     </ExampleContext.Provider>
   )
 }
 
-function VisualEffectNodes() {
-  const example = useExampleDefinition()
+function VisualEffectSurface() {
+  const exampleState = useExampleState()
+  const isDied = exampleState._tag === "Died"
+  const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
+
   return (
-    <div className="border-b p-6">
+    <motion.div
+      className="flex w-fit min-w-full flex-col border shadow-2xl"
+      initial={false}
+      animate={{
+        borderColor,
+        boxShadow: isDied ? "0 0 40px rgba(220, 38, 38, 0.3)" : "0 0 0 0 rgba(59, 130, 250, 0)",
+      }}
+      transition={{
+        borderColor: { duration: 0.2, ease: "easeInOut" },
+        boxShadow: { duration: 0.2, ease: "easeInOut" },
+      }}
+    >
+      <MotionConfig reducedMotion="user">
+        <VisualEffectControls isDied={isDied} />
+        <VisualEffectNodes isDied={isDied} />
+      </MotionConfig>
+    </motion.div>
+  )
+}
+
+function VisualEffectNodes({ isDied }: { readonly isDied: boolean }) {
+  const example = useExampleDefinition()
+  const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
+
+  return (
+    <motion.div
+      className="border-b p-6"
+      initial={false}
+      animate={{ borderColor }}
+      transition={{ borderColor: { duration: 0.2, ease: "easeInOut" } }}
+    >
       <div className="flex items-center justify-start gap-6">
         <div className="flex flex-wrap justify-center gap-6">
           {example.steps.map((step) => (
@@ -47,7 +75,7 @@ function VisualEffectNodes() {
 
         <VisualEffectResultNode />
       </div>
-    </div>
+    </motion.div>
   )
 }
 

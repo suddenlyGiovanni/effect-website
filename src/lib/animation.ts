@@ -12,15 +12,6 @@ export const COLORS = {
     death: "rgba(220, 38, 38, 0.8)", // red-600
     running: "rgba(59, 130, 246, 0.2)", // blue-500
   },
-
-  task: {
-    idle: "#000000",
-    running: "var(--color-blue-500)",
-    success: "var(--color-green-700)",
-    error: "#ef4444",
-    interrupted: "var(--color-orange-500)",
-    death: "#991b1b",
-  },
 } as const
 
 export const SHADOW_COLORS = {

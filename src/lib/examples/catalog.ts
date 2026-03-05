@@ -1,7 +1,9 @@
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { allExample } from "./catalog/effect-all"
 import { dieExample } from "./catalog/effect-die"
+import { failExample } from "./catalog/effect-fail"
 import { raceExample } from "./catalog/effect-race"
+import { succeedExample } from "./catalog/effect-succeed"
 
 export type ExampleCategory =
   | "concurrency"
@@ -26,7 +28,7 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
   },
   constructors: {
     label: "Constructors",
-    examples: [dieExample],
+    examples: [succeedExample, failExample, dieExample],
   },
   "error-handling": {
     label: "Error Handling",
