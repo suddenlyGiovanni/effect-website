@@ -1,5 +1,6 @@
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { allExample } from "./catalog/effect-all"
+import { dieExample } from "./catalog/effect-die"
 import { raceExample } from "./catalog/effect-race"
 
 export type ExampleCategory =
@@ -25,7 +26,7 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
   },
   constructors: {
     label: "Constructors",
-    examples: [],
+    examples: [dieExample],
   },
   "error-handling": {
     label: "Error Handling",

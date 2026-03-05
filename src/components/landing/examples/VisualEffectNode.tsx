@@ -241,8 +241,6 @@ function VisualEffectContent({
       case "Running":
         return null
       case "Succeeded": {
-        // const { result } = state
-        // const content = isRenderableResult(result) ? renderResult(result) : String(result)
         return (
           <motion.div
             key="result"
@@ -321,7 +319,7 @@ function VisualEffectNodeIcon({
     case "Failed":
       return <Skull size={iconSize} />
     case "Died":
-      return <Skull size={iconSize} />
+      return <Skull className="text-red-800 fill-red-600" size={iconSize * 1.2} />
     case "Interrupted":
       return <OctagonAlert size={iconSize} />
     default:
