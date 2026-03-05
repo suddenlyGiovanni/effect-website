@@ -54,7 +54,7 @@ export const SPRINGS = {
 
 export const TIMINGS = {
   runningBorderPulseDurationSec: 1.5,
-  runningGlowPulseDurationSec: 0.6,
+  runningGlowPulseDurationSec: 0.5,
   runningJitterDurationSec: 0.4,
   failureShakeDurationSec: 0.36,
   flashInDurationSec: 0.02,

@@ -187,7 +187,7 @@ function RunningOverlay({ delay }: { readonly delay: number }) {
         "bg-[linear-gradient(90deg,transparent_0%,transparent_40%,rgba(255,255,255,0.1)_45%,rgba(255,255,255,0.5)_50%,rgba(255,255,255,0.1)_55%,transparent_60%,transparent_100%)]",
       )}
       animate={{
-        x: ["-66.0%"],
+        x: ["-66.0%", "50%"],
       }}
       transition={{
         duration: 0.8,

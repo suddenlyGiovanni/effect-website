@@ -17,9 +17,14 @@ interface NodeAnimationControllerInput {
   readonly transition: TransitionFlags
 }
 
-const RUNNING_ROTATION = [0, 0.8, -0.7, 0.4, 0]
-const RUNNING_X = [0, 0.7, -0.6, 0.4, 0]
-const RUNNING_Y = [0, -0.2, 0.15, -0.1, 0]
+const RUNNING_ANGLE_RANGE = 4
+const RUNNING_ANGLE_BASE = 0.5
+const RUNNING_OFFSET_X_RANGE = 1.5
+const RUNNING_OFFSET_X_BASE = 0.5
+const RUNNING_OFFSET_Y_RANGE = 0.6
+const RUNNING_OFFSET_Y_BASE = 0.1
+const RUNNING_DURATION_MIN_SEC = 0.1
+const RUNNING_DURATION_MAX_SEC = 0.2
 
 const FAILURE_ROTATION = [0, 5, -5, 4, -4, 0]
 const FAILURE_X = [0, 4, -4, 3, -3, 0]
@@ -57,6 +62,23 @@ export const useEffectNodeAnimationController = ({
       return control
     }
 
+    let runningJitterCancelled = false
+    let runningJitterFrame: number | null = null
+    let runningJitterControls: Array<AnimationPlaybackControls> = []
+
+    const stopRunningJitter = () => {
+      runningJitterCancelled = true
+      if (runningJitterFrame !== null) {
+        cancelAnimationFrame(runningJitterFrame)
+        runningJitterFrame = null
+      }
+
+      for (const control of runningJitterControls) {
+        control.stop()
+      }
+      runningJitterControls = []
+    }
+
     stopAll()
 
     const isRunning = tag === "Running"
@@ -89,6 +111,7 @@ export const useEffectNodeAnimationController = ({
 
       return () => {
         runIdRef.current += 1
+        stopRunningJitter()
         stopAll()
       }
     }
@@ -117,33 +140,60 @@ export const useEffectNodeAnimationController = ({
         }),
       )
       registerControl(
-        animate(motion.glowIntensity, [0, 3, 0], {
+        animate(motion.glowIntensity, [1, 5, 1], {
           duration: TIMINGS.runningGlowPulseDurationSec,
           ease: "easeInOut",
           repeat: Infinity,
         }),
       )
-      registerControl(
-        animate(motion.rotation, RUNNING_ROTATION, {
-          duration: TIMINGS.runningJitterDurationSec,
+
+      const runRunningJitter = () => {
+        if (runningJitterCancelled || !isActive()) return
+
+        const angle =
+          (Math.random() * RUNNING_ANGLE_RANGE + RUNNING_ANGLE_BASE) *
+          (Math.random() < 0.5 ? 1 : -1)
+
+        const offsetX =
+          (Math.random() * RUNNING_OFFSET_X_RANGE + RUNNING_OFFSET_X_BASE) *
+          (Math.random() < 0.5 ? -1 : 1)
+
+        const offsetY =
+          (Math.random() * RUNNING_OFFSET_Y_RANGE + RUNNING_OFFSET_Y_BASE) *
+          (Math.random() < 0.5 ? -1 : 1)
+
+        const duration =
+          RUNNING_DURATION_MIN_SEC +
+          Math.random() * (RUNNING_DURATION_MAX_SEC - RUNNING_DURATION_MIN_SEC)
+
+        const rotationControl = animate(motion.rotation, angle, {
+          duration,
+          ease: "circInOut",
+        })
+
+        const shakeXControl = animate(motion.shakeX, offsetX, {
+          duration,
           ease: "easeInOut",
-          repeat: Infinity,
-        }),
-      )
-      registerControl(
-        animate(motion.shakeX, RUNNING_X, {
-          duration: TIMINGS.runningJitterDurationSec,
+        })
+
+        const shakeYControl = animate(motion.shakeY, offsetY, {
+          duration,
           ease: "easeInOut",
-          repeat: Infinity,
-        }),
-      )
-      registerControl(
-        animate(motion.shakeY, RUNNING_Y, {
-          duration: TIMINGS.runningJitterDurationSec,
-          ease: "easeInOut",
-          repeat: Infinity,
-        }),
-      )
+        })
+
+        runningJitterControls = [rotationControl, shakeXControl, shakeYControl]
+
+        void Promise.all([
+          rotationControl.finished.catch(() => undefined),
+          shakeXControl.finished.catch(() => undefined),
+          shakeYControl.finished.catch(() => undefined),
+        ]).then(() => {
+          if (runningJitterCancelled || !isActive()) return
+          runningJitterFrame = requestAnimationFrame(runRunningJitter)
+        })
+      }
+
+      runningJitterFrame = requestAnimationFrame(runRunningJitter)
     }
 
     if (transition.justCompleted) {
@@ -214,6 +264,7 @@ export const useEffectNodeAnimationController = ({
 
     return () => {
       runIdRef.current += 1
+      stopRunningJitter()
       stopAll()
       motion.rotation.set(0)
       motion.shakeX.set(0)
