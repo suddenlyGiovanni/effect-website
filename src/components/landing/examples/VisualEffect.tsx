@@ -67,10 +67,9 @@ function EffectNode() {
   return (
     <div>
       <motion.div
-        className="relative h-14"
+        className="relative flex h-14 items-center justify-center"
         style={{
           width: motionValues.nodeWidth,
-          height: motionValues.nodeHeight,
         }}
       >
         <EffectContainer scope={scope} motionValues={motionValues} tag={stepState._tag}>
@@ -133,7 +132,7 @@ function EffectContainer({
         willChange: "transform, filter",
         transform: "translateZ(0)",
       }}
-      className={cn("absolute inset-0 cursor-auto overflow-hidden")}
+      className={cn("relative cursor-auto overflow-hidden")}
     >
       {children}
     </motion.div>
@@ -207,6 +206,36 @@ function EffectContent({
   readonly motionValues: EffectMotionValues
   readonly state: VisualEffectState
 }) {
+  const formatSucceededValue = (raw: unknown): string => {
+    if (typeof raw === "string") return raw
+    if (typeof raw === "number" || typeof raw === "boolean" || typeof raw === "bigint") {
+      return String(raw)
+    }
+    if (raw === null || raw === undefined) return ""
+
+    try {
+      return JSON.stringify(raw) ?? String(raw)
+    } catch {
+      return String(raw)
+    }
+  }
+
+  const contentRef = React.useRef<HTMLSpanElement>(null)
+
+  const value = state._tag === "Succeeded" ? formatSucceededValue(state.value) : null
+
+  React.useLayoutEffect(() => {
+    if (value === null) return
+
+    const content = contentRef.current
+    if (content === null) return
+
+    const actualWidth = content.scrollWidth
+    if (actualWidth > 40) {
+      motionValues.nodeWidth.set(actualWidth + 24)
+    }
+  }, [motionValues.nodeWidth, value])
+
   return (
     <motion.div
       style={{
@@ -219,9 +248,14 @@ function EffectContent({
         fontWeight: 600,
         opacity: motionValues.contentOpacity,
         scale: motionValues.contentScale,
+        padding: "0 8px",
       }}
     >
-      {VisualEffectState.$is("Succeeded")(state) ? <span>{state.value as any}</span> : null}
+      {value === null ? null : (
+        <span ref={contentRef} style={{ whiteSpace: "nowrap" }}>
+          {value}
+        </span>
+      )}
     </motion.div>
   )
 }

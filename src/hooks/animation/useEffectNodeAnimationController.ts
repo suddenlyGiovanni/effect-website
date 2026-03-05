@@ -25,6 +25,10 @@ const FAILURE_ROTATION = [0, 5, -5, 4, -4, 0]
 const FAILURE_X = [0, 4, -4, 3, -3, 0]
 const FAILURE_Y = [0, -2, 2, -1, 1, 0]
 
+const BASE_NODE_SIZE = 56
+const RUNNING_NODE_HEIGHT = BASE_NODE_SIZE * 0.4
+const BASE_BORDER_RADIUS = 8
+
 export const useEffectNodeAnimationController = ({
   motion,
   tag,
@@ -54,6 +58,25 @@ export const useEffectNodeAnimationController = ({
     }
 
     stopAll()
+
+    const isRunning = tag === "Running"
+    const hasResult = tag === "Succeeded"
+
+    motion.borderRadius.set(isRunning ? 15 : BASE_BORDER_RADIUS)
+
+    registerControl(
+      animate(motion.nodeHeight, isRunning ? RUNNING_NODE_HEIGHT : BASE_NODE_SIZE, {
+        duration: 0.4,
+        bounce: isRunning ? 0.3 : 0.5,
+        type: "spring",
+      }),
+    )
+
+    if (!hasResult) {
+      motion.nodeWidth.set(BASE_NODE_SIZE)
+    }
+
+    motion.contentOpacity.set(isRunning ? 0 : 1)
 
     if (prefersReducedMotion) {
       motion.flashOpacity.set(0)
