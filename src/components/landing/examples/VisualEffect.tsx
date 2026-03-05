@@ -153,28 +153,50 @@ function EffectOverlay({
     <>
       {isRunning && (
         <motion.div
+          className={cn(
+            "absolute inset-0 pointer-events-none",
+            "ring-1 ring-inset ring-[rgba(100,200,255,0.8)]",
+          )}
           style={{
-            position: "absolute",
-            inset: 0,
             borderRadius: motionValues.borderRadius,
-            boxShadow: "inset 0 0 0 1px rgba(100, 200, 255, 0.8)",
             opacity: motionValues.borderOpacity,
-            pointerEvents: "none",
           }}
         />
       )}
 
+      {isRunning &&
+        [0, 0.2, 0.4, 0.6, 0.8, 1].map((delay) => (
+          <RunningOverlay key={delay.toString()} delay={delay} />
+        ))}
+
       <motion.div
+        className="absolute inset-0 pointer-events-none mix-blend-overlay"
         style={{
-          position: "absolute",
-          inset: 0,
           background: motionValues.flashColor,
           opacity: motionValues.flashOpacity,
-          mixBlendMode: "overlay",
-          pointerEvents: "none",
         }}
       />
     </>
+  )
+}
+
+function RunningOverlay({ delay }: { readonly delay: number }) {
+  return (
+    <motion.div
+      className={cn(
+        "absolute top-0 left-0 bottom-0 w-[200%] blur-xs mix-blend-lighten",
+        "bg-[linear-gradient(90deg,transparent_0%,transparent_40%,rgba(255,255,255,0.1)_45%,rgba(255,255,255,0.5)_50%,rgba(255,255,255,0.1)_55%,transparent_60%,transparent_100%)]",
+      )}
+      animate={{
+        x: ["-66.0%"],
+      }}
+      transition={{
+        duration: 0.8,
+        delay,
+        repeat: Infinity,
+        ease: [0.5, 0, 0.1, 1],
+      }}
+    />
   )
 }
 
