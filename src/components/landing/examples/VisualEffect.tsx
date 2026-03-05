@@ -1,6 +1,5 @@
 import { ArrowRight } from "lucide-react"
 import { MotionConfig, motion, useAnimate } from "motion/react"
-import * as React from "react"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { useEffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { useEffectNodeAnimationController } from "@/hooks/animation/useEffectNodeAnimationController"
@@ -30,8 +29,7 @@ export function VisualEffect({ example }: { readonly example: ExampleDefinition 
 function VisualEffectSurface() {
   const exampleState = useExampleState()
   const example = useExampleDefinition()
-  const [hoveredTarget, setHoveredTarget] = React.useState<string | null>(null)
-  const delayedTarget = useSnippetHoverState(example.key, hoveredTarget, 500)
+  const { delayedTarget, onHoverTargetChange } = useSnippetHoverState(example.key, 500)
   const isDied = exampleState._tag === "Died"
   const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
 
@@ -50,7 +48,7 @@ function VisualEffectSurface() {
     >
       <MotionConfig reducedMotion="user">
         <VisualEffectControls isDied={isDied} />
-        <VisualEffectNodes isDied={isDied} onHoverTargetChange={setHoveredTarget} />
+        <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
         <VisualEffectCodeSnippet
           snippet={example.code}
           activeTarget={delayedTarget}

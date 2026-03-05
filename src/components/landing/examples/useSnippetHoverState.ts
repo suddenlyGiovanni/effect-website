@@ -1,54 +1,61 @@
-import { useAtom } from "@effect/atom-react"
+import { useAtomSet, useAtomValue } from "@effect/atom-react"
+import * as Effect from "effect/Effect"
 import * as Atom from "effect/unstable/reactivity/Atom"
-import * as React from "react"
 
 const delayedSnippetHoverAtom = Atom.family((scopeKey: string) =>
   Atom.make<string | null>(null).pipe(Atom.withLabel(`snippet-hover:${scopeKey}`)),
 )
 
+const snippetHoverTokenAtom = Atom.family((scopeKey: string) =>
+  Atom.make(0).pipe(Atom.withLabel(`snippet-hover-token:${scopeKey}`)),
+)
+
+interface SnippetHoverUpdate {
+  readonly scopeKey: string
+  readonly hoveredTarget: string | null
+  readonly hideDelayMilliseconds: number
+}
+
+const updateSnippetHoverAtom = Atom.fn<SnippetHoverUpdate>()(
+  (input, get) =>
+    Effect.gen(function* () {
+      const token = get(snippetHoverTokenAtom(input.scopeKey)) + 1
+      get.set(snippetHoverTokenAtom(input.scopeKey), token)
+
+      if (input.hoveredTarget !== null) {
+        get.set(delayedSnippetHoverAtom(input.scopeKey), input.hoveredTarget)
+        return
+      }
+
+      yield* Effect.sleep(input.hideDelayMilliseconds)
+
+      if (get(snippetHoverTokenAtom(input.scopeKey)) !== token) {
+        return
+      }
+
+      get.set(delayedSnippetHoverAtom(input.scopeKey), null)
+    }),
+  { concurrent: true },
+)
+
 export const useSnippetHoverState = (
   scopeKey: string,
-  hoveredTarget: string | null,
   hideDelayMilliseconds: number,
-): string | null => {
-  const [delayedTarget, setDelayedTarget] = useAtom(delayedSnippetHoverAtom(scopeKey))
-  const hideTimeoutReference = React.useRef<number | undefined>(undefined)
+): {
+  readonly delayedTarget: string | null
+  readonly onHoverTargetChange: (target: string | null) => void
+} => {
+  const delayedTarget = useAtomValue(delayedSnippetHoverAtom(scopeKey))
+  const updateSnippetHover = useAtomSet(updateSnippetHoverAtom)
 
-  React.useEffect(() => {
-    const activeTimeout = hideTimeoutReference.current
-    if (activeTimeout !== undefined) {
-      window.clearTimeout(activeTimeout)
-      hideTimeoutReference.current = undefined
-    }
-
-    if (hoveredTarget !== null) {
-      setDelayedTarget(hoveredTarget)
-      return
-    }
-
-    hideTimeoutReference.current = window.setTimeout(() => {
-      setDelayedTarget(null)
-      hideTimeoutReference.current = undefined
-    }, hideDelayMilliseconds)
-
-    return () => {
-      const timeout = hideTimeoutReference.current
-      if (timeout !== undefined) {
-        window.clearTimeout(timeout)
-        hideTimeoutReference.current = undefined
-      }
-    }
-  }, [hideDelayMilliseconds, hoveredTarget, setDelayedTarget])
-
-  React.useEffect(() => {
-    return () => {
-      const timeout = hideTimeoutReference.current
-      if (timeout !== undefined) {
-        window.clearTimeout(timeout)
-        hideTimeoutReference.current = undefined
-      }
-    }
-  }, [])
-
-  return delayedTarget
+  return {
+    delayedTarget,
+    onHoverTargetChange(target) {
+      updateSnippetHover({
+        scopeKey,
+        hoveredTarget: target,
+        hideDelayMilliseconds,
+      })
+    },
+  }
 }
