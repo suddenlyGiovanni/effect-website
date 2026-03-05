@@ -37,6 +37,10 @@ export const SPRINGS = {
     mass: 0.8,
     stiffness: 180,
   },
+  bouncy: {
+    bounce: 0.3,
+    visualDuration: 0.5,
+  },
   contentScale: {
     bounce: 0.3,
     damping: 18,

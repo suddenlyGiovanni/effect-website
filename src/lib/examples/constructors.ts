@@ -2,16 +2,28 @@ import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
 import * as ServiceMap from "effect/ServiceMap"
+import type { RenderableResult } from "./domain"
+
+export type RenderableEffect<
+  A extends RenderableResult,
+  E extends RenderableResult,
+> = Effect.Effect<A, E>
 
 export interface AddStepOptions {
-  readonly id?: string
   readonly label: string
 }
 
 export interface BuildContext {
   readonly addStep: {
-    <A, E, R>(self: Effect.Effect<A, E, R>, options: AddStepOptions): Effect.Effect<A, E, R>
-    (options: AddStepOptions): <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
+    <A extends RenderableResult, E extends RenderableResult>(
+      self: RenderableEffect<A, E>,
+      options: AddStepOptions,
+    ): RenderableEffect<A, E>
+    (
+      options: AddStepOptions,
+    ): <A extends RenderableResult, E extends RenderableResult>(
+      self: RenderableEffect<A, E>,
+    ) => RenderableEffect<A, E>
   }
 }
 
@@ -25,14 +37,14 @@ export interface ExampleDefinition {
   readonly subtitle: string | undefined
   readonly description: string | undefined
   readonly steps: ReadonlyArray<StepDefinition>
-  readonly program: Effect.Effect<unknown, unknown>
+  readonly program: RenderableEffect<RenderableResult, RenderableResult>
 }
 
 export const defineExample = (input: {
   readonly label: string
   readonly subtitle?: string | undefined
   readonly description?: string | undefined
-  readonly build: (ctx: BuildContext) => Effect.Effect<unknown, unknown>
+  readonly build: (ctx: BuildContext) => RenderableEffect<RenderableResult, RenderableResult>
 }): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
 
@@ -45,17 +57,20 @@ export const defineExample = (input: {
 
   const addStep: BuildContext["addStep"] = dual(
     2,
-    <A, E>(self: Effect.Effect<A, E>, options: AddStepOptions): Effect.Effect<A, E> => {
+    <A extends RenderableResult, E extends RenderableResult>(
+      self: RenderableEffect<A, E>,
+      options: AddStepOptions,
+    ): RenderableEffect<A, E> => {
       const step = registerStep(options)
+      // Suspend the renderable Effect here to avoid eagerly accessing the
+      // example definition when calling `addStep`
       return Effect.suspend(() =>
-        self.pipe(
-          Effect.withSpan(step.label, {
-            annotations: ExampleStep.serviceMap({
-              definition,
-              step,
-            }),
+        Effect.withSpan(self, step.label, {
+          annotations: ExampleStep.serviceMap({
+            definition,
+            step,
           }),
-        ),
+        }),
       )
     },
   )

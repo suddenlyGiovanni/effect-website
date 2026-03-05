@@ -1,6 +1,22 @@
-import { Data, DateTime, Duration } from "effect"
+import type * as React from "react"
+import * as Data from "effect/Data"
+import * as DateTime from "effect/DateTime"
+import * as Duration from "effect/Duration"
 import { constFalse, constTrue } from "effect/Function"
 import * as Option from "effect/Option"
+import * as Predicate from "effect/Predicate"
+
+const RenderableResultSymbol = Symbol.for("renderable-result")
+
+export abstract class RenderableResult {
+  readonly [RenderableResultSymbol] = RenderableResultSymbol
+
+  static is(u: unknown): u is RenderableResult {
+    return Predicate.hasProperty(u, RenderableResultSymbol)
+  }
+
+  abstract render(): React.ReactNode
+}
 
 export type VisualEffectState = Data.TaggedEnum<{
   readonly Idle: {}
@@ -9,12 +25,12 @@ export type VisualEffectState = Data.TaggedEnum<{
     readonly notification: Option.Option<string>
   }
   readonly Succeeded: {
-    readonly value: unknown
+    readonly value: RenderableResult
     readonly endedAt: DateTime.Utc
     readonly duration: Duration.Duration
   }
   readonly Failed: {
-    readonly error: unknown
+    readonly error: RenderableResult
     readonly endedAt: DateTime.Utc
     readonly duration: Duration.Duration
   }
@@ -23,7 +39,7 @@ export type VisualEffectState = Data.TaggedEnum<{
     readonly duration: Duration.Duration
   }
   readonly Died: {
-    readonly defect: unknown
+    readonly defect: RenderableResult
     readonly endedAt: DateTime.Utc
     readonly duration: Duration.Duration
   }

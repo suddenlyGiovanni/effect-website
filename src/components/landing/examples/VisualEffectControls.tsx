@@ -6,16 +6,17 @@ import { useExampleControls, useExampleDefinition, useExampleState } from "./Vis
 
 export function VisualEffectControls() {
   const example = useExampleDefinition()
-  const programState = useExampleState()
+  const exampleState = useExampleState()
   const controls = useExampleControls()
   const [isHovered, setIsHovered] = React.useState(false)
   const [isPressed, setIsPressed] = React.useState(false)
-  const isRunning = VisualEffectState.$is("Running")(programState)
+  const isRunning = VisualEffectState.$is("Running")(exampleState)
+  const isResettable = canReset(exampleState)
 
   const handleClick = () => {
     if (isRunning) {
       controls.stop()
-    } else if (canReset(programState)) {
+    } else if (isResettable) {
       controls.reset()
     } else {
       controls.start()
@@ -24,6 +25,11 @@ export function VisualEffectControls() {
 
   const title = example.title
   const subtitle = example.subtitle
+  const cta = isRunning
+    ? "Click to stop"
+    : isResettable
+      ? "Click to reset"
+      : "Click to run an Effect"
 
   return (
     <div className="flex border-b bg-zinc-800 px-6 py-4">
@@ -44,7 +50,7 @@ export function VisualEffectControls() {
         <VisualEffectControlsIcon
           isHovered={isHovered}
           isPressed={isPressed}
-          state={programState}
+          state={exampleState}
         />
 
         <span className="flex flex-1 justify-between gap-4 text-neutral-400">
@@ -55,9 +61,7 @@ export function VisualEffectControls() {
             </span>
             <span className="text-sm leading-4">{example.description}</span>
           </span>
-          <span className="-mt-1 font-mono text-xs">
-            {isRunning ? "Click to stop" : "Click to run an Effect"}
-          </span>
+          <span className="-mt-1 font-mono text-xs">{cta}</span>
         </span>
       </motion.button>
     </div>
