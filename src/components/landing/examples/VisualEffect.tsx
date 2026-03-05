@@ -1,9 +1,13 @@
 import { ArrowRight } from "lucide-react"
 import { MotionConfig, motion, useAnimate } from "motion/react"
+import * as React from "react"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { useEffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
-import { useNodeTransitionFlags } from "@/hooks/animation/useNodeTransitionFlags"
 import { useEffectNodeAnimationController } from "@/hooks/animation/useEffectNodeAnimationController"
+import { useNodeTransitionFlags } from "@/hooks/animation/useNodeTransitionFlags"
+import { snippetResultTargetKey, toStepSnippetTargetKey } from "@/lib/examples/snippet-highlights"
+import { useSnippetHoverState } from "./useSnippetHoverState"
+import { VisualEffectCodeSnippet } from "./VisualEffectCodeSnippet"
 import { VisualEffectControls } from "./VisualEffectControls"
 import { VisualEffectNode } from "./VisualEffectNode"
 import {
@@ -25,6 +29,9 @@ export function VisualEffect({ example }: { readonly example: ExampleDefinition 
 
 function VisualEffectSurface() {
   const exampleState = useExampleState()
+  const example = useExampleDefinition()
+  const [hoveredTarget, setHoveredTarget] = React.useState<string | null>(null)
+  const delayedTarget = useSnippetHoverState(example.key, hoveredTarget, 500)
   const isDied = exampleState._tag === "Died"
   const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
 
@@ -43,13 +50,24 @@ function VisualEffectSurface() {
     >
       <MotionConfig reducedMotion="user">
         <VisualEffectControls isDied={isDied} />
-        <VisualEffectNodes isDied={isDied} />
+        <VisualEffectNodes isDied={isDied} onHoverTargetChange={setHoveredTarget} />
+        <VisualEffectCodeSnippet
+          snippet={example.code}
+          activeTarget={delayedTarget}
+          isDied={isDied}
+        />
       </MotionConfig>
     </motion.div>
   )
 }
 
-function VisualEffectNodes({ isDied }: { readonly isDied: boolean }) {
+function VisualEffectNodes({
+  isDied,
+  onHoverTargetChange,
+}: {
+  readonly isDied: boolean
+  readonly onHoverTargetChange: (target: string | null) => void
+}) {
   const example = useExampleDefinition()
   const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
 
@@ -63,28 +81,33 @@ function VisualEffectNodes({ isDied }: { readonly isDied: boolean }) {
       <div className="flex items-center justify-start gap-6">
         <div className="flex flex-wrap justify-center gap-6">
           {example.steps.map((step) => (
-            <StepContext.Provider key={step.label} value={step}>
-              <VisualEffectStepNode />
+            <StepContext.Provider key={step.id} value={step}>
+              <VisualEffectStepNode onHoverTargetChange={onHoverTargetChange} />
             </StepContext.Provider>
           ))}
         </div>
 
-        <div className="flex items-center mb-6 text-neutral-500">
+        <div className="mb-6 flex items-center text-neutral-500">
           <ArrowRight className="size-6" fill="currentColor" />
         </div>
 
-        <VisualEffectResultNode />
+        <VisualEffectResultNode onHoverTargetChange={onHoverTargetChange} />
       </div>
     </motion.div>
   )
 }
 
-export function VisualEffectStepNode() {
+export function VisualEffectStepNode({
+  onHoverTargetChange,
+}: {
+  readonly onHoverTargetChange: (target: string | null) => void
+}) {
   const [scope] = useAnimate()
   const definition = useStepDefinition()
   const stepState = useStepState()
   const motionValues = useEffectMotionValues()
   const transition = useNodeTransitionFlags(stepState)
+  const target = toStepSnippetTargetKey(definition.id)
 
   useEffectNodeAnimationController({
     scope,
@@ -97,13 +120,19 @@ export function VisualEffectStepNode() {
     <VisualEffectNode
       label={definition.label}
       motionValues={motionValues}
+      onMouseEnter={() => onHoverTargetChange(target)}
+      onMouseLeave={() => onHoverTargetChange(null)}
       state={stepState}
       scope={scope}
     />
   )
 }
 
-export function VisualEffectResultNode() {
+export function VisualEffectResultNode({
+  onHoverTargetChange,
+}: {
+  readonly onHoverTargetChange: (target: string | null) => void
+}) {
   const [scope] = useAnimate()
   const exampleState = useExampleState()
   const motionValues = useEffectMotionValues()
@@ -120,6 +149,8 @@ export function VisualEffectResultNode() {
     <VisualEffectNode
       label="result"
       motionValues={motionValues}
+      onMouseEnter={() => onHoverTargetChange(snippetResultTargetKey)}
+      onMouseLeave={() => onHoverTargetChange(null)}
       state={exampleState}
       scope={scope}
     />

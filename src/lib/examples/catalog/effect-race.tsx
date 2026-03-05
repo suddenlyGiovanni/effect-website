@@ -11,13 +11,27 @@ const getEmoji = Effect.fnUntraced(function* (emoji: EmojiKey): Effect.fn.Return
 
 export const raceExample = defineExample({
   label: "Effect.race",
-  build: ({ addStep }) =>
-    Effect.race(
+  code: {
+    language: "typescript",
+    source: `const tortoise = runFast("tortoise")
+const achilles = runFast("achilles")
+
+const winner = Effect.race(tortoise, achilles)`,
+  },
+  resultHighlight: {
+    _tag: "Text",
+    text: "Effect.race(tortoise, achilles)",
+  },
+  build: ({ addStep }) => {
+    return Effect.race(
       addStep(getEmoji("Tortoise"), {
         label: "tortoise",
+        highlight: { _tag: "Text", text: 'runFast("tortoise")' },
       }),
       addStep(getEmoji("Achilles"), {
         label: "achilles",
+        highlight: { _tag: "Text", text: 'runFast("achilles")' },
       }),
-    ),
+    )
+  },
 })

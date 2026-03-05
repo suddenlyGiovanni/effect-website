@@ -1,4 +1,3 @@
-import * as React from "react"
 import { OctagonAlert, Skull, Sparkle } from "lucide-react"
 import {
   AnimatePresence,
@@ -7,24 +6,29 @@ import {
   type AnimationScope,
   type Variants,
 } from "motion/react"
+import * as React from "react"
+import type { VisualEffectState } from "@/lib/examples/domain"
 import { type EffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { COLORS, SHADOW_COLORS, SPRINGS, VFX } from "@/lib/animation"
-import type { VisualEffectState } from "@/lib/examples/domain"
 import { cn } from "@/lib/utils"
 
 export function VisualEffectNode({
   label,
   motionValues,
+  onMouseEnter,
+  onMouseLeave,
   scope,
   state,
 }: {
   readonly label: string
   readonly motionValues: EffectMotionValues
+  readonly onMouseEnter?: React.MouseEventHandler<HTMLDivElement>
+  readonly onMouseLeave?: React.MouseEventHandler<HTMLDivElement>
   readonly scope: AnimationScope
   readonly state: VisualEffectState
 }) {
   return (
-    <div>
+    <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <motion.div
         className="relative flex h-14 items-center justify-center"
         style={{ width: motionValues.nodeWidth }}
@@ -173,8 +177,8 @@ function VisualEffectOverlay({
       {isRunning && (
         <motion.div
           className={cn(
-            "absolute inset-0 pointer-events-none",
-            "ring-1 ring-inset ring-[rgba(100,200,255,0.8)]",
+            "pointer-events-none absolute inset-0",
+            "ring-1 ring-[rgba(100,200,255,0.8)] ring-inset",
           )}
           style={{
             borderRadius: motionValues.borderRadius,
@@ -188,7 +192,7 @@ function VisualEffectOverlay({
           <motion.div
             key={`delay(${delay.toString()})`}
             className={cn(
-              "absolute top-0 left-0 bottom-0 w-[200%] blur-xs mix-blend-lighten",
+              "absolute top-0 bottom-0 left-0 w-[200%] mix-blend-lighten blur-xs",
               "bg-[linear-gradient(90deg,transparent_0%,transparent_40%,rgba(255,255,255,0.1)_45%,rgba(255,255,255,0.5)_50%,rgba(255,255,255,0.1)_55%,transparent_60%,transparent_100%)]",
             )}
             animate={{
@@ -204,7 +208,7 @@ function VisualEffectOverlay({
         ))}
 
       <motion.div
-        className="absolute inset-0 pointer-events-none mix-blend-overlay"
+        className="pointer-events-none absolute inset-0 mix-blend-overlay"
         style={{
           background: motionValues.flashColor,
           opacity: motionValues.flashOpacity,
@@ -229,7 +233,7 @@ function VisualEffectContent({
         return (
           <motion.div
             key="star"
-            className="flex justify-center items-center"
+            className="flex items-center justify-center"
             initial={{ scale: 0, filter: "blur(10px)" }}
             animate={{ scale: 1, filter: "blur(0px)" }}
             exit={{ scale: 0, filter: "blur(10px)" }}
@@ -263,7 +267,7 @@ function VisualEffectContent({
         return (
           <motion.div
             key={state._tag}
-            className="flex justify-center items-center"
+            className="flex items-center justify-center"
             initial={{ scale: 0, filter: "blur(10px)" }}
             animate={{ scale: 1, filter: "blur(0px)" }}
             exit={{ scale: 0, filter: "blur(10px)" }}
@@ -293,7 +297,7 @@ function VisualEffectContent({
 
   return (
     <motion.div
-      className="absolute inset-0 flex justify-center items-center font-bold py-2"
+      className="absolute inset-0 flex items-center justify-center py-2 font-bold"
       style={{
         color: "white",
         opacity: motionValues.contentOpacity,
@@ -317,9 +321,9 @@ function VisualEffectNodeIcon({
   const iconSize = size * 0.5
   switch (state._tag) {
     case "Failed":
-      return <Skull className="text-red-500 fill-white" size={iconSize * 1.2} />
+      return <Skull className="fill-white text-red-500" size={iconSize * 1.2} />
     case "Died":
-      return <Skull className="text-red-800 fill-red-600" size={iconSize * 1.2} />
+      return <Skull className="fill-red-600 text-red-800" size={iconSize * 1.2} />
     case "Interrupted":
       return <OctagonAlert size={iconSize} />
     default:

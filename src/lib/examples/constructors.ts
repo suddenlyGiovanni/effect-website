@@ -3,6 +3,17 @@ import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
 import * as ServiceMap from "effect/ServiceMap"
 import type { RenderableResult } from "./domain"
+import {
+  normalizeSelectorInput,
+  normalizeSnippetSource,
+  resolveAllSelectors,
+  snippetResultTargetKey,
+  toStepSnippetTargetKey,
+  validateSnippetLanguage,
+  type ExampleCodeSnippet,
+  type ExampleCodeSnippetInput,
+  type SnippetHighlightSelector,
+} from "./snippet-highlights"
 
 export type RenderableEffect<
   A extends RenderableResult,
@@ -11,6 +22,7 @@ export type RenderableEffect<
 
 export interface AddStepOptions {
   readonly label: string
+  readonly highlight?: SnippetHighlightSelector | ReadonlyArray<SnippetHighlightSelector>
 }
 
 export interface BuildContext {
@@ -28,7 +40,19 @@ export interface BuildContext {
 }
 
 export interface StepDefinition {
+  readonly id: string
   readonly label: string
+}
+
+export type { ExampleCodeSnippetInput, SnippetHighlightSelector }
+
+export interface DefineExampleInput {
+  readonly label: string
+  readonly subtitle?: string | undefined
+  readonly description?: string | undefined
+  readonly code: ExampleCodeSnippetInput
+  readonly resultHighlight?: SnippetHighlightSelector | ReadonlyArray<SnippetHighlightSelector>
+  readonly build: (ctx: BuildContext) => RenderableEffect<RenderableResult, RenderableResult>
 }
 
 export interface ExampleDefinition {
@@ -38,20 +62,29 @@ export interface ExampleDefinition {
   readonly description: string | undefined
   readonly steps: ReadonlyArray<StepDefinition>
   readonly program: RenderableEffect<RenderableResult, RenderableResult>
+  readonly code: ExampleCodeSnippet
 }
 
-export const defineExample = (input: {
-  readonly label: string
-  readonly subtitle?: string | undefined
-  readonly description?: string | undefined
-  readonly build: (ctx: BuildContext) => RenderableEffect<RenderableResult, RenderableResult>
-}): ExampleDefinition => {
+export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
+  const selectorsByTarget: Record<string, ReadonlyArray<SnippetHighlightSelector>> = {}
 
   const registerStep = (options: AddStepOptions): StepDefinition => {
-    const step: StepDefinition = { label: options.label }
+    const step: StepDefinition = {
+      id: `step-${steps.length.toString()}`,
+      label: options.label,
+    }
     steps.push(step)
     Equal.byReferenceUnsafe(step)
+
+    if (options.highlight !== undefined) {
+      const targetKey = toStepSnippetTargetKey(step.id)
+      selectorsByTarget[targetKey] = normalizeSelectorInput(options.highlight, {
+        exampleLabel: input.label,
+        targetKey,
+      })
+    }
+
     return step
   }
 
@@ -75,7 +108,26 @@ export const defineExample = (input: {
     },
   )
 
+  if (input.resultHighlight !== undefined) {
+    selectorsByTarget[snippetResultTargetKey] = normalizeSelectorInput(input.resultHighlight, {
+      exampleLabel: input.label,
+      targetKey: snippetResultTargetKey,
+    })
+  }
+
   const program = input.build({ addStep })
+
+  const normalizedCodeSource = normalizeSnippetSource(input.code.source)
+
+  const highlightsByTarget = resolveAllSelectors({
+    source: normalizedCodeSource,
+    selectorsByTarget,
+    exampleLabel: input.label,
+  })
+
+  const language = validateSnippetLanguage(input.code.language, {
+    exampleLabel: input.label,
+  })
 
   const definition: ExampleDefinition = {
     key: crypto.randomUUID(),
@@ -84,7 +136,13 @@ export const defineExample = (input: {
     description: input.description,
     steps,
     program,
+    code: {
+      language,
+      source: normalizedCodeSource,
+      highlightsByTarget,
+    },
   }
+
   Equal.byReferenceUnsafe(definition)
 
   return definition

@@ -5,8 +5,18 @@ import { ErrorResult } from "../results/error"
 export const failExample = defineExample({
   label: "Effect.fail",
   description: "Create an effect that represents a recoverable error",
-  build: ({ addStep }) =>
-    addStep(Effect.fail(new ErrorResult("Kaboom!")), {
+  code: {
+    language: "typescript",
+    source: `const error = Effect.fail("Kaboom!")`,
+  },
+  resultHighlight: {
+    _tag: "Text",
+    text: 'Effect.fail("Kaboom!")',
+  },
+  build: ({ addStep }) => {
+    return addStep(Effect.fail(new ErrorResult("Kaboom!")), {
       label: "error",
-    }),
+      highlight: { _tag: "Text", text: 'Effect.fail("Kaboom!")' },
+    })
+  },
 })

@@ -254,3 +254,22 @@
     font-family: var(--font-jetbrains-mono);
   }
 }
+
+@layer utilities {
+  .landing-example-snippet {
+    background: linear-gradient(180deg, rgb(24 24 27 / 92%) 0%, rgb(9 9 11 / 98%) 100%);
+  }
+
+  .landing-example-snippet-pre {
+    margin: 0;
+    font-family: var(--font-jetbrains-mono);
+    line-height: 1.6;
+    tab-size: 2;
+    white-space: pre;
+  }
+
+  .landing-example-snippet-line {
+    display: block;
+    min-height: 1.6em;
+  }
+}

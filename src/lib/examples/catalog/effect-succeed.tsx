@@ -5,8 +5,18 @@ import { PrimitiveResult } from "../results/primitive"
 export const succeedExample = defineExample({
   label: "Effect.succeed",
   description: "Create an effect that always succeeds with a given value",
-  build: ({ addStep }) =>
-    addStep(Effect.succeed(new PrimitiveResult(42)), {
+  code: {
+    language: "typescript",
+    source: `const value = Effect.succeed(42)`,
+  },
+  resultHighlight: {
+    _tag: "Text",
+    text: "Effect.succeed(42)",
+  },
+  build: ({ addStep }) => {
+    return addStep(Effect.succeed(new PrimitiveResult(42)), {
       label: "value",
-    }),
+      highlight: { _tag: "Text", text: "Effect.succeed(42)" },
+    })
+  },
 })
