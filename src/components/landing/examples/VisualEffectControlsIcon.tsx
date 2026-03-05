@@ -69,7 +69,7 @@ export function VisualEffectControlsIcon({
             }
       }
     >
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={getPresenceKey(state)}
           className="flex items-center"
@@ -117,7 +117,7 @@ const getMotionConfig = (
       initial: { opacity: 0, scale: 1, rotate: 0, filter: "blur(0px)" },
       animate: { opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" },
       exit: { opacity: 0, scale: 1, rotate: 0, filter: "blur(0px)" },
-      transition: { duration: 0.12, ease: "easeOut" },
+      transition: { duration: 0.08, ease: "easeOut" },
     }
   }
 
@@ -125,24 +125,24 @@ const getMotionConfig = (
     case "Idle": {
       return isHovered
         ? {
-            initial: { rotate: 0, scale: 1 },
-            animate: { rotate: 360, scale: 1.05 },
-            exit: { rotate: -360, scale: 1 },
-            transition: { type: "spring", stiffness: 300, damping: 20 },
+            initial: { opacity: 0, rotate: 0, scale: 1 },
+            animate: { opacity: 1, rotate: 360, scale: 1.05 },
+            exit: { opacity: 0, rotate: -360, scale: 1 },
+            transition: { duration: 0.12, ease: "easeOut" },
           }
         : {
             initial: { opacity: 0, scale: 0.8, filter: "blur(4px)" },
             animate: { opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" },
             exit: { opacity: 0, scale: 0.8, rotate: 20, filter: "blur(4px)" },
-            transition: { duration: 0.3, ease: "easeOut" },
+            transition: { duration: 0.14, ease: "easeOut" },
           }
     }
     case "Running": {
       return {
-        initial: { scale: 0, rotate: -180, filter: "blur(10px)" },
-        animate: { scale: 1, rotate: 0, filter: "blur(0px)" },
-        exit: { scale: 0, rotate: 180, filter: "blur(10px)" },
-        transition: { type: "spring", stiffness: 300, damping: 20 },
+        initial: { opacity: 0, scale: 0, rotate: -180, filter: "blur(10px)" },
+        animate: { opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, scale: 0, rotate: 180, filter: "blur(10px)" },
+        transition: { duration: 0.14, ease: "easeOut" },
       }
     }
     case "Succeeded":
@@ -150,10 +150,10 @@ const getMotionConfig = (
     case "Died":
     case "Interrupted": {
       return {
-        initial: { scale: 0, rotate: -180, filter: "blur(10px)" },
-        animate: { scale: 1, rotate: 0, filter: "blur(0px)" },
-        exit: { scale: 0, rotate: 180, filter: "blur(10px)" },
-        transition: { type: "spring", stiffness: 300, damping: 20 },
+        initial: { opacity: 0, scale: 0, rotate: -180, filter: "blur(10px)" },
+        animate: { opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, scale: 0, rotate: 180, filter: "blur(10px)" },
+        transition: { duration: 0.14, ease: "easeOut" },
       }
     }
   }
