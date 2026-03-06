@@ -223,7 +223,6 @@ const makeToneEngine = Effect.gen(function* () {
       }
       case "ControlChanged": {
         config.triggerAttackRelease("G5", "16n", now, 0.55)
-        config.triggerAttackRelease("D6", "32n", now + 0.06, 0.35)
         break
       }
     }
