@@ -11,23 +11,6 @@ Code for [https://effect.website](https://effect.website) -- the Effect document
 - **TypeScript** (strict), path alias `@/*` -> `./src/*`
 - **pnpm**, **Oxc** toolchain (oxlint, oxfmt), **Nix** dev shell
 
-## Project Structure
-
-```
-src/
-  assets/          # Fonts (OG image gen), brand SVG logos
-  components/
-    astro/         # .astro-only components
-    navigation/    # Nav bar: Astro wrappers + React islands
-    ui/            # Shadcn components (Base UI primitives)
-  content/docs/    # Starlight markdown/mdx content
-  layouts/         # BaseLayout.astro (root HTML shell)
-  lib/             # Utilities (cn(), constants, navigation ADTs)
-  pages/           # Astro routes (index, OG image endpoint)
-  services/        # Effect services (OpenGraph)
-  styles/          # global.css (Tailwind + Shadcn theme + scroll lock)
-```
-
 ## Reference Repos (`.repos`)
 
 - `.repos/` is a local, gitignored workspace for reference codebases.
@@ -36,7 +19,7 @@ src/
   - Use it to reference previous implementations of website components / logic
 - Effect v4 reference examples should exist at `.repos/effect-smol`.
   - If missing, clone it first: `git clone https://github.com/Effect-TS/effect-smol .repos/effect-smol`
-  - Use it to reference how to work with Effect v4, in particular the `./repos/effect-smol/LLMS.md`
+  - Use it to reference how to work with Effect v4, in particular the `.repos/effect-smol/LLMS.md`
 
 ## Interactive UI Components
 
