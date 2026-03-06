@@ -12,6 +12,7 @@ import { VisualEffectConfigPanel } from "./VisualEffectConfigPanel"
 import { VisualEffectControls } from "./VisualEffectControls"
 import { VisualEffectNode } from "./VisualEffectNode"
 import {
+  ExampleControlRuntimeProvider,
   ExampleContext,
   StepContext,
   useExampleDefinition,
@@ -23,7 +24,9 @@ import {
 export function VisualEffect({ example }: { readonly example: ExampleDefinition }) {
   return (
     <ExampleContext.Provider value={example}>
-      <VisualEffectSurface />
+      <ExampleControlRuntimeProvider>
+        <VisualEffectSurface />
+      </ExampleControlRuntimeProvider>
     </ExampleContext.Provider>
   )
 }

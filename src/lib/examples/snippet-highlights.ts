@@ -18,6 +18,28 @@ export interface ExampleCodeSnippet {
   readonly highlightsByTarget: Readonly<Record<string, ReadonlyArray<ResolvedOffsetRange>>>
 }
 
+export const resolveExampleCodeSnippet = (input: {
+  readonly code: ExampleCodeSnippetInput
+  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<SnippetHighlightSelector>>>
+  readonly exampleLabel: string
+}): ExampleCodeSnippet => {
+  const normalizedCodeSource = normalizeSnippetSource(input.code.source)
+  const highlightsByTarget = resolveAllSelectors({
+    source: normalizedCodeSource,
+    selectorsByTarget: input.selectorsByTarget,
+    exampleLabel: input.exampleLabel,
+  })
+  const language = validateSnippetLanguage(input.code.language, {
+    exampleLabel: input.exampleLabel,
+  })
+
+  return {
+    language,
+    source: normalizedCodeSource,
+    highlightsByTarget,
+  }
+}
+
 export type SnippetHighlightSelector =
   | {
       readonly _tag: "Text"

@@ -1,7 +1,9 @@
 import type { ThemedToken } from "shiki/types"
 import * as React from "react"
-import type { ExampleCodeSnippet, ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
+import type { ExampleCodeDefinition } from "@/lib/examples/constructors"
+import type { ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
 import { getSnippetTokens } from "@/lib/examples/shiki-singleton"
+import { useExampleControlValues, useExampleControlVersion } from "./VisualEffectProvider"
 import { VisualEffectCodeSnippetHighlight } from "./VisualEffectCodeSnippetHighlight"
 
 const EMPTY_RANGES: ReadonlyArray<ResolvedOffsetRange> = []
@@ -23,17 +25,23 @@ export function VisualEffectCodeSnippet({
   snippet,
   activeTarget,
 }: {
-  readonly snippet: ExampleCodeSnippet
+  readonly snippet: ExampleCodeDefinition
   readonly activeTarget: string | null
 }) {
+  const controlValues = useExampleControlValues()
+  const controlVersion = useExampleControlVersion()
   const [tokensState, setTokensState] = React.useState<TokensState>({ _tag: "Loading" })
   const snippetContainerReference = React.useRef<HTMLDivElement | null>(null)
+  const resolvedSnippet = React.useMemo(
+    () => snippet.resolve(controlValues),
+    [controlValues, controlVersion, snippet],
+  )
 
   React.useEffect(() => {
     let isMounted = true
     setTokensState({ _tag: "Loading" })
 
-    void getSnippetTokens(snippet.language, snippet.source)
+    void getSnippetTokens(resolvedSnippet.language, resolvedSnippet.source)
       .then((tokens) => {
         if (!isMounted) {
           return
@@ -60,10 +68,10 @@ export function VisualEffectCodeSnippet({
     return () => {
       isMounted = false
     }
-  }, [snippet.language, snippet.source])
+  }, [resolvedSnippet.language, resolvedSnippet.source])
 
   const activeRanges = activeTarget
-    ? (snippet.highlightsByTarget[activeTarget] ?? EMPTY_RANGES)
+    ? (resolvedSnippet.highlightsByTarget[activeTarget] ?? EMPTY_RANGES)
     : EMPTY_RANGES
 
   return (
@@ -76,7 +84,7 @@ export function VisualEffectCodeSnippet({
           {tokensState._tag === "Ready" ? (
             <SnippetTokens tokens={tokensState.tokens} />
           ) : (
-            <SnippetFallback source={snippet.source} />
+            <SnippetFallback source={resolvedSnippet.source} />
           )}
 
           <VisualEffectCodeSnippetHighlight

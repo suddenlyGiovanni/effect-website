@@ -54,23 +54,38 @@ const getTemperature = (
   return Effect.sleep(duration).pipe(Effect.as(result))
 }
 
+const effectAll = (mode: ConcurrencyMode): string => {
+  switch (mode) {
+    case "sequential":
+      return "Effect.all([nyc, berlin, tokyo, london])"
+    case "numbered":
+      return "Effect.all([nyc, berlin, tokyo, london], {\n  concurrency: 2\n})"
+    case "unbounded":
+      return 'Effect.all([nyc, berlin, tokyo, london], {\n  concurrency: "unbounded"\n})'
+  }
+}
+
+const effectAllSnippetSource = (
+  mode: ConcurrencyMode,
+): string => `const nyc = readTemperature("New York")
+const berlin = readTemperature("Berlin")
+const tokyo = readTemperature("Tokyo")
+const london = readTemperature("London")
+
+const result = ${effectAll(mode)}`
+
 export const allExample = defineExample({
   label: "Effect.all",
   description: "Combine multiple effects into one, returning results based on input structure",
   code: {
     language: "typescript",
-    source: `const nyc = readTemperature("New York")
-const berlin = readTemperature("Berlin")
-const tokyo = readTemperature("Tokyo")
-const london = readTemperature("London")
-
-const result = Effect.all([nyc, berlin, tokyo, london])`,
+    source: effectAllSnippetSource("sequential"),
   },
   resultHighlight: {
     _tag: "Text",
-    text: "Effect.all([nyc, berlin, tokyo, london])",
+    text: effectAll("sequential"),
   },
-  build: ({ addStep, controls }) => {
+  build: ({ addStep, controls, snippet }) => {
     const concurrency = controls.register({
       id: "concurrency",
       label: "Concurrency",
@@ -79,6 +94,15 @@ const result = Effect.all([nyc, berlin, tokyo, london])`,
       render: ConcurrencyModeControl,
       changePolicy: "ifRunning",
     })
+
+    snippet.setCode(({ get }) => ({
+      language: "typescript",
+      source: effectAllSnippetSource(get(concurrency)),
+    }))
+    snippet.setResultHighlight(({ get }) => ({
+      _tag: "Text",
+      text: effectAll(get(concurrency)),
+    }))
 
     const nyc = addStep(getTemperature(14, "900 millis"), {
       label: "nyc",

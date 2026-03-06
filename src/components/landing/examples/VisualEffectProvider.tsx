@@ -2,7 +2,11 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as Equal from "effect/Equal"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
-import type { ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
+import type {
+  ExampleControlValues,
+  ExampleDefinition,
+  StepDefinition,
+} from "@/lib/examples/constructors"
 import type { SoundPreference } from "@/lib/examples/sound"
 import {
   controlWriteSideEffectsAtom,
@@ -20,8 +24,51 @@ import { exampleStateAtom, stepStateAtom } from "@/services/VisualEffectManager"
 // =============================================================================
 
 export const ExampleContext = React.createContext<ExampleDefinition>(null as any)
+const ExampleControlValuesContext = React.createContext<ExampleControlValues | null>(null)
+const ExampleControlVersionContext = React.createContext(0)
 
 export const useExampleDefinition = () => React.useContext(ExampleContext)
+
+export function ExampleControlRuntimeProvider({ children }: { readonly children: React.ReactNode }) {
+  const example = useExampleDefinition()
+  const [version, setVersion] = React.useState(0)
+
+  const controlValues = React.useMemo<ExampleControlValues>(
+    () => ({
+      get: (control) => control.currentValueRef.current,
+    }),
+    [],
+  )
+
+  const onValueChange = React.useCallback(() => {
+    setVersion((version) => version + 1)
+  }, [])
+
+  return (
+    <ExampleControlValuesContext.Provider value={controlValues}>
+      <ExampleControlVersionContext.Provider value={version}>
+        {example.controls.map((control) => (
+          <React.Fragment key={`${control.id}-observer`}>
+            {control.observe({ onValueChange })}
+          </React.Fragment>
+        ))}
+        {children}
+      </ExampleControlVersionContext.Provider>
+    </ExampleControlValuesContext.Provider>
+  )
+}
+
+export const useExampleControlValues = () => {
+  const controlValues = React.useContext(ExampleControlValuesContext)
+
+  if (controlValues === null) {
+    throw new Error("Missing example control values context")
+  }
+
+  return controlValues
+}
+
+export const useExampleControlVersion = () => React.useContext(ExampleControlVersionContext)
 
 export const useExampleControls = () => {
   const example = useExampleDefinition()
