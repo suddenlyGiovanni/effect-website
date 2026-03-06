@@ -1,9 +1,9 @@
 import * as React from "react"
 import { motion } from "motion/react"
 import type { ThemedToken } from "shiki/types"
+import { getSnippetTokens } from "@/lib/examples/shiki-singleton"
 import type { ExampleCodeSnippet, ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
 import { VisualEffectCodeSnippetHighlight } from "./VisualEffectCodeSnippetHighlight"
-import { getSnippetTokens } from "./shiki-singleton"
 
 const EMPTY_RANGES: ReadonlyArray<ResolvedOffsetRange> = []
 

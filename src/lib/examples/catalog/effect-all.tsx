@@ -1,29 +1,40 @@
+import { useAtomValue } from "@effect/atom-react"
 import * as Array from "effect/Array"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useControlWrite } from "@/components/landing/examples/VisualEffectProvider"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TabsIndicator } from "@/components/ui/tabs-indicator"
+import { useTabsIndicator } from "@/hooks/useTabsIndicator"
+import { cn } from "@/lib/utils"
 import { defineExample, type ExampleControlRenderProps } from "../constructors"
 import { TemperatureArrayResult, TemperatureResult } from "../results/temperature"
-import { cn } from "@/lib/utils"
 
 type ConcurrencyMode = "sequential" | "numbered" | "unbounded"
 
 const CONCURRENCY_OPTIONS: ReadonlyArray<ConcurrencyMode> = ["sequential", "numbered", "unbounded"]
 
 function ConcurrencyModeControl(props: ExampleControlRenderProps<ConcurrencyMode>) {
+  const value = useAtomValue(props.atom)
   const setValue = useControlWrite(props.atom)
+  const { indicatorRect, rootRef } = useTabsIndicator(value)
 
   return (
-    <div className="flex justify-start items-center gap-3">
-      <span className="text-neutral-500 font-mono tracking-wider select-none">CONCURRENCY</span>
-      <Tabs defaultValue={CONCURRENCY_OPTIONS[0]} onValueChange={(value) => setValue(value)}>
-        <TabsList className="group-data-horizontal/tabs:h-11 p-1 gap-3 bg-zinc-900 border border-zinc-700">
+    <div ref={rootRef} className="flex items-center justify-start gap-3">
+      <span className="font-mono tracking-wider text-neutral-500 select-none">CONCURRENCY</span>
+      <Tabs value={value} onValueChange={(value) => setValue(value)}>
+        <TabsList className="relative isolate gap-3 overflow-hidden border border-zinc-700 bg-zinc-900 p-1 group-data-horizontal/tabs:h-11">
+          <TabsIndicator rect={indicatorRect} variant="fill" className="rounded-md bg-zinc-950" />
+
           {CONCURRENCY_OPTIONS.map((option) => (
             <TabsTrigger
+              key={option}
+              disabled={props.disabled}
               className={cn(
-                "px-3 text-center font-mono border-none cursor-pointer",
-                "bg-transparent data-active:font-semibold data-active:bg-background dark:data-active:bg-zinc-950",
+                "relative z-10 cursor-pointer border-none px-3 text-center font-mono shadow-none",
+                "bg-transparent data-active:border-transparent data-active:bg-transparent data-active:font-semibold data-active:shadow-none",
+                "dark:data-active:border-transparent dark:data-active:bg-transparent",
+                "group-data-[variant=default]/tabs-list:data-active:shadow-none",
               )}
               value={option}
             >
