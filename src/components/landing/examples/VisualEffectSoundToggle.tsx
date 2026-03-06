@@ -1,4 +1,5 @@
 import { Volume2, VolumeX } from "lucide-react"
+import * as React from "react"
 import type { SoundPreference } from "@/lib/examples/sound"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
@@ -13,6 +14,13 @@ const SOUND_OPTIONS: ReadonlyArray<{ readonly value: SoundPreference; readonly l
 export function VisualEffectSoundToggle() {
   const sound = useSoundControls()
   const settings = useSoundSettings()
+  const [isHydrated, setIsHydrated] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  const displayedPreference = isHydrated ? settings.preference : "system"
 
   const handleSelect = (preference: SoundPreference) => {
     if (preference === "on") {
@@ -34,7 +42,7 @@ export function VisualEffectSoundToggle() {
 
       <ToggleGroup
         className="bg-zinc-900 p-1"
-        value={[settings.preference]}
+        value={[displayedPreference]}
         onValueChange={(value) => {
           const nextPreference = value[0]
           if (nextPreference !== undefined) {
