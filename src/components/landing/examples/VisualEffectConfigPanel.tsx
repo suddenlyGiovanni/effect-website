@@ -1,3 +1,4 @@
+import * as React from "react"
 import { motion } from "motion/react"
 import { useExampleDefinition, useExampleState } from "./VisualEffectProvider"
 
@@ -27,7 +28,9 @@ export function VisualEffectConfigPanel({ isDied }: { readonly isDied: boolean }
       }}
     >
       <div className="bg-linear-to-t from-neutral-800/40 to-neutral-800/20 px-6 py-4">
-        {example.controls.map((control) => control.render({ disabled }))}
+        {example.controls.map((control) => (
+          <React.Fragment key={control.id}>{control.render({ disabled })}</React.Fragment>
+        ))}
       </div>
     </motion.section>
   )

@@ -2,18 +2,26 @@ import { motion } from "motion/react"
 import * as React from "react"
 import { canReset } from "@/lib/examples/domain"
 import { VisualEffectControlsIcon } from "./VisualEffectControlsIcon"
-import { useExampleControls, useExampleDefinition, useExampleState } from "./VisualEffectProvider"
+import {
+  useExampleControls,
+  useExampleDefinition,
+  useExampleState,
+  useSoundControls,
+} from "./VisualEffectProvider"
 
 export function VisualEffectControls({ isDied }: { readonly isDied: boolean }) {
   const example = useExampleDefinition()
   const exampleState = useExampleState()
   const controls = useExampleControls()
+  const sound = useSoundControls()
   const [isHovered, setIsHovered] = React.useState(false)
   const [isPressed, setIsPressed] = React.useState(false)
   const isRunning = exampleState._tag === "Running"
   const isResettable = canReset(exampleState)
 
   const handleClick = () => {
+    sound.unlockSounds()
+
     if (isRunning) {
       controls.stop()
     } else if (isResettable) {

@@ -11,6 +11,7 @@ import * as ServiceMap from "effect/ServiceMap"
 import * as Tracer from "effect/Tracer"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
+import type { VisualEffectSoundEvent } from "@/lib/examples/sound"
 import {
   ExampleControlSnapshot,
   ExampleStep,
@@ -18,6 +19,7 @@ import {
   type StepDefinition,
 } from "@/lib/examples/constructors"
 import { InitialState, RenderableResult, VisualEffectState } from "@/lib/examples/domain"
+import { VisualEffectEventBus } from "@/services/VisualEffectEventBus"
 
 export const exampleStateAtom = Atom.family((_definition: ExampleDefinition) =>
   Atom.make<VisualEffectState>(InitialState),
@@ -39,16 +41,122 @@ export class VisualEffectManager extends ServiceMap.Service<
     Effect.gen(function* () {
       const registry = yield* AtomRegistry.AtomRegistry
       const tracer = yield* Effect.tracer
+      const eventBus = yield* VisualEffectEventBus
       const fiberMap = yield* FiberMap.make<ExampleDefinition>()
+      const resettingExamples = new Set<string>()
+
+      const unsafePublishEvent = (event: VisualEffectSoundEvent): void => {
+        try {
+          return eventBus.publishUnsafe(event)
+        } catch {}
+      }
+
+      const publishEvent = (event: VisualEffectSoundEvent): Effect.Effect<void> =>
+        eventBus.publish(event).pipe(Effect.catchCause(() => Effect.void))
+
+      const publishExampleTransition = (
+        example: ExampleDefinition,
+        previous: VisualEffectState,
+        current: VisualEffectState,
+      ): Effect.Effect<void> => {
+        if (previous._tag === current._tag) {
+          return Effect.void
+        }
+
+        return publishEvent({
+          _tag: "ExampleTransition",
+          exampleKey: example.key,
+          previous: previous._tag,
+          current: current._tag,
+          hasSteps: example.steps.length > 0,
+        })
+      }
+
+      const publishStepTransition = (
+        details: ExampleStep["Service"],
+        previous: VisualEffectState,
+        current: VisualEffectState,
+      ): Effect.Effect<void> => {
+        if (previous._tag === current._tag) {
+          return Effect.void
+        }
+
+        return publishEvent({
+          _tag: "StepTransition",
+          exampleKey: details.definition.key,
+          stepId: details.step.id,
+          stepLabel: details.step.label,
+          previous: previous._tag,
+          current: current._tag,
+        })
+      }
+
+      const setExampleState = (
+        example: ExampleDefinition,
+        current: VisualEffectState,
+      ): Effect.Effect<void> => {
+        if (current._tag !== "Running" && resettingExamples.has(example.key)) {
+          return Effect.void
+        }
+
+        const atom = exampleStateAtom(example)
+        const previous = registry.get(atom)
+        registry.set(atom, current)
+        return publishExampleTransition(example, previous, current)
+      }
+
+      const setStepState = (details: ExampleStep["Service"], current: VisualEffectState): void => {
+        if (current._tag !== "Running" && resettingExamples.has(details.definition.key)) {
+          return
+        }
+
+        const atom = stepStateAtom(details.step)
+        const previous = registry.get(atom)
+        registry.set(atom, current)
+        Effect.runSync(publishStepTransition(details, previous, current))
+      }
+
+      const runningNotificationMatches = (state: VisualEffectState, message: string): boolean => {
+        return (
+          state._tag === "Running" &&
+          Option.isSome(state.notification) &&
+          state.notification.value === message
+        )
+      }
+
+      const setStepNotification = (details: ExampleStep["Service"], message: string): void => {
+        if (resettingExamples.has(details.definition.key)) {
+          return
+        }
+
+        const atom = stepStateAtom(details.step)
+        const previous = registry.get(atom)
+
+        if (previous._tag !== "Running" || runningNotificationMatches(previous, message)) {
+          return
+        }
+
+        const state = VisualEffectState.Running({
+          startedAt: previous.startedAt,
+          notification: Option.some(message),
+        })
+
+        registry.set(atom, state)
+
+        unsafePublishEvent({
+          _tag: "NotificationRaised",
+          exampleKey: details.definition.key,
+          stepId: details.step.id,
+          message,
+        })
+      }
 
       const startVisualSpan = (details: ExampleStep["Service"], startedAt: DateTime.Utc): void => {
-        registry.set(
-          stepStateAtom(details.step),
-          VisualEffectState.Running({
-            notification: Option.none(),
-            startedAt,
-          }),
-        )
+        const state = VisualEffectState.Running({
+          notification: Option.none(),
+          startedAt,
+        })
+        setStepState(details, state)
       }
 
       const endVisualSpan = (
@@ -57,7 +165,7 @@ export class VisualEffectManager extends ServiceMap.Service<
         endedAt: DateTime.Utc,
         exit: Exit.Exit<RenderableResult, RenderableResult>,
       ): void => {
-        registry.set(stepStateAtom(details.step), exitToState(exit, startedAt, endedAt))
+        setStepState(details, exitToState(exit, startedAt, endedAt))
       }
 
       const visualEffectTracer = Tracer.make({
@@ -98,13 +206,7 @@ export class VisualEffectManager extends ServiceMap.Service<
             },
             event(name, startTime, attributes) {
               span.event(name, startTime, attributes)
-              registry.update(stepStateAtom(details.step), (state) => {
-                if (state._tag !== "Running") return state
-                return VisualEffectState.Running({
-                  startedAt: state.startedAt,
-                  notification: Option.some(name),
-                })
-              })
+              setStepNotification(details, name)
             },
             addLinks(links) {
               span.addLinks(links)
@@ -121,22 +223,16 @@ export class VisualEffectManager extends ServiceMap.Service<
         sleep(duration) {
           return Effect.withFiber((fiber) => {
             const span = fiber.currentSpan
-            const eff = clock.sleep(duration)
-            if (!span) return eff
-            if (span._tag !== "Span") return eff
+            const effect = clock.sleep(duration)
+            if (!span) return effect
+            if (span._tag !== "Span") return effect
 
             const details = ServiceMap.getOrUndefined(span.annotations, ExampleStep)
-            if (!details) return eff
+            if (!details) return effect
 
-            registry.update(stepStateAtom(details.step), (state) => {
-              if (state._tag !== "Running") return state
-              return VisualEffectState.Running({
-                startedAt: state.startedAt,
-                notification: Option.some(`😴`),
-              })
-            })
+            setStepNotification(details, "😴")
 
-            return eff
+            return effect
           })
         },
         currentTimeMillisUnsafe() {
@@ -149,7 +245,6 @@ export class VisualEffectManager extends ServiceMap.Service<
 
       const manager = VisualEffectManager.of({
         start: Effect.fnUntraced(function* (example) {
-          const atom = exampleStateAtom(example)
           const startedAt = yield* DateTime.now
           const snapshotRegistry = AtomRegistry.make({
             initialValues: example.controls.map(
@@ -169,15 +264,18 @@ export class VisualEffectManager extends ServiceMap.Service<
                 startedAt,
                 notification: Option.none(),
               })
-              registry.set(atom, startState)
-              return example.program.pipe(
-                Effect.provideService(ExampleControlSnapshot, snapshot),
-                Effect.onExit(
-                  Effect.fnUntraced(function* (exit) {
-                    const endedAt = yield* DateTime.now
-                    const endState = exitToState(exit, startedAt, endedAt)
-                    registry.set(atom, endState)
-                  }),
+              return setExampleState(example, startState).pipe(
+                Effect.andThen(
+                  example.program.pipe(
+                    Effect.provideService(ExampleControlSnapshot, snapshot),
+                    Effect.onExit(
+                      Effect.fnUntraced(function* (exit) {
+                        const endedAt = yield* DateTime.now
+                        const endState = exitToState(exit, startedAt, endedAt)
+                        yield* setExampleState(example, endState)
+                      }),
+                    ),
+                  ),
                 ),
               )
             }),
@@ -188,10 +286,21 @@ export class VisualEffectManager extends ServiceMap.Service<
           yield* FiberMap.remove(fiberMap, example)
         }),
         reset: Effect.fnUntraced(function* (example) {
-          yield* FiberMap.remove(fiberMap, example)
-          registry.set(exampleStateAtom(example), InitialState)
-          for (const step of example.steps) {
-            registry.set(stepStateAtom(step), InitialState)
+          resettingExamples.add(example.key)
+
+          try {
+            yield* FiberMap.remove(fiberMap, example)
+            registry.set(exampleStateAtom(example), InitialState)
+            for (const step of example.steps) {
+              registry.set(stepStateAtom(step), InitialState)
+            }
+
+            yield* publishEvent({
+              _tag: "ExampleReset",
+              exampleKey: example.key,
+            })
+          } finally {
+            resettingExamples.delete(example.key)
           }
         }),
       })

@@ -1,11 +1,12 @@
+import { useAtomMount } from "@effect/atom-react"
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
-import { useAtom } from "@effect/atom-react"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
-import { currentExampleCategoryAtom } from "@/atoms/visual-effect"
+import { prefersReducedMotionAtom } from "@/atoms/visual-effect"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type ExampleCategory, EXAMPLES_CATALOG } from "@/lib/examples/catalog"
 import { cn } from "@/lib/utils"
 import { VisualEffect } from "./VisualEffect"
+import { VisualEffectSoundToggle } from "./VisualEffectSoundToggle"
 
 const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
   "concurrency",
@@ -16,7 +17,9 @@ const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
 ]
 
 export function VisualEffects() {
-  const [category, setCategory] = useAtom(currentExampleCategoryAtom)
+  useAtomMount(prefersReducedMotionAtom)
+
+  const [category, setCategory] = useState<ExampleCategory>("concurrency")
   const [indicatorRect, setIndicatorRect] = useState<IndicatorRect | undefined>(undefined)
   const rootElementReference = useRef<HTMLElement | undefined>(undefined)
   const resizeObserverReference = useRef<ResizeObserver | undefined>(undefined)
@@ -139,6 +142,10 @@ export function VisualEffects() {
       className="border-t border-r border-zinc-800 shadow-2xl shadow-black/20"
     >
       <Tabs value={category} onValueChange={(category) => setCategory(category)} className="gap-0">
+        <div className="flex items-center justify-end border-b border-zinc-800 bg-zinc-950/90 px-4 py-3">
+          <VisualEffectSoundToggle />
+        </div>
+
         <TabsList
           variant="line"
           className={cn(

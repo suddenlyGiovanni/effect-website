@@ -1,38 +1,34 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react"
+import * as Equal from "effect/Equal"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
 import type { ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
+import type { SoundPreference } from "@/lib/examples/sound"
 import {
-  exampleStateAtom,
-  stepStateAtom,
-  VisualEffectManager,
-} from "@/services/VisualEffectManager"
+  controlWriteSideEffectsAtom,
+  resetExampleAtom,
+  soundPreferenceAtom,
+  soundSettingsAtom,
+  startExampleAtom,
+  stopExampleAtom,
+  unlockSoundAtom,
+} from "@/atoms/visual-effect"
+import { exampleStateAtom, stepStateAtom } from "@/services/VisualEffectManager"
+
+// =============================================================================
+// Step Definition Context
+// =============================================================================
 
 export const ExampleContext = React.createContext<ExampleDefinition>(null as any)
 
 export const useExampleDefinition = () => React.useContext(ExampleContext)
 
-const runtime = Atom.runtime(VisualEffectManager.layer)
-
-const startAtom = runtime.fn<ExampleDefinition>()(
-  (example) => VisualEffectManager.use((_) => _.start(example)),
-  { concurrent: true },
-)
-const stopAtom = runtime.fn<ExampleDefinition>()(
-  (example) => VisualEffectManager.use((_) => _.stop(example)),
-  { concurrent: true },
-)
-const resetAtom = runtime.fn<ExampleDefinition>()(
-  (example) => VisualEffectManager.use((_) => _.reset(example)),
-  { concurrent: true },
-)
-
 export const useExampleControls = () => {
   const example = useExampleDefinition()
 
-  const start = useAtomSet(startAtom)
-  const stop = useAtomSet(stopAtom)
-  const reset = useAtomSet(resetAtom)
+  const start = useAtomSet(startExampleAtom)
+  const stop = useAtomSet(stopExampleAtom)
+  const reset = useAtomSet(resetExampleAtom)
 
   return {
     start() {
@@ -52,11 +48,29 @@ export const useExampleState = () => {
   return useAtomValue(exampleStateAtom(example))
 }
 
+// =============================================================================
+// Step Definition Context
+// =============================================================================
+
+export const StepContext = React.createContext<StepDefinition>(null as any)
+
+export const useStepDefinition = () => React.useContext(StepContext)
+
+export const useStepState = () => {
+  const step = useStepDefinition()
+  return useAtomValue(stepStateAtom(step))
+}
+
+// =============================================================================
+// Example Controls
+// =============================================================================
+
 export const useControlWrite = <A,>(atom: Atom.Writable<A>) => {
   const example = useExampleDefinition()
   const state = useExampleState()
+  const current = useAtomValue(atom)
   const set = useAtomSet(atom)
-  const { reset } = useExampleControls()
+  const applyControlWriteSideEffects = useAtomSet(controlWriteSideEffectsAtom)
 
   const control = React.useMemo(
     () => example.controls.find((control) => control.matches(atom)),
@@ -69,26 +83,42 @@ export const useControlWrite = <A,>(atom: Atom.Writable<A>) => {
         throw new Error("Unknown example control atom")
       }
 
-      set(next)
-
-      if (control.changePolicy === "always") {
-        reset()
+      if (Object.is(current, next) || Equal.equals(current, next)) {
         return
       }
 
-      if (control.changePolicy === "ifRunning" && state._tag === "Running") {
-        reset()
-      }
+      const isRunning = state._tag === "Running"
+      const shouldReset =
+        control.changePolicy === "always" || (control.changePolicy === "ifRunning" && isRunning)
+
+      set(next)
+
+      applyControlWriteSideEffects({
+        example,
+        controlId: control.id,
+        shouldReset,
+      })
     },
-    [control, reset, set, state._tag],
+    [applyControlWriteSideEffects, control, current, example, set, state._tag],
   )
 }
 
-export const StepContext = React.createContext<StepDefinition>(null as any)
+// =============================================================================
+// Sound Settings / Controls
+// =============================================================================
 
-export const useStepDefinition = () => React.useContext(StepContext)
+export const useSoundSettings = () => useAtomValue(soundSettingsAtom)
 
-export const useStepState = () => {
-  const step = useStepDefinition()
-  return useAtomValue(stepStateAtom(step))
+export const useSoundControls = () => {
+  const unlockSounds = useAtomSet(unlockSoundAtom)
+  const setSoundPreference = useAtomSet(soundPreferenceAtom)
+
+  return {
+    unlockSounds() {
+      unlockSounds(void 0)
+    },
+    setSoundPreference(preference: SoundPreference) {
+      setSoundPreference(preference)
+    },
+  } as const
 }

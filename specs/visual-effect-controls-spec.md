@@ -222,9 +222,7 @@ const snapshot = ExampleControlSnapshot.of({
   },
 })
 
-return example.program.pipe(
-  Effect.provideService(ExampleControlSnapshot, snapshot),
-)
+return example.program.pipe(Effect.provideService(ExampleControlSnapshot, snapshot))
 ```
 
 ## 7.2 Control change behavior while running
@@ -323,9 +321,7 @@ const AllConfigSchema = Schema.Struct({
 function AllConfigControl(props: ExampleControlRenderProps<AllConfig>) {
   const [value, setValue] = useAtom(props.atom)
 
-  const parseConcurrency = (
-    input: string,
-  ): AllConfig["concurrency"] => {
+  const parseConcurrency = (input: string): AllConfig["concurrency"] => {
     if (input === "numbered") {
       return "numbered"
     }
@@ -421,9 +417,7 @@ export const allExample = defineExample({
 
     return Effect.gen(function* () {
       const cfg = yield* controls.read(config)
-      const effects = cfg.includeLondon
-        ? [nyc, berlin, tokyo, london]
-        : [nyc, berlin, tokyo]
+      const effects = cfg.includeLondon ? [nyc, berlin, tokyo, london] : [nyc, berlin, tokyo]
 
       if (cfg.concurrency === "sequential") {
         return yield* Effect.all(effects)

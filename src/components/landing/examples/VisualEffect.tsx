@@ -70,7 +70,7 @@ function VisualEffectNodes({
 
   return (
     <motion.div
-      className="bg-background border-b p-6"
+      className="border-b bg-background p-6"
       initial={false}
       animate={{ borderColor }}
       transition={{ borderColor: { duration: 0.2, ease: "easeInOut" } }}
