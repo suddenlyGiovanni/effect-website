@@ -1,6 +1,6 @@
 import { motion } from "motion/react"
 import * as React from "react"
-import { canReset, VisualEffectState } from "@/lib/examples/domain"
+import { canReset } from "@/lib/examples/domain"
 import { VisualEffectControlsIcon } from "./VisualEffectControlsIcon"
 import { useExampleControls, useExampleDefinition, useExampleState } from "./VisualEffectProvider"
 
@@ -10,7 +10,7 @@ export function VisualEffectControls({ isDied }: { readonly isDied: boolean }) {
   const controls = useExampleControls()
   const [isHovered, setIsHovered] = React.useState(false)
   const [isPressed, setIsPressed] = React.useState(false)
-  const isRunning = VisualEffectState.$is("Running")(exampleState)
+  const isRunning = exampleState._tag === "Running"
   const isResettable = canReset(exampleState)
 
   const handleClick = () => {

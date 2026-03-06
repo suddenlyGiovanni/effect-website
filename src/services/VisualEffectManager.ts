@@ -12,6 +12,7 @@ import * as Tracer from "effect/Tracer"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import {
+  ExampleControlSnapshot,
   ExampleStep,
   type ExampleDefinition,
   type StepDefinition,
@@ -29,11 +30,11 @@ export const stepStateAtom = Atom.family((_definition: StepDefinition) =>
 export class VisualEffectManager extends ServiceMap.Service<
   VisualEffectManager,
   {
-    start(example: ExampleDefinition): Effect.Effect<void>
-    stop(example: ExampleDefinition): Effect.Effect<void>
-    reset(example: ExampleDefinition): Effect.Effect<void>
+    start: (example: ExampleDefinition) => Effect.Effect<void>
+    stop: (example: ExampleDefinition) => Effect.Effect<void>
+    reset: (example: ExampleDefinition) => Effect.Effect<void>
   }
->()("website-v4/services/VisualEffectManager") {
+>()("VisualEffectManager") {
   static readonly layer = Layer.effectServices(
     Effect.gen(function* () {
       const registry = yield* AtomRegistry.AtomRegistry
@@ -150,20 +151,34 @@ export class VisualEffectManager extends ServiceMap.Service<
         start: Effect.fnUntraced(function* (example) {
           const atom = exampleStateAtom(example)
           const startedAt = yield* DateTime.now
+          const snapshotRegistry = AtomRegistry.make({
+            initialValues: example.controls.map(
+              (control) => [control.atom, control.get(registry)] as const,
+            ),
+          })
+
+          const snapshot = ExampleControlSnapshot.of({
+            get: (atom) => snapshotRegistry.get(atom),
+          })
+
           yield* FiberMap.run(
             fiberMap,
             example,
             Effect.suspend(() => {
-              registry.set(
-                atom,
-                VisualEffectState.Running({ startedAt, notification: Option.none() }),
-              )
-              return Effect.onExit(
-                example.program,
-                Effect.fnUntraced(function* (exit) {
-                  const endedAt = yield* DateTime.now
-                  registry.set(atom, exitToState(exit, startedAt, endedAt))
-                }),
+              const startState = VisualEffectState.Running({
+                startedAt,
+                notification: Option.none(),
+              })
+              registry.set(atom, startState)
+              return example.program.pipe(
+                Effect.provideService(ExampleControlSnapshot, snapshot),
+                Effect.onExit(
+                  Effect.fnUntraced(function* (exit) {
+                    const endedAt = yield* DateTime.now
+                    const endState = exitToState(exit, startedAt, endedAt)
+                    registry.set(atom, endState)
+                  }),
+                ),
               )
             }),
             { startImmediately: true, onlyIfMissing: true },

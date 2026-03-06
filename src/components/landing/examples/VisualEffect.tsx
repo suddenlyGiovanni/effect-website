@@ -7,6 +7,7 @@ import { useNodeTransitionFlags } from "@/hooks/animation/useNodeTransitionFlags
 import { snippetResultTargetKey, toStepSnippetTargetKey } from "@/lib/examples/snippet-highlights"
 import { useSnippetHoverState } from "./useSnippetHoverState"
 import { VisualEffectCodeSnippet } from "./VisualEffectCodeSnippet"
+import { VisualEffectConfigPanel } from "./VisualEffectConfigPanel"
 import { VisualEffectControls } from "./VisualEffectControls"
 import { VisualEffectNode } from "./VisualEffectNode"
 import {
@@ -48,6 +49,7 @@ function VisualEffectSurface() {
     >
       <MotionConfig reducedMotion="user">
         <VisualEffectControls isDied={isDied} />
+        <VisualEffectConfigPanel isDied={isDied} />
         <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
         <VisualEffectCodeSnippet
           snippet={example.code}

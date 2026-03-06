@@ -52,6 +52,38 @@ export const useExampleState = () => {
   return useAtomValue(exampleStateAtom(example))
 }
 
+export const useControlWrite = <A,>(atom: Atom.Writable<A>) => {
+  const example = useExampleDefinition()
+  const state = useExampleState()
+  const set = useAtomSet(atom)
+  const { reset } = useExampleControls()
+
+  const control = React.useMemo(
+    () => example.controls.find((control) => control.matches(atom)),
+    [atom, example.controls],
+  )
+
+  return React.useCallback(
+    (next: A) => {
+      if (control === undefined) {
+        throw new Error("Unknown example control atom")
+      }
+
+      set(next)
+
+      if (control.changePolicy === "always") {
+        reset()
+        return
+      }
+
+      if (control.changePolicy === "ifRunning" && state._tag === "Running") {
+        reset()
+      }
+    },
+    [control, reset, set, state._tag],
+  )
+}
+
 export const StepContext = React.createContext<StepDefinition>(null as any)
 
 export const useStepDefinition = () => React.useContext(StepContext)
