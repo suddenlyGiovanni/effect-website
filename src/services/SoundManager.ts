@@ -116,6 +116,11 @@ const makeToneEngine = Effect.gen(function* () {
   const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.25 }).connect(volume)
   const distortion = new Tone.Distortion({ distortion: 0.8, wet: 1 }).connect(volume)
 
+  const running = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: "triangle" },
+    envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.08 },
+  }).connect(reverb)
+
   const success = new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: "triangle" },
     envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.1 },
@@ -187,6 +192,10 @@ const makeToneEngine = Effect.gen(function* () {
   const play = Effect.fn("ToneEngine.play")(function* (cue: SoundCue) {
     const now = Tone.now()
     switch (cue._tag) {
+      case "StepRunning": {
+        running.triggerAttackRelease("C2", "16n", now, 0.68)
+        break
+      }
       case "StepSucceeded": {
         const note = yield* nextSuccessNote
         success.triggerAttackRelease(note, "8n", now, 0.45)
@@ -222,6 +231,7 @@ const makeToneEngine = Effect.gen(function* () {
 
   yield* Effect.addFinalizer(() =>
     Effect.sync(() => {
+      running.dispose()
       success.dispose()
       failure.dispose()
       interrupted.dispose()

@@ -12,6 +12,8 @@ import { type EffectMotionValues } from "@/hooks/animation/useEffectMotionValues
 import { COLORS, SHADOW_COLORS, SPRINGS, VFX } from "@/lib/animation"
 import { cn } from "@/lib/utils"
 
+const FILTER_TRANSITION = { duration: 0.16, ease: "easeOut" } as const
+
 export function VisualEffectNode({
   label,
   motionValues,
@@ -56,7 +58,7 @@ function VisualEffectContainer({
   const isDied = state._tag === "Died"
 
   const filter = useTransform(motionValues.blurAmount, (blur = 0) => {
-    const cappedBlur = Math.min(blur, 2)
+    const cappedBlur = Math.max(0, Math.min(blur, 2))
     return isDied
       ? `blur(${cappedBlur}px) contrast(${VFX.contrast.death}) brightness(${VFX.brightness.death})`
       : `blur(${cappedBlur}px)`
@@ -237,7 +239,10 @@ function VisualEffectContent({
             initial={{ scale: 0, filter: "blur(10px)" }}
             animate={{ scale: 1, filter: "blur(0px)" }}
             exit={{ scale: 0, filter: "blur(10px)" }}
-            transition={{ type: "spring", bounce: 0.3, visualDuration: 0.3 }}
+            transition={{
+              scale: { type: "spring", bounce: 0.3, visualDuration: 0.3 },
+              filter: FILTER_TRANSITION,
+            }}
           >
             <VisualEffectNodeIcon size={56} state={state} />
           </motion.div>
@@ -252,9 +257,13 @@ function VisualEffectContent({
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 0.5, filter: "blur(10px)" }}
             transition={{
-              ...SPRINGS.bouncy,
-              stiffness: 260,
-              damping: 18,
+              opacity: { duration: 0.16, ease: "easeOut" },
+              scale: {
+                ...SPRINGS.bouncy,
+                stiffness: 260,
+                damping: 18,
+              },
+              filter: FILTER_TRANSITION,
             }}
           >
             {state.value.render()}
@@ -272,9 +281,12 @@ function VisualEffectContent({
             animate={{ scale: 1, filter: "blur(0px)" }}
             exit={{ scale: 0, filter: "blur(10px)" }}
             transition={{
-              type: "spring",
-              bounce: state._tag === "Interrupted" ? 0.5 : 0.3,
-              visualDuration: 0.3,
+              scale: {
+                type: "spring",
+                bounce: state._tag === "Interrupted" ? 0.5 : 0.3,
+                visualDuration: 0.3,
+              },
+              filter: FILTER_TRANSITION,
             }}
           >
             <VisualEffectNodeIcon size={56} state={state} />
