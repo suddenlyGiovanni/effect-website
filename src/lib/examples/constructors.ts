@@ -3,6 +3,7 @@ import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
+import * as Schema from "effect/Schema"
 import * as ServiceMap from "effect/ServiceMap"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
@@ -26,6 +27,20 @@ export type RenderableEffect<
 export interface AddStepOptions {
   readonly label: string
   readonly highlight?: SnippetSelectorDefinition
+  readonly scheduleRole?: ExampleScheduleRole | undefined
+}
+
+export type ExampleScheduleRole = "attempt"
+
+export interface ExampleScheduleTimelineInput {
+  readonly pixelsPerSecond?: number | undefined
+  readonly scrollThreshold?: number | undefined
+}
+
+export interface ExampleScheduleTimelineDefinition {
+  readonly attemptStep: StepDefinition
+  readonly pixelsPerSecond: number
+  readonly scrollThreshold: number
 }
 
 export interface BuildContext {
@@ -110,6 +125,7 @@ export interface DefineExampleInput {
   readonly description?: string | undefined
   readonly code: ExampleCodeSnippetInput
   readonly resultHighlight?: SnippetHighlightSelector | ReadonlyArray<SnippetHighlightSelector>
+  readonly scheduleTimeline?: ExampleScheduleTimelineInput | undefined
   readonly build: (
     ctx: BuildContext,
   ) => RenderableEffect<RenderableResult, RenderableResult, ExampleControlSnapshot>
@@ -124,6 +140,7 @@ export interface ExampleDefinition {
   readonly controls: ReadonlyArray<ExampleControlDefinition>
   readonly program: RenderableEffect<RenderableResult, RenderableResult, ExampleControlSnapshot>
   readonly code: ExampleCodeDefinition
+  readonly scheduleTimeline: ExampleScheduleTimelineDefinition | undefined
 }
 
 export interface ExampleCodeDefinition {
@@ -147,9 +164,45 @@ export class ExampleControlSnapshot extends ServiceMap.Service<
   { readonly get: <A>(atom: Atom.Atom<A>) => A }
 >()("ExampleControlSnapshot") {}
 
+export class MissingScheduleAttemptStepError extends Schema.TaggedErrorClass<MissingScheduleAttemptStepError>()(
+  "MissingScheduleAttemptStepError",
+  {
+    exampleLabel: Schema.String,
+  },
+) {}
+
+export class DuplicateScheduleAttemptStepError extends Schema.TaggedErrorClass<DuplicateScheduleAttemptStepError>()(
+  "DuplicateScheduleAttemptStepError",
+  {
+    exampleLabel: Schema.String,
+    count: Schema.Number,
+  },
+) {}
+
+export class OrphanedScheduleRoleError extends Schema.TaggedErrorClass<OrphanedScheduleRoleError>()(
+  "OrphanedScheduleRoleError",
+  {
+    exampleLabel: Schema.String,
+    stepLabel: Schema.String,
+  },
+) {}
+
+export class InvalidScheduleTimelineConfigError extends Schema.TaggedErrorClass<InvalidScheduleTimelineConfigError>()(
+  "InvalidScheduleTimelineConfigError",
+  {
+    exampleLabel: Schema.String,
+    field: Schema.Union([
+      Schema.Literal("pixelsPerSecond"),
+      Schema.Literal("scrollThreshold"),
+    ]),
+    message: Schema.String,
+  },
+) {}
+
 export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
   const controls: Array<ExampleControlDefinition> = []
+  const scheduleAttemptSteps: Array<StepDefinition> = []
   const selectorsByTarget: Record<string, SnippetSelectorDefinition> = {}
   let codeDefinition: ExampleCodeDefinitionInput = input.code
   let resultHighlightDefinition: SnippetSelectorDefinition | undefined = input.resultHighlight
@@ -165,6 +218,10 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     if (options.highlight !== undefined) {
       const targetKey = toStepSnippetTargetKey(step.id)
       selectorsByTarget[targetKey] = options.highlight
+    }
+
+    if (options.scheduleRole === "attempt") {
+      scheduleAttemptSteps.push(step)
     }
 
     return step
@@ -256,6 +313,8 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     },
   })
 
+  const resolvedScheduleTimeline = resolveScheduleTimelineDefinition(input, scheduleAttemptSteps)
+
   const definition: ExampleDefinition = {
     key: crypto.randomUUID(),
     title: input.label,
@@ -264,6 +323,7 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     steps,
     controls,
     program,
+    scheduleTimeline: resolvedScheduleTimeline,
     code: {
       resolve: (controlValues) => {
         const resolvedSelectorsByTarget: Record<
@@ -339,4 +399,64 @@ const resolveSnippetSelectors = (
   }
 
   return definition
+}
+
+const resolveScheduleTimelineDefinition = (
+  input: DefineExampleInput,
+  scheduleAttemptSteps: ReadonlyArray<StepDefinition>,
+): ExampleScheduleTimelineDefinition | undefined => {
+  if (input.scheduleTimeline === undefined) {
+    const orphanedStep = scheduleAttemptSteps[0]
+
+    if (orphanedStep !== undefined) {
+      throw new OrphanedScheduleRoleError({
+        exampleLabel: input.label,
+        stepLabel: orphanedStep.label,
+      })
+    }
+
+    return undefined
+  }
+
+  if (scheduleAttemptSteps.length === 0) {
+    throw new MissingScheduleAttemptStepError({ exampleLabel: input.label })
+  }
+
+  if (scheduleAttemptSteps.length > 1) {
+    throw new DuplicateScheduleAttemptStepError({
+      exampleLabel: input.label,
+      count: scheduleAttemptSteps.length,
+    })
+  }
+
+  const pixelsPerSecond = input.scheduleTimeline.pixelsPerSecond ?? 100
+  const scrollThreshold = input.scheduleTimeline.scrollThreshold ?? 0.8
+
+  if (!(pixelsPerSecond > 0)) {
+    throw new InvalidScheduleTimelineConfigError({
+      exampleLabel: input.label,
+      field: "pixelsPerSecond",
+      message: "Expected a value greater than 0.",
+    })
+  }
+
+  if (!(scrollThreshold > 0 && scrollThreshold < 1)) {
+    throw new InvalidScheduleTimelineConfigError({
+      exampleLabel: input.label,
+      field: "scrollThreshold",
+      message: "Expected a value between 0 and 1.",
+    })
+  }
+
+  const attemptStep = scheduleAttemptSteps[0]
+
+  if (attemptStep === undefined) {
+    throw new MissingScheduleAttemptStepError({ exampleLabel: input.label })
+  }
+
+  return {
+    attemptStep,
+    pixelsPerSecond,
+    scrollThreshold,
+  }
 }

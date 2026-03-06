@@ -11,6 +11,7 @@ import { VisualEffectCodeSnippet } from "./VisualEffectCodeSnippet"
 import { VisualEffectConfigPanel } from "./VisualEffectConfigPanel"
 import { VisualEffectControls } from "./VisualEffectControls"
 import { VisualEffectNode } from "./VisualEffectNode"
+import { VisualEffectScheduleTimeline } from "./VisualEffectScheduleTimeline"
 import {
   ExampleControlRuntimeProvider,
   ExampleContext,
@@ -55,6 +56,9 @@ function VisualEffectSurface() {
         <VisualEffectControls isDied={isDied} />
         <VisualEffectConfigPanel isDied={isDied} />
         <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
+        {example.scheduleTimeline !== undefined && (
+          <VisualEffectScheduleTimeline config={example.scheduleTimeline} />
+        )}
         <VisualEffectCodeSnippet snippet={example.code} activeTarget={delayedTarget} />
       </MotionConfig>
     </motion.div>

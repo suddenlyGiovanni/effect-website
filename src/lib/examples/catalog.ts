@@ -3,6 +3,9 @@ import { allExample } from "./catalog/effect-all"
 import { dieExample } from "./catalog/effect-die"
 import { failExample } from "./catalog/effect-fail"
 import { raceExample } from "./catalog/effect-race"
+import { repeatSpacedExample } from "./catalog/effect-repeat-spaced"
+import { retryExponentialExample } from "./catalog/effect-retry-exponential"
+import { retryRecursExample } from "./catalog/effect-retry-recurs"
 import { succeedExample } from "./catalog/effect-succeed"
 
 export type ExampleCategory =
@@ -24,7 +27,7 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
   },
   schedule: {
     label: "Schedule",
-    examples: [],
+    examples: [repeatSpacedExample, retryExponentialExample, retryRecursExample],
   },
   constructors: {
     label: "Constructors",
