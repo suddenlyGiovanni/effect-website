@@ -5,8 +5,8 @@ import {
   useReducedMotion,
 } from "motion/react"
 import { useCallback, useEffect, useRef } from "react"
-import { SPRINGS, TIMINGS } from "@/lib/animation"
 import type { VisualEffectState } from "@/lib/examples/domain"
+import { SPRINGS, TIMINGS } from "@/lib/animation"
 import type { EffectMotionValues } from "./useEffectMotionValues"
 import type { TransitionFlags } from "./useNodeTransitionFlags"
 
@@ -352,7 +352,10 @@ export const useEffectNodeAnimationController = ({
           if (!isActive()) return
 
           motion.glowIntensity.set(randomBetween(GLITCH_GLOW_MIN, GLITCH_GLOW_MAX))
-          schedule(runSubtleLoop, randomBetween(GLITCH_SUBTLE_DELAY_MIN_MS, GLITCH_SUBTLE_DELAY_MAX_MS))
+          schedule(
+            runSubtleLoop,
+            randomBetween(GLITCH_SUBTLE_DELAY_MIN_MS, GLITCH_SUBTLE_DELAY_MAX_MS),
+          )
         }
 
         runSubtleLoop()

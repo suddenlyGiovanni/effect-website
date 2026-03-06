@@ -1,7 +1,7 @@
-import * as React from "react"
 import { motion, useReducedMotion } from "motion/react"
-import { SPRINGS } from "@/lib/animation"
+import * as React from "react"
 import type { ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
+import { SPRINGS } from "@/lib/animation"
 
 interface HighlightRect {
   readonly x: number

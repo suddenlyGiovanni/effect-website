@@ -13,10 +13,5 @@ export const succeedExample = defineExample({
     _tag: "Text",
     text: "Effect.succeed(42)",
   },
-  build: ({ addStep }) => {
-    return addStep(Effect.succeed(new PrimitiveResult(42)), {
-      label: "value",
-      highlight: { _tag: "Text", text: "Effect.succeed(42)" },
-    })
-  },
+  build: () => Effect.succeed(new PrimitiveResult(42)),
 })

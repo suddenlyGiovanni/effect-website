@@ -29,7 +29,6 @@ function ConcurrencyModeControl(props: ExampleControlRenderProps<ConcurrencyMode
           {CONCURRENCY_OPTIONS.map((option) => (
             <TabsTrigger
               key={option}
-              disabled={props.disabled}
               className={cn(
                 "relative z-10 cursor-pointer border-none px-3 text-center font-mono shadow-none",
                 "bg-transparent data-active:border-transparent data-active:bg-transparent data-active:font-semibold data-active:shadow-none",

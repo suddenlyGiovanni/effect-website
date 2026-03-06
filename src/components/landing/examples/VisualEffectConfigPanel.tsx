@@ -26,7 +26,7 @@ export function VisualEffectConfigPanel({ isDied }: { readonly isDied: boolean }
         backgroundColor: { duration: 0.2, ease: "easeInOut" },
       }}
     >
-      <div className="px-6 py-4 bg-linear-to-t from-neutral-800/40 to-neutral-800/20">
+      <div className="bg-linear-to-t from-neutral-800/40 to-neutral-800/20 px-6 py-4">
         {example.controls.map((control) => control.render({ disabled }))}
       </div>
     </motion.section>

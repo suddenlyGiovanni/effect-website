@@ -1,10 +1,10 @@
-import * as React from "react"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
 import * as ServiceMap from "effect/ServiceMap"
+import * as Atom from "effect/unstable/reactivity/Atom"
+import * as React from "react"
 import type { RenderableResult } from "./domain"
 import {
   normalizeSelectorInput,

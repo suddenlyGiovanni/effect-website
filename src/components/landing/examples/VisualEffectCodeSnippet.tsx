@@ -1,8 +1,7 @@
-import * as React from "react"
-import { motion } from "motion/react"
 import type { ThemedToken } from "shiki/types"
-import { getSnippetTokens } from "@/lib/examples/shiki-singleton"
+import * as React from "react"
 import type { ExampleCodeSnippet, ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
+import { getSnippetTokens } from "@/lib/examples/shiki-singleton"
 import { VisualEffectCodeSnippetHighlight } from "./VisualEffectCodeSnippetHighlight"
 
 const EMPTY_RANGES: ReadonlyArray<ResolvedOffsetRange> = []
@@ -23,11 +22,9 @@ type TokensState =
 export function VisualEffectCodeSnippet({
   snippet,
   activeTarget,
-  isDied,
 }: {
   readonly snippet: ExampleCodeSnippet
   readonly activeTarget: string | null
-  readonly isDied: boolean
 }) {
   const [tokensState, setTokensState] = React.useState<TokensState>({ _tag: "Loading" })
   const snippetContainerReference = React.useRef<HTMLDivElement | null>(null)
@@ -69,19 +66,13 @@ export function VisualEffectCodeSnippet({
     ? (snippet.highlightsByTarget[activeTarget] ?? EMPTY_RANGES)
     : EMPTY_RANGES
 
-  const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
-
   return (
-    <motion.div
-      className="landing-example-snippet border-t"
-      initial={false}
-      animate={{
-        borderColor,
-      }}
-      transition={{ borderColor: { duration: 0.2, ease: "easeInOut" } }}
-    >
+    <React.Fragment>
       <div className="overflow-x-auto">
-        <div ref={snippetContainerReference} className="relative min-w-full px-6 py-5">
+        <div
+          ref={snippetContainerReference}
+          className="relative min-w-full bg-background px-6 py-5"
+        >
           {tokensState._tag === "Ready" ? (
             <SnippetTokens tokens={tokensState.tokens} />
           ) : (
@@ -100,15 +91,15 @@ export function VisualEffectCodeSnippet({
           highlighting unavailable: {tokensState.message}
         </div>
       )}
-    </motion.div>
+    </React.Fragment>
   )
 }
 
 function SnippetTokens({ tokens }: { readonly tokens: ReadonlyArray<ReadonlyArray<ThemedToken>> }) {
   return (
-    <pre className="landing-example-snippet-pre text-sm text-zinc-300">
+    <pre className="m-0 font-mono text-sm leading-[1.6] whitespace-pre text-zinc-300 [tab-size:2]">
       {tokens.map((lineTokens, lineIndex) => (
-        <div key={`snippet-line-${lineIndex.toString()}`} className="landing-example-snippet-line">
+        <div key={`snippet-line-${lineIndex.toString()}`} className="block min-h-[1.6em]">
           {lineTokens.length === 0 ? (
             <span>{"\u00a0"}</span>
           ) : (
@@ -134,7 +125,11 @@ function SnippetTokens({ tokens }: { readonly tokens: ReadonlyArray<ReadonlyArra
 }
 
 function SnippetFallback({ source }: { readonly source: string }) {
-  return <pre className="landing-example-snippet-pre text-sm text-zinc-300">{source}</pre>
+  return (
+    <pre className="m-0 font-mono text-sm leading-[1.6] whitespace-pre text-zinc-300 [tab-size:2]">
+      {source}
+    </pre>
+  )
 }
 
 const tokenStyle = (token: ThemedToken): React.CSSProperties => {

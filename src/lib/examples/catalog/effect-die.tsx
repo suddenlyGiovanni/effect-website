@@ -12,13 +12,5 @@ export const dieExample = defineExample({
     _tag: "Text",
     text: 'Effect.die(new Error("FATAL: System corrupted"))',
   },
-  build: ({ addStep }) => {
-    return addStep(Effect.die(new Error("FATAL: System corrupted")), {
-      label: "death",
-      highlight: {
-        _tag: "Text",
-        text: 'Effect.die(new Error("FATAL: System corrupted"))',
-      },
-    })
-  },
+  build: () => Effect.die(new Error("FATAL: System corrupted")),
 })

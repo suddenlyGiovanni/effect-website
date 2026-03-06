@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react"
 import { MotionConfig, motion, useAnimate } from "motion/react"
+import * as React from "react"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { useEffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { useEffectNodeAnimationController } from "@/hooks/animation/useEffectNodeAnimationController"
@@ -51,11 +52,7 @@ function VisualEffectSurface() {
         <VisualEffectControls isDied={isDied} />
         <VisualEffectConfigPanel isDied={isDied} />
         <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
-        <VisualEffectCodeSnippet
-          snippet={example.code}
-          activeTarget={delayedTarget}
-          isDied={isDied}
-        />
+        <VisualEffectCodeSnippet snippet={example.code} activeTarget={delayedTarget} />
       </MotionConfig>
     </motion.div>
   )
@@ -73,23 +70,27 @@ function VisualEffectNodes({
 
   return (
     <motion.div
-      className="border-b p-6"
+      className="bg-background border-b p-6"
       initial={false}
       animate={{ borderColor }}
       transition={{ borderColor: { duration: 0.2, ease: "easeInOut" } }}
     >
       <div className="flex items-center justify-start gap-6">
-        <div className="flex flex-wrap justify-center gap-6">
-          {example.steps.map((step) => (
-            <StepContext.Provider key={step.id} value={step}>
-              <VisualEffectStepNode onHoverTargetChange={onHoverTargetChange} />
-            </StepContext.Provider>
-          ))}
-        </div>
+        {example.steps.length > 0 && (
+          <React.Fragment>
+            <div className="flex flex-wrap justify-center gap-6">
+              {example.steps.map((step) => (
+                <StepContext.Provider key={step.id} value={step}>
+                  <VisualEffectStepNode onHoverTargetChange={onHoverTargetChange} />
+                </StepContext.Provider>
+              ))}
+            </div>
 
-        <div className="mb-6 flex items-center text-neutral-500">
-          <ArrowRight className="size-6" fill="currentColor" />
-        </div>
+            <div className="mb-6 flex items-center text-neutral-500">
+              <ArrowRight className="size-6" fill="currentColor" />
+            </div>
+          </React.Fragment>
+        )}
 
         <VisualEffectResultNode onHoverTargetChange={onHoverTargetChange} />
       </div>

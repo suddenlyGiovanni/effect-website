@@ -13,10 +13,5 @@ export const failExample = defineExample({
     _tag: "Text",
     text: 'Effect.fail("Kaboom!")',
   },
-  build: ({ addStep }) => {
-    return addStep(Effect.fail(new ErrorResult("Kaboom!")), {
-      label: "error",
-      highlight: { _tag: "Text", text: 'Effect.fail("Kaboom!")' },
-    })
-  },
+  build: () => Effect.fail(new ErrorResult("Kaboom!")),
 })
