@@ -82,9 +82,8 @@ export function VisualEffectScheduleTimeline() {
   )
 
   const currentTimeMillis = getCurrentTimeMillis(exampleState, timeline, currentTime)
-  const startedAt =
-    exampleState._tag === "Running" ? exampleState.startedAt : DateTime.makeUnsafe(0)
-  const cursorPosition = getCursorPosition(exampleState, currentTimeMillis)
+  const timelineOriginMillis = getTimelineOriginMillis(exampleState, timeline, currentTimeMillis)
+  const cursorPosition = getCursorPosition(exampleState, currentTimeMillis, timelineOriginMillis)
   const scrollOffset = getScrollOffset(containerWidth, cursorPosition)
   const totalWidth = containerWidth + scrollOffset + TIMELINE_CONFIG.scrollBuffer
   const tickCount = Math.max(0, Math.ceil(totalWidth / TIMELINE_CONFIG.tickMarkSpacing))
@@ -103,7 +102,6 @@ export function VisualEffectScheduleTimeline() {
             top: "50%",
             transform: "translateY(-50%)",
             backgroundColor: TIMELINE_COLORS.backgroundLine,
-            // opacity: session?.clearing === true ? 0 : 1,
           }}
         />
 
@@ -118,7 +116,6 @@ export function VisualEffectScheduleTimeline() {
                 left: `${x}px`,
                 width: 1,
                 backgroundColor: TIMELINE_COLORS.tickMark,
-                // opacity: session?.clearing === true ? 0 : 1,
               }}
             />
           )
@@ -130,7 +127,7 @@ export function VisualEffectScheduleTimeline() {
               state: exampleState,
               segment,
               scrollOffset,
-              startedAt,
+              timelineOriginMillis,
               currentTimeMillis,
             })
 
@@ -148,7 +145,7 @@ export function VisualEffectScheduleTimeline() {
                 }}
                 animate={{
                   backgroundColor: lineColor,
-                  // opacity: session?.clearing === true ? 0 : 1,
+                  opacity: 1,
                   width: `${visibleWidth}px`,
                 }}
                 transition={{
@@ -172,7 +169,7 @@ export function VisualEffectScheduleTimeline() {
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{
                     backgroundColor: lineColor,
-                    // opacity: session?.clearing === true ? 0 : 1,
+                    opacity: 1,
                     scale: 1,
                   }}
                   transition={{
@@ -197,7 +194,7 @@ export function VisualEffectScheduleTimeline() {
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{
                     backgroundColor: TIMELINE_COLORS.runningInactive,
-                    // opacity: session?.clearing === true ? 0 : 1,
+                    opacity: 1,
                     scale: 1,
                   }}
                   transition={{
@@ -221,10 +218,7 @@ export function VisualEffectScheduleTimeline() {
                   <motion.div
                     className="rounded border border-neutral-700 bg-neutral-900/90 px-2 py-0.5 font-mono text-xs text-neutral-300 whitespace-nowrap"
                     initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{
-                      // opacity: session?.clearing === true ? 0 : 1,
-                      scale: 1,
-                    }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{
                       opacity: { duration: 0.2, ease: "easeOut" },
                       scale: { duration: 0.2, ease: "easeOut" },
@@ -249,7 +243,6 @@ export function VisualEffectScheduleTimeline() {
                 ? TIMELINE_COLORS.cursorActive
                 : TIMELINE_COLORS.cursorInactive,
             left: `${cursorPosition - scrollOffset}px`,
-            // opacity: session?.clearing === true ? 0 : 1,
           }}
           transition={{
             backgroundColor: { duration: 0.24, ease: "easeOut" },
@@ -285,27 +278,41 @@ const getCurrentTimeMillis = (
   return currentTime
 }
 
-const toTimelineX = (
-  currentTime: DateTime.Utc | number,
-  startTime: DateTime.Utc | number,
+const getTimelineOriginMillis = (
+  state: VisualEffectState,
+  segments: VisualEffectScheduleTimeline,
+  currentTimeMillis: number,
 ): number => {
-  const currentTimeMillis = DateTime.isDateTime(currentTime)
-    ? DateTime.toEpochMillis(currentTime)
-    : currentTime
-  const startTimeMillis = DateTime.isDateTime(startTime)
-    ? DateTime.toEpochMillis(startTime)
-    : startTime
+  if (state._tag === "Running") {
+    return DateTime.toEpochMillis(state.startedAt)
+  }
+
+  const firstSegment = segments[0]
+
+  if (firstSegment !== undefined) {
+    return DateTime.toEpochMillis(firstSegment.startedAt)
+  }
+
+  return currentTimeMillis
+}
+
+const toTimelineX = (currentTimeMillis: number, startTimeMillis: number): number => {
   const delta = currentTimeMillis - startTimeMillis
   const normalizedDelta = (delta / 1_000) * TIMELINE_CONFIG.pixelsPerSecond
   const offsetDelta = normalizedDelta + TIMELINE_CONFIG.startOffset
   return offsetDelta
 }
 
-const getCursorPosition = (state: VisualEffectState, time: number): number => {
-  if (state._tag === "Running") {
-    return toTimelineX(time, state.startedAt)
+const getCursorPosition = (
+  state: VisualEffectState,
+  currentTimeMillis: number,
+  timelineOriginMillis: number,
+): number => {
+  if (state._tag === "Idle") {
+    return TIMELINE_CONFIG.startOffset
   }
-  return TIMELINE_CONFIG.startOffset
+
+  return toTimelineX(currentTimeMillis, timelineOriginMillis)
 }
 
 const getScrollOffset = (containerWidth: number, cursorPosition: number): number => {
@@ -319,22 +326,24 @@ const getScrollOffset = (containerWidth: number, cursorPosition: number): number
 const getSegmentConfig = ({
   state,
   segment,
-  startedAt,
+  timelineOriginMillis,
   scrollOffset,
   currentTimeMillis,
 }: {
   readonly state: VisualEffectState
   readonly segment: TimelineSegment
-  readonly startedAt: DateTime.Utc
+  readonly timelineOriginMillis: number
   readonly scrollOffset: number
   readonly currentTimeMillis: number
 }) => {
   const isActive = segment.endedAt === undefined && state._tag === "Running"
-  const endedAt = segment.endedAt ? DateTime.toEpochMillis(segment.endedAt) : currentTimeMillis
-  const durationMillis = endedAt - DateTime.toEpochMillis(segment.startedAt)
+  const startedAtMillis = DateTime.toEpochMillis(segment.startedAt)
+  const endedAtMillis =
+    segment.endedAt === undefined ? currentTimeMillis : DateTime.toEpochMillis(segment.endedAt)
+  const durationMillis = endedAtMillis - startedAtMillis
 
-  const startX = toTimelineX(segment.startedAt, startedAt)
-  const endX = toTimelineX(segment.endedAt ?? currentTimeMillis, startedAt)
+  const startX = toTimelineX(startedAtMillis, timelineOriginMillis)
+  const endX = toTimelineX(endedAtMillis, timelineOriginMillis)
   const left = startX - scrollOffset
   const width = Math.max(0, endX - startX)
   const dotInset = TIMELINE_CONFIG.dotSize / 2 + TIMELINE_CONFIG.lineDotGap

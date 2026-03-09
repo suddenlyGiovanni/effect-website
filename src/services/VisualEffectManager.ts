@@ -364,7 +364,7 @@ export class VisualEffectManager extends ServiceMap.Service<
             for (const step of example.steps) {
               registry.set(stepStateAtom(step), InitialState)
             }
-            registry.set(scheduleTimelineAtom, [])
+            registry.set(scheduleTimelineAtom(example), [])
 
             yield* publishEvent({
               _tag: "ExampleReset",
