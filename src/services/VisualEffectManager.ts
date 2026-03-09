@@ -1,8 +1,10 @@
+import * as Array from "effect/Array"
 import * as Cause from "effect/Cause"
 import * as Clock from "effect/Clock"
 import * as DateTime from "effect/DateTime"
 import * as Effect from "effect/Effect"
 import * as Exit from "effect/Exit"
+import * as Fiber from "effect/Fiber"
 import * as FiberMap from "effect/FiberMap"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
@@ -18,7 +20,13 @@ import {
   type ExampleDefinition,
   type StepDefinition,
 } from "@/lib/examples/constructors"
-import { InitialState, RenderableResult, VisualEffectState } from "@/lib/examples/domain"
+import {
+  makeTimelineSegment,
+  InitialState,
+  RenderableResult,
+  VisualEffectState,
+  type VisualEffectScheduleTimeline,
+} from "@/lib/examples/domain"
 import { VisualEffectEventBus } from "@/services/VisualEffectEventBus"
 
 export const exampleStateAtom = Atom.family((_definition: ExampleDefinition) =>
@@ -27,6 +35,12 @@ export const exampleStateAtom = Atom.family((_definition: ExampleDefinition) =>
 
 export const stepStateAtom = Atom.family((_definition: StepDefinition) =>
   Atom.make<VisualEffectState>(InitialState),
+)
+
+export const scheduleTimeAtom = Atom.family((_definition: ExampleDefinition) => Atom.make(0))
+
+export const scheduleTimelineAtom = Atom.family((_definition: ExampleDefinition) =>
+  Atom.make<VisualEffectScheduleTimeline>([]),
 )
 
 export class VisualEffectManager extends ServiceMap.Service<
@@ -105,15 +119,21 @@ export class VisualEffectManager extends ServiceMap.Service<
         return publishExampleTransition(example, previous, current)
       }
 
-      const setStepState = (details: ExampleStep["Service"], current: VisualEffectState): void => {
-        if (current._tag !== "Running" && resettingExamples.has(details.definition.key)) {
-          return
-        }
+      const setStepState = (details: ExampleStep["Service"], state: VisualEffectState): void => {
+        // if (current._tag !== "Running" && resettingExamples.has(details.definition.key)) {
+        //   return
+        // }
 
         const atom = stepStateAtom(details.step)
         const previous = registry.get(atom)
-        registry.set(atom, current)
-        Effect.runSync(publishStepTransition(details, previous, current))
+        registry.set(atom, state)
+
+        Effect.runSync(publishStepTransition(details, previous, state))
+
+        // Update the schedule timeline when working with a schedule step
+        if (details.step.type === "schedule") {
+          updateScheduleTimeline(details, state)
+        }
       }
 
       const runningNotificationMatches = (state: VisualEffectState, message: string): boolean => {
@@ -151,6 +171,41 @@ export class VisualEffectManager extends ServiceMap.Service<
         })
       }
 
+      const updateScheduleTimeline = (
+        details: ExampleStep["Service"],
+        state: VisualEffectState,
+      ): void => {
+        const exampleState = registry.get(exampleStateAtom(details.definition))
+
+        // Don't attempt to update the timeline if the example is not currently
+        // running, or if receiving a state update for a step that is idle
+        if (exampleState._tag !== "Running" || state._tag === "Idle") {
+          return
+        }
+
+        registry.update(scheduleTimelineAtom(details.definition), (segments) => {
+          if (Array.isReadonlyArrayNonEmpty(segments)) {
+            const previousSegment = Array.lastNonEmpty(segments)
+            const nextSegmentKind = state._tag === "Running" ? "Running" : "Waiting"
+
+            // Don't update the timeline if the previous and next segments are
+            // the same kind
+            if (previousSegment.kind === nextSegmentKind) {
+              return segments
+            }
+
+            const transitionTime = state._tag === "Running" ? state.startedAt : state.endedAt
+            const nextSegment = makeTimelineSegment(nextSegmentKind, transitionTime)
+            previousSegment.endedAt = transitionTime
+
+            return Array.append(segments, nextSegment)
+          } else {
+            const kind = state._tag === "Running" ? "Running" : "Waiting"
+            return Array.of(makeTimelineSegment(kind, exampleState.startedAt))
+          }
+        })
+      }
+
       const startVisualSpan = (details: ExampleStep["Service"], startedAt: DateTime.Utc): void => {
         const state = VisualEffectState.Running({
           notification: Option.none(),
@@ -163,7 +218,7 @@ export class VisualEffectManager extends ServiceMap.Service<
         details: ExampleStep["Service"],
         startedAt: DateTime.Utc,
         endedAt: DateTime.Utc,
-        exit: Exit.Exit<RenderableResult, RenderableResult>,
+        exit: Exit.Exit<unknown, unknown>,
       ): void => {
         setStepState(details, exitToState(exit, startedAt, endedAt))
       }
@@ -194,12 +249,7 @@ export class VisualEffectManager extends ServiceMap.Service<
             end(endTime, exit) {
               span.end(endTime, exit)
               const endedAt = dateTimeFromNanos(endTime)
-              endVisualSpan(
-                details,
-                startTime,
-                endedAt,
-                exit as Exit.Exit<RenderableResult, RenderableResult>,
-              )
+              endVisualSpan(details, startTime, endedAt, exit)
             },
             attribute(key, value) {
               span.attribute(key, value)
@@ -243,6 +293,20 @@ export class VisualEffectManager extends ServiceMap.Service<
         },
       }
 
+      const scheduleTimer = (example: ExampleDefinition) =>
+        Effect.callback((_resume) => {
+          let frame = 0
+          const tickScheduleTimer = () => {
+            registry.set(scheduleTimeAtom(example), clock.currentTimeMillisUnsafe())
+            frame = globalThis.requestAnimationFrame(tickScheduleTimer)
+          }
+          tickScheduleTimer()
+          return Effect.sync(() => {
+            globalThis.cancelAnimationFrame(frame)
+            registry.set(scheduleTimeAtom(example), 0)
+          })
+        })
+
       const manager = VisualEffectManager.of({
         start: Effect.fnUntraced(function* (example) {
           const startedAt = yield* DateTime.now
@@ -256,31 +320,37 @@ export class VisualEffectManager extends ServiceMap.Service<
             get: (atom) => snapshotRegistry.get(atom),
           })
 
-          yield* FiberMap.run(
-            fiberMap,
-            example,
-            Effect.suspend(() => {
-              const startState = VisualEffectState.Running({
-                startedAt,
-                notification: Option.none(),
-              })
-              return setExampleState(example, startState).pipe(
-                Effect.andThen(
-                  example.program.pipe(
-                    Effect.provideService(ExampleControlSnapshot, snapshot),
-                    Effect.onExit(
-                      Effect.fnUntraced(function* (exit) {
-                        const endedAt = yield* DateTime.now
-                        const endState = exitToState(exit, startedAt, endedAt)
-                        yield* setExampleState(example, endState)
-                      }),
-                    ),
-                  ),
-                ),
-              )
-            }),
-            { startImmediately: true, onlyIfMissing: true },
-          )
+          const program = Effect.gen(function* () {
+            const startState = VisualEffectState.Running({
+              startedAt,
+              notification: Option.none(),
+            })
+
+            yield* setExampleState(example, startState)
+
+            const fiber = yield* example.program.pipe(
+              Effect.provideService(ExampleControlSnapshot, snapshot),
+              Effect.onExit(
+                Effect.fnUntraced(function* (exit) {
+                  const endedAt = yield* DateTime.now
+                  const endState = exitToState(exit, startedAt, endedAt)
+                  yield* setExampleState(example, endState)
+                }),
+              ),
+              Effect.forkChild,
+            )
+
+            if (example.type === "schedule") {
+              yield* Effect.forkChild(scheduleTimer(example))
+            }
+
+            return yield* Fiber.join(fiber)
+          })
+
+          yield* FiberMap.run(fiberMap, example, program, {
+            startImmediately: true,
+            onlyIfMissing: true,
+          })
         }),
         stop: Effect.fnUntraced(function* (example) {
           yield* FiberMap.remove(fiberMap, example)
@@ -294,6 +364,7 @@ export class VisualEffectManager extends ServiceMap.Service<
             for (const step of example.steps) {
               registry.set(stepStateAtom(step), InitialState)
             }
+            registry.set(scheduleTimelineAtom, [])
 
             yield* publishEvent({
               _tag: "ExampleReset",
@@ -319,8 +390,8 @@ const dateTimeFromNanos = (nanos: bigint): DateTime.Utc => {
 
 const nanosToMilliseconds = (nanos: bigint): number => Number(nanos / 1_000_000n)
 
-const exitToState = <E extends RenderableResult, A extends RenderableResult>(
-  exit: Exit.Exit<E, A>,
+const exitToState = (
+  exit: Exit.Exit<unknown, unknown>,
   startedAt: DateTime.Utc,
   endedAt: DateTime.Utc,
 ): VisualEffectState => {
@@ -329,7 +400,7 @@ const exitToState = <E extends RenderableResult, A extends RenderableResult>(
     return VisualEffectState.Succeeded({
       duration,
       endedAt,
-      value: exit.value,
+      value: exit.value as RenderableResult,
     })
   }
   if (Cause.hasInterruptsOnly(exit.cause)) {

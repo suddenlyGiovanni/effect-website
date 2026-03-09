@@ -3,7 +3,13 @@ import * as Schedule from "effect/Schedule"
 import { defineExample } from "../constructors"
 import { ErrorResult } from "../results/error"
 
-const snoozeMessages = ["snooze #1", "snooze #2", "snooze #3", "snooze #4", "asleep forever"] as const
+const snoozeMessages = [
+  "snooze #1",
+  "snooze #2",
+  "snooze #3",
+  "snooze #4",
+  "asleep forever",
+] as const
 
 // The retry demo always follows the same sequence of failures so the timeline and
 // final exhausted state stay easy to compare during development.
@@ -25,6 +31,7 @@ const wakeUpAttempt = Effect.gen(function* () {
 const snoozeSchedule = Schedule.both(Schedule.spaced("2 seconds"), Schedule.recurs(4))
 
 export const retryRecursExample = defineExample({
+  type: "schedule",
   label: "Effect.retry",
   subtitle: "recurs",
   description: "Retry while both spacing and retry-count limits still allow another attempt",
@@ -46,12 +53,11 @@ const result = Effect.retry(wakeUp, snoozeSchedule)`,
     _tag: "Text",
     text: "Effect.retry(wakeUp, snoozeSchedule)",
   },
-  scheduleTimeline: {},
   build: ({ addStep }) => {
     const wakeUp = addStep(wakeUpAttempt, {
+      type: "schedule",
       label: "wakeUp",
       highlight: { _tag: "Text", text: "attemptToWakeUp()" },
-      scheduleRole: "attempt",
     })
 
     return Effect.retry(wakeUp, snoozeSchedule).pipe(Effect.ensuring(resetSnoozeAttempt))

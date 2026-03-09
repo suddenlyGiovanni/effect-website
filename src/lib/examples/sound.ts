@@ -128,6 +128,14 @@ const transitionToCue = ({
     return undefined
   }
 
+  if (current === "Running") {
+    return {
+      _tag: "StepRunning",
+      exampleKey,
+      stepId,
+    }
+  }
+
   if (previous !== "Running") {
     return undefined
   }

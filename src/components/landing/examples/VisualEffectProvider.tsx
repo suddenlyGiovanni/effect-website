@@ -17,19 +17,28 @@ import {
   stopExampleAtom,
   unlockSoundAtom,
 } from "@/atoms/visual-effect"
-import { exampleStateAtom, stepStateAtom } from "@/services/VisualEffectManager"
+import {
+  exampleStateAtom,
+  stepStateAtom,
+  scheduleTimelineAtom,
+  scheduleTimeAtom,
+} from "@/services/VisualEffectManager"
 
 // =============================================================================
-// Step Definition Context
+// Example Definition Context
 // =============================================================================
 
 export const ExampleContext = React.createContext<ExampleDefinition>(null as any)
-const ExampleControlValuesContext = React.createContext<ExampleControlValues | null>(null)
+const ExampleControlValuesContext = React.createContext<ExampleControlValues>(null as any)
 const ExampleControlVersionContext = React.createContext(0)
 
 export const useExampleDefinition = () => React.useContext(ExampleContext)
 
-export function ExampleControlRuntimeProvider({ children }: { readonly children: React.ReactNode }) {
+export function ExampleControlRuntimeProvider({
+  children,
+}: {
+  readonly children: React.ReactNode
+}) {
   const example = useExampleDefinition()
   const [version, setVersion] = React.useState(0)
 
@@ -58,15 +67,7 @@ export function ExampleControlRuntimeProvider({ children }: { readonly children:
   )
 }
 
-export const useExampleControlValues = () => {
-  const controlValues = React.useContext(ExampleControlValuesContext)
-
-  if (controlValues === null) {
-    throw new Error("Missing example control values context")
-  }
-
-  return controlValues
-}
+export const useExampleControlValues = () => React.useContext(ExampleControlValuesContext)
 
 export const useExampleControlVersion = () => React.useContext(ExampleControlVersionContext)
 
@@ -109,6 +110,19 @@ export const useStepState = () => {
 }
 
 // =============================================================================
+// Schedule Timeline
+// =============================================================================
+
+export const useScheduleTime = () => {
+  const example = useExampleDefinition()
+  return useAtomValue(scheduleTimeAtom(example))
+}
+export const useScheduleTimeline = () => {
+  const example = useExampleDefinition()
+  return useAtomValue(scheduleTimelineAtom(example))
+}
+
+// =============================================================================
 // Example Controls
 // =============================================================================
 
@@ -130,7 +144,7 @@ export const useControlWrite = <A,>(atom: Atom.Writable<A>) => {
         throw new Error("Unknown example control atom")
       }
 
-      if (Object.is(current, next) || Equal.equals(current, next)) {
+      if (Equal.equals(current, next)) {
         return
       }
 

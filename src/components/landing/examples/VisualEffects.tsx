@@ -16,10 +16,10 @@ const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
   "ref-scope",
 ]
 
-export function VisualEffects() {
+export default function VisualEffects() {
   useAtomMount(prefersReducedMotionAtom)
 
-  const [category, setCategory] = useState<ExampleCategory>("concurrency")
+  const [category, setCategory] = useState<ExampleCategory>("schedule")
   const [indicatorRect, setIndicatorRect] = useState<IndicatorRect | undefined>(undefined)
   const rootElementReference = useRef<HTMLElement | undefined>(undefined)
   const resizeObserverReference = useRef<ResizeObserver | undefined>(undefined)

@@ -30,6 +30,7 @@ const attemptParallelPark = Effect.gen(function* () {
 })
 
 export const retryExponentialExample = defineExample({
+  type: "schedule",
   label: "Effect.retry",
   subtitle: "exponential",
   description: "Retry a failing effect with gaps that widen after each failure",
@@ -44,12 +45,11 @@ const result = Effect.retry(park, Schedule.exponential("700 millis"))`,
     _tag: "Text",
     text: 'Effect.retry(park, Schedule.exponential("700 millis"))',
   },
-  scheduleTimeline: {},
   build: ({ addStep }) => {
     const park = addStep(attemptParallelPark, {
+      type: "schedule",
       label: "park",
       highlight: { _tag: "Text", text: "attemptParallelPark()" },
-      scheduleRole: "attempt",
     })
 
     return Effect.retry(park, Schedule.exponential("700 millis")).pipe(

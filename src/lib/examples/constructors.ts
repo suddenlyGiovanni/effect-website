@@ -1,9 +1,8 @@
-import { useAtomValue } from "@effect/atom-react"
+import { useAtomSubscribe } from "@effect/atom-react"
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
-import * as Schema from "effect/Schema"
 import * as ServiceMap from "effect/ServiceMap"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
@@ -24,50 +23,10 @@ export type RenderableEffect<
   R = never,
 > = Effect.Effect<A, E, R>
 
-export interface AddStepOptions {
-  readonly label: string
-  readonly highlight?: SnippetSelectorDefinition
-  readonly scheduleRole?: ExampleScheduleRole | undefined
-}
-
-export type ExampleScheduleRole = "attempt"
-
-export interface ExampleScheduleTimelineInput {
-  readonly pixelsPerSecond?: number | undefined
-  readonly scrollThreshold?: number | undefined
-}
-
-export interface ExampleScheduleTimelineDefinition {
-  readonly attemptStep: StepDefinition
-  readonly pixelsPerSecond: number
-  readonly scrollThreshold: number
-}
-
-export interface BuildContext {
-  readonly addStep: {
-    <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleControlSnapshot>,
-      options: AddStepOptions,
-    ): RenderableEffect<A, E, ExampleControlSnapshot>
-    (
-      options: AddStepOptions,
-    ): <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleControlSnapshot>,
-    ) => RenderableEffect<A, E, ExampleControlSnapshot>
-  }
-  readonly controls: {
-    readonly register: <A>(input: RegisterControlInput<A>) => ExampleControlHandle<A>
-    readonly read: <A>(
-      control: ExampleControlHandle<A>,
-    ) => Effect.Effect<A, never, ExampleControlSnapshot>
-  }
-  readonly snippet: {
-    readonly setCode: (input: ExampleCodeDefinitionInput) => void
-    readonly setResultHighlight: (input: SnippetSelectorDefinition) => void
-  }
-}
+export type StepType = "default" | "schedule"
 
 export interface StepDefinition {
+  readonly type: StepType
   readonly id: string
   readonly label: string
 }
@@ -119,19 +78,50 @@ export interface ExampleControlDefinition {
   readonly observe: (props: { readonly onValueChange: () => void }) => React.ReactNode
 }
 
+export interface AddStepOptions {
+  readonly type?: StepType | undefined
+  readonly label: string
+  readonly highlight?: SnippetSelectorDefinition
+}
+
+export interface BuildContext {
+  readonly addStep: {
+    <A extends RenderableResult, E extends RenderableResult>(
+      self: RenderableEffect<A, E, ExampleControlSnapshot>,
+      options: AddStepOptions,
+    ): RenderableEffect<A, E, ExampleControlSnapshot>
+    (
+      options: AddStepOptions,
+    ): <A extends RenderableResult, E extends RenderableResult>(
+      self: RenderableEffect<A, E, ExampleControlSnapshot>,
+    ) => RenderableEffect<A, E, ExampleControlSnapshot>
+  }
+  readonly controls: {
+    readonly register: <A>(input: RegisterControlInput<A>) => ExampleControlHandle<A>
+    readonly read: <A>(
+      control: ExampleControlHandle<A>,
+    ) => Effect.Effect<A, never, ExampleControlSnapshot>
+  }
+  readonly snippet: {
+    readonly setCode: (input: ExampleCodeDefinitionInput) => void
+    readonly setResultHighlight: (input: SnippetSelectorDefinition) => void
+  }
+}
+
 export interface DefineExampleInput {
+  readonly type?: StepType | undefined
   readonly label: string
   readonly subtitle?: string | undefined
   readonly description?: string | undefined
   readonly code: ExampleCodeSnippetInput
   readonly resultHighlight?: SnippetHighlightSelector | ReadonlyArray<SnippetHighlightSelector>
-  readonly scheduleTimeline?: ExampleScheduleTimelineInput | undefined
   readonly build: (
     ctx: BuildContext,
   ) => RenderableEffect<RenderableResult, RenderableResult, ExampleControlSnapshot>
 }
 
 export interface ExampleDefinition {
+  readonly type: StepType
   readonly key: string
   readonly title: string
   readonly subtitle: string | undefined
@@ -140,7 +130,6 @@ export interface ExampleDefinition {
   readonly controls: ReadonlyArray<ExampleControlDefinition>
   readonly program: RenderableEffect<RenderableResult, RenderableResult, ExampleControlSnapshot>
   readonly code: ExampleCodeDefinition
-  readonly scheduleTimeline: ExampleScheduleTimelineDefinition | undefined
 }
 
 export interface ExampleCodeDefinition {
@@ -164,51 +153,16 @@ export class ExampleControlSnapshot extends ServiceMap.Service<
   { readonly get: <A>(atom: Atom.Atom<A>) => A }
 >()("ExampleControlSnapshot") {}
 
-export class MissingScheduleAttemptStepError extends Schema.TaggedErrorClass<MissingScheduleAttemptStepError>()(
-  "MissingScheduleAttemptStepError",
-  {
-    exampleLabel: Schema.String,
-  },
-) {}
-
-export class DuplicateScheduleAttemptStepError extends Schema.TaggedErrorClass<DuplicateScheduleAttemptStepError>()(
-  "DuplicateScheduleAttemptStepError",
-  {
-    exampleLabel: Schema.String,
-    count: Schema.Number,
-  },
-) {}
-
-export class OrphanedScheduleRoleError extends Schema.TaggedErrorClass<OrphanedScheduleRoleError>()(
-  "OrphanedScheduleRoleError",
-  {
-    exampleLabel: Schema.String,
-    stepLabel: Schema.String,
-  },
-) {}
-
-export class InvalidScheduleTimelineConfigError extends Schema.TaggedErrorClass<InvalidScheduleTimelineConfigError>()(
-  "InvalidScheduleTimelineConfigError",
-  {
-    exampleLabel: Schema.String,
-    field: Schema.Union([
-      Schema.Literal("pixelsPerSecond"),
-      Schema.Literal("scrollThreshold"),
-    ]),
-    message: Schema.String,
-  },
-) {}
-
 export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
   const controls: Array<ExampleControlDefinition> = []
-  const scheduleAttemptSteps: Array<StepDefinition> = []
   const selectorsByTarget: Record<string, SnippetSelectorDefinition> = {}
   let codeDefinition: ExampleCodeDefinitionInput = input.code
   let resultHighlightDefinition: SnippetSelectorDefinition | undefined = input.resultHighlight
 
   const registerStep = (options: AddStepOptions): StepDefinition => {
     const step: StepDefinition = {
+      type: options.type ?? "default",
       id: `step-${steps.length.toString()}`,
       label: options.label,
     }
@@ -218,10 +172,6 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     if (options.highlight !== undefined) {
       const targetKey = toStepSnippetTargetKey(step.id)
       selectorsByTarget[targetKey] = options.highlight
-    }
-
-    if (options.scheduleRole === "attempt") {
-      scheduleAttemptSteps.push(step)
     }
 
     return step
@@ -265,13 +215,7 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     }
 
     const ControlObserver = ({ onValueChange }: { readonly onValueChange: () => void }) => {
-      const value = useAtomValue(handle.atom)
-
-      React.useEffect(() => {
-        currentValueRef.current = value
-        onValueChange()
-      }, [onValueChange, value])
-
+      useAtomSubscribe(handle.atom, onValueChange, { immediate: true })
       return null
     }
 
@@ -287,7 +231,9 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
       render: ({ disabled }) => React.createElement(handle.render, { atom: handle.atom, disabled }),
       observe: ({ onValueChange }) => React.createElement(ControlObserver, { onValueChange }),
     })
+
     Equal.byReferenceUnsafe(handle)
+
     return handle
   }
 
@@ -313,9 +259,8 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     },
   })
 
-  const resolvedScheduleTimeline = resolveScheduleTimelineDefinition(input, scheduleAttemptSteps)
-
   const definition: ExampleDefinition = {
+    type: input.type ?? "default",
     key: crypto.randomUUID(),
     title: input.label,
     subtitle: input.subtitle,
@@ -323,7 +268,6 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     steps,
     controls,
     program,
-    scheduleTimeline: resolvedScheduleTimeline,
     code: {
       resolve: (controlValues) => {
         const resolvedSelectorsByTarget: Record<
@@ -399,64 +343,4 @@ const resolveSnippetSelectors = (
   }
 
   return definition
-}
-
-const resolveScheduleTimelineDefinition = (
-  input: DefineExampleInput,
-  scheduleAttemptSteps: ReadonlyArray<StepDefinition>,
-): ExampleScheduleTimelineDefinition | undefined => {
-  if (input.scheduleTimeline === undefined) {
-    const orphanedStep = scheduleAttemptSteps[0]
-
-    if (orphanedStep !== undefined) {
-      throw new OrphanedScheduleRoleError({
-        exampleLabel: input.label,
-        stepLabel: orphanedStep.label,
-      })
-    }
-
-    return undefined
-  }
-
-  if (scheduleAttemptSteps.length === 0) {
-    throw new MissingScheduleAttemptStepError({ exampleLabel: input.label })
-  }
-
-  if (scheduleAttemptSteps.length > 1) {
-    throw new DuplicateScheduleAttemptStepError({
-      exampleLabel: input.label,
-      count: scheduleAttemptSteps.length,
-    })
-  }
-
-  const pixelsPerSecond = input.scheduleTimeline.pixelsPerSecond ?? 100
-  const scrollThreshold = input.scheduleTimeline.scrollThreshold ?? 0.8
-
-  if (!(pixelsPerSecond > 0)) {
-    throw new InvalidScheduleTimelineConfigError({
-      exampleLabel: input.label,
-      field: "pixelsPerSecond",
-      message: "Expected a value greater than 0.",
-    })
-  }
-
-  if (!(scrollThreshold > 0 && scrollThreshold < 1)) {
-    throw new InvalidScheduleTimelineConfigError({
-      exampleLabel: input.label,
-      field: "scrollThreshold",
-      message: "Expected a value between 0 and 1.",
-    })
-  }
-
-  const attemptStep = scheduleAttemptSteps[0]
-
-  if (attemptStep === undefined) {
-    throw new MissingScheduleAttemptStepError({ exampleLabel: input.label })
-  }
-
-  return {
-    attemptStep,
-    pixelsPerSecond,
-    scrollThreshold,
-  }
 }

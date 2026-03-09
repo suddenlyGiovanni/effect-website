@@ -33,9 +33,10 @@ export function VisualEffect({ example }: { readonly example: ExampleDefinition 
 }
 
 function VisualEffectSurface() {
-  const exampleState = useExampleState()
   const example = useExampleDefinition()
+  const exampleState = useExampleState()
   const { delayedTarget, onHoverTargetChange } = useSnippetHoverState(example.key, 500)
+
   const isDied = exampleState._tag === "Died"
   const borderColor = isDied ? "rgba(127, 29, 29, 0.5)" : "#27272a"
 
@@ -56,9 +57,7 @@ function VisualEffectSurface() {
         <VisualEffectControls isDied={isDied} />
         <VisualEffectConfigPanel isDied={isDied} />
         <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
-        {example.scheduleTimeline !== undefined && (
-          <VisualEffectScheduleTimeline config={example.scheduleTimeline} />
-        )}
+        {example.type === "schedule" && <VisualEffectScheduleTimeline />}
         <VisualEffectCodeSnippet snippet={example.code} activeTarget={delayedTarget} />
       </MotionConfig>
     </motion.div>

@@ -56,3 +56,24 @@ export const canReset = VisualEffectState.$match({
   Failed: constTrue,
   Died: constTrue,
 })
+
+export type VisualEffectScheduleTimeline = ReadonlyArray<TimelineSegment>
+
+export type TimelineSegmentKind = "Running" | "Waiting"
+
+export type TimelineSegment = {
+  readonly id: string
+  readonly kind: TimelineSegmentKind
+  readonly startedAt: DateTime.Utc
+  endedAt: DateTime.Utc | undefined
+}
+
+export const makeTimelineSegment = (
+  kind: TimelineSegmentKind,
+  startedAt: DateTime.Utc,
+): TimelineSegment => ({
+  id: crypto.randomUUID(),
+  kind,
+  startedAt,
+  endedAt: undefined,
+})

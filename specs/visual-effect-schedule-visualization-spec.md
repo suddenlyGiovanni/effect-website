@@ -83,12 +83,7 @@ The smallest useful API adds one optional field to `AddStepOptions` and one opti
 export interface AddStepOptions {
   readonly label: string
   readonly highlight?: SnippetSelectorDefinition
-  readonly scheduleRole?: "attempt"
-}
-
-export interface ExampleScheduleTimelineInput {
-  readonly pixelsPerSecond?: number
-  readonly scrollThreshold?: number
+  readonly isScheduleTrackedStep?: boolean
 }
 
 export interface DefineExampleInput {
@@ -97,7 +92,6 @@ export interface DefineExampleInput {
   readonly description?: string | undefined
   readonly code: ExampleCodeSnippetInput
   readonly resultHighlight?: SnippetHighlightSelector | ReadonlyArray<SnippetHighlightSelector>
-  readonly scheduleTimeline?: ExampleScheduleTimelineInput
   readonly build: (
     ctx: BuildContext,
   ) => RenderableEffect<RenderableResult, RenderableResult, ExampleControlSnapshot>
@@ -106,11 +100,11 @@ export interface DefineExampleInput {
 
 This API is small for three reasons.
 
-First, `scheduleRole` keeps schedule intent next to the `addStep(...)` call, so the tracked step does not drift away from the authored effect.
+First, `isScheduleTrackedStep` keeps schedule intent next to the `addStep(...)` call, so the tracked step does not drift away from the authored effect.
 
 Second, `scheduleTimeline` is example-level opt-in, so the card layout does not need to guess based on category or step count.
 
-Third, the timeline config only exposes two tuning values that already existed in the legacy component. Everything else should stay internal to the component.
+Third, all visual tuning stays inside the component so every schedule timeline remains visually consistent.
 
 ### 5.2 Resolved example model
 
@@ -119,8 +113,6 @@ Third, the timeline config only exposes two tuning values that already existed i
 ```ts
 export interface ExampleScheduleTimelineDefinition {
   readonly attemptStep: StepDefinition
-  readonly pixelsPerSecond: number
-  readonly scrollThreshold: number
 }
 
 export interface ExampleDefinition {
@@ -156,7 +148,7 @@ export const SCHEDULE_TIMELINE_DEFAULTS = {
 } as const
 ```
 
-Only `pixelsPerSecond` and `scrollThreshold` should be part of the public example API. The rest should remain component-owned constants.
+All timeline tuning constants should remain component-owned so every schedule example shares one visual language.
 
 ## 6. Example Authoring
 
@@ -196,12 +188,11 @@ const result = Effect.retry(park, Schedule.exponential("700 millis"))`,
     _tag: "Text",
     text: 'Effect.retry(park, Schedule.exponential("700 millis"))',
   },
-  scheduleTimeline: {},
   build: ({ addStep }) => {
     const park = addStep(attemptParallelPark, {
       label: "park",
       highlight: { _tag: "Text", text: "attemptParallelPark()" },
-      scheduleRole: "attempt",
+      isScheduleTrackedStep: true,
     })
 
     return Effect.retry(park, Schedule.exponential("700 millis"))
@@ -239,12 +230,11 @@ const checking = Effect.repeat(phone, Schedule.spaced("2 seconds"))`,
     _tag: "Text",
     text: 'Effect.repeat(phone, Schedule.spaced("2 seconds"))',
   },
-  scheduleTimeline: {},
   build: ({ addStep }) => {
     const phone = addStep(checkNotifications, {
       label: "phone",
       highlight: { _tag: "Text", text: "checkNotifications()" },
-      scheduleRole: "attempt",
+      isScheduleTrackedStep: true,
     })
 
     return Effect.repeat(phone, Schedule.spaced("2 seconds"))
@@ -297,12 +287,11 @@ const result = Effect.retry(wakeUp, snoozeSchedule)`,
     _tag: "Text",
     text: "Effect.retry(wakeUp, snoozeSchedule)",
   },
-  scheduleTimeline: {},
   build: ({ addStep }) => {
     const attempt = addStep(wakeUp, {
       label: "wakeUp",
       highlight: { _tag: "Text", text: "attemptToWakeUp()" },
-      scheduleRole: "attempt",
+      isScheduleTrackedStep: true,
     })
 
     return Effect.retry(attempt, snoozeSchedule)
@@ -322,7 +311,7 @@ When `scheduleTimeline` is omitted, the constructor should behave exactly as it 
 
 When `scheduleTimeline` is present, the constructor should:
 
-1. collect every step marked with `scheduleRole: "attempt"`,
+1. collect every step marked with `isScheduleTrackedStep: true`,
 2. require exactly one such step,
 3. merge default config values,
 4. store a resolved `ExampleScheduleTimelineDefinition` on the example.
@@ -333,10 +322,7 @@ The implementation must fail at definition time in these cases.
 
 1. `scheduleTimeline` is enabled and no step is tagged as the attempt step.
 2. `scheduleTimeline` is enabled and more than one step is tagged as the attempt step.
-3. A step declares `scheduleRole` but the example does not enable `scheduleTimeline`.
-4. `pixelsPerSecond` is not greater than zero.
-5. `scrollThreshold` is not strictly between `0` and `1`.
-
+3. More than one step is marked as the tracked schedule step.
 ### 7.3 Suggested tagged errors
 
 ```ts
@@ -365,14 +351,6 @@ export class OrphanedScheduleRoleError extends Schema.TaggedErrorClass<OrphanedS
   },
 ) {}
 
-export class InvalidScheduleTimelineConfigError extends Schema.TaggedErrorClass<InvalidScheduleTimelineConfigError>()(
-  "InvalidScheduleTimelineConfigError",
-  {
-    exampleLabel: Schema.String,
-    field: Schema.Literal("pixelsPerSecond", "scrollThreshold"),
-    message: Schema.String,
-  },
-) {}
 ```
 
 ### 7.4 Constructor pseudocode
@@ -386,7 +364,7 @@ const registerStep = (options: AddStepOptions): StepDefinition => {
   const step = makeStep(options.label)
   steps.push(step)
 
-  if (options.scheduleRole === "attempt") {
+  if (options.isScheduleTrackedStep === true) {
     attemptSteps.push(step)
   }
 
@@ -420,8 +398,6 @@ const resolvedScheduleTimeline = (() => {
 
   return {
     attemptStep: attemptSteps[0],
-    pixelsPerSecond: input.scheduleTimeline.pixelsPerSecond ?? 100,
-    scrollThreshold: input.scheduleTimeline.scrollThreshold ?? 0.8,
   }
 })()
 
@@ -537,9 +513,9 @@ const toX = (timeMs: number, runStartedAtMs: number, pixelsPerSecond: number) =>
   return 50 + ((timeMs - runStartedAtMs) / 1000) * pixelsPerSecond
 }
 
-const segmentStartX = toX(segment.startedAtMs, session.runStartedAtMs, config.pixelsPerSecond)
-const segmentEndX = toX(segment.endedAtMs ?? nowMs, session.runStartedAtMs, config.pixelsPerSecond)
-const cursorX = toX(nowMs, session.runStartedAtMs, config.pixelsPerSecond)
+const segmentStartX = toX(segment.startedAtMs, session.runStartedAtMs, 100)
+const segmentEndX = toX(segment.endedAtMs ?? nowMs, session.runStartedAtMs, 100)
+const cursorX = toX(nowMs, session.runStartedAtMs, 100)
 ```
 
 ## 11. Timeline Update Algorithm
@@ -707,8 +683,8 @@ Until then, state-derived React history is the simplest and best option.
 ### Files to modify
 
 - `src/lib/examples/constructors.ts`
-  - Add `scheduleRole` to `AddStepOptions`.
-  - Add `scheduleTimeline` to `DefineExampleInput` and `ExampleDefinition`.
+  - Add `isScheduleTrackedStep` to `AddStepOptions`.
+  - Derive `scheduleTimeline` on `ExampleDefinition` from tracked steps.
   - Resolve and validate the tracked attempt step during `defineExample(...)`.
 
 - `src/components/landing/examples/VisualEffect.tsx`
@@ -768,10 +744,7 @@ Keeping these files unchanged is part of the design. The feature should slot int
 Add tests for `defineExample(...)` validation.
 
 - `scheduleTimeline` without an attempt step fails.
-- Multiple `scheduleRole: "attempt"` steps fail.
-- An orphaned `scheduleRole` fails.
-- Invalid `pixelsPerSecond` fails.
-- Invalid `scrollThreshold` fails.
+- Multiple `isScheduleTrackedStep: true` steps fail.
 
 ### 16.2 Timeline behavior tests
 
