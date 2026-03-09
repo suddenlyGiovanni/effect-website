@@ -10,13 +10,40 @@ export interface SoundSettings {
 }
 
 export type SoundCue =
-  | { readonly _tag: "StepRunning"; readonly exampleKey: string; readonly stepId: string }
-  | { readonly _tag: "StepSucceeded"; readonly exampleKey: string; readonly stepId: string }
-  | { readonly _tag: "StepFailed"; readonly exampleKey: string; readonly stepId: string }
-  | { readonly _tag: "StepInterrupted"; readonly exampleKey: string; readonly stepId: string }
-  | { readonly _tag: "StepDied"; readonly exampleKey: string; readonly stepId: string }
-  | { readonly _tag: "ExampleReset"; readonly exampleKey: string }
-  | { readonly _tag: "ControlChanged"; readonly exampleKey: string; readonly controlId: string }
+  | {
+      readonly _tag: "StepRunning"
+      readonly exampleKey: string
+      readonly stepId: string
+    }
+  | {
+      readonly _tag: "StepSucceeded"
+      readonly exampleKey: string
+      readonly stepId: string
+    }
+  | {
+      readonly _tag: "StepFailed"
+      readonly exampleKey: string
+      readonly stepId: string
+    }
+  | {
+      readonly _tag: "StepInterrupted"
+      readonly exampleKey: string
+      readonly stepId: string
+    }
+  | {
+      readonly _tag: "StepDied"
+      readonly exampleKey: string
+      readonly stepId: string
+    }
+  | {
+      readonly _tag: "ExampleReset"
+      readonly exampleKey: string
+    }
+  | {
+      readonly _tag: "ControlChanged"
+      readonly exampleKey: string
+      readonly controlId: string
+    }
 
 export const visualEffectExampleCueStepId = "__example__"
 
