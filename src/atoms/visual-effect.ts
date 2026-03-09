@@ -5,16 +5,13 @@ import * as Atom from "effect/unstable/reactivity/Atom"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { SoundPreference, type SoundSettings } from "@/lib/examples/sound"
 import { SoundManager } from "@/services/SoundManager"
-import { VisualEffectEventBus, visualEffectEventBusLayer } from "@/services/VisualEffectEventBus"
 import { VisualEffectManager } from "@/services/VisualEffectManager"
 
 // =============================================================================
 // Visual Effect Atom Runtime
 // =============================================================================
 
-const VisualEffectsLayer = Layer.mergeAll(SoundManager.layer, VisualEffectManager.layer).pipe(
-  Layer.provideMerge(visualEffectEventBusLayer),
-)
+const VisualEffectsLayer = VisualEffectManager.layer.pipe(Layer.provideMerge(SoundManager.layer))
 
 export const visualEffectsRuntime = Atom.runtime(VisualEffectsLayer)
 
@@ -45,15 +42,15 @@ export interface ControlWriteSideEffectInput {
 
 export const controlWriteSideEffectsAtom = visualEffectsRuntime.fn<ControlWriteSideEffectInput>()(
   ({ example, controlId, shouldReset }) =>
-    VisualEffectEventBus.use((eventBus) =>
-      Effect.andThen(
-        eventBus.publish({
+    Effect.andThen(
+      SoundManager.use((soundManager) =>
+        soundManager.play({
           _tag: "ControlChanged",
           exampleKey: example.key,
           controlId,
         }),
-        shouldReset ? VisualEffectManager.use((manager) => manager.reset(example)) : Effect.void,
       ),
+      shouldReset ? VisualEffectManager.use((manager) => manager.reset(example)) : Effect.void,
     ),
   { concurrent: true },
 )

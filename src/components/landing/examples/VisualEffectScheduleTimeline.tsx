@@ -236,6 +236,7 @@ export function VisualEffectScheduleTimeline() {
           className="absolute top-0 bottom-0"
           style={{
             width: TIMELINE_CONFIG.cursorWidth,
+            zIndex: 4,
           }}
           animate={{
             backgroundColor:
@@ -319,8 +320,9 @@ const getScrollOffset = (containerWidth: number, cursorPosition: number): number
   if (containerWidth <= 0) {
     return 0
   }
-  const delta = cursorPosition - containerWidth
-  return Math.max(0, delta * TIMELINE_CONFIG.scrollThreshold)
+
+  const thresholdPosition = containerWidth * TIMELINE_CONFIG.scrollThreshold
+  return Math.max(0, cursorPosition - thresholdPosition)
 }
 
 const getSegmentConfig = ({

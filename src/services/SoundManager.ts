@@ -2,22 +2,18 @@ import * as Clock from "effect/Clock"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Scope from "effect/Scope"
-import * as Semaphore from "effect/Semaphore"
 import * as ServiceMap from "effect/ServiceMap"
-import * as Stream from "effect/Stream"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import { prefersReducedMotionAtom, soundPreferenceAtom } from "@/atoms/visual-effect"
-import {
-  soundCueKey,
-  toSoundCue,
-  type SoundCue,
-  type VisualEffectSoundEvent,
-} from "@/lib/examples/sound"
-import { VisualEffectEventBus } from "@/services/VisualEffectEventBus"
+import { soundCueKey, type SoundCue } from "@/lib/examples/sound"
 
 const PENTATONIC_SCALE = ["C", "D", "E", "G", "A"] as const
-const BASE_OCTAVE = 3
-const CHORD_WINDOW_MS = 100
+const RUNNING_NOTES = ["C2", "D2", "E2", "G2"] as const
+const FAILURE_NOTES = ["C2", "D#2", "F2", "G#2", "A#2"] as const
+const INTERRUPTED_NOTES = ["C5", "D5", "E5", "G5", "A5"] as const
+const DEATH_NOTES = ["C1", "D#1", "F1", "G1"] as const
+const RESET_NOTES = ["C3", "E3", "G3", "A3"] as const
+const CONTROL_NOTES = ["D5", "E5", "G5", "A5", "C6"] as const
 const DEDUPE_WINDOW_MS = 60
 
 export interface ToneEngine {
@@ -26,16 +22,16 @@ export interface ToneEngine {
 
 export class SoundManager extends ServiceMap.Service<
   SoundManager,
-  { readonly unlock: Effect.Effect<void> }
+  {
+    readonly play: (cue: SoundCue) => Effect.Effect<void>
+    readonly unlock: Effect.Effect<void>
+  }
 >()("SoundManager", {
   make: Effect.gen(function* () {
     const registry = yield* AtomRegistry.AtomRegistry
-    const eventBus = yield* VisualEffectEventBus
-    const semaphore = yield* Semaphore.make(1)
-    const scope = yield* Scope.make()
+    const scope = yield* Effect.scope
 
-    yield* semaphore.take(1)
-
+    let isUnlocked = false
     const recentCueTimes = new Map<string, number>()
     const loadToneEngine = yield* Effect.cached(makeToneEngine)
 
@@ -58,7 +54,7 @@ export class SoundManager extends ServiceMap.Service<
       }
 
       if (soundPreference === "on") {
-        return false
+        return true
       }
 
       // If the user prefers reduced motion and they've set their sound
@@ -66,7 +62,7 @@ export class SoundManager extends ServiceMap.Service<
       return prefersReducedMotion === false
     }
 
-    const isPlayableCue = Effect.fnUntraced(function* (cue: SoundCue) {
+    const isPlayableCue = Effect.fn(function* (cue: SoundCue) {
       const now = yield* Clock.currentTimeMillis
       const key = soundCueKey(cue)
       const previous = recentCueTimes.get(key)
@@ -78,7 +74,7 @@ export class SoundManager extends ServiceMap.Service<
       return true
     })
 
-    const handleEvent = Effect.fnUntraced(function* (event: VisualEffectSoundEvent) {
+    const play = Effect.fn(function* (cue: SoundCue) {
       const soundEnabled = isSoundEnabled()
       if (!soundEnabled) {
         return yield* Effect.void
@@ -87,21 +83,20 @@ export class SoundManager extends ServiceMap.Service<
       // Only attempt to load the tone engine if sound has been enabled
       const toneEngine = yield* Scope.provide(loadToneEngine, scope)
 
-      const cue = toSoundCue(event)
-      if (cue && isPlayableCue(cue)) {
-        return yield* semaphore.withPermitsIfAvailable(1)(toneEngine.play(cue))
+      if (isUnlocked && (yield* isPlayableCue(cue))) {
+        return toneEngine.play(cue)
       }
 
       return yield* Effect.void
     })
 
-    yield* eventBus.events.pipe(
-      Stream.runForEach((event) => handleEvent(event)),
-      Effect.forkScoped,
-    )
+    const unlock = Effect.sync(() => {
+      isUnlocked = true
+    })
 
     return {
-      unlock: semaphore.release(1),
+      play,
+      unlock,
     } as const
   }),
 }) {
@@ -157,76 +152,103 @@ const makeToneEngine = Effect.gen(function* () {
     transport.start()
   }
 
-  let currentNoteIndex = 0
-  let chordWindowStart: number | undefined = undefined
-  let chordStep = 0
-  let chordBaseIndex = 0
-
-  const inChordWindow = (nowMs: number): boolean => {
-    return chordWindowStart !== undefined && nowMs - chordWindowStart <= CHORD_WINDOW_MS
+  const randomItem = <A>(items: ReadonlyArray<A>): A => {
+    const index = Math.floor(Math.random() * items.length)
+    return items[index] ?? items[0]
   }
 
-  const rotateScaleNote = (octave: number): string => {
-    const note = PENTATONIC_SCALE[currentNoteIndex % PENTATONIC_SCALE.length]
-    currentNoteIndex = (currentNoteIndex + 1) % (PENTATONIC_SCALE.length * 2)
+  const randomBetween = (min: number, max: number): number => {
+    return min + Math.random() * (max - min)
+  }
+
+  const randomPentatonicNote = (octaves: ReadonlyArray<number>): string => {
+    const note = randomItem(PENTATONIC_SCALE)
+    const octave = randomItem(octaves)
     return `${note}${octave}`
   }
 
-  const nextSuccessNote = Effect.gen(function* () {
-    const now = yield* Clock.currentTimeMillis
-    if (!inChordWindow(now)) {
-      chordWindowStart = now
-      chordStep = 0
-      chordBaseIndex = currentNoteIndex % PENTATONIC_SCALE.length
-    }
-
-    const root = `${PENTATONIC_SCALE[chordBaseIndex]}${BASE_OCTAVE + 1}`
-    const semitoneOffset = [0, 4, 7][chordStep % 3]
-
-    chordStep += 1
-    currentNoteIndex = (currentNoteIndex + 1) % (PENTATONIC_SCALE.length * 2)
-
-    return Tone.Frequency(root).transpose(semitoneOffset).toNote()
-  })
-
-  const play = Effect.fn("ToneEngine.play")(function* (cue: SoundCue) {
+  const play = (cue: SoundCue) => {
     const now = Tone.now()
     switch (cue._tag) {
       case "StepRunning": {
-        running.triggerAttackRelease("C2", "16n", now, 0.68)
+        running.triggerAttackRelease(
+          randomItem(RUNNING_NOTES),
+          randomItem(["32n", "16n"]),
+          now,
+          randomBetween(0.58, 0.76),
+        )
         break
       }
       case "StepSucceeded": {
-        const note = yield* nextSuccessNote
-        success.triggerAttackRelease(note, "8n", now, 0.45)
+        const note = randomPentatonicNote([4, 5])
+        success.triggerAttackRelease(
+          note,
+          randomItem(["16n", "8n"]),
+          now,
+          randomBetween(0.38, 0.52),
+        )
         break
       }
       case "StepFailed": {
-        const note = rotateScaleNote(BASE_OCTAVE - 1)
-        failure.triggerAttackRelease(note, "4n", now, 0.65)
+        failure.triggerAttackRelease(
+          randomItem(FAILURE_NOTES),
+          randomItem(["8n", "4n"]),
+          now,
+          randomBetween(0.55, 0.72),
+        )
         break
       }
       case "StepInterrupted": {
-        interrupted.triggerAttackRelease("C5", "32n", now, 0.6)
-        interrupted.triggerAttackRelease("E5", "32n", now + 0.07, 0.6)
+        interrupted.triggerAttackRelease(
+          randomItem(INTERRUPTED_NOTES),
+          "32n",
+          now,
+          randomBetween(0.52, 0.66),
+        )
+        interrupted.triggerAttackRelease(
+          randomItem(INTERRUPTED_NOTES),
+          "32n",
+          now + randomBetween(0.05, 0.09),
+          randomBetween(0.52, 0.66),
+        )
         break
       }
       case "StepDied": {
-        death.triggerAttackRelease("D#3", "32n", now, 0.45)
-        death.triggerAttackRelease("C1", "1n", now + 0.1, 0.55)
+        death.triggerAttackRelease(
+          randomPentatonicNote([2, 3]),
+          "32n",
+          now,
+          randomBetween(0.38, 0.5),
+        )
+        death.triggerAttackRelease(
+          randomItem(DEATH_NOTES),
+          randomItem(["2n", "1n"]),
+          now + randomBetween(0.08, 0.14),
+          randomBetween(0.48, 0.6),
+        )
         break
       }
       case "ExampleReset": {
-        reset.triggerAttackRelease(`G${BASE_OCTAVE}`, "16n", now, 0.6)
-        reset.triggerAttackRelease(`C${BASE_OCTAVE}`, "16n", now + 0.1, 0.6)
+        reset.triggerAttackRelease(randomItem(RESET_NOTES), "16n", now, randomBetween(0.52, 0.66))
+        reset.triggerAttackRelease(
+          randomItem(RESET_NOTES),
+          "16n",
+          now + randomBetween(0.08, 0.12),
+          randomBetween(0.52, 0.66),
+        )
         break
       }
       case "ControlChanged": {
-        config.triggerAttackRelease("G5", "16n", now, 0.55)
+        config.triggerAttackRelease(
+          randomItem(CONTROL_NOTES),
+          randomItem(["32n", "16n"]),
+          now,
+          randomBetween(0.48, 0.6),
+        )
         break
       }
     }
-  })
+  }
 
   yield* Effect.addFinalizer(() =>
     Effect.sync(() => {
