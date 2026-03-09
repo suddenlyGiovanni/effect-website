@@ -8,12 +8,8 @@ import { prefersReducedMotionAtom, soundPreferenceAtom } from "@/atoms/visual-ef
 import { soundCueKey, type SoundCue } from "@/lib/examples/sound"
 
 const PENTATONIC_SCALE = ["C", "D", "E", "G", "A"] as const
-const RUNNING_NOTES = ["C2", "D2", "E2", "G2"] as const
-const FAILURE_NOTES = ["C2", "D#2", "F2", "G#2", "A#2"] as const
-const INTERRUPTED_NOTES = ["C5", "D5", "E5", "G5", "A5"] as const
-const DEATH_NOTES = ["C1", "D#1", "F1", "G1"] as const
-const RESET_NOTES = ["C3", "E3", "G3", "A3"] as const
-const CONTROL_NOTES = ["D5", "E5", "G5", "A5", "C6"] as const
+const BASE_OCTAVE = 3
+const CHORD_WINDOW_MS = 100
 const DEDUPE_WINDOW_MS = 60
 
 export interface ToneEngine {
@@ -108,17 +104,17 @@ const makeToneEngine = Effect.gen(function* () {
   yield* Effect.promise(() => Tone.start())
 
   const volume = new Tone.Volume(-12).toDestination()
-  const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.25 }).connect(volume)
+  const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.3 }).connect(volume)
   const distortion = new Tone.Distortion({ distortion: 0.8, wet: 1 }).connect(volume)
 
   const running = new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: "triangle" },
-    envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.08 },
+    oscillator: { type: "sine" },
+    envelope: { attack: 0.002, decay: 0.08, sustain: 0, release: 0.1 },
   }).connect(reverb)
 
   const success = new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: "triangle" },
-    envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.1 },
+    envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 },
   }).connect(reverb)
 
   const failure = new Tone.PolySynth(Tone.Synth, {
@@ -152,18 +148,38 @@ const makeToneEngine = Effect.gen(function* () {
     transport.start()
   }
 
-  const randomItem = <A>(items: ReadonlyArray<A>): A => {
-    const index = Math.floor(Math.random() * items.length)
-    return items[index] ?? items[0]
+  let currentNoteIndex = 0
+  let chordWindowStart: number | undefined = undefined
+  let chordStep = 0
+  let chordBaseIndex = 0
+  let chordBaseOctave = BASE_OCTAVE
+  let isPlayingFailure = false
+  let isPlayingInterrupt = false
+
+  const inChordWindow = (nowMs: number): boolean => {
+    return chordWindowStart !== undefined && nowMs - chordWindowStart <= CHORD_WINDOW_MS
   }
 
-  const randomBetween = (min: number, max: number): number => {
-    return min + Math.random() * (max - min)
+  const scheduleOnce = (callback: () => void, time: string | number): void => {
+    transport.scheduleOnce(callback, time)
   }
 
-  const randomPentatonicNote = (octaves: ReadonlyArray<number>): string => {
-    const note = randomItem(PENTATONIC_SCALE)
-    const octave = randomItem(octaves)
+  const getNextNote = (octaveOffset = 0): string => {
+    const now = Date.now()
+    if (!inChordWindow(now)) {
+      chordWindowStart = now
+      chordStep = 0
+      chordBaseIndex = currentNoteIndex % PENTATONIC_SCALE.length
+      chordBaseOctave = BASE_OCTAVE + octaveOffset
+    }
+
+    const scaleIndex = (chordBaseIndex + chordStep) % PENTATONIC_SCALE.length
+    const note = PENTATONIC_SCALE[scaleIndex]
+    const octave = chordBaseOctave
+
+    chordStep += 1
+    currentNoteIndex = (currentNoteIndex + 1) % (PENTATONIC_SCALE.length * 2)
+
     return `${note}${octave}`
   }
 
@@ -171,80 +187,69 @@ const makeToneEngine = Effect.gen(function* () {
     const now = Tone.now()
     switch (cue._tag) {
       case "StepRunning": {
-        running.triggerAttackRelease(
-          randomItem(RUNNING_NOTES),
-          randomItem(["32n", "16n"]),
-          now,
-          randomBetween(0.58, 0.76),
-        )
+        running.triggerAttackRelease(getNextNote(0.5), "32n", now, 0.25)
         break
       }
       case "StepSucceeded": {
-        const note = randomPentatonicNote([4, 5])
-        success.triggerAttackRelease(
-          note,
-          randomItem(["16n", "8n"]),
-          now,
-          randomBetween(0.38, 0.52),
-        )
+        const currentTime = Date.now()
+        if (!inChordWindow(currentTime)) {
+          chordWindowStart = currentTime
+          chordStep = 0
+          chordBaseIndex = currentNoteIndex % PENTATONIC_SCALE.length
+          chordBaseOctave = BASE_OCTAVE + 1
+        }
+
+        const rootNoteName = PENTATONIC_SCALE[chordBaseIndex]
+        const rootNote = `${rootNoteName}${chordBaseOctave}`
+        const semitoneOffset = [0, 4, 7][chordStep % 3] ?? 0
+        const note = Tone.Frequency(rootNote).transpose(semitoneOffset).toNote()
+
+        chordStep += 1
+        currentNoteIndex = (currentNoteIndex + 1) % (PENTATONIC_SCALE.length * 2)
+
+        success.triggerAttackRelease(note, "4n")
         break
       }
       case "StepFailed": {
-        failure.triggerAttackRelease(
-          randomItem(FAILURE_NOTES),
-          randomItem(["8n", "4n"]),
-          now,
-          randomBetween(0.55, 0.72),
-        )
+        if (isPlayingFailure) {
+          break
+        }
+
+        isPlayingFailure = true
+        const note = `${PENTATONIC_SCALE[currentNoteIndex % PENTATONIC_SCALE.length]}${BASE_OCTAVE - 1}`
+        currentNoteIndex = (currentNoteIndex + 1) % PENTATONIC_SCALE.length
+
+        failure.triggerAttackRelease(note, "4n", now, 0.65)
+        scheduleOnce(() => {
+          isPlayingFailure = false
+        }, "+0.2")
         break
       }
       case "StepInterrupted": {
-        interrupted.triggerAttackRelease(
-          randomItem(INTERRUPTED_NOTES),
-          "32n",
-          now,
-          randomBetween(0.52, 0.66),
-        )
-        interrupted.triggerAttackRelease(
-          randomItem(INTERRUPTED_NOTES),
-          "32n",
-          now + randomBetween(0.05, 0.09),
-          randomBetween(0.52, 0.66),
-        )
+        if (isPlayingInterrupt) {
+          break
+        }
+
+        isPlayingInterrupt = true
+        interrupted.triggerAttackRelease("C5", "32n", now, 0.6)
+        interrupted.triggerAttackRelease("E5", "32n", now + 0.07, 0.6)
+        scheduleOnce(() => {
+          isPlayingInterrupt = false
+        }, "+0.2")
         break
       }
       case "StepDied": {
-        death.triggerAttackRelease(
-          randomPentatonicNote([2, 3]),
-          "32n",
-          now,
-          randomBetween(0.38, 0.5),
-        )
-        death.triggerAttackRelease(
-          randomItem(DEATH_NOTES),
-          randomItem(["2n", "1n"]),
-          now + randomBetween(0.08, 0.14),
-          randomBetween(0.48, 0.6),
-        )
+        death.triggerAttackRelease(`D#${BASE_OCTAVE}`, "32n", now, 0.45)
+        death.triggerAttackRelease(`C${BASE_OCTAVE - 2}`, "1n", now + 0.1, 0.55)
         break
       }
       case "ExampleReset": {
-        reset.triggerAttackRelease(randomItem(RESET_NOTES), "16n", now, randomBetween(0.52, 0.66))
-        reset.triggerAttackRelease(
-          randomItem(RESET_NOTES),
-          "16n",
-          now + randomBetween(0.08, 0.12),
-          randomBetween(0.52, 0.66),
-        )
+        reset.triggerAttackRelease(`G${BASE_OCTAVE}`, "16n", now, 0.6)
+        reset.triggerAttackRelease(`C${BASE_OCTAVE}`, "16n", now + 0.1, 0.6)
         break
       }
       case "ControlChanged": {
-        config.triggerAttackRelease(
-          randomItem(CONTROL_NOTES),
-          randomItem(["32n", "16n"]),
-          now,
-          randomBetween(0.48, 0.6),
-        )
+        config.triggerAttackRelease("G5", "16n", now, 0.6)
         break
       }
     }

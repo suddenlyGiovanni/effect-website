@@ -57,7 +57,7 @@ export class VisualEffectManager extends ServiceMap.Service<
       const soundManager = yield* SoundManager
       const tracer = yield* Effect.tracer
       const fiberMap = yield* FiberMap.make<ExampleDefinition>()
-      const services = Effect.services()
+      const services = yield* Effect.services()
       const runSync = Effect.runSyncWith(services)
 
       const playExampleTransition = (
