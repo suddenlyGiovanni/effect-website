@@ -1,5 +1,5 @@
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
-import { useAtomSubscribe } from "@effect/atom-react"
+import { useAtomValue } from "@effect/atom-react"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
@@ -16,10 +16,10 @@ import {
   toStepSnippetTargetKey,
   type CodeSnippet,
   type CodeSnippetConfig,
-  type CodeSnippetHighlightSelector,
+  HighlightSelector,
 } from "./snippet-highlights"
 
-export type { CodeSnippetConfig, CodeSnippetHighlightSelector }
+export { type CodeSnippetConfig, HighlightSelector }
 
 // =============================================================================
 // Renderable Effect
@@ -57,9 +57,7 @@ export interface ExampleDefinitionOptions<Type extends ExampleType> {
   readonly subtitle?: string | undefined
   readonly description?: string | undefined
   readonly code: CodeSnippetConfig
-  readonly resultHighlight?:
-    | CodeSnippetHighlightSelector
-    | ReadonlyArray<CodeSnippetHighlightSelector>
+  readonly resultHighlight?: HighlightSelector | ReadonlyArray<HighlightSelector>
   readonly build: (
     ctx: BuildContext<Type>,
   ) => RenderableEffect<RenderableResult, RenderableResult, ExampleEnvironment>
@@ -151,9 +149,7 @@ export type CodeSnippetSelectorOptions =
   | CodeSnippetSelectorConfig
   | ((controls: ControlValues) => CodeSnippetSelectorConfig)
 
-export type CodeSnippetSelectorConfig =
-  | CodeSnippetHighlightSelector
-  | ReadonlyArray<CodeSnippetHighlightSelector>
+export type CodeSnippetSelectorConfig = HighlightSelector | ReadonlyArray<HighlightSelector>
 
 // =============================================================================
 // Notifications
@@ -282,7 +278,13 @@ export const defineExample = <Type extends ExampleType>(
     }
 
     const ControlObserver = ({ onValueChange }: { readonly onValueChange: () => void }) => {
-      useAtomSubscribe(handle.atom, onValueChange, { immediate: true })
+      const value = useAtomValue(handle.atom)
+
+      React.useEffect(() => {
+        handle.currentValueRef.current = value
+        onValueChange()
+      }, [onValueChange, value])
+
       return null
     }
 
@@ -337,10 +339,7 @@ export const defineExample = <Type extends ExampleType>(
     program,
     code: {
       resolve: (controlValues) => {
-        const resolvedSelectorsByTarget: Record<
-          string,
-          ReadonlyArray<CodeSnippetHighlightSelector>
-        > = {}
+        const resolvedSelectorsByTarget: Record<string, ReadonlyArray<HighlightSelector>> = {}
 
         for (const targetKey of Object.keys(selectorsByTarget)) {
           const selectorDefinition = selectorsByTarget[targetKey]
