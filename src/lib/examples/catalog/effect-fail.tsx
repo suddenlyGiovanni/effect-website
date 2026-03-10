@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect"
-import { defineExample, Notifications } from "../constructors"
+import { defineExample, HighlightSelector, Notifications } from "../constructors"
 import { ErrorResult } from "../results/error"
 
 export const failExample = defineExample({
@@ -9,10 +9,9 @@ export const failExample = defineExample({
     language: "typescript",
     source: 'const error = Effect.fail("Kaboom!")',
   },
-  resultHighlight: {
-    _tag: "Text",
+  resultHighlight: HighlightSelector.Text({
     text: 'Effect.fail("Kaboom!")',
-  },
+  }),
   build: () =>
     Effect.fail(new ErrorResult("Kaboom!")).pipe(
       Effect.tapError((error) =>

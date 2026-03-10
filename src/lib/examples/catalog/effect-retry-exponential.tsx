@@ -1,33 +1,11 @@
 import * as Effect from "effect/Effect"
 import * as Schedule from "effect/Schedule"
-import { defineExample } from "../constructors"
+import * as String from "effect/String"
+import { defineExample, HighlightSelector, Notifications } from "../constructors"
 import { ErrorResult } from "../results/error"
 import { PrimitiveResult } from "../results/primitive"
 
-const parkingMistakes = ["too close", "too far", "still crooked"] as const
-
-// This counter keeps the demo deterministic so the widening backoff is easy to read.
-// We reset it in `ensuring(...)` so each new run replays the same sequence of failures.
-let parkingAttempt = 0
-
-const resetParkingAttempt = Effect.sync(() => {
-  parkingAttempt = 0
-})
-
-const attemptParallelPark = Effect.gen(function* () {
-  yield* Effect.sleep("500 millis")
-
-  const attemptNumber = parkingAttempt
-  parkingAttempt += 1
-
-  const parkingMistake = parkingMistakes[attemptNumber]
-
-  if (parkingMistake !== undefined) {
-    return yield* Effect.fail(new ErrorResult(parkingMistake))
-  }
-
-  return new PrimitiveResult("parked")
-})
+const PARKING_ATTEMPTS = ["😤 Too Close!", "😡 Too Far!", "🤬 Neutral!", "😑 Focus."]
 
 export const retryExponentialExample = defineExample({
   type: "schedule",
@@ -36,24 +14,40 @@ export const retryExponentialExample = defineExample({
   description: "Retry a failing effect with gaps that widen after each failure",
   code: {
     language: "typescript",
-    source: `const park = attemptParallelPark()
-
-// Exponential backoff widens the gap after each failed attempt.
-const result = Effect.retry(park, Schedule.exponential("700 millis"))`,
+    source: String.stripMargin(
+      `|const park = attemptParallelPark()
+       |const result = Effect.retry(park, Schedule.exponential("700 millis"))`,
+    ),
   },
-  resultHighlight: {
-    _tag: "Text",
+  resultHighlight: HighlightSelector.Text({
     text: 'Effect.retry(park, Schedule.exponential("700 millis"))',
-  },
+  }),
   build: ({ addStep }) => {
-    const park = addStep(attemptParallelPark, {
+    let index = 0
+
+    const attemptParallelPark = Effect.gen(function* () {
+      const notifications = yield* Notifications
+
+      yield* Effect.sleep("500 millis")
+
+      if (index >= PARKING_ATTEMPTS.length) {
+        return new PrimitiveResult("🚗 Parked!")
+      }
+
+      const result = PARKING_ATTEMPTS[index]
+      index += 1
+
+      return yield* Effect.fail(new ErrorResult(result)).pipe(
+        Effect.tapError((error) => notifications.notify(error.message)),
+      )
+    })
+
+    const parkStep = addStep(attemptParallelPark, {
       label: "park",
-      highlight: { _tag: "Text", text: "attemptParallelPark()" },
+      highlight: HighlightSelector.Text({ text: "attemptParallelPark()" }),
       addToTimeline: true,
     })
 
-    return Effect.retry(park, Schedule.exponential("700 millis")).pipe(
-      Effect.ensuring(resetParkingAttempt),
-    )
+    return Effect.retry(parkStep, Schedule.exponential("700 millis"))
   },
 })

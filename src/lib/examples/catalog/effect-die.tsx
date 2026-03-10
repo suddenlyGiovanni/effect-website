@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect"
-import { defineExample, Notifications } from "../constructors"
+import { defineExample, HighlightSelector, Notifications } from "../constructors"
 
 export const dieExample = defineExample({
   label: "Effect.die",
@@ -8,10 +8,9 @@ export const dieExample = defineExample({
     language: "typescript",
     source: 'const death = Effect.die(new Error("FATAL: System corrupted"))',
   },
-  resultHighlight: {
-    _tag: "Text",
+  resultHighlight: HighlightSelector.Text({
     text: 'Effect.die(new Error("FATAL: System corrupted"))',
-  },
+  }),
   build: () =>
     Effect.die(new Error("FATAL: System corrupted")).pipe(
       Effect.tapDefect((defect) =>

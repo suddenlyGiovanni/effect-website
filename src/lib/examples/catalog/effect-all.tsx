@@ -1,13 +1,13 @@
 import { useAtomValue } from "@effect/atom-react"
-import * as Array from "effect/Array"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
+import * as String from "effect/String"
 import { useControlWrite } from "@/components/landing/examples/VisualEffectProvider"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TabsIndicator } from "@/components/ui/tabs-indicator"
 import { useTabsIndicator } from "@/hooks/useTabsIndicator"
 import { cn } from "@/lib/utils"
-import { defineExample, type ControlRenderProps } from "../constructors"
+import { defineExample, HighlightSelector, type ControlRenderProps } from "../constructors"
 import { TemperatureArrayResult, TemperatureResult } from "../results/temperature"
 
 type ConcurrencyMode = "sequential" | "numbered" | "unbounded"
@@ -54,37 +54,45 @@ const getTemperature = (
   return Effect.sleep(duration).pipe(Effect.as(result))
 }
 
-const effectAll = (mode: ConcurrencyMode): string => {
+const getResultCodeSnippet = (mode: ConcurrencyMode): string => {
   switch (mode) {
     case "sequential":
       return "Effect.all([nyc, berlin, tokyo, london])"
     case "numbered":
-      return "Effect.all([nyc, berlin, tokyo, london], {\n  concurrency: 2\n})"
+      return String.stripMargin(
+        `|Effect.all([nyc, berlin, tokyo, london], {
+         |  concurrency: 2
+         |})`,
+      )
     case "unbounded":
-      return 'Effect.all([nyc, berlin, tokyo, london], {\n  concurrency: "unbounded"\n})'
+      return String.stripMargin(
+        `|Effect.all([nyc, berlin, tokyo, london], {
+         |  concurrency: "unbounded"
+         |})`,
+      )
   }
 }
 
-const effectAllSnippetSource = (
-  mode: ConcurrencyMode,
-): string => `const nyc = readTemperature("New York")
-const berlin = readTemperature("Berlin")
-const tokyo = readTemperature("Tokyo")
-const london = readTemperature("London")
-
-const result = ${effectAll(mode)}`
+const getCodeSnippet = (mode: ConcurrencyMode): string =>
+  String.stripMargin(
+    `|const nyc = readTemperature("New York")
+     |const berlin = readTemperature("Berlin")
+     |const tokyo = readTemperature("Tokyo")
+     |const london = readTemperature("London")
+     |
+     |const result = ${getResultCodeSnippet(mode)}`,
+  )
 
 export const allExample = defineExample({
   label: "Effect.all",
   description: "Combine multiple effects into one, returning results based on input structure",
   code: {
     language: "typescript",
-    source: effectAllSnippetSource("sequential"),
+    source: getCodeSnippet("sequential"),
   },
-  resultHighlight: {
-    _tag: "Text",
-    text: effectAll("sequential"),
-  },
+  resultHighlight: HighlightSelector.Text({
+    text: getResultCodeSnippet("sequential"),
+  }),
   build: ({ addStep, controls, snippet }) => {
     const concurrency = controls.register({
       id: "concurrency",
@@ -97,28 +105,28 @@ export const allExample = defineExample({
 
     snippet.setCode(({ get }) => ({
       language: "typescript",
-      source: effectAllSnippetSource(get(concurrency)),
+      source: getCodeSnippet(get(concurrency)),
     }))
     snippet.setResultHighlight(({ get }) => ({
       _tag: "Text",
-      text: effectAll(get(concurrency)),
+      text: getResultCodeSnippet(get(concurrency)),
     }))
 
-    const nyc = addStep(getTemperature(14, "900 millis"), {
+    const nyc = addStep(getTemperature(65, "900 millis"), {
       label: "nyc",
-      highlight: { _tag: "Text", text: 'readTemperature("New York")' },
+      highlight: HighlightSelector.Text({ text: 'readTemperature("New York")' }),
     })
-    const berlin = addStep(getTemperature(11, "500 millis"), {
+    const berlin = addStep(getTemperature(44, "500 millis"), {
       label: "berlin",
-      highlight: { _tag: "Text", text: 'readTemperature("Berlin")' },
+      highlight: HighlightSelector.Text({ text: 'readTemperature("Berlin")' }),
     })
-    const tokyo = addStep(getTemperature(18, "650 millis"), {
+    const tokyo = addStep(getTemperature(72, "650 millis"), {
       label: "tokyo",
-      highlight: { _tag: "Text", text: 'readTemperature("Tokyo")' },
+      highlight: HighlightSelector.Text({ text: 'readTemperature("Tokyo")' }),
     })
-    const london = addStep(getTemperature(9, "400 millis"), {
+    const london = addStep(getTemperature(53, "400 millis"), {
       label: "london",
-      highlight: { _tag: "Text", text: 'readTemperature("London")' },
+      highlight: HighlightSelector.Text({ text: 'readTemperature("London")' }),
     })
 
     return Effect.gen(function* () {
@@ -132,7 +140,7 @@ export const allExample = defineExample({
             ? yield* Effect.all(effects, { concurrency: "unbounded" })
             : yield* Effect.all(effects, { concurrency: 2 })
 
-      return new TemperatureArrayResult(Array.map(temperatures, (result) => result.value))
+      return new TemperatureArrayResult(temperatures)
     })
   },
 })

@@ -1,3 +1,4 @@
+import * as Data from "effect/Data"
 import * as Schema from "effect/Schema"
 
 export type SnippetLanguage = "typescript" | "javascript"
@@ -20,7 +21,7 @@ export interface ResolvedOffsetRange {
 
 export const resolveExampleCodeSnippet = (input: {
   readonly code: CodeSnippetConfig
-  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<CodeSnippetHighlightSelector>>>
+  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<HighlightSelector>>>
   readonly exampleLabel: string
 }): CodeSnippet => {
   const normalizedCodeSource = normalizeSnippetSource(input.code.source)
@@ -40,22 +41,21 @@ export const resolveExampleCodeSnippet = (input: {
   }
 }
 
-export type CodeSnippetHighlightSelector =
-  | {
-      readonly _tag: "Text"
-      readonly text: string
-      readonly occurrence?: number
-    }
-  | {
-      readonly _tag: "LineRange"
-      readonly startLine: number
-      readonly endLine: number
-    }
-  | {
-      readonly _tag: "OffsetRange"
-      readonly startOffset: number
-      readonly endOffset: number
-    }
+export type HighlightSelector = Data.TaggedEnum<{
+  readonly Text: {
+    readonly text: string
+    readonly occurrence?: number
+  }
+  readonly LineRange: {
+    readonly startLine: number
+    readonly endLine: number
+  }
+  readonly OffsetRange: {
+    readonly startOffset: number
+    readonly endOffset: number
+  }
+}>
+export const HighlightSelector = Data.taggedEnum<HighlightSelector>()
 
 export const snippetResultTargetKey = "result"
 
@@ -123,12 +123,12 @@ export const validateSnippetLanguage = (
 }
 
 export const normalizeSelectorInput = (
-  selectors: CodeSnippetHighlightSelector | ReadonlyArray<CodeSnippetHighlightSelector>,
+  selectors: HighlightSelector | ReadonlyArray<HighlightSelector>,
   options: {
     readonly exampleLabel: string
     readonly targetKey: string
   },
-): ReadonlyArray<CodeSnippetHighlightSelector> => {
+): ReadonlyArray<HighlightSelector> => {
   const normalizedSelectors = Array.isArray(selectors) ? Array.from(selectors) : [selectors]
 
   if (normalizedSelectors.length === 0) {
@@ -143,7 +143,7 @@ export const normalizeSelectorInput = (
 
 export const resolveAllSelectors = (input: {
   readonly source: string
-  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<CodeSnippetHighlightSelector>>>
+  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<HighlightSelector>>>
   readonly exampleLabel: string
 }): Readonly<Record<string, ReadonlyArray<ResolvedOffsetRange>>> => {
   const highlightsByTarget: Record<string, ReadonlyArray<ResolvedOffsetRange>> = {}
@@ -179,7 +179,7 @@ export const resolveAllSelectors = (input: {
 
 const resolveSelector = (input: {
   readonly source: string
-  readonly selector: CodeSnippetHighlightSelector
+  readonly selector: HighlightSelector
   readonly exampleLabel: string
   readonly targetKey: string
 }): ResolvedOffsetRange => {
@@ -377,7 +377,7 @@ const mergeRanges = (
   return mergedRanges
 }
 
-const stringifySelector = (selector: CodeSnippetHighlightSelector): string => {
+const stringifySelector = (selector: HighlightSelector): string => {
   switch (selector._tag) {
     case "Text": {
       const occurrenceText = selector.occurrence

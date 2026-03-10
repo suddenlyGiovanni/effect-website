@@ -13,9 +13,9 @@ export class TemperatureResult extends RenderableResult {
 
 export class TemperatureArrayResult extends RenderableResult {
   readonly values: ReadonlyArray<number>
-  constructor(values: ReadonlyArray<number>) {
+  constructor(values: ReadonlyArray<TemperatureResult>) {
     super()
-    this.values = values
+    this.values = values.map((result) => result.value)
   }
   render(): React.ReactNode {
     return <div className="text-2xl">[{this.values.map((value) => `${value}°`).join(", ")}]</div>

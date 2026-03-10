@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect"
 import * as Random from "effect/Random"
-import { defineExample } from "../constructors"
+import * as String from "effect/String"
+import { defineExample, HighlightSelector } from "../constructors"
 import { EmojiResult, type EmojiKey } from "../results/emoji"
 
 const getEmoji = Effect.fnUntraced(function* (emoji: EmojiKey): Effect.fn.Return<EmojiResult> {
@@ -11,19 +12,21 @@ const getEmoji = Effect.fnUntraced(function* (emoji: EmojiKey): Effect.fn.Return
 
 export const raceExample = defineExample({
   label: "Effect.race",
+  description: "Race two effects and return the result of the first successful one",
   code: {
     language: "typescript",
-    source: `const tortoise = runFast("tortoise")
-const achilles = runFast("achilles")
-
-const winner = Effect.race(tortoise, achilles)`,
+    source: String.stripMargin(
+      `|const tortoise = runFast("tortoise")
+       |const achilles = runFast("achilles")
+       |
+       |const winner = Effect.race(tortoise, achilles)`,
+    ),
   },
-  resultHighlight: {
-    _tag: "Text",
+  resultHighlight: HighlightSelector.Text({
     text: "Effect.race(tortoise, achilles)",
-  },
-  build: ({ addStep }) => {
-    return Effect.race(
+  }),
+  build: ({ addStep }) =>
+    Effect.race(
       addStep(getEmoji("Tortoise"), {
         label: "tortoise",
         highlight: { _tag: "Text", text: 'runFast("tortoise")' },
@@ -32,6 +35,5 @@ const winner = Effect.race(tortoise, achilles)`,
         label: "achilles",
         highlight: { _tag: "Text", text: 'runFast("achilles")' },
       }),
-    )
-  },
+    ),
 })

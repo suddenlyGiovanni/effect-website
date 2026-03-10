@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect"
 import * as Schedule from "effect/Schedule"
 import * as String from "effect/String"
-import { defineExample, Notifications } from "../constructors"
+import { defineExample, HighlightSelector, Notifications } from "../constructors"
 import { ErrorResult } from "../results/error"
 import { PrimitiveResult } from "../results/primitive"
 
@@ -39,10 +39,9 @@ export const repeatSpacedExample = defineExample({
        |const checking = Effect.repeat(phone, Schedule.spaced("2 seconds"))`,
     ),
   },
-  resultHighlight: {
-    _tag: "Text",
+  resultHighlight: HighlightSelector.Text({
     text: 'Effect.repeat(phone, Schedule.spaced("2 seconds"))',
-  },
+  }),
   build: ({ addStep }) => {
     let index = 0
 
@@ -53,7 +52,7 @@ export const repeatSpacedExample = defineExample({
 
       if (index >= NOTIFICATION_MESSAGES.length) {
         return yield* Effect.fail(new ErrorResult("phone died")).pipe(
-          Effect.tapError((result) => notifications.notify(result.message)),
+          Effect.tapError((error) => notifications.notify(error.message)),
         )
       }
 
@@ -65,7 +64,7 @@ export const repeatSpacedExample = defineExample({
 
     const checkPhoneStep = addStep(checkPhone, {
       label: "phone",
-      highlight: { _tag: "Text", text: "checkNotifications()" },
+      highlight: HighlightSelector.Text({ text: "checkNotifications()" }),
       addToTimeline: true,
     })
 
