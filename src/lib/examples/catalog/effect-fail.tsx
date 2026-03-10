@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect"
-import { defineExample } from "../constructors"
+import { defineExample, Notifications } from "../constructors"
 import { ErrorResult } from "../results/error"
 
 export const failExample = defineExample({
@@ -7,11 +7,21 @@ export const failExample = defineExample({
   description: "Create an effect that represents a recoverable error",
   code: {
     language: "typescript",
-    source: `const error = Effect.fail("Kaboom!")`,
+    source: 'const error = Effect.fail("Kaboom!")',
   },
   resultHighlight: {
     _tag: "Text",
     text: 'Effect.fail("Kaboom!")',
   },
-  build: () => Effect.fail(new ErrorResult("Kaboom!")),
+  build: () =>
+    Effect.fail(new ErrorResult("Kaboom!")).pipe(
+      Effect.tapError((error) =>
+        Notifications.use(({ notify }) =>
+          notify(error.message, {
+            duration: "2 seconds",
+            showOnHover: true,
+          }),
+        ),
+      ),
+    ),
 })

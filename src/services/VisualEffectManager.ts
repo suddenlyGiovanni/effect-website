@@ -197,14 +197,19 @@ export class VisualEffectManager extends ServiceMap.Service<
       ): void => {
         const atom = stepStateAtom(details.step)
         const previous = registry.get(atom)
-        registry.set(atom, {
-          ...previous,
-          notification: Option.some({
-            id: crypto.randomUUID(),
-            message,
-            duration: (attributes?.duration as Duration.Duration) ?? Duration.seconds(2),
-          }),
-        })
+        const state = setStateNotification(previous, message, attributes)
+        registry.set(atom, state)
+      }
+
+      const setExampleNotification = (
+        example: ExampleDefinition,
+        message: string,
+        attributes: Record<string, unknown> | undefined,
+      ): void => {
+        const atom = exampleStateAtom(example)
+        const previous = registry.get(atom)
+        const state = setStateNotification(previous, message, attributes)
+        registry.set(atom, state)
       }
 
       const updateScheduleTimeline = (
@@ -256,7 +261,8 @@ export class VisualEffectManager extends ServiceMap.Service<
         endedAt: DateTime.Utc,
         exit: Exit.Exit<unknown, unknown>,
       ): void => {
-        setStepState(details, exitToState(exit, startedAt, endedAt))
+        const previous = registry.get(stepStateAtom(details.step))
+        setStepState(details, exitToState(exit, startedAt, endedAt, previous))
       }
 
       const visualEffectTracer = Tracer.make({
@@ -292,7 +298,6 @@ export class VisualEffectManager extends ServiceMap.Service<
             },
             event(name, startTime, attributes) {
               span.event(name, startTime, attributes)
-              console.log({ name, startTime, attributes })
               setStepNotification(details, name, attributes)
             },
             addLinks(links) {
@@ -319,23 +324,39 @@ export class VisualEffectManager extends ServiceMap.Service<
 
       const DEFAULT_NOTIFICATION_DURATION = Duration.seconds(2)
 
-      const notify: (typeof Notifications.Service)["notify"] = (message, options) =>
-        Effect.withFiber((fiber) => {
-          const span = fiber.currentSpan
-          if (!span || span._tag !== "Span") {
+      const notifyForExample =
+        (example: ExampleDefinition): (typeof Notifications.Service)["notify"] =>
+        (message, options) =>
+          Effect.withFiber((fiber) => {
+            const span = fiber.currentSpan
+
+            const duration = options?.duration
+              ? (Duration.fromInput(options.duration) ?? DEFAULT_NOTIFICATION_DURATION)
+              : DEFAULT_NOTIFICATION_DURATION
+
+            const attributes = {
+              duration,
+              showOnHover: options?.showOnHover ?? false,
+            } satisfies Record<string, unknown>
+
+            if (!span || span._tag !== "Span") {
+              setExampleNotification(example, message, attributes)
+              return Effect.void
+            }
+
+            const details = ServiceMap.getOrUndefined(span.annotations, ExampleStep)
+            if (details === undefined) {
+              setExampleNotification(example, message, attributes)
+              return Effect.void
+            }
+
+            span.event(message, clock.currentTimeNanosUnsafe(), {
+              duration,
+              showOnHover: options?.showOnHover ?? false,
+            })
+
             return Effect.void
-          }
-
-          const duration = options?.duration
-            ? (Duration.fromInput(options.duration) ?? DEFAULT_NOTIFICATION_DURATION)
-            : DEFAULT_NOTIFICATION_DURATION
-
-          span.event(message, clock.currentTimeNanosUnsafe(), {
-            duration,
           })
-
-          return Effect.void
-        })
 
       const manager = VisualEffectManager.of({
         start: Effect.fnUntraced(function* (example) {
@@ -350,6 +371,8 @@ export class VisualEffectManager extends ServiceMap.Service<
           const snapshot = ControlSnapshot.of({
             get: (atom) => snapshotRegistry.get(atom),
           })
+
+          const notify = notifyForExample(example)
 
           const program = Effect.gen(function* () {
             const startState = VisualEffectState.Running({
@@ -372,7 +395,8 @@ export class VisualEffectManager extends ServiceMap.Service<
               Effect.onExit(
                 Effect.fnUntraced(function* (exit) {
                   const endedAt = yield* DateTime.now
-                  const endState = exitToState(exit, startedAt, endedAt)
+                  const currentState = registry.get(exampleStateAtom(example))
+                  const endState = exitToState(exit, startedAt, endedAt, currentState)
                   yield* setExampleState(example, endState)
                 }),
               ),
@@ -422,13 +446,95 @@ const dateTimeFromNanos = (nanos: bigint): DateTime.Utc => {
 
 const nanosToMilliseconds = (nanos: bigint): number => Number(nanos / 1_000_000n)
 
+const getNotificationDuration = (
+  attributes: Record<string, unknown> | undefined,
+): Duration.Duration => {
+  const duration = attributes?.duration
+  return Duration.isDuration(duration) ? duration : Duration.seconds(2)
+}
+
+const getNotificationShowOnHover = (attributes: Record<string, unknown> | undefined): boolean => {
+  return attributes?.showOnHover === true
+}
+
+const makeNotification = (
+  message: string,
+  attributes: Record<string, unknown> | undefined,
+): VisualEffectNotification => ({
+  id: crypto.randomUUID(),
+  message,
+  duration: getNotificationDuration(attributes),
+  showOnHover: getNotificationShowOnHover(attributes),
+})
+
+const setStateNotification = (
+  state: VisualEffectState,
+  message: string,
+  attributes: Record<string, unknown> | undefined,
+): VisualEffectState => {
+  const notification = Option.some(makeNotification(message, attributes))
+
+  switch (state._tag) {
+    case "Running":
+      return VisualEffectState.Running({
+        startedAt: state.startedAt,
+        notification,
+      })
+    case "Succeeded":
+      return VisualEffectState.Succeeded({
+        duration: state.duration,
+        endedAt: state.endedAt,
+        value: state.value,
+        notification,
+      })
+    case "Failed":
+      return VisualEffectState.Failed({
+        duration: state.duration,
+        endedAt: state.endedAt,
+        error: state.error,
+        notification,
+      })
+    case "Interrupted":
+      return VisualEffectState.Interrupted({
+        duration: state.duration,
+        endedAt: state.endedAt,
+        notification,
+      })
+    case "Died":
+      return VisualEffectState.Died({
+        defect: state.defect,
+        duration: state.duration,
+        endedAt: state.endedAt,
+        notification,
+      })
+    case "Idle":
+      return state
+  }
+}
+
+const getStateNotification = (
+  state: VisualEffectState,
+): Option.Option<VisualEffectNotification> => {
+  switch (state._tag) {
+    case "Running":
+    case "Succeeded":
+    case "Failed":
+    case "Interrupted":
+    case "Died":
+      return state.notification
+    case "Idle":
+      return Option.none()
+  }
+}
+
 const exitToState = (
   exit: Exit.Exit<unknown, unknown>,
   startedAt: DateTime.Utc,
   endedAt: DateTime.Utc,
+  previous: VisualEffectState,
 ): VisualEffectState => {
   const duration = DateTime.distance(startedAt, endedAt)
-  const notification = Option.none()
+  const notification = getStateNotification(previous)
   if (Exit.isSuccess(exit)) {
     return VisualEffectState.Succeeded({
       duration,

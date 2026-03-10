@@ -7,7 +7,7 @@ export const succeedExample = defineExample({
   description: "Create an effect that always succeeds with a given value",
   code: {
     language: "typescript",
-    source: `const value = Effect.succeed(42)`,
+    source: "const value = Effect.succeed(42)",
   },
   resultHighlight: {
     _tag: "Text",

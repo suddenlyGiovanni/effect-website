@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react"
 import { MotionConfig, motion, useAnimate } from "motion/react"
 import * as React from "react"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { useEffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { useEffectNodeAnimationController } from "@/hooks/animation/useEffectNodeAnimationController"
 import { useNodeTransitionFlags } from "@/hooks/animation/useNodeTransitionFlags"
@@ -11,7 +12,6 @@ import { VisualEffectCodeSnippet } from "./VisualEffectCodeSnippet"
 import { VisualEffectConfigPanel } from "./VisualEffectConfigPanel"
 import { VisualEffectControls } from "./VisualEffectControls"
 import { VisualEffectNode } from "./VisualEffectNode"
-import { VisualEffectScheduleTimeline } from "./VisualEffectScheduleTimeline"
 import {
   ExampleControlRuntimeProvider,
   ExampleContext,
@@ -21,14 +21,19 @@ import {
   useStepDefinition,
   useStepState,
 } from "./VisualEffectProvider"
+import { VisualEffectScheduleTimeline } from "./VisualEffectScheduleTimeline"
 
 export function VisualEffect({ example }: { readonly example: ExampleDefinition }) {
   return (
-    <ExampleContext.Provider value={example}>
-      <ExampleControlRuntimeProvider>
-        <VisualEffectSurface />
-      </ExampleControlRuntimeProvider>
-    </ExampleContext.Provider>
+    <MotionConfig reducedMotion="user">
+      <TooltipProvider delay={0}>
+        <ExampleContext.Provider value={example}>
+          <ExampleControlRuntimeProvider>
+            <VisualEffectSurface />
+          </ExampleControlRuntimeProvider>
+        </ExampleContext.Provider>
+      </TooltipProvider>
+    </MotionConfig>
   )
 }
 
@@ -44,22 +49,20 @@ function VisualEffectSurface() {
     <motion.div
       className="flex w-fit min-w-full flex-col border shadow-2xl"
       initial={false}
-      animate={{
-        borderColor,
-        boxShadow: isDied ? "0 0 40px rgba(220, 38, 38, 0.3)" : "0 0 0 0 rgba(59, 130, 250, 0)",
-      }}
+        animate={{
+          borderColor,
+          boxShadow: isDied ? "0 0 10px rgba(220, 38, 38, 0.06)" : "0 0 0 0 rgba(59, 130, 250, 0)",
+        }}
       transition={{
         borderColor: { duration: 0.2, ease: "easeInOut" },
         boxShadow: { duration: 0.2, ease: "easeInOut" },
       }}
     >
-      <MotionConfig reducedMotion="user">
-        <VisualEffectControls isDied={isDied} />
-        <VisualEffectConfigPanel isDied={isDied} />
-        <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
-        {example.type === "schedule" && <VisualEffectScheduleTimeline />}
-        <VisualEffectCodeSnippet snippet={example.code} activeTarget={delayedTarget} />
-      </MotionConfig>
+      <VisualEffectControls isDied={isDied} />
+      <VisualEffectConfigPanel isDied={isDied} />
+      <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
+      {example.type === "schedule" && <VisualEffectScheduleTimeline />}
+      <VisualEffectCodeSnippet snippet={example.code} activeTarget={delayedTarget} />
     </motion.div>
   )
 }

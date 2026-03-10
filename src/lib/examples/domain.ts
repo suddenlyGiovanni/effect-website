@@ -22,6 +22,7 @@ export interface VisualEffectNotification {
   readonly id: string
   readonly message: string
   readonly duration: Duration.Duration
+  readonly showOnHover: boolean
 }
 
 export type VisualEffectState = Data.TaggedEnum<{

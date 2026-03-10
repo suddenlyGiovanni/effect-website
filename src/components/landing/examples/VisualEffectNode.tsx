@@ -1,3 +1,4 @@
+import * as Duration from "effect/Duration"
 import * as Option from "effect/Option"
 import { OctagonAlert, Skull, Sparkle } from "lucide-react"
 import {
@@ -15,7 +16,6 @@ import { cn } from "@/lib/utils"
 import { VisualEffectNotificationBubble } from "./VisualEffectNotificationBubble"
 
 const FILTER_TRANSITION = { duration: 0.16, ease: "easeOut" } as const
-const NOTIFICATION_DISPLAY_MS = 2000
 
 export function VisualEffectNode({
   label,
@@ -32,25 +32,38 @@ export function VisualEffectNode({
   readonly scope: AnimationScope
   readonly state: VisualEffectState
 }) {
-  const notificationPresentation = useVisibleNotification(state)
+  const [isHovered, setIsHovered] = React.useState(false)
+  const notificationPresentation = useVisibleNotification(state, isHovered)
+
+  const handleMouseEnter = React.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      setIsHovered(true)
+      onMouseEnter?.(event)
+    },
+    [onMouseEnter],
+  )
+
+  const handleMouseLeave = React.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      setIsHovered(false)
+      onMouseLeave?.(event)
+    },
+    [onMouseLeave],
+  )
 
   return (
-    <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <motion.div
         className="relative flex h-14 items-center justify-center"
         style={{ width: motionValues.nodeWidth }}
       >
-        <AnimatePresence initial={false}>
-          {notificationPresentation !== undefined ? (
-            <VisualEffectNotificationBubble
-              key={notificationPresentation.notification.id}
-              notification={notificationPresentation.notification}
-              tone={notificationPresentation.tone}
-            />
-          ) : null}
-        </AnimatePresence>
-
-        <VisualEffectContainer scope={scope} motionValues={motionValues} state={state}>
+        <VisualEffectContainer
+          notification={notificationPresentation?.notification}
+          scope={scope}
+          motionValues={motionValues}
+          state={state}
+          variant={notificationPresentation?.variant}
+        >
           <VisualEffectOverlay motionValues={motionValues} state={state} />
           <VisualEffectContent motionValues={motionValues} state={state} />
         </VisualEffectContainer>
@@ -62,11 +75,15 @@ export function VisualEffectNode({
 
 type NotificationPresentation = {
   readonly notification: VisualEffectNotification
-  readonly tone: "info" | "failure" | "death"
+  readonly variant: "info" | "failure" | "death"
 }
 
-function useVisibleNotification(state: VisualEffectState): NotificationPresentation | undefined {
+function useVisibleNotification(
+  state: VisualEffectState,
+  isHovered: boolean,
+): NotificationPresentation | undefined {
   const semanticNotification = getNotificationPresentation(state)
+  const notificationId = semanticNotification?.notification.id
 
   const [visibleNotification, setVisibleNotification] = React.useState<
     NotificationPresentation | undefined
@@ -80,20 +97,26 @@ function useVisibleNotification(state: VisualEffectState): NotificationPresentat
 
     setVisibleNotification(semanticNotification)
 
-    if (semanticNotification.tone !== "info") {
-      return
-    }
+    const notificationDuration = Duration.toMillis(semanticNotification.notification.duration)
 
     const timeout = window.setTimeout(() => {
       setVisibleNotification((current) =>
         current?.notification.id === semanticNotification.notification.id ? undefined : current,
       )
-    }, NOTIFICATION_DISPLAY_MS)
+    }, notificationDuration)
 
     return () => {
       window.clearTimeout(timeout)
     }
-  }, [semanticNotification])
+  }, [notificationId])
+
+  if (
+    visibleNotification === undefined &&
+    semanticNotification?.notification.showOnHover === true &&
+    isHovered
+  ) {
+    return semanticNotification
+  }
 
   return visibleNotification
 }
@@ -105,17 +128,17 @@ function getNotificationPresentation(
     case "Running":
       return Option.match(state.notification, {
         onNone: () => undefined,
-        onSome: (notification) => ({ notification, tone: "info" }),
+        onSome: (notification) => ({ notification, variant: "info" }),
       })
     case "Failed":
       return Option.match(state.notification, {
         onNone: () => undefined,
-        onSome: (notification) => ({ notification, tone: "failure" }),
+        onSome: (notification) => ({ notification, variant: "failure" }),
       })
     case "Died":
       return Option.match(state.notification, {
         onNone: () => undefined,
-        onSome: (notification) => ({ notification, tone: "death" }),
+        onSome: (notification) => ({ notification, variant: "death" }),
       })
     default:
       return undefined
@@ -124,13 +147,17 @@ function getNotificationPresentation(
 
 function VisualEffectContainer({
   children,
+  notification,
   scope,
   motionValues,
   state,
+  variant,
 }: React.PropsWithChildren<{
+  readonly notification: VisualEffectNotification | undefined
   readonly scope: AnimationScope
   readonly motionValues: EffectMotionValues
   readonly state: VisualEffectState
+  readonly variant?: "info" | "failure" | "death"
 }>) {
   const isDied = state._tag === "Died"
 
@@ -144,38 +171,40 @@ function VisualEffectContainer({
   const boxShadow = useTransform(motionValues.glowIntensity, (glow = 0) => {
     const baseGlow = state._tag === "Running" ? SHADOW_COLORS.task.running : SHADOW_COLORS.small
     const cappedGlow = Math.min(glow, 8)
-
     if (isDied) {
       return cappedGlow > 0 ? `${baseGlow}, 0 0 ${cappedGlow * 2}px ${COLORS.glow.death}` : baseGlow
     }
-
     return cappedGlow > 0 ? `${baseGlow}, 0 0 ${cappedGlow}px ${COLORS.glow.running}` : baseGlow
   })
 
   return (
-    <motion.div
-      ref={scope}
-      variants={VISUAL_EFFECT_NODE_VARIANTS}
-      animate={state._tag}
-      initial={false}
-      style={{
-        width: motionValues.nodeWidth,
-        height: motionValues.nodeHeight,
-        borderRadius: motionValues.borderRadius,
-        rotate: motionValues.rotation,
-        x: motionValues.shakeX,
-        y: motionValues.shakeY,
-        filter,
-        boxShadow,
-        border: isDied ? `2px solid ${COLORS.border.death}` : `1px solid ${COLORS.border.default}`,
-        contain: "layout style paint",
-        willChange: "transform, filter",
-        transform: "translateZ(0)",
-      }}
-      className={cn("relative cursor-auto overflow-hidden")}
-    >
-      {children}
-    </motion.div>
+    <VisualEffectNotificationBubble notification={notification} variant={variant}>
+      <motion.div
+        ref={scope}
+        variants={VISUAL_EFFECT_NODE_VARIANTS}
+        animate={state._tag}
+        initial={false}
+        style={{
+          width: motionValues.nodeWidth,
+          height: motionValues.nodeHeight,
+          borderRadius: motionValues.borderRadius,
+          rotate: motionValues.rotation,
+          x: motionValues.shakeX,
+          y: motionValues.shakeY,
+          filter,
+          boxShadow,
+          border: isDied
+            ? `2px solid ${COLORS.border.death}`
+            : `1px solid ${COLORS.border.default}`,
+          contain: "layout style paint",
+          willChange: "transform, filter",
+          transform: "translateZ(0)",
+        }}
+        className={cn("relative cursor-auto overflow-hidden")}
+      >
+        {children}
+      </motion.div>
+    </VisualEffectNotificationBubble>
   )
 }
 
@@ -221,7 +250,7 @@ export const VISUAL_EFFECT_NODE_VARIANTS: Record<VisualEffectState["_tag"], Vari
     },
   },
   Died: {
-    backgroundColor: "var(--color-red-800)",
+    backgroundColor: "var(--color-red-900)",
     scale: 1,
     opacity: 1,
     transition: {
@@ -412,7 +441,7 @@ function VisualEffectNodeIcon({
     case "Failed":
       return <Skull className="fill-white text-red-500" size={iconSize * 1.2} />
     case "Died":
-      return <Skull className="fill-red-600 text-red-800" size={iconSize * 1.2} />
+      return <Skull className="fill-red-600 text-red-900" size={iconSize * 1.2} />
     case "Interrupted":
       return <OctagonAlert size={iconSize} />
     default:

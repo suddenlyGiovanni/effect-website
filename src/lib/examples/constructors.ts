@@ -1,5 +1,6 @@
-import { useAtomSubscribe } from "@effect/atom-react"
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
+import { useAtomSubscribe } from "@effect/atom-react"
+import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
@@ -17,7 +18,6 @@ import {
   type CodeSnippetConfig,
   type CodeSnippetHighlightSelector,
 } from "./snippet-highlights"
-import * as Duration from "effect/Duration"
 
 export type { CodeSnippetConfig, CodeSnippetHighlightSelector }
 
@@ -161,6 +161,7 @@ export type CodeSnippetSelectorConfig =
 
 export interface NotificationOptions {
   readonly duration?: Duration.Input | undefined
+  readonly showOnHover?: boolean | undefined
 }
 
 export class Notifications extends ServiceMap.Service<
