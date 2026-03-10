@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
 import { dual } from "effect/Function"
 import * as ServiceMap from "effect/ServiceMap"
+import * as Types from "effect/Types"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
 import type { RenderableResult } from "./domain"
@@ -12,10 +13,17 @@ import {
   resolveExampleCodeSnippet,
   snippetResultTargetKey,
   toStepSnippetTargetKey,
-  type ExampleCodeSnippet,
-  type ExampleCodeSnippetInput,
-  type SnippetHighlightSelector,
+  type CodeSnippet,
+  type CodeSnippetConfig,
+  type CodeSnippetHighlightSelector,
 } from "./snippet-highlights"
+import * as Duration from "effect/Duration"
+
+export type { CodeSnippetConfig, CodeSnippetHighlightSelector }
+
+// =============================================================================
+// Renderable Effect
+// =============================================================================
 
 export type RenderableEffect<
   A extends RenderableResult,
@@ -23,49 +31,63 @@ export type RenderableEffect<
   R = never,
 > = Effect.Effect<A, E, R>
 
-export type StepType = "default" | "schedule"
+// =============================================================================
+// Example Definition
+// =============================================================================
+
+export type ExampleType = "default" | "schedule"
+
+export type ExampleEnvironment = ControlSnapshot | Notifications
+
+export interface ExampleDefinition {
+  readonly type: ExampleType
+  readonly key: string
+  readonly title: string
+  readonly subtitle: string | undefined
+  readonly description: string | undefined
+  readonly steps: ReadonlyArray<StepDefinition>
+  readonly controls: ReadonlyArray<ControlDefinition>
+  readonly program: RenderableEffect<RenderableResult, RenderableResult, ExampleEnvironment>
+  readonly code: CodeSnippetDefinition
+}
+
+export interface ExampleDefinitionOptions<Type extends ExampleType> {
+  readonly type?: Type | undefined
+  readonly label: string
+  readonly subtitle?: string | undefined
+  readonly description?: string | undefined
+  readonly code: CodeSnippetConfig
+  readonly resultHighlight?:
+    | CodeSnippetHighlightSelector
+    | ReadonlyArray<CodeSnippetHighlightSelector>
+  readonly build: (
+    ctx: BuildContext<Type>,
+  ) => RenderableEffect<RenderableResult, RenderableResult, ExampleEnvironment>
+}
+
+// =============================================================================
+// Step Definition
+// =============================================================================
 
 export interface StepDefinition {
-  readonly type: StepType
   readonly id: string
   readonly label: string
+  readonly addToTimeline?: boolean
 }
 
-export type { ExampleCodeSnippetInput, SnippetHighlightSelector }
-
-export type ControlChangePolicy = "never" | "ifRunning" | "always"
-
-export interface ExampleControlRenderProps<A> {
-  readonly atom: Atom.Writable<A>
-  readonly disabled: boolean
-}
-
-export interface RegisterControlInput<A> {
-  readonly id: string
-  readonly label: string
-  readonly description?: string | undefined
-  readonly initialValue: A
-  readonly render: React.ComponentType<ExampleControlRenderProps<A>>
-  readonly changePolicy?: ControlChangePolicy | undefined
-}
-
-export interface ExampleControlHandle<A> {
-  readonly id: string
-  readonly label: string
-  readonly description: string | undefined
-  readonly atom: Atom.Writable<A>
-  readonly currentValueRef: {
-    current: A
+export class ExampleStep extends ServiceMap.Service<
+  ExampleStep,
+  {
+    readonly definition: ExampleDefinition
+    readonly step: StepDefinition
   }
-  readonly render: React.ComponentType<ExampleControlRenderProps<A>>
-  readonly changePolicy: ControlChangePolicy
-}
+>()("ExampleStep") {}
 
-export interface ExampleControlValues {
-  readonly get: <A>(control: ExampleControlHandle<A>) => A
-}
+// =============================================================================
+// Controls
+// =============================================================================
 
-export interface ExampleControlDefinition {
+export interface ControlDefinition {
   readonly id: string
   readonly label: string
   readonly description: string | undefined
@@ -78,96 +100,140 @@ export interface ExampleControlDefinition {
   readonly observe: (props: { readonly onValueChange: () => void }) => React.ReactNode
 }
 
-export interface AddStepOptions {
-  readonly type?: StepType | undefined
+export type ControlChangePolicy = "never" | "ifRunning" | "always"
+
+export interface RegisterControlOptions<A> {
+  readonly id: string
   readonly label: string
-  readonly highlight?: SnippetSelectorDefinition
+  readonly description?: string | undefined
+  readonly initialValue: A
+  readonly render: React.ComponentType<ControlRenderProps<A>>
+  readonly changePolicy?: ControlChangePolicy | undefined
 }
 
-export interface BuildContext {
+export interface ControlRenderProps<A> {
+  readonly atom: Atom.Writable<A>
+  readonly disabled: boolean
+}
+
+export interface ControlHandle<A> {
+  readonly id: string
+  readonly label: string
+  readonly description: string | undefined
+  readonly atom: Atom.Writable<A>
+  readonly currentValueRef: { current: A }
+  readonly render: React.ComponentType<ControlRenderProps<A>>
+  readonly changePolicy: ControlChangePolicy
+}
+
+export interface ControlValues {
+  readonly get: <A>(control: ControlHandle<A>) => A
+}
+
+export class ControlSnapshot extends ServiceMap.Service<
+  ControlSnapshot,
+  { readonly get: <A>(atom: Atom.Atom<A>) => A }
+>()("ControlSnapshot") {}
+
+// =============================================================================
+// Code Snippets
+// =============================================================================
+
+export interface CodeSnippetDefinition {
+  readonly resolve: (controls: ControlValues) => CodeSnippet
+}
+
+export type CodeDefinitionOptions =
+  | CodeSnippetConfig
+  | ((controls: ControlValues) => CodeSnippetConfig)
+
+export type CodeSnippetSelectorOptions =
+  | CodeSnippetSelectorConfig
+  | ((controls: ControlValues) => CodeSnippetSelectorConfig)
+
+export type CodeSnippetSelectorConfig =
+  | CodeSnippetHighlightSelector
+  | ReadonlyArray<CodeSnippetHighlightSelector>
+
+// =============================================================================
+// Notifications
+// =============================================================================
+
+export interface NotificationOptions {
+  readonly duration?: Duration.Input | undefined
+}
+
+export class Notifications extends ServiceMap.Service<
+  Notifications,
+  {
+    readonly notify: (
+      message: string,
+      options?: NotificationOptions | undefined,
+    ) => Effect.Effect<void>
+  }
+>()("Notifications") {}
+
+// =============================================================================
+// Build Context
+// =============================================================================
+
+export interface BuildContext<Type extends ExampleType> {
   readonly addStep: {
     <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleControlSnapshot>,
-      options: AddStepOptions,
-    ): RenderableEffect<A, E, ExampleControlSnapshot>
+      self: RenderableEffect<A, E, ExampleEnvironment>,
+      options: AddStepOptions<Type>,
+    ): RenderableEffect<A, E, ExampleEnvironment>
     (
-      options: AddStepOptions,
+      options: AddStepOptions<Type>,
     ): <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleControlSnapshot>,
-    ) => RenderableEffect<A, E, ExampleControlSnapshot>
+      self: RenderableEffect<A, E, ExampleEnvironment>,
+    ) => RenderableEffect<A, E, ExampleEnvironment>
   }
   readonly controls: {
-    readonly register: <A>(input: RegisterControlInput<A>) => ExampleControlHandle<A>
-    readonly read: <A>(
-      control: ExampleControlHandle<A>,
-    ) => Effect.Effect<A, never, ExampleControlSnapshot>
+    readonly register: <A>(input: RegisterControlOptions<A>) => ControlHandle<A>
+    readonly read: <A>(control: ControlHandle<A>) => Effect.Effect<A, never, ExampleEnvironment>
   }
   readonly snippet: {
-    readonly setCode: (input: ExampleCodeDefinitionInput) => void
-    readonly setResultHighlight: (input: SnippetSelectorDefinition) => void
+    readonly setCode: (input: CodeDefinitionOptions) => void
+    readonly setResultHighlight: (input: CodeSnippetSelectorOptions) => void
   }
 }
 
-export interface DefineExampleInput {
-  readonly type?: StepType | undefined
+export type AddStepOptions<Type extends ExampleType> = {
   readonly label: string
-  readonly subtitle?: string | undefined
-  readonly description?: string | undefined
-  readonly code: ExampleCodeSnippetInput
-  readonly resultHighlight?: SnippetHighlightSelector | ReadonlyArray<SnippetHighlightSelector>
-  readonly build: (
-    ctx: BuildContext,
-  ) => RenderableEffect<RenderableResult, RenderableResult, ExampleControlSnapshot>
-}
+  readonly highlight?: CodeSnippetSelectorOptions | undefined
+} & (Type extends "schedule"
+  ? {
+      readonly addToTimeline?: boolean | undefined
+    }
+  : never)
 
-export interface ExampleDefinition {
-  readonly type: StepType
-  readonly key: string
-  readonly title: string
-  readonly subtitle: string | undefined
-  readonly description: string | undefined
-  readonly steps: ReadonlyArray<StepDefinition>
-  readonly controls: ReadonlyArray<ExampleControlDefinition>
-  readonly program: RenderableEffect<RenderableResult, RenderableResult, ExampleControlSnapshot>
-  readonly code: ExampleCodeDefinition
-}
+// =============================================================================
+// Example Definition Constructor
+// =============================================================================
 
-export interface ExampleCodeDefinition {
-  readonly resolve: (controls: ExampleControlValues) => ExampleCodeSnippet
-}
-
-export type ExampleCodeDefinitionInput =
-  | ExampleCodeSnippetInput
-  | ((controls: ExampleControlValues) => ExampleCodeSnippetInput)
-
-export type SnippetSelectorInput =
-  | SnippetHighlightSelector
-  | ReadonlyArray<SnippetHighlightSelector>
-
-export type SnippetSelectorDefinition =
-  | SnippetSelectorInput
-  | ((controls: ExampleControlValues) => SnippetSelectorInput)
-
-export class ExampleControlSnapshot extends ServiceMap.Service<
-  ExampleControlSnapshot,
-  { readonly get: <A>(atom: Atom.Atom<A>) => A }
->()("ExampleControlSnapshot") {}
-
-export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
+export const defineExample = <Type extends ExampleType>(
+  options: ExampleDefinitionOptions<Type>,
+): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
-  const controls: Array<ExampleControlDefinition> = []
-  const selectorsByTarget: Record<string, SnippetSelectorDefinition> = {}
-  let codeDefinition: ExampleCodeDefinitionInput = input.code
-  let resultHighlightDefinition: SnippetSelectorDefinition | undefined = input.resultHighlight
+  const controls: Array<ControlDefinition> = []
+  const selectorsByTarget: Record<string, CodeSnippetSelectorOptions> = {}
+  let codeDefinitionOptions: CodeDefinitionOptions = options.code
+  let resultHighlightDefinition: CodeSnippetSelectorOptions | undefined = options.resultHighlight
 
-  const registerStep = (options: AddStepOptions): StepDefinition => {
-    const step: StepDefinition = {
-      type: options.type ?? "default",
-      id: `step-${steps.length.toString()}`,
+  const registerStep = (options: AddStepOptions<Type>): StepDefinition => {
+    const step: Types.Mutable<StepDefinition> = {
+      id: crypto.randomUUID(),
       label: options.label,
     }
-    steps.push(step)
+
+    if (options.addToTimeline) {
+      step.addToTimeline = true
+    }
+
     Equal.byReferenceUnsafe(step)
+
+    steps.push(step)
 
     if (options.highlight !== undefined) {
       const targetKey = toStepSnippetTargetKey(step.id)
@@ -177,15 +243,15 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     return step
   }
 
-  const addStep: BuildContext["addStep"] = dual(
+  const addStep: BuildContext<Type>["addStep"] = dual(
     2,
     <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleControlSnapshot>,
-      options: AddStepOptions,
-    ): RenderableEffect<A, E, ExampleControlSnapshot> => {
+      self: RenderableEffect<A, E, ExampleEnvironment>,
+      options: AddStepOptions<Type>,
+    ): RenderableEffect<A, E, ExampleEnvironment> => {
       const step = registerStep(options)
-      // Suspend the renderable Effect here to avoid eagerly accessing the
-      // example definition when calling `addStep`
+      // Suspend to ensure that the renderable effect is not evaluated eagerly
+      // to prevent accessing the example definition before it is initialized
       return Effect.suspend(() =>
         Effect.withSpan(self, step.label, {
           annotations: ExampleStep.serviceMap({
@@ -197,14 +263,14 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     },
   )
 
-  const registerControl = <A>(control: RegisterControlInput<A>): ExampleControlHandle<A> => {
+  const registerControl = <A>(control: RegisterControlOptions<A>): ControlHandle<A> => {
     const atom = Atom.make(control.initialValue).pipe(
-      Atom.withLabel(`${input.label}:control:${control.id}`),
+      Atom.withLabel(`${options.label}:control:${control.id}`),
     )
     const readableAtom: Atom.Atom<A> = atom
     const currentValueRef = { current: control.initialValue }
 
-    const handle: ExampleControlHandle<A> = {
+    const handle: ControlHandle<A> = {
       id: control.id,
       label: control.label,
       description: control.description,
@@ -238,12 +304,12 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
   }
 
   const readControl = <A>(
-    control: ExampleControlHandle<A>,
-  ): Effect.Effect<A, never, ExampleControlSnapshot> => {
-    return ExampleControlSnapshot.useSync((snapshot) => snapshot.get(control.atom))
+    control: ControlHandle<A>,
+  ): Effect.Effect<A, never, ExampleEnvironment> => {
+    return ControlSnapshot.useSync((snapshot) => snapshot.get(control.atom))
   }
 
-  const program = input.build({
+  const program = options.build({
     addStep,
     controls: {
       register: registerControl,
@@ -251,7 +317,7 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
     },
     snippet: {
       setCode: (next) => {
-        codeDefinition = next
+        codeDefinitionOptions = next
       },
       setResultHighlight: (next) => {
         resultHighlightDefinition = next
@@ -260,11 +326,11 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
   })
 
   const definition: ExampleDefinition = {
-    type: input.type ?? "default",
+    type: options.type ?? "default",
     key: crypto.randomUUID(),
-    title: input.label,
-    subtitle: input.subtitle,
-    description: input.description,
+    title: options.label,
+    subtitle: options.subtitle,
+    description: options.description,
     steps,
     controls,
     program,
@@ -272,7 +338,7 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
       resolve: (controlValues) => {
         const resolvedSelectorsByTarget: Record<
           string,
-          ReadonlyArray<SnippetHighlightSelector>
+          ReadonlyArray<CodeSnippetHighlightSelector>
         > = {}
 
         for (const targetKey of Object.keys(selectorsByTarget)) {
@@ -285,7 +351,7 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
           resolvedSelectorsByTarget[targetKey] = normalizeSelectorInput(
             resolveSnippetSelectors(selectorDefinition, controlValues),
             {
-              exampleLabel: input.label,
+              exampleLabel: options.label,
               targetKey,
             },
           )
@@ -295,16 +361,16 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
           resolvedSelectorsByTarget[snippetResultTargetKey] = normalizeSelectorInput(
             resolveSnippetSelectors(resultHighlightDefinition, controlValues),
             {
-              exampleLabel: input.label,
+              exampleLabel: options.label,
               targetKey: snippetResultTargetKey,
             },
           )
         }
 
         return resolveExampleCodeSnippet({
-          code: resolveCodeDefinition(codeDefinition, controlValues),
+          code: resolveCodeDefinition(codeDefinitionOptions, controlValues),
           selectorsByTarget: resolvedSelectorsByTarget,
-          exampleLabel: input.label,
+          exampleLabel: options.label,
         })
       },
     },
@@ -315,18 +381,10 @@ export const defineExample = (input: DefineExampleInput): ExampleDefinition => {
   return definition
 }
 
-export class ExampleStep extends ServiceMap.Service<
-  ExampleStep,
-  {
-    readonly definition: ExampleDefinition
-    readonly step: StepDefinition
-  }
->()("ExampleStep") {}
-
 const resolveCodeDefinition = (
-  definition: ExampleCodeDefinitionInput,
-  controls: ExampleControlValues,
-): ExampleCodeSnippetInput => {
+  definition: CodeDefinitionOptions,
+  controls: ControlValues,
+): CodeSnippetConfig => {
   if (typeof definition === "function") {
     return definition(controls)
   }
@@ -335,9 +393,9 @@ const resolveCodeDefinition = (
 }
 
 const resolveSnippetSelectors = (
-  definition: SnippetSelectorDefinition,
-  controls: ExampleControlValues,
-): SnippetSelectorInput => {
+  definition: CodeSnippetSelectorOptions,
+  controls: ControlValues,
+): CodeSnippetSelectorConfig => {
   if (typeof definition === "function") {
     return definition(controls)
   }

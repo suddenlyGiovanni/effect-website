@@ -47,9 +47,9 @@ const result = Effect.retry(park, Schedule.exponential("700 millis"))`,
   },
   build: ({ addStep }) => {
     const park = addStep(attemptParallelPark, {
-      type: "schedule",
       label: "park",
       highlight: { _tag: "Text", text: "attemptParallelPark()" },
+      addToTimeline: true,
     })
 
     return Effect.retry(park, Schedule.exponential("700 millis")).pipe(

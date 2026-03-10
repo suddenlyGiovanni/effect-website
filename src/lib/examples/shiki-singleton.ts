@@ -1,6 +1,6 @@
 import type { ThemedToken } from "shiki/types"
 import { createHighlighter, type Highlighter } from "shiki"
-import type { ExampleSnippetLanguage } from "@/lib/examples/snippet-highlights"
+import type { SnippetLanguage } from "@/lib/examples/snippet-highlights"
 import { effectShikiTheme } from "./shiki-theme"
 
 let highlighterPromise: Promise<Highlighter> | undefined = undefined
@@ -21,7 +21,7 @@ export const getHighlighter = (): Promise<Highlighter> => {
 }
 
 export const getSnippetTokens = (
-  language: ExampleSnippetLanguage,
+  language: SnippetLanguage,
   source: string,
 ): Promise<ReadonlyArray<ReadonlyArray<ThemedToken>>> => {
   const key = `${language}::${source}`

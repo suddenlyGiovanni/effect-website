@@ -142,6 +142,11 @@ const makeToneEngine = Effect.gen(function* () {
     envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 },
   }).connect(reverb)
 
+  const notification = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: "sine" },
+    envelope: { attack: 0.004, decay: 0.12, sustain: 0, release: 0.16 },
+  }).connect(reverb)
+
   const transport = Tone.getTransport()
 
   if (transport.state !== "started") {
@@ -252,6 +257,11 @@ const makeToneEngine = Effect.gen(function* () {
         config.triggerAttackRelease("G5", "16n", now, 0.6)
         break
       }
+      case "Notification": {
+        notification.triggerAttackRelease("D5", "32n", now, 0.35)
+        notification.triggerAttackRelease("G5", "16n", now + 0.08, 0.3)
+        break
+      }
     }
   }
 
@@ -264,6 +274,7 @@ const makeToneEngine = Effect.gen(function* () {
       reset.dispose()
       death.dispose()
       config.dispose()
+      notification.dispose()
       distortion.dispose()
       reverb.dispose()
       volume.dispose()

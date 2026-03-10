@@ -1,9 +1,15 @@
 import * as Schema from "effect/Schema"
 
-export type ExampleSnippetLanguage = "typescript" | "javascript"
+export type SnippetLanguage = "typescript" | "javascript"
 
-export interface ExampleCodeSnippetInput {
-  readonly language: ExampleSnippetLanguage
+export interface CodeSnippet {
+  readonly language: SnippetLanguage
+  readonly source: string
+  readonly highlightsByTarget: Readonly<Record<string, ReadonlyArray<ResolvedOffsetRange>>>
+}
+
+export interface CodeSnippetConfig {
+  readonly language: SnippetLanguage
   readonly source: string
 }
 
@@ -12,17 +18,11 @@ export interface ResolvedOffsetRange {
   readonly endOffset: number
 }
 
-export interface ExampleCodeSnippet {
-  readonly language: ExampleSnippetLanguage
-  readonly source: string
-  readonly highlightsByTarget: Readonly<Record<string, ReadonlyArray<ResolvedOffsetRange>>>
-}
-
 export const resolveExampleCodeSnippet = (input: {
-  readonly code: ExampleCodeSnippetInput
-  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<SnippetHighlightSelector>>>
+  readonly code: CodeSnippetConfig
+  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<CodeSnippetHighlightSelector>>>
   readonly exampleLabel: string
-}): ExampleCodeSnippet => {
+}): CodeSnippet => {
   const normalizedCodeSource = normalizeSnippetSource(input.code.source)
   const highlightsByTarget = resolveAllSelectors({
     source: normalizedCodeSource,
@@ -40,7 +40,7 @@ export const resolveExampleCodeSnippet = (input: {
   }
 }
 
-export type SnippetHighlightSelector =
+export type CodeSnippetHighlightSelector =
   | {
       readonly _tag: "Text"
       readonly text: string
@@ -61,8 +61,8 @@ export const snippetResultTargetKey = "result"
 
 export const toStepSnippetTargetKey = (stepId: string): string => `step:${stepId}`
 
-export class SnippetHighlightResolutionError extends Schema.TaggedErrorClass<SnippetHighlightResolutionError>()(
-  "SnippetHighlightResolutionError",
+export class CodeSnippetHighlightResolutionError extends Schema.TaggedErrorClass<CodeSnippetHighlightResolutionError>()(
+  "CodeSnippetHighlightResolutionError",
   {
     exampleLabel: Schema.String,
     targetKey: Schema.String,
@@ -84,8 +84,8 @@ export class EmptyHighlightSelectorsError extends Schema.TaggedErrorClass<EmptyH
   },
 ) {}
 
-export class InvalidSnippetLanguageError extends Schema.TaggedErrorClass<InvalidSnippetLanguageError>()(
-  "InvalidSnippetLanguageError",
+export class InvalidCodeSnippetLanguageError extends Schema.TaggedErrorClass<InvalidCodeSnippetLanguageError>()(
+  "InvalidCodeSnippetLanguageError",
   {
     exampleLabel: Schema.String,
     language: Schema.String,
@@ -111,24 +111,24 @@ export const validateSnippetLanguage = (
   options: {
     readonly exampleLabel: string
   },
-): ExampleSnippetLanguage => {
+): SnippetLanguage => {
   if (language === "typescript" || language === "javascript") {
     return language
   }
 
-  throw new InvalidSnippetLanguageError({
+  throw new InvalidCodeSnippetLanguageError({
     exampleLabel: options.exampleLabel,
     language,
   })
 }
 
 export const normalizeSelectorInput = (
-  selectors: SnippetHighlightSelector | ReadonlyArray<SnippetHighlightSelector>,
+  selectors: CodeSnippetHighlightSelector | ReadonlyArray<CodeSnippetHighlightSelector>,
   options: {
     readonly exampleLabel: string
     readonly targetKey: string
   },
-): ReadonlyArray<SnippetHighlightSelector> => {
+): ReadonlyArray<CodeSnippetHighlightSelector> => {
   const normalizedSelectors = Array.isArray(selectors) ? Array.from(selectors) : [selectors]
 
   if (normalizedSelectors.length === 0) {
@@ -143,7 +143,7 @@ export const normalizeSelectorInput = (
 
 export const resolveAllSelectors = (input: {
   readonly source: string
-  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<SnippetHighlightSelector>>>
+  readonly selectorsByTarget: Readonly<Record<string, ReadonlyArray<CodeSnippetHighlightSelector>>>
   readonly exampleLabel: string
 }): Readonly<Record<string, ReadonlyArray<ResolvedOffsetRange>>> => {
   const highlightsByTarget: Record<string, ReadonlyArray<ResolvedOffsetRange>> = {}
@@ -179,7 +179,7 @@ export const resolveAllSelectors = (input: {
 
 const resolveSelector = (input: {
   readonly source: string
-  readonly selector: SnippetHighlightSelector
+  readonly selector: CodeSnippetHighlightSelector
   readonly exampleLabel: string
   readonly targetKey: string
 }): ResolvedOffsetRange => {
@@ -188,7 +188,7 @@ const resolveSelector = (input: {
       const matches = findTextMatches(input.source, input.selector.text)
 
       if (matches.length === 0) {
-        throw new SnippetHighlightResolutionError({
+        throw new CodeSnippetHighlightResolutionError({
           exampleLabel: input.exampleLabel,
           targetKey: input.targetKey,
           selector: stringifySelector(input.selector),
@@ -198,7 +198,7 @@ const resolveSelector = (input: {
       }
 
       if (matches.length > 1 && !input.selector.occurrence) {
-        throw new SnippetHighlightResolutionError({
+        throw new CodeSnippetHighlightResolutionError({
           exampleLabel: input.exampleLabel,
           targetKey: input.targetKey,
           selector: stringifySelector(input.selector),
@@ -209,7 +209,7 @@ const resolveSelector = (input: {
 
       const occurrence = input.selector.occurrence ?? 1
       if (!Number.isInteger(occurrence) || occurrence < 1 || occurrence > matches.length) {
-        throw new SnippetHighlightResolutionError({
+        throw new CodeSnippetHighlightResolutionError({
           exampleLabel: input.exampleLabel,
           targetKey: input.targetKey,
           selector: stringifySelector(input.selector),
@@ -243,7 +243,7 @@ const resolveSelector = (input: {
         endLine < startLine ||
         endLine > lineCount
       ) {
-        throw new SnippetHighlightResolutionError({
+        throw new CodeSnippetHighlightResolutionError({
           exampleLabel: input.exampleLabel,
           targetKey: input.targetKey,
           selector: stringifySelector(input.selector),
@@ -331,7 +331,7 @@ const ensureValidRange = (
     range.startOffset >= range.endOffset ||
     range.endOffset > options.sourceLength
   ) {
-    throw new SnippetHighlightResolutionError({
+    throw new CodeSnippetHighlightResolutionError({
       exampleLabel: options.exampleLabel,
       targetKey: options.targetKey,
       selector: options.selector,
@@ -377,7 +377,7 @@ const mergeRanges = (
   return mergedRanges
 }
 
-const stringifySelector = (selector: SnippetHighlightSelector): string => {
+const stringifySelector = (selector: CodeSnippetHighlightSelector): string => {
   switch (selector._tag) {
     case "Text": {
       const occurrenceText = selector.occurrence

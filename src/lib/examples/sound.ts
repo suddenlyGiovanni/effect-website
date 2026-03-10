@@ -44,6 +44,11 @@ export type SoundCue =
       readonly exampleKey: string
       readonly controlId: string
     }
+  | {
+      readonly _tag: "Notification"
+      readonly exampleKey: string
+      readonly stepId: string
+    }
 
 export const visualEffectExampleCueStepId = "__example__"
 
@@ -58,6 +63,7 @@ export const soundCueKey = (cue: SoundCue): string => {
     case "StepFailed":
     case "StepInterrupted":
     case "StepDied":
+    case "Notification":
       return `${cue._tag}:${cue.exampleKey}:${cue.stepId}`
   }
 }

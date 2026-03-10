@@ -1,3 +1,4 @@
+import * as Option from "effect/Option"
 import { OctagonAlert, Skull, Sparkle } from "lucide-react"
 import {
   AnimatePresence,
@@ -7,12 +8,14 @@ import {
   type Variants,
 } from "motion/react"
 import * as React from "react"
-import type { VisualEffectState } from "@/lib/examples/domain"
+import type { VisualEffectNotification, VisualEffectState } from "@/lib/examples/domain"
 import { type EffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { COLORS, SHADOW_COLORS, SPRINGS, VFX } from "@/lib/animation"
 import { cn } from "@/lib/utils"
+import { VisualEffectNotificationBubble } from "./VisualEffectNotificationBubble"
 
 const FILTER_TRANSITION = { duration: 0.16, ease: "easeOut" } as const
+const NOTIFICATION_DISPLAY_MS = 2000
 
 export function VisualEffectNode({
   label,
@@ -29,12 +32,24 @@ export function VisualEffectNode({
   readonly scope: AnimationScope
   readonly state: VisualEffectState
 }) {
+  const notificationPresentation = useVisibleNotification(state)
+
   return (
     <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <motion.div
         className="relative flex h-14 items-center justify-center"
         style={{ width: motionValues.nodeWidth }}
       >
+        <AnimatePresence initial={false}>
+          {notificationPresentation !== undefined ? (
+            <VisualEffectNotificationBubble
+              key={notificationPresentation.notification.id}
+              notification={notificationPresentation.notification}
+              tone={notificationPresentation.tone}
+            />
+          ) : null}
+        </AnimatePresence>
+
         <VisualEffectContainer scope={scope} motionValues={motionValues} state={state}>
           <VisualEffectOverlay motionValues={motionValues} state={state} />
           <VisualEffectContent motionValues={motionValues} state={state} />
@@ -43,6 +58,68 @@ export function VisualEffectNode({
       <VisualEffectLabel label={label} />
     </div>
   )
+}
+
+type NotificationPresentation = {
+  readonly notification: VisualEffectNotification
+  readonly tone: "info" | "failure" | "death"
+}
+
+function useVisibleNotification(state: VisualEffectState): NotificationPresentation | undefined {
+  const semanticNotification = getNotificationPresentation(state)
+
+  const [visibleNotification, setVisibleNotification] = React.useState<
+    NotificationPresentation | undefined
+  >(semanticNotification)
+
+  React.useEffect(() => {
+    if (semanticNotification === undefined) {
+      setVisibleNotification(undefined)
+      return
+    }
+
+    setVisibleNotification(semanticNotification)
+
+    if (semanticNotification.tone !== "info") {
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      setVisibleNotification((current) =>
+        current?.notification.id === semanticNotification.notification.id ? undefined : current,
+      )
+    }, NOTIFICATION_DISPLAY_MS)
+
+    return () => {
+      window.clearTimeout(timeout)
+    }
+  }, [semanticNotification])
+
+  return visibleNotification
+}
+
+function getNotificationPresentation(
+  state: VisualEffectState,
+): NotificationPresentation | undefined {
+  switch (state._tag) {
+    case "Running":
+      return Option.match(state.notification, {
+        onNone: () => undefined,
+        onSome: (notification) => ({ notification, tone: "info" }),
+      })
+    case "Failed":
+      return Option.match(state.notification, {
+        onNone: () => undefined,
+        onSome: (notification) => ({ notification, tone: "failure" }),
+      })
+    case "Died":
+      return Option.match(state.notification, {
+        onNone: () => undefined,
+        onSome: (notification) => ({ notification, tone: "death" }),
+      })
+    default:
+      return undefined
+  }
 }
 
 function VisualEffectContainer({

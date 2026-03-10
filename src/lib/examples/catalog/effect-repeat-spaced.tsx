@@ -1,63 +1,76 @@
 import * as Effect from "effect/Effect"
 import * as Schedule from "effect/Schedule"
-import { defineExample } from "../constructors"
+import * as String from "effect/String"
+import { defineExample, Notifications } from "../constructors"
 import { ErrorResult } from "../results/error"
 import { PrimitiveResult } from "../results/primitive"
 
-const notifications = [
-  "unknown caller",
-  "calendar alert",
-  "new message",
-  "battery warning",
+const NOTIFICATION_MESSAGES = [
+  "📞 Unknown Caller",
+  "📧 Cellphone Bill",
+  "🔔 0 New Messages!",
+  "💬 We have to talk...",
+  "📅 Dinner Cancelled",
+  "📰 War!",
+  "😴 Nothing...",
+  "😴 Still nothing",
+  "🕳️ Doomscrolling",
+  "🪫 Battery Low",
+  "💔 Swiped Left",
+  "🏠 Rent Overdue",
+  "💸 Account Overdrawn",
+  "🚕 Driver Cancelled",
+  "🚫 Friend Request Denied",
+  "📅 Meeting Moved to 4am",
+  "🌧️ Rain All Week",
+  "📉 Stocks Down 20%",
+  "🥀 Plant Died",
 ] as const
-
-// This module-level cursor gives the demo a deterministic story across retries.
-// `Effect.ensuring(...)` resets it so every run starts from the same state.
-let notificationIndex = 0
-
-const resetNotificationIndex = Effect.sync(() => {
-  notificationIndex = 0
-})
-
-const checkNotifications = Effect.gen(function* () {
-  yield* Effect.sleep("500 millis")
-
-  const notification = notifications[notificationIndex]
-  notificationIndex += 1
-
-  if (notification === undefined) {
-    return yield* Effect.fail(new ErrorResult("phone died"))
-  }
-
-  return new PrimitiveResult(notification)
-})
 
 export const repeatSpacedExample = defineExample({
   type: "schedule",
   label: "Effect.repeat",
   subtitle: "spaced",
-  description: "Repeat an effect after a fixed delay for as long as it keeps succeeding",
+  description: "Repeat an effect with a fixed delay between each execution",
   code: {
     language: "typescript",
-    source: `const phone = checkNotifications()
-
-// Repeat only after each successful check finishes.
-const checking = Effect.repeat(phone, Schedule.spaced("2 seconds"))`,
+    source: String.stripMargin(
+      `|const phone = checkNotifications()
+       |const checking = Effect.repeat(phone, Schedule.spaced("2 seconds"))`,
+    ),
   },
   resultHighlight: {
     _tag: "Text",
     text: 'Effect.repeat(phone, Schedule.spaced("2 seconds"))',
   },
   build: ({ addStep }) => {
-    const phone = addStep(checkNotifications, {
-      type: "schedule",
-      label: "phone",
-      highlight: { _tag: "Text", text: "checkNotifications()" },
+    let index = 0
+
+    const checkPhone = Effect.gen(function* () {
+      const notifications = yield* Notifications
+
+      yield* Effect.sleep("500 millis")
+
+      if (index >= NOTIFICATION_MESSAGES.length) {
+        return yield* Effect.fail(new ErrorResult("phone died")).pipe(
+          Effect.tapError((result) => notifications.notify(result.message)),
+        )
+      }
+
+      const notification = NOTIFICATION_MESSAGES[index]
+      index += 1
+
+      return new PrimitiveResult(notification)
     })
 
-    return Effect.repeat(phone, Schedule.spaced("2 seconds")).pipe(
+    const checkPhoneStep = addStep(checkPhone, {
+      label: "phone",
+      highlight: { _tag: "Text", text: "checkNotifications()" },
+      addToTimeline: true,
+    })
+
+    return Effect.repeat(checkPhoneStep, Schedule.spaced("2 seconds")).pipe(
       Effect.map((count) => new PrimitiveResult(count)),
-      Effect.ensuring(resetNotificationIndex),
     )
   },
 })

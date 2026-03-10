@@ -55,9 +55,9 @@ const result = Effect.retry(wakeUp, snoozeSchedule)`,
   },
   build: ({ addStep }) => {
     const wakeUp = addStep(wakeUpAttempt, {
-      type: "schedule",
       label: "wakeUp",
       highlight: { _tag: "Text", text: "attemptToWakeUp()" },
+      addToTimeline: true,
     })
 
     return Effect.retry(wakeUp, snoozeSchedule).pipe(Effect.ensuring(resetSnoozeAttempt))

@@ -7,14 +7,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TabsIndicator } from "@/components/ui/tabs-indicator"
 import { useTabsIndicator } from "@/hooks/useTabsIndicator"
 import { cn } from "@/lib/utils"
-import { defineExample, type ExampleControlRenderProps } from "../constructors"
+import { defineExample, type ControlRenderProps } from "../constructors"
 import { TemperatureArrayResult, TemperatureResult } from "../results/temperature"
 
 type ConcurrencyMode = "sequential" | "numbered" | "unbounded"
 
 const CONCURRENCY_OPTIONS: ReadonlyArray<ConcurrencyMode> = ["sequential", "numbered", "unbounded"]
 
-function ConcurrencyModeControl(props: ExampleControlRenderProps<ConcurrencyMode>) {
+function ConcurrencyModeControl(props: ControlRenderProps<ConcurrencyMode>) {
   const value = useAtomValue(props.atom)
   const setValue = useControlWrite(props.atom)
   const { indicatorRect, rootRef } = useTabsIndicator(value)

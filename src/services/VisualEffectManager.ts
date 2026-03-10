@@ -2,6 +2,7 @@ import * as Array from "effect/Array"
 import * as Cause from "effect/Cause"
 import * as Clock from "effect/Clock"
 import * as DateTime from "effect/DateTime"
+import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Exit from "effect/Exit"
 import * as Fiber from "effect/Fiber"
@@ -14,8 +15,9 @@ import * as Tracer from "effect/Tracer"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import {
-  ExampleControlSnapshot,
+  ControlSnapshot,
   ExampleStep,
+  Notifications,
   type ExampleDefinition,
   type StepDefinition,
 } from "@/lib/examples/constructors"
@@ -24,8 +26,10 @@ import {
   InitialState,
   RenderableResult,
   VisualEffectState,
+  type VisualEffectNotification,
   type VisualEffectScheduleTimeline,
 } from "@/lib/examples/domain"
+import { ErrorResult } from "@/lib/examples/results/error"
 import { visualEffectExampleCueStepId } from "@/lib/examples/sound"
 import { SoundManager } from "@/services/SoundManager"
 
@@ -53,9 +57,10 @@ export class VisualEffectManager extends ServiceMap.Service<
 >()("VisualEffectManager") {
   static readonly layer = Layer.effectServices(
     Effect.gen(function* () {
+      const clock = yield* Clock.Clock
+      const tracer = yield* Effect.tracer
       const registry = yield* AtomRegistry.AtomRegistry
       const soundManager = yield* SoundManager
-      const tracer = yield* Effect.tracer
       const fiberMap = yield* FiberMap.make<ExampleDefinition>()
       const services = yield* Effect.services()
       const runSync = Effect.runSyncWith(services)
@@ -180,33 +185,26 @@ export class VisualEffectManager extends ServiceMap.Service<
         runSync(playStepTransition(details, previous, state))
 
         // Update the schedule timeline when working with a schedule step
-        if (details.step.type === "schedule") {
+        if (details.step.addToTimeline) {
           updateScheduleTimeline(details, state)
         }
       }
 
-      const runningNotificationMatches = (state: VisualEffectState, message: string): boolean => {
-        return (
-          state._tag === "Running" &&
-          Option.isSome(state.notification) &&
-          state.notification.value === message
-        )
-      }
-
-      const setStepNotification = (details: ExampleStep["Service"], message: string): void => {
+      const setStepNotification = (
+        details: ExampleStep["Service"],
+        message: string,
+        attributes: Record<string, unknown> | undefined,
+      ): void => {
         const atom = stepStateAtom(details.step)
         const previous = registry.get(atom)
-
-        if (previous._tag !== "Running" || runningNotificationMatches(previous, message)) {
-          return
-        }
-
-        const state = VisualEffectState.Running({
-          startedAt: previous.startedAt,
-          notification: Option.some(message),
+        registry.set(atom, {
+          ...previous,
+          notification: Option.some({
+            id: crypto.randomUUID(),
+            message,
+            duration: (attributes?.duration as Duration.Duration) ?? Duration.seconds(2),
+          }),
         })
-
-        registry.set(atom, state)
       }
 
       const updateScheduleTimeline = (
@@ -294,7 +292,8 @@ export class VisualEffectManager extends ServiceMap.Service<
             },
             event(name, startTime, attributes) {
               span.event(name, startTime, attributes)
-              setStepNotification(details, name)
+              console.log({ name, startTime, attributes })
+              setStepNotification(details, name, attributes)
             },
             addLinks(links) {
               span.addLinks(links)
@@ -303,33 +302,6 @@ export class VisualEffectManager extends ServiceMap.Service<
         },
         context: tracer.context,
       })
-
-      const clock = yield* Clock.Clock
-      const newClock: Clock.Clock = {
-        currentTimeMillis: clock.currentTimeMillis,
-        currentTimeNanos: clock.currentTimeNanos,
-        sleep(duration) {
-          return Effect.withFiber((fiber) => {
-            const span = fiber.currentSpan
-            const effect = clock.sleep(duration)
-            if (!span) return effect
-            if (span._tag !== "Span") return effect
-
-            const details = ServiceMap.getOrUndefined(span.annotations, ExampleStep)
-            if (!details) return effect
-
-            setStepNotification(details, "😴")
-
-            return effect
-          })
-        },
-        currentTimeMillisUnsafe() {
-          return clock.currentTimeMillisUnsafe()
-        },
-        currentTimeNanosUnsafe() {
-          return clock.currentTimeNanosUnsafe()
-        },
-      }
 
       const scheduleTimer = (example: ExampleDefinition) =>
         Effect.callback((_resume) => {
@@ -345,6 +317,26 @@ export class VisualEffectManager extends ServiceMap.Service<
           })
         })
 
+      const DEFAULT_NOTIFICATION_DURATION = Duration.seconds(2)
+
+      const notify: (typeof Notifications.Service)["notify"] = (message, options) =>
+        Effect.withFiber((fiber) => {
+          const span = fiber.currentSpan
+          if (!span || span._tag !== "Span") {
+            return Effect.void
+          }
+
+          const duration = options?.duration
+            ? (Duration.fromInput(options.duration) ?? DEFAULT_NOTIFICATION_DURATION)
+            : DEFAULT_NOTIFICATION_DURATION
+
+          span.event(message, clock.currentTimeNanosUnsafe(), {
+            duration,
+          })
+
+          return Effect.void
+        })
+
       const manager = VisualEffectManager.of({
         start: Effect.fnUntraced(function* (example) {
           const startedAt = yield* DateTime.now
@@ -355,7 +347,7 @@ export class VisualEffectManager extends ServiceMap.Service<
             ),
           })
 
-          const snapshot = ExampleControlSnapshot.of({
+          const snapshot = ControlSnapshot.of({
             get: (atom) => snapshotRegistry.get(atom),
           })
 
@@ -371,8 +363,12 @@ export class VisualEffectManager extends ServiceMap.Service<
 
             yield* setExampleState(example, startState)
 
+            const services = ServiceMap.make(ControlSnapshot, snapshot).pipe(
+              ServiceMap.add(Notifications, { notify }),
+            )
+
             const fiber = yield* example.program.pipe(
-              Effect.provideService(ExampleControlSnapshot, snapshot),
+              Effect.provide(services),
               Effect.onExit(
                 Effect.fnUntraced(function* (exit) {
                   const endedAt = yield* DateTime.now
@@ -414,7 +410,6 @@ export class VisualEffectManager extends ServiceMap.Service<
       })
 
       return Tracer.Tracer.serviceMap(visualEffectTracer).pipe(
-        ServiceMap.add(Clock.Clock, newClock),
         ServiceMap.add(VisualEffectManager, manager),
       )
     }),
@@ -433,17 +428,20 @@ const exitToState = (
   endedAt: DateTime.Utc,
 ): VisualEffectState => {
   const duration = DateTime.distance(startedAt, endedAt)
+  const notification = Option.none()
   if (Exit.isSuccess(exit)) {
     return VisualEffectState.Succeeded({
       duration,
       endedAt,
       value: exit.value as RenderableResult,
+      notification,
     })
   }
   if (Cause.hasInterruptsOnly(exit.cause)) {
     return VisualEffectState.Interrupted({
       duration,
       endedAt,
+      notification,
     })
   }
   const defect = Cause.findDefect(exit.cause)
@@ -452,11 +450,14 @@ const exitToState = (
       defect: defect.success as RenderableResult,
       duration,
       endedAt,
+      notification,
     })
   }
+  const error = Cause.squash(exit.cause) as RenderableResult
   return VisualEffectState.Failed({
     duration,
     endedAt,
-    error: Cause.squash(exit.cause) as RenderableResult,
+    error,
+    notification,
   })
 }

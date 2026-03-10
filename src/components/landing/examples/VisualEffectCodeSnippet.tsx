@@ -1,6 +1,6 @@
 import type { ThemedToken } from "shiki/types"
 import * as React from "react"
-import type { ExampleCodeDefinition } from "@/lib/examples/constructors"
+import type { CodeSnippetDefinition } from "@/lib/examples/constructors"
 import type { ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
 import { getSnippetTokens } from "@/lib/examples/shiki-singleton"
 import { useExampleControlValues, useExampleControlVersion } from "./VisualEffectProvider"
@@ -25,7 +25,7 @@ export function VisualEffectCodeSnippet({
   snippet,
   activeTarget,
 }: {
-  readonly snippet: ExampleCodeDefinition
+  readonly snippet: CodeSnippetDefinition
   readonly activeTarget: string | null
 }) {
   const controlValues = useExampleControlValues()

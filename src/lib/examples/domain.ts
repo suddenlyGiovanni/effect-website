@@ -18,30 +18,40 @@ export abstract class RenderableResult {
   abstract render(): React.ReactNode
 }
 
+export interface VisualEffectNotification {
+  readonly id: string
+  readonly message: string
+  readonly duration: Duration.Duration
+}
+
 export type VisualEffectState = Data.TaggedEnum<{
   readonly Idle: {}
   readonly Running: {
     readonly startedAt: DateTime.Utc
-    readonly notification: Option.Option<string>
+    readonly notification: Option.Option<VisualEffectNotification>
   }
   readonly Succeeded: {
     readonly value: RenderableResult
     readonly endedAt: DateTime.Utc
     readonly duration: Duration.Duration
+    readonly notification: Option.Option<VisualEffectNotification>
   }
   readonly Failed: {
     readonly error: RenderableResult
     readonly endedAt: DateTime.Utc
     readonly duration: Duration.Duration
+    readonly notification: Option.Option<VisualEffectNotification>
   }
   readonly Interrupted: {
     readonly endedAt: DateTime.Utc
     readonly duration: Duration.Duration
+    readonly notification: Option.Option<VisualEffectNotification>
   }
   readonly Died: {
     readonly defect: RenderableResult
     readonly endedAt: DateTime.Utc
     readonly duration: Duration.Duration
+    readonly notification: Option.Option<VisualEffectNotification>
   }
 }>
 export const VisualEffectState = Data.taggedEnum<VisualEffectState>()
