@@ -14,9 +14,9 @@ type ConcurrencyMode = "sequential" | "numbered" | "unbounded"
 
 const CONCURRENCY_OPTIONS: ReadonlyArray<ConcurrencyMode> = ["sequential", "numbered", "unbounded"]
 
-function ConcurrencyModeControl(props: ControlRenderProps<ConcurrencyMode>) {
-  const value = useAtomValue(props.atom)
-  const setValue = useControlWrite(props.atom)
+function ConcurrencyModeControl({ atom }: ControlRenderProps<ConcurrencyMode>) {
+  const value = useAtomValue(atom)
+  const setValue = useControlWrite(atom)
   const { indicatorRect, rootRef } = useTabsIndicator(value)
 
   return (
@@ -100,7 +100,6 @@ export const allExample = defineExample({
       description: "Changing mode resets the current run.",
       initialValue: "sequential",
       render: ConcurrencyModeControl,
-      changePolicy: "ifRunning",
     })
 
     snippet.setCode(({ get }) => ({

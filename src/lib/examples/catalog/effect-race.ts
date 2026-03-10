@@ -29,11 +29,11 @@ export const raceExample = defineExample({
     Effect.race(
       addStep(getEmoji("Tortoise"), {
         label: "tortoise",
-        highlight: { _tag: "Text", text: 'runFast("tortoise")' },
+        highlight: HighlightSelector.Text({ text: 'runFast("tortoise")' }),
       }),
       addStep(getEmoji("Achilles"), {
         label: "achilles",
-        highlight: { _tag: "Text", text: 'runFast("achilles")' },
+        highlight: HighlightSelector.Text({ text: 'runFast("achilles")' }),
       }),
     ),
 })

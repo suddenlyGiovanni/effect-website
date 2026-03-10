@@ -1,9 +1,9 @@
+import { useAtomValue } from "@effect/atom-react"
 import type { ThemedToken } from "shiki/types"
 import * as React from "react"
 import type { CodeSnippetDefinition } from "@/lib/examples/constructors"
 import type { ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
 import { getSnippetTokens } from "@/lib/examples/shiki-singleton"
-import { useExampleControlValues, useExampleControlVersion } from "./VisualEffectProvider"
 import { VisualEffectCodeSnippetHighlight } from "./VisualEffectCodeSnippetHighlight"
 
 const EMPTY_RANGES: ReadonlyArray<ResolvedOffsetRange> = []
@@ -28,14 +28,9 @@ export function VisualEffectCodeSnippet({
   readonly snippet: CodeSnippetDefinition
   readonly activeTarget: string | null
 }) {
-  const controlValues = useExampleControlValues()
-  const controlVersion = useExampleControlVersion()
   const [tokensState, setTokensState] = React.useState<TokensState>({ _tag: "Loading" })
   const snippetContainerReference = React.useRef<HTMLDivElement | null>(null)
-  const resolvedSnippet = React.useMemo(
-    () => snippet.resolve(controlValues),
-    [controlValues, controlVersion, snippet],
-  )
+  const resolvedSnippet = useAtomValue(snippet.atom)
 
   React.useEffect(() => {
     let isMounted = true

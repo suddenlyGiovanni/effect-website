@@ -1,11 +1,9 @@
 import * as React from "react"
 import { motion } from "motion/react"
-import { useExampleDefinition, useExampleState } from "./VisualEffectProvider"
+import { useExampleDefinition } from "./VisualEffectProvider"
 
 export function VisualEffectConfigPanel({ isDied }: { readonly isDied: boolean }) {
   const example = useExampleDefinition()
-  const state = useExampleState()
-  const disabled = state._tag === "Running"
 
   if (example.controls.length === 0) {
     return null
@@ -28,9 +26,7 @@ export function VisualEffectConfigPanel({ isDied }: { readonly isDied: boolean }
       }}
     >
       <div className="bg-linear-to-t from-neutral-800/40 to-neutral-800/20 px-6 py-4">
-        {example.controls.map((control) => (
-          <React.Fragment key={control.id}>{control.render({ disabled })}</React.Fragment>
-        ))}
+        {example.controls.map((control) => <React.Fragment key={control.id}>{control.render()}</React.Fragment>)}
       </div>
     </motion.section>
   )

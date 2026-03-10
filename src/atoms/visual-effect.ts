@@ -37,11 +37,10 @@ export const resetExampleAtom = visualEffectsRuntime.fn<ExampleDefinition>()(
 export interface ControlWriteSideEffectInput {
   readonly example: ExampleDefinition
   readonly controlId: string
-  readonly shouldReset: boolean
 }
 
 export const controlWriteSideEffectsAtom = visualEffectsRuntime.fn<ControlWriteSideEffectInput>()(
-  ({ example, controlId, shouldReset }) =>
+  ({ example, controlId }) =>
     Effect.andThen(
       SoundManager.use((soundManager) =>
         soundManager.play({
@@ -50,7 +49,7 @@ export const controlWriteSideEffectsAtom = visualEffectsRuntime.fn<ControlWriteS
           controlId,
         }),
       ),
-      shouldReset ? VisualEffectManager.use((manager) => manager.reset(example)) : Effect.void,
+      VisualEffectManager.use((manager) => manager.reset(example)),
     ),
   { concurrent: true },
 )

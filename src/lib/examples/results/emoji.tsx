@@ -14,6 +14,8 @@ export const Emoji = {
   Lion: "🦁",
   Tiger: "🐯",
   Elephant: "🐮",
+  Thinking: "💬",
+  Shoot: "🔫",
 } as const
 
 export type EmojiKey = keyof typeof Emoji

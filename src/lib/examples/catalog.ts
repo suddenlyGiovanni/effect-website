@@ -1,5 +1,7 @@
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { allExample } from "./catalog/effect-all"
+import { allShortCircuitExample } from "./catalog/effect-all-short-circuit"
+import { catchExample } from "./catalog/effect-catch"
 import { dieExample } from "./catalog/effect-die"
 import { failExample } from "./catalog/effect-fail"
 import { forEachExample } from "./catalog/effect-foreach"
@@ -43,7 +45,7 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
   },
   "error-handling": {
     label: "Error Handling",
-    examples: [],
+    examples: [allShortCircuitExample, catchExample],
   },
   "ref-scope": {
     label: "Ref & Scope",

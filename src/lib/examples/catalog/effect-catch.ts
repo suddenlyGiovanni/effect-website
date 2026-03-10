@@ -1,0 +1,73 @@
+import * as Effect from "effect/Effect"
+import * as Random from "effect/Random"
+import * as String from "effect/String"
+import { defineExample, HighlightSelector, Notifications } from "../constructors"
+import { ErrorResult } from "../results/error"
+import { EmojiResult } from "../results/emoji"
+
+export const catchExample = defineExample({
+  label: "Effect.catch",
+  description: "Try one effect, and if it fails, catch the error and run another effect",
+  code: {
+    language: "typescript",
+    source: String.stripMargin(
+      `|const shoot = shootFirst()
+       |const question = askQuestions()
+       |
+       |const result = Effect.catch(shoot, (error) => question)`,
+    ),
+  },
+  resultHighlight: HighlightSelector.Text({
+    text: "Effect.catch(shoot, (error) => question)",
+  }),
+  build: ({ addStep }) => {
+    let attempt = 0
+
+    const shoot = Effect.gen(function* () {
+      const notifications = yield* Notifications
+
+      const currentAttempt = attempt
+      attempt = (attempt + 1) % 3
+
+      const delay = yield* Random.nextIntBetween(300, 600)
+      yield* Effect.sleep(delay)
+
+      // Cycle: 0 = fail, 1 = succeed, 2 = fail
+      if (currentAttempt === 1) {
+        return new EmojiResult("Shoot")
+      }
+
+      return yield* Effect.fail(new ErrorResult("Out of Ammo!")).pipe(
+        Effect.tapError((error) => notifications.notify(error.message)),
+      )
+    })
+
+    const question = Effect.gen(function* () {
+      const notifications = yield* Notifications
+
+      const delay = yield* Random.nextIntBetween(300, 600)
+      yield* Effect.sleep(delay)
+
+      // Cycle: 1 = succeed, 2 = succeed, 3 = fail
+      if (attempt === 2) {
+        return yield* Effect.fail(new ErrorResult("Brain Fart!")).pipe(
+          Effect.tapError((error) => notifications.notify(error.message)),
+        )
+      }
+
+      return new EmojiResult("Thinking")
+    })
+
+    const shootStep = addStep(shoot, {
+      label: "shoot",
+      highlight: HighlightSelector.Text({ text: "shootFirst()" }),
+    })
+
+    const questionStep = addStep(question, {
+      label: "question",
+      highlight: HighlightSelector.Text({ text: "askQuestions()" }),
+    })
+
+    return Effect.catch(shootStep, () => questionStep)
+  },
+})

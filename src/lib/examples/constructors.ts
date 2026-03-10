@@ -1,5 +1,4 @@
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
-import { useAtomValue } from "@effect/atom-react"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
@@ -46,7 +45,7 @@ export interface ExampleDefinition {
   readonly subtitle: string | undefined
   readonly description: string | undefined
   readonly steps: ReadonlyArray<StepDefinition>
-  readonly controls: ReadonlyArray<ControlDefinition>
+  readonly controls: ReadonlyArray<AnyExampleControl>
   readonly program: RenderableEffect<RenderableResult, RenderableResult, ExampleEnvironment>
   readonly code: CodeSnippetDefinition
 }
@@ -85,20 +84,22 @@ export class ExampleStep extends ServiceMap.Service<
 // Controls
 // =============================================================================
 
-export interface ControlDefinition {
+export interface AnyExampleControl {
   readonly id: string
   readonly label: string
   readonly description: string | undefined
   readonly initialValue: unknown
   readonly atom: Atom.Atom<unknown>
-  readonly changePolicy: ControlChangePolicy
   readonly get: (registry: AtomRegistry.AtomRegistry) => unknown
   readonly matches: <A>(atom: Atom.Atom<A>) => boolean
-  readonly render: (props: { readonly disabled: boolean }) => React.ReactNode
-  readonly observe: (props: { readonly onValueChange: () => void }) => React.ReactNode
+  readonly render: () => React.ReactNode
 }
 
-export type ControlChangePolicy = "never" | "ifRunning" | "always"
+export interface ExampleControl<A> extends AnyExampleControl {
+  readonly initialValue: A
+  readonly atom: Atom.Writable<A>
+  readonly get: (registry: AtomRegistry.AtomRegistry) => A
+}
 
 export interface RegisterControlOptions<A> {
   readonly id: string
@@ -106,26 +107,14 @@ export interface RegisterControlOptions<A> {
   readonly description?: string | undefined
   readonly initialValue: A
   readonly render: React.ComponentType<ControlRenderProps<A>>
-  readonly changePolicy?: ControlChangePolicy | undefined
 }
 
 export interface ControlRenderProps<A> {
   readonly atom: Atom.Writable<A>
-  readonly disabled: boolean
-}
-
-export interface ControlHandle<A> {
-  readonly id: string
-  readonly label: string
-  readonly description: string | undefined
-  readonly atom: Atom.Writable<A>
-  readonly currentValueRef: { current: A }
-  readonly render: React.ComponentType<ControlRenderProps<A>>
-  readonly changePolicy: ControlChangePolicy
 }
 
 export interface ControlValues {
-  readonly get: <A>(control: ControlHandle<A>) => A
+  readonly get: <A>(control: ExampleControl<A>) => A
 }
 
 export class ControlSnapshot extends ServiceMap.Service<
@@ -138,7 +127,7 @@ export class ControlSnapshot extends ServiceMap.Service<
 // =============================================================================
 
 export interface CodeSnippetDefinition {
-  readonly resolve: (controls: ControlValues) => CodeSnippet
+  readonly atom: Atom.Atom<CodeSnippet>
 }
 
 export type CodeDefinitionOptions =
@@ -176,19 +165,19 @@ export class Notifications extends ServiceMap.Service<
 
 export interface BuildContext<Type extends ExampleType> {
   readonly addStep: {
-    <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleEnvironment>,
+    <A extends RenderableResult, E extends RenderableResult, R>(
+      self: RenderableEffect<A, E, R>,
       options: AddStepOptions<Type>,
-    ): RenderableEffect<A, E, ExampleEnvironment>
+    ): RenderableEffect<A, E, R>
     (
       options: AddStepOptions<Type>,
-    ): <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleEnvironment>,
-    ) => RenderableEffect<A, E, ExampleEnvironment>
+    ): <A extends RenderableResult, E extends RenderableResult, R>(
+      self: RenderableEffect<A, E, R>,
+    ) => RenderableEffect<A, E, R>
   }
   readonly controls: {
-    readonly register: <A>(input: RegisterControlOptions<A>) => ControlHandle<A>
-    readonly read: <A>(control: ControlHandle<A>) => Effect.Effect<A, never, ExampleEnvironment>
+    readonly register: <A>(input: RegisterControlOptions<A>) => ExampleControl<A>
+    readonly read: <A>(control: ExampleControl<A>) => Effect.Effect<A, never, ExampleEnvironment>
   }
   readonly snippet: {
     readonly setCode: (input: CodeDefinitionOptions) => void
@@ -213,7 +202,7 @@ export const defineExample = <Type extends ExampleType>(
   options: ExampleDefinitionOptions<Type>,
 ): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
-  const controls: Array<ControlDefinition> = []
+  const controls: Array<AnyExampleControl> = []
   const selectorsByTarget: Record<string, CodeSnippetSelectorOptions> = {}
   let codeDefinitionOptions: CodeDefinitionOptions = options.code
   let resultHighlightDefinition: CodeSnippetSelectorOptions | undefined = options.resultHighlight
@@ -242,10 +231,10 @@ export const defineExample = <Type extends ExampleType>(
 
   const addStep: BuildContext<Type>["addStep"] = dual(
     2,
-    <A extends RenderableResult, E extends RenderableResult>(
-      self: RenderableEffect<A, E, ExampleEnvironment>,
+    <A extends RenderableResult, E extends RenderableResult, R>(
+      self: RenderableEffect<A, E, R>,
       options: AddStepOptions<Type>,
-    ): RenderableEffect<A, E, ExampleEnvironment> => {
+    ): RenderableEffect<A, E, R> => {
       const step = registerStep(options)
       // Suspend to ensure that the renderable effect is not evaluated eagerly
       // to prevent accessing the example definition before it is initialized
@@ -260,54 +249,31 @@ export const defineExample = <Type extends ExampleType>(
     },
   )
 
-  const registerControl = <A>(control: RegisterControlOptions<A>): ControlHandle<A> => {
+  const registerControl = <A>(control: RegisterControlOptions<A>): ExampleControl<A> => {
     const atom = Atom.make(control.initialValue).pipe(
       Atom.withLabel(`${options.label}:control:${control.id}`),
     )
-    const readableAtom: Atom.Atom<A> = atom
-    const currentValueRef = { current: control.initialValue }
 
-    const handle: ControlHandle<A> = {
+    const registeredControl: ExampleControl<A> = {
       id: control.id,
       label: control.label,
       description: control.description,
-      atom,
-      currentValueRef,
-      render: control.render,
-      changePolicy: control.changePolicy ?? "ifRunning",
-    }
-
-    const ControlObserver = ({ onValueChange }: { readonly onValueChange: () => void }) => {
-      const value = useAtomValue(handle.atom)
-
-      React.useEffect(() => {
-        handle.currentValueRef.current = value
-        onValueChange()
-      }, [onValueChange, value])
-
-      return null
-    }
-
-    controls.push({
-      id: handle.id,
-      label: handle.label,
-      description: handle.description,
       initialValue: control.initialValue,
-      atom: readableAtom,
-      changePolicy: handle.changePolicy,
-      get: (registry) => registry.get(handle.atom),
-      matches: (atom) => Object.is(atom, readableAtom),
-      render: ({ disabled }) => React.createElement(handle.render, { atom: handle.atom, disabled }),
-      observe: ({ onValueChange }) => React.createElement(ControlObserver, { onValueChange }),
-    })
+      atom,
+      get: (registry) => registry.get(atom),
+      matches: (candidate) => Object.is(candidate, atom),
+      render: () => React.createElement(control.render, { atom }),
+    }
 
-    Equal.byReferenceUnsafe(handle)
+    controls.push(registeredControl)
 
-    return handle
+    Equal.byReferenceUnsafe(registeredControl)
+
+    return registeredControl
   }
 
   const readControl = <A>(
-    control: ControlHandle<A>,
+    control: ExampleControl<A>,
   ): Effect.Effect<A, never, ExampleEnvironment> => {
     return ControlSnapshot.useSync((snapshot) => snapshot.get(control.atom))
   }
@@ -328,6 +294,46 @@ export const defineExample = <Type extends ExampleType>(
     },
   })
 
+  const codeAtom = Atom.make((get) => {
+    const controlValues: ControlValues = {
+      get: (control) => get(control.atom),
+    }
+
+    const resolvedSelectorsByTarget: Record<string, ReadonlyArray<HighlightSelector>> = {}
+
+    for (const targetKey of Object.keys(selectorsByTarget)) {
+      const selectorDefinition = selectorsByTarget[targetKey]
+
+      if (selectorDefinition === undefined) {
+        continue
+      }
+
+      resolvedSelectorsByTarget[targetKey] = normalizeSelectorInput(
+        resolveSnippetSelectors(selectorDefinition, controlValues),
+        {
+          exampleLabel: options.label,
+          targetKey,
+        },
+      )
+    }
+
+    if (resultHighlightDefinition !== undefined) {
+      resolvedSelectorsByTarget[snippetResultTargetKey] = normalizeSelectorInput(
+        resolveSnippetSelectors(resultHighlightDefinition, controlValues),
+        {
+          exampleLabel: options.label,
+          targetKey: snippetResultTargetKey,
+        },
+      )
+    }
+
+    return resolveExampleCodeSnippet({
+      code: resolveCodeDefinition(codeDefinitionOptions, controlValues),
+      selectorsByTarget: resolvedSelectorsByTarget,
+      exampleLabel: options.label,
+    })
+  })
+
   const definition: ExampleDefinition = {
     type: options.type ?? "default",
     key: crypto.randomUUID(),
@@ -338,41 +344,7 @@ export const defineExample = <Type extends ExampleType>(
     controls,
     program,
     code: {
-      resolve: (controlValues) => {
-        const resolvedSelectorsByTarget: Record<string, ReadonlyArray<HighlightSelector>> = {}
-
-        for (const targetKey of Object.keys(selectorsByTarget)) {
-          const selectorDefinition = selectorsByTarget[targetKey]
-
-          if (selectorDefinition === undefined) {
-            continue
-          }
-
-          resolvedSelectorsByTarget[targetKey] = normalizeSelectorInput(
-            resolveSnippetSelectors(selectorDefinition, controlValues),
-            {
-              exampleLabel: options.label,
-              targetKey,
-            },
-          )
-        }
-
-        if (resultHighlightDefinition !== undefined) {
-          resolvedSelectorsByTarget[snippetResultTargetKey] = normalizeSelectorInput(
-            resolveSnippetSelectors(resultHighlightDefinition, controlValues),
-            {
-              exampleLabel: options.label,
-              targetKey: snippetResultTargetKey,
-            },
-          )
-        }
-
-        return resolveExampleCodeSnippet({
-          code: resolveCodeDefinition(codeDefinitionOptions, controlValues),
-          selectorsByTarget: resolvedSelectorsByTarget,
-          exampleLabel: options.label,
-        })
-      },
+      atom: codeAtom,
     },
   }
 

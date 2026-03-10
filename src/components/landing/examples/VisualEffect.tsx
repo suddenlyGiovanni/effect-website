@@ -13,7 +13,6 @@ import { VisualEffectConfigPanel } from "./VisualEffectConfigPanel"
 import { VisualEffectControls } from "./VisualEffectControls"
 import { VisualEffectNode } from "./VisualEffectNode"
 import {
-  ExampleControlRuntimeProvider,
   ExampleContext,
   StepContext,
   useExampleDefinition,
@@ -28,9 +27,7 @@ export function VisualEffect({ example }: { readonly example: ExampleDefinition 
     <MotionConfig reducedMotion="user">
       <TooltipProvider delay={0}>
         <ExampleContext.Provider value={example}>
-          <ExampleControlRuntimeProvider>
-            <VisualEffectSurface />
-          </ExampleControlRuntimeProvider>
+          <VisualEffectSurface />
         </ExampleContext.Provider>
       </TooltipProvider>
     </MotionConfig>

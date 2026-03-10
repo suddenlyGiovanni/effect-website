@@ -2,7 +2,7 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as Equal from "effect/Equal"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
-import type { ControlValues, ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
+import type { ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
 import type { SoundPreference } from "@/lib/examples/sound"
 import {
   controlWriteSideEffectsAtom,
@@ -25,47 +25,8 @@ import {
 // =============================================================================
 
 export const ExampleContext = React.createContext<ExampleDefinition>(null as any)
-const ExampleControlValuesContext = React.createContext<ControlValues>(null as any)
-const ExampleControlVersionContext = React.createContext(0)
 
 export const useExampleDefinition = () => React.useContext(ExampleContext)
-
-export function ExampleControlRuntimeProvider({
-  children,
-}: {
-  readonly children: React.ReactNode
-}) {
-  const example = useExampleDefinition()
-  const [version, setVersion] = React.useState(0)
-
-  const controlValues = React.useMemo<ControlValues>(
-    () => ({
-      get: (control) => control.currentValueRef.current,
-    }),
-    [],
-  )
-
-  const onValueChange = React.useCallback(() => {
-    setVersion((version) => version + 1)
-  }, [])
-
-  return (
-    <ExampleControlValuesContext.Provider value={controlValues}>
-      <ExampleControlVersionContext.Provider value={version}>
-        {example.controls.map((control) => (
-          <React.Fragment key={`${control.id}-observer`}>
-            {control.observe({ onValueChange })}
-          </React.Fragment>
-        ))}
-        {children}
-      </ExampleControlVersionContext.Provider>
-    </ExampleControlValuesContext.Provider>
-  )
-}
-
-export const useExampleControlValues = () => React.useContext(ExampleControlValuesContext)
-
-export const useExampleControlVersion = () => React.useContext(ExampleControlVersionContext)
 
 export const useExampleControls = () => {
   const example = useExampleDefinition()
@@ -124,9 +85,9 @@ export const useScheduleTimeline = () => {
 
 export const useControlWrite = <A,>(atom: Atom.Writable<A>) => {
   const example = useExampleDefinition()
-  const state = useExampleState()
   const current = useAtomValue(atom)
   const set = useAtomSet(atom)
+  const unlockSounds = useAtomSet(unlockSoundAtom)
   const applyControlWriteSideEffects = useAtomSet(controlWriteSideEffectsAtom)
 
   const control = React.useMemo(
@@ -144,19 +105,16 @@ export const useControlWrite = <A,>(atom: Atom.Writable<A>) => {
         return
       }
 
-      const isRunning = state._tag === "Running"
-      const shouldReset =
-        control.changePolicy === "always" || (control.changePolicy === "ifRunning" && isRunning)
+      unlockSounds()
 
       set(next)
 
       applyControlWriteSideEffects({
         example,
         controlId: control.id,
-        shouldReset,
       })
     },
-    [applyControlWriteSideEffects, control, current, example, set, state._tag],
+    [applyControlWriteSideEffects, control, current, example, set, unlockSounds],
   )
 }
 
