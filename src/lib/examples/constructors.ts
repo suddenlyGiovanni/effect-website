@@ -1,7 +1,9 @@
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
+import * as Exit from "effect/Exit"
 import { dual } from "effect/Function"
+import * as Scope from "effect/Scope"
 import * as ServiceMap from "effect/ServiceMap"
 import * as Types from "effect/Types"
 import * as Atom from "effect/unstable/reactivity/Atom"
@@ -35,7 +37,15 @@ export type RenderableEffect<
 
 export type ExampleType = "default" | "schedule"
 
-export type ExampleEnvironment = ControlSnapshot | Notifications
+export class VisualFinalizers extends ServiceMap.Service<
+  VisualFinalizers,
+  {
+    readonly register: (label: string) => Effect.Effect<string>
+    readonly run: <A, E, R>(id: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
+  }
+>()("VisualFinalizers") {}
+
+export type ExampleEnvironment = ControlSnapshot | Notifications | VisualFinalizers
 
 export interface ExampleDefinition {
   readonly type: ExampleType
@@ -179,6 +189,12 @@ export interface BuildContext<Type extends ExampleType> {
     readonly setCode: (input: CodeDefinitionOptions) => void
     readonly setResultHighlight: (input: CodeSnippetSelectorOptions) => void
   }
+  readonly finalizers: {
+    readonly add: <R>(
+      label: string,
+      finalizer: Effect.Effect<void, never, R>,
+    ) => Effect.Effect<void, never, R | ExampleEnvironment | Scope.Scope>
+  }
 }
 
 export type AddStepOptions<Type extends ExampleType> = {
@@ -297,6 +313,17 @@ export const defineExample = <Type extends ExampleType>(
     return ControlSnapshot.useSync((snapshot) => snapshot.get(control.atom))
   }
 
+  const addVisualFinalizer = <R>(
+    label: string,
+    finalizer: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<void, never, R>,
+  ): Effect.Effect<void, never, R | ExampleEnvironment | Scope.Scope> =>
+    VisualFinalizers.use((visualFinalizers) =>
+      Effect.gen(function* () {
+        const id = yield* visualFinalizers.register(label)
+        yield* Effect.addFinalizer((exit) => visualFinalizers.run(id, finalizer(exit)))
+      }),
+    )
+
   const program = options.build({
     addStep,
     controls: {
@@ -310,6 +337,9 @@ export const defineExample = <Type extends ExampleType>(
       setResultHighlight: (next) => {
         resultHighlightDefinition = next
       },
+    },
+    finalizers: {
+      add: (label, finalizer) => addVisualFinalizer(label, () => finalizer),
     },
   })
 
@@ -353,9 +383,7 @@ export const defineExample = <Type extends ExampleType>(
     steps,
     controls,
     program,
-    code: {
-      atom: codeAtom,
-    },
+    code: { atom: codeAtom },
   }
 
   Equal.byReferenceUnsafe(definition)

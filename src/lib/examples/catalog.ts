@@ -1,6 +1,8 @@
 import type { ExampleDefinition } from "@/lib/examples/constructors"
 import { allExample } from "./catalog/effect-all"
 import { allShortCircuitExample } from "./catalog/effect-all-short-circuit"
+import { acquireReleaseExample } from "./catalog/effect-acquirerelease"
+import { addFinalizerExample } from "./catalog/effect-addfinalizer"
 import { catchExample } from "./catalog/effect-catch"
 import { dieExample } from "./catalog/effect-die"
 import { eventuallyExample } from "./catalog/effect-eventually"
@@ -63,6 +65,6 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
   },
   scope: {
     label: "Scope",
-    examples: [],
+    examples: [addFinalizerExample, acquireReleaseExample],
   },
 }

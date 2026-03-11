@@ -88,3 +88,133 @@ export const makeTimelineSegment = (
   startedAt,
   endedAt: undefined,
 })
+
+export type VisualFinalizerPhase = "Pending" | "Running" | "Succeeded" | "Failed" | "Interrupted"
+
+export type VisualFinalizerStatus = "Idle" | "Active" | "Releasing" | "Released"
+
+export interface VisualFinalizerEntry {
+  readonly id: string
+  readonly label: string
+  readonly registrationIndex: number
+  readonly registeredAt: DateTime.Utc
+  readonly phase: VisualFinalizerPhase
+  readonly startedAt: DateTime.Utc | undefined
+  readonly endedAt: DateTime.Utc | undefined
+}
+
+export interface VisualFinalizerState {
+  readonly runId: number
+  readonly status: VisualFinalizerStatus
+  readonly finalizers: ReadonlyArray<VisualFinalizerEntry>
+}
+
+export const InitialFinalizerPanelState: VisualFinalizerState = {
+  runId: 0,
+  status: "Idle",
+  finalizers: [],
+}
+
+export type VisualFinalizerEvent =
+  | {
+      readonly _tag: "RunStarted"
+      readonly runId: number
+    }
+  | {
+      readonly _tag: "Registered"
+      readonly runId: number
+      readonly id: string
+      readonly label: string
+      readonly registrationIndex: number
+      readonly at: DateTime.Utc
+    }
+  | {
+      readonly _tag: "Started"
+      readonly runId: number
+      readonly id: string
+      readonly at: DateTime.Utc
+    }
+  | {
+      readonly _tag: "Finished"
+      readonly runId: number
+      readonly id: string
+      readonly at: DateTime.Utc
+      readonly phase: Exclude<VisualFinalizerPhase, "Pending" | "Running">
+    }
+  | {
+      readonly _tag: "Reset"
+      readonly runId: number
+    }
+
+export const reduceFinalizerPanel = (
+  state: VisualFinalizerState,
+  event: VisualFinalizerEvent,
+): VisualFinalizerState => {
+  if (event._tag !== "RunStarted" && event._tag !== "Reset" && event.runId !== state.runId) {
+    return state
+  }
+
+  switch (event._tag) {
+    case "RunStarted":
+      return {
+        runId: event.runId,
+        status: "Active",
+        finalizers: [],
+      }
+    case "Registered":
+      return {
+        ...state,
+        finalizers: [
+          ...state.finalizers,
+          {
+            id: event.id,
+            label: event.label,
+            registrationIndex: event.registrationIndex,
+            registeredAt: event.at,
+            phase: "Pending",
+            startedAt: undefined,
+            endedAt: undefined,
+          },
+        ],
+      }
+    case "Started":
+      return {
+        ...state,
+        status: "Releasing",
+        finalizers: state.finalizers.map((finalizer) =>
+          finalizer.id === event.id
+            ? {
+                ...finalizer,
+                phase: "Running",
+                startedAt: event.at,
+              }
+            : finalizer,
+        ),
+      }
+    case "Finished": {
+      const nextFinalizers = state.finalizers.map((finalizer) =>
+        finalizer.id === event.id
+          ? {
+              ...finalizer,
+              phase: event.phase,
+              endedAt: event.at,
+            }
+          : finalizer,
+      )
+      const hasActiveFinalizers = nextFinalizers.some(
+        (finalizer) => finalizer.phase === "Pending" || finalizer.phase === "Running",
+      )
+      return {
+        ...state,
+        status: hasActiveFinalizers ? "Releasing" : "Released",
+        finalizers: nextFinalizers,
+      }
+    }
+    case "Reset":
+      return {
+        runId: event.runId,
+        status: "Idle",
+        finalizers: [],
+      }
+  }
+}

@@ -11,12 +11,14 @@ import { snippetResultTargetKey, toStepSnippetTargetKey } from "@/lib/examples/s
 import { VisualEffectCodeSnippet } from "./VisualEffectCodeSnippet"
 import { VisualEffectConfigPanel } from "./VisualEffectConfigPanel"
 import { VisualEffectControls } from "./VisualEffectControls"
+import { VisualEffectFinalizerPanel } from "./VisualEffectFinalizerPanel"
 import { VisualEffectNode } from "./VisualEffectNode"
 import {
   ExampleContext,
   StepContext,
   useExampleDefinition,
   useExampleState,
+  useFinalizerPanel,
   useStepDefinition,
   useStepState,
 } from "./VisualEffectProvider"
@@ -58,6 +60,7 @@ function VisualEffectSurface() {
       <VisualEffectControls isDied={isDied} />
       <VisualEffectConfigPanel isDied={isDied} />
       <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
+      <VisualEffectFinalizerPanel />
       {example.type === "schedule" && <VisualEffectScheduleTimeline />}
       <VisualEffectCodeSnippet snippet={example.code} activeTarget={delayedTarget} />
     </motion.div>

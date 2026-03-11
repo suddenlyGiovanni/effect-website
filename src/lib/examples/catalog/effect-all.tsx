@@ -106,10 +106,11 @@ export const allExample = defineExample({
       language: "typescript",
       source: getCodeSnippet(get(concurrency)),
     }))
-    snippet.setResultHighlight(({ get }) => ({
-      _tag: "Text",
-      text: getResultCodeSnippet(get(concurrency)),
-    }))
+    snippet.setResultHighlight(({ get }) =>
+      HighlightSelector.Text({
+        text: getResultCodeSnippet(get(concurrency)),
+      }),
+    )
 
     const nyc = addStep(getTemperature(65, "900 millis"), {
       label: "nyc",

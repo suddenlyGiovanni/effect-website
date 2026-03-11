@@ -16,6 +16,7 @@ import {
 } from "@/atoms/visual-effect"
 import {
   exampleStateAtom,
+  finalizerPanelAtom,
   stepStateAtom,
   scheduleTimelineAtom,
   scheduleTimeAtom,
@@ -78,6 +79,11 @@ export const useScheduleTime = () => {
 export const useScheduleTimeline = () => {
   const example = useExampleDefinition()
   return useAtomValue(scheduleTimelineAtom(example))
+}
+
+export const useFinalizerPanel = () => {
+  const example = useExampleDefinition()
+  return useAtomValue(finalizerPanelAtom(example))
 }
 
 // =============================================================================

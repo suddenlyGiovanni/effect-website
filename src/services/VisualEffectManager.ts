@@ -18,14 +18,19 @@ import {
   ControlSnapshot,
   ExampleStep,
   Notifications,
+  VisualFinalizers,
   type ExampleDefinition,
   type StepDefinition,
 } from "@/lib/examples/constructors"
 import {
+  InitialFinalizerPanelState,
   makeTimelineSegment,
   InitialState,
   RenderableResult,
+  reduceFinalizerPanel,
   VisualEffectState,
+  type VisualFinalizerEvent,
+  type VisualFinalizerState,
   type VisualEffectNotification,
   type VisualEffectScheduleTimeline,
 } from "@/lib/examples/domain"
@@ -44,6 +49,10 @@ export const scheduleTimeAtom = Atom.family((_definition: ExampleDefinition) => 
 
 export const scheduleTimelineAtom = Atom.family((_definition: ExampleDefinition) =>
   Atom.make<VisualEffectScheduleTimeline>([]),
+)
+
+export const finalizersAtom = Atom.family((_definition: ExampleDefinition) =>
+  Atom.make<VisualFinalizerState>(InitialFinalizerPanelState),
 )
 
 export interface ResetOptions {
@@ -68,6 +77,7 @@ export class VisualEffectManager extends ServiceMap.Service<
       const services = yield* Effect.services()
       const runSync = Effect.runSyncWith(services)
       const resettingExamples = new Set<string>()
+      const exampleRunIds = new Map<string, number>()
 
       const playExampleTransition = (
         example: ExampleDefinition,
@@ -222,6 +232,74 @@ export class VisualEffectManager extends ServiceMap.Service<
         const previous = registry.get(atom)
         const state = setStateNotification(previous, message, attributes)
         registry.set(atom, state)
+      }
+
+      const nextRunId = (example: ExampleDefinition): number => {
+        const previous = exampleRunIds.get(example.key) ?? 0
+        const next = previous + 1
+        exampleRunIds.set(example.key, next)
+        return next
+      }
+
+      const dispatchFinalizerEvent = (
+        example: ExampleDefinition,
+        event: VisualFinalizerEvent,
+      ): void => {
+        registry.update(finalizersAtom(example), (state) => reduceFinalizerPanel(state, event))
+      }
+
+      const makeVisualFinalizers = (
+        example: ExampleDefinition,
+        runId: number,
+      ): VisualFinalizers["Service"] => {
+        let registrationIndex = 0
+
+        return {
+          register: Effect.fn(function* (label: string) {
+            const id = crypto.randomUUID()
+            const at = yield* DateTime.now
+            const currentIndex = registrationIndex
+            registrationIndex += 1
+
+            dispatchFinalizerEvent(example, {
+              _tag: "Registered",
+              runId,
+              id,
+              label,
+              registrationIndex: currentIndex,
+              at,
+            })
+
+            return id
+          }),
+          run: Effect.fn(function* <A, E, R>(id: string, effect: Effect.Effect<A, E, R>) {
+            const startedAt = yield* DateTime.now
+
+            dispatchFinalizerEvent(example, {
+              _tag: "Started",
+              runId,
+              id,
+              at: startedAt,
+            })
+
+            const exit = yield* Effect.exit(effect)
+            const endedAt = yield* DateTime.now
+
+            dispatchFinalizerEvent(example, {
+              _tag: "Finished",
+              runId,
+              id,
+              at: endedAt,
+              phase: classifyFinalizerExit(exit),
+            })
+
+            if (Exit.isSuccess(exit)) {
+              return exit.value
+            }
+
+            return yield* Effect.failCause(exit.cause)
+          }),
+        }
       }
 
       const updateScheduleTimeline = (
@@ -387,9 +465,15 @@ export class VisualEffectManager extends ServiceMap.Service<
           const notify = notifyForExample(example)
 
           const program = Effect.gen(function* () {
+            const runId = nextRunId(example)
             const startState = VisualEffectState.Running({
               startedAt,
               notification: Option.none(),
+            })
+
+            dispatchFinalizerEvent(example, {
+              _tag: "RunStarted",
+              runId,
             })
 
             if (example.type === "schedule") {
@@ -400,6 +484,7 @@ export class VisualEffectManager extends ServiceMap.Service<
 
             const services = ServiceMap.make(ControlSnapshot, snapshot).pipe(
               ServiceMap.add(Notifications, { notify }),
+              ServiceMap.add(VisualFinalizers, makeVisualFinalizers(example, runId)),
             )
 
             const fiber = yield* example.program.pipe(
@@ -440,6 +525,10 @@ export class VisualEffectManager extends ServiceMap.Service<
                 registry.set(stepStateAtom(step), InitialState)
               }
               registry.set(scheduleTimelineAtom(example), [])
+              dispatchFinalizerEvent(example, {
+                _tag: "Reset",
+                runId: nextRunId(example),
+              })
               if (options?.silent !== true) {
                 yield* soundManager.play({
                   _tag: "ExampleReset",
@@ -456,6 +545,16 @@ export class VisualEffectManager extends ServiceMap.Service<
       )
     }),
   )
+}
+
+const classifyFinalizerExit = <A, E>(
+  exit: Exit.Exit<A, E>,
+): "Succeeded" | "Failed" | "Interrupted" => {
+  if (Exit.isSuccess(exit)) {
+    return "Succeeded"
+  }
+
+  return Cause.hasInterruptsOnly(exit.cause) ? "Interrupted" : "Failed"
 }
 
 const dateTimeFromNanos = (nanos: bigint): DateTime.Utc => {
