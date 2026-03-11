@@ -7,13 +7,16 @@ import { eventuallyExample } from "./catalog/effect-eventually"
 import { failExample } from "./catalog/effect-fail"
 import { forEachExample } from "./catalog/effect-foreach"
 import { partitionExample } from "./catalog/effect-partition"
+import { promiseExample } from "./catalog/effect-promise"
 import { raceExample } from "./catalog/effect-race"
 import { raceAllExample } from "./catalog/effect-raceall"
 import { repeatSpacedExample } from "./catalog/effect-repeat-spaced"
 import { repeatWhileExample } from "./catalog/effect-repeat-while"
 import { retryExponentialExample } from "./catalog/effect-retry-exponential"
 import { retryRecursExample } from "./catalog/effect-retry-recurs"
+import { sleepExample } from "./catalog/effect-sleep"
 import { succeedExample } from "./catalog/effect-succeed"
+import { syncExample } from "./catalog/effect-sync"
 import { timeoutExample } from "./catalog/effect-timeout"
 import { validateExample } from "./catalog/effect-validate"
 
@@ -45,7 +48,7 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
   },
   constructors: {
     label: "Constructors",
-    examples: [succeedExample, failExample, dieExample],
+    examples: [succeedExample, failExample, dieExample, syncExample, promiseExample, sleepExample],
   },
   "error-handling": {
     label: "Error Handling",
