@@ -1,8 +1,7 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as Equal from "effect/Equal"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
-import type { ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
+import type { ExampleControl, ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
 import type { SoundPreference } from "@/lib/examples/sound"
 import {
   controlWriteSideEffectsAtom,
@@ -83,24 +82,15 @@ export const useScheduleTimeline = () => {
 // Example Controls
 // =============================================================================
 
-export const useControlWrite = <A,>(atom: Atom.Writable<A>) => {
+export const useControlWrite = <A,>(control: ExampleControl<A>) => {
   const example = useExampleDefinition()
-  const current = useAtomValue(atom)
-  const set = useAtomSet(atom)
+  const current = useAtomValue(control.atom)
+  const set = useAtomSet(control.atom)
   const unlockSounds = useAtomSet(unlockSoundAtom)
   const applyControlWriteSideEffects = useAtomSet(controlWriteSideEffectsAtom)
 
-  const control = React.useMemo(
-    () => example.controls.find((control) => control.matches(atom)),
-    [atom, example.controls],
-  )
-
   return React.useCallback(
     (next: A) => {
-      if (control === undefined) {
-        throw new Error("Unknown example control atom")
-      }
-
       if (Equal.equals(current, next)) {
         return
       }

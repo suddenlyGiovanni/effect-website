@@ -265,10 +265,7 @@ const wakeUp = Effect.gen(function* () {
   return yield* Effect.fail(new ErrorResult("snooze"))
 })
 
-const snoozeSchedule = Schedule.intersect(
-  Schedule.spaced("2 seconds"),
-  Schedule.recurs(4),
-)
+const snoozeSchedule = Schedule.intersect(Schedule.spaced("2 seconds"), Schedule.recurs(4))
 
 export const retryRecursExample = defineExample({
   label: "Effect.retry",
@@ -323,6 +320,7 @@ The implementation must fail at definition time in these cases.
 1. `scheduleTimeline` is enabled and no step is tagged as the attempt step.
 2. `scheduleTimeline` is enabled and more than one step is tagged as the attempt step.
 3. More than one step is marked as the tracked schedule step.
+
 ### 7.3 Suggested tagged errors
 
 ```ts
@@ -350,7 +348,6 @@ export class OrphanedScheduleRoleError extends Schema.TaggedErrorClass<OrphanedS
     stepLabel: Schema.String,
   },
 ) {}
-
 ```
 
 ### 7.4 Constructor pseudocode

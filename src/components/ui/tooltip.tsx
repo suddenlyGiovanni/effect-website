@@ -36,10 +36,12 @@ function TooltipContent({
     readonly presence?: boolean | undefined
   }) {
   const resolvedMotionStyle =
-    motionStyle === undefined ? undefined : ((popupStyle: HTMLMotionProps<"div">["style"]) => ({
-      ...popupStyle,
-      ...motionStyle,
-    }))
+    motionStyle === undefined
+      ? undefined
+      : (popupStyle: HTMLMotionProps<"div">["style"]) => ({
+          ...popupStyle,
+          ...motionStyle,
+        })
 
   return (
     <TooltipPrimitive.Portal keepMounted={keepMounted}>
@@ -59,7 +61,7 @@ function TooltipContent({
           render={
             animated
               ? presence
-                  ? (popupProps) => (
+                ? (popupProps) => (
                     <motion.div
                       {...(popupProps as HTMLMotionProps<"div">)}
                       style={resolvedMotionStyle?.(popupProps.style) ?? popupProps.style}

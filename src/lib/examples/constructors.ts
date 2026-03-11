@@ -91,7 +91,6 @@ export interface AnyExampleControl {
   readonly initialValue: unknown
   readonly atom: Atom.Atom<unknown>
   readonly get: (registry: AtomRegistry.AtomRegistry) => unknown
-  readonly matches: <A>(atom: Atom.Atom<A>) => boolean
   readonly render: () => React.ReactNode
 }
 
@@ -110,7 +109,7 @@ export interface RegisterControlOptions<A> {
 }
 
 export interface ControlRenderProps<A> {
-  readonly atom: Atom.Writable<A>
+  readonly control: ExampleControl<A>
 }
 
 export interface ControlValues {
@@ -261,8 +260,7 @@ export const defineExample = <Type extends ExampleType>(
       initialValue: control.initialValue,
       atom,
       get: (registry) => registry.get(atom),
-      matches: (candidate) => Object.is(candidate, atom),
-      render: () => React.createElement(control.render, { atom }),
+      render: () => React.createElement(control.render, { control: registeredControl }),
     }
 
     controls.push(registeredControl)

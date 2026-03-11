@@ -1,9 +1,9 @@
-import * as React from "react"
 import { cva } from "class-variance-authority"
-import { animate, AnimatePresence, useMotionValue, useReducedMotion } from "motion/react"
 import { constVoid } from "effect/Function"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { animate, AnimatePresence, useMotionValue, useReducedMotion } from "motion/react"
+import * as React from "react"
 import type { VisualEffectNotification } from "@/lib/examples/domain"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 const DEATH_GLITCH_CHARSET = "@#$%&*/=-+?!~<>\\|"
@@ -175,16 +175,14 @@ function VisualEffectTooltipContent({
           ),
           animateStep(
             y,
-            shakeConfig.baseYPx + randomBetween(-shakeConfig.yRangePx / 2, shakeConfig.yRangePx / 2),
+            shakeConfig.baseYPx +
+              randomBetween(-shakeConfig.yRangePx / 2, shakeConfig.yRangePx / 2),
             shakeConfig.stepDurationSec,
             "easeInOut",
           ),
           animateStep(
             rotate,
-            randomBetween(
-              -shakeConfig.rotationRangeDeg / 2,
-              shakeConfig.rotationRangeDeg / 2,
-            ),
+            randomBetween(-shakeConfig.rotationRangeDeg / 2, shakeConfig.rotationRangeDeg / 2),
             shakeConfig.stepDurationSec,
             "easeInOut",
           ),

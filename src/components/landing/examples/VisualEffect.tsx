@@ -46,10 +46,10 @@ function VisualEffectSurface() {
     <motion.div
       className="flex w-fit min-w-full flex-col border shadow-2xl"
       initial={false}
-        animate={{
-          borderColor,
-          boxShadow: isDied ? "0 0 10px rgba(220, 38, 38, 0.06)" : "0 0 0 0 rgba(59, 130, 250, 0)",
-        }}
+      animate={{
+        borderColor,
+        boxShadow: isDied ? "0 0 10px rgba(220, 38, 38, 0.06)" : "0 0 0 0 rgba(59, 130, 250, 0)",
+      }}
       transition={{
         borderColor: { duration: 0.2, ease: "easeInOut" },
         boxShadow: { duration: 0.2, ease: "easeInOut" },

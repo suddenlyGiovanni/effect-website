@@ -2,8 +2,8 @@ import * as Effect from "effect/Effect"
 import * as Random from "effect/Random"
 import * as String from "effect/String"
 import { defineExample, HighlightSelector, Notifications } from "../constructors"
-import { ErrorResult } from "../results/error"
 import { EmojiResult } from "../results/emoji"
+import { ErrorResult } from "../results/error"
 
 export const catchExample = defineExample({
   label: "Effect.catch",

@@ -152,8 +152,8 @@ A notification needs identity even if the message text repeats.
 Without an `id`, this sequence cannot retrigger correctly:
 
 ```ts
-yield* Effect.sleep("500 millis") // emits "😴"
-yield* Effect.sleep("500 millis") // must emit a fresh "😴", not be ignored
+yield * Effect.sleep("500 millis") // emits "😴"
+yield * Effect.sleep("500 millis") // must emit a fresh "😴", not be ignored
 ```
 
 The current `setStepNotification(...)` dedupes by message text. That should be removed.
@@ -182,8 +182,8 @@ It solves three concrete problems:
 Without `id`, this sequence is ambiguous:
 
 ```ts
-yield* Effect.sleep("500 millis")
-yield* Effect.sleep("500 millis")
+yield * Effect.sleep("500 millis")
+yield * Effect.sleep("500 millis")
 ```
 
 Both notifications may render as `"😴"`, but they are not the same notification instance.
@@ -255,10 +255,7 @@ const makeNotification = (message: string): VisualEffectNotification => ({
   message,
 })
 
-const raiseStepNotification = (
-  details: ExampleStep["Service"],
-  message: string,
-): void => {
+const raiseStepNotification = (details: ExampleStep["Service"], message: string): void => {
   const atom = stepStateAtom(details.step)
   const previous = registry.get(atom)
 
@@ -422,9 +419,7 @@ This avoids UI timers mutating semantic runtime state.
 #### Recommended hook
 
 ```tsx
-function useVisibleNotification(
-  state: VisualEffectState,
-): VisualEffectNotification | undefined {
+function useVisibleNotification(state: VisualEffectState): VisualEffectNotification | undefined {
   const [visible, setVisible] = React.useState<VisualEffectNotification | undefined>(undefined)
   const NOTIFICATION_DISPLAY_MS = 2000
 
@@ -575,11 +570,18 @@ This spec should align with `specs/visual-effect-sound-integration-spec.md`.
 That spec already proposes:
 
 ```ts
-type VisualEffectSoundEvent =
-  | { readonly _tag: "NotificationRaised"; readonly exampleKey: string; readonly stepId: string; readonly message: string }
+type VisualEffectSoundEvent = {
+  readonly _tag: "NotificationRaised"
+  readonly exampleKey: string
+  readonly stepId: string
+  readonly message: string
+}
 
-type SoundCue =
-  | { readonly _tag: "Notification"; readonly exampleKey: string; readonly stepId: string }
+type SoundCue = {
+  readonly _tag: "Notification"
+  readonly exampleKey: string
+  readonly stepId: string
+}
 ```
 
 ### 9.1 Required integration rule

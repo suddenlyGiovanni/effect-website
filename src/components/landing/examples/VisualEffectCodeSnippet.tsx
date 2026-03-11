@@ -1,5 +1,5 @@
-import { useAtomValue } from "@effect/atom-react"
 import type { ThemedToken } from "shiki/types"
+import { useAtomValue } from "@effect/atom-react"
 import * as React from "react"
 import type { CodeSnippetDefinition } from "@/lib/examples/constructors"
 import type { ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"

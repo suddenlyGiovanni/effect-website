@@ -1,9 +1,9 @@
-import * as React from "react"
-import { motion } from "motion/react"
+import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as DateTime from "effect/DateTime"
 import * as Option from "effect/Option"
 import * as Atom from "effect/unstable/reactivity/Atom"
-import { useAtomSet, useAtomValue } from "@effect/atom-react"
+import { motion } from "motion/react"
+import * as React from "react"
 import type {
   TimelineSegment,
   VisualEffectScheduleTimeline,
@@ -216,7 +216,7 @@ export function VisualEffectScheduleTimeline() {
                   }}
                 >
                   <motion.div
-                    className="rounded border border-neutral-700 bg-neutral-900/90 px-2 py-0.5 font-mono text-xs text-neutral-300 whitespace-nowrap"
+                    className="rounded border border-neutral-700 bg-neutral-900/90 px-2 py-0.5 font-mono text-xs whitespace-nowrap text-neutral-300"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{

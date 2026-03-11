@@ -3,8 +3,10 @@ import { allExample } from "./catalog/effect-all"
 import { allShortCircuitExample } from "./catalog/effect-all-short-circuit"
 import { catchExample } from "./catalog/effect-catch"
 import { dieExample } from "./catalog/effect-die"
+import { eventuallyExample } from "./catalog/effect-eventually"
 import { failExample } from "./catalog/effect-fail"
 import { forEachExample } from "./catalog/effect-foreach"
+import { partitionExample } from "./catalog/effect-partition"
 import { raceExample } from "./catalog/effect-race"
 import { raceAllExample } from "./catalog/effect-raceall"
 import { repeatSpacedExample } from "./catalog/effect-repeat-spaced"
@@ -12,6 +14,8 @@ import { repeatWhileExample } from "./catalog/effect-repeat-while"
 import { retryExponentialExample } from "./catalog/effect-retry-exponential"
 import { retryRecursExample } from "./catalog/effect-retry-recurs"
 import { succeedExample } from "./catalog/effect-succeed"
+import { timeoutExample } from "./catalog/effect-timeout"
+import { validateExample } from "./catalog/effect-validate"
 
 export type ExampleCategory =
   | "concurrency"
@@ -45,7 +49,14 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
   },
   "error-handling": {
     label: "Error Handling",
-    examples: [allShortCircuitExample, catchExample],
+    examples: [
+      allShortCircuitExample,
+      catchExample,
+      timeoutExample,
+      eventuallyExample,
+      partitionExample,
+      validateExample,
+    ],
   },
   "ref-scope": {
     label: "Ref & Scope",

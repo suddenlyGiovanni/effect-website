@@ -14,9 +14,9 @@ type ConcurrencyMode = "sequential" | "numbered" | "unbounded"
 
 const CONCURRENCY_OPTIONS: ReadonlyArray<ConcurrencyMode> = ["sequential", "numbered", "unbounded"]
 
-function ConcurrencyModeControl({ atom }: ControlRenderProps<ConcurrencyMode>) {
-  const value = useAtomValue(atom)
-  const setValue = useControlWrite(atom)
+function ConcurrencyModeControl({ control }: ControlRenderProps<ConcurrencyMode>) {
+  const value = useAtomValue(control.atom)
+  const setValue = useControlWrite(control)
   const { indicatorRect, rootRef } = useTabsIndicator(value)
 
   return (

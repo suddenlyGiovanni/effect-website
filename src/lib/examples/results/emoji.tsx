@@ -14,6 +14,9 @@ export const Emoji = {
   Lion: "🦁",
   Tiger: "🐯",
   Elephant: "🐮",
+  Ok: "👌",
+  Pizza: "🍕",
+  Money: "💰",
   Thinking: "💬",
   Shoot: "🔫",
 } as const
