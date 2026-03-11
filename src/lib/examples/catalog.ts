@@ -25,7 +25,7 @@ export type ExampleCategory =
   | "constructors"
   | "error-handling"
   | "schedule"
-  | "ref-scope"
+  | "scope"
 
 export interface ExampleCatalogEntry {
   readonly label: string
@@ -61,8 +61,8 @@ export const EXAMPLES_CATALOG: Record<ExampleCategory, ExampleCatalogEntry> = {
       validateExample,
     ],
   },
-  "ref-scope": {
-    label: "Ref & Scope",
+  scope: {
+    label: "Scope",
     examples: [],
   },
 }
