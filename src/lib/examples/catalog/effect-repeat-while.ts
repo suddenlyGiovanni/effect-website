@@ -7,10 +7,10 @@ import { defineExample, HighlightSelector } from "../constructors"
 import { PrimitiveResult } from "../results/primitive"
 
 export const repeatWhileExample = defineExample({
-  type: "schedule",
   label: "Effect.repeat",
   subtitle: "while",
   description: "Repeat an effect while a schedule condition is true",
+  features: { timeline: true },
   code: {
     language: "typescript",
     source: String.stripMargin(

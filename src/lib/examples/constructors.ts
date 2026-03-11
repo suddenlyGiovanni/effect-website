@@ -35,20 +35,7 @@ export type RenderableEffect<
 // Example Definition
 // =============================================================================
 
-export type ExampleType = "default" | "schedule"
-
-export class VisualFinalizers extends ServiceMap.Service<
-  VisualFinalizers,
-  {
-    readonly register: (label: string) => Effect.Effect<string>
-    readonly run: <A, E, R>(id: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
-  }
->()("VisualFinalizers") {}
-
-export type ExampleEnvironment = ControlSnapshot | Notifications | VisualFinalizers
-
 export interface ExampleDefinition {
-  readonly type: ExampleType
   readonly key: string
   readonly title: string
   readonly subtitle: string | undefined
@@ -57,19 +44,52 @@ export interface ExampleDefinition {
   readonly controls: ReadonlyArray<AnyExampleControl>
   readonly program: RenderableEffect<RenderableResult, RenderableResult, ExampleEnvironment>
   readonly code: CodeSnippetDefinition
+  readonly features: ExampleFeatures
 }
 
-export interface ExampleDefinitionOptions<Type extends ExampleType> {
-  readonly type?: Type | undefined
+type ExampleFeatureInput = {
+  readonly finalizers?: boolean
+  readonly timeline?: boolean
+}
+
+interface ExampleDefinitionOptions<Features extends ExampleFeatureInput> {
   readonly label: string
   readonly subtitle?: string | undefined
   readonly description?: string | undefined
   readonly code: CodeSnippetConfig
   readonly resultHighlight?: HighlightSelector | ReadonlyArray<HighlightSelector>
+  readonly features?: Features | undefined
   readonly build: (
-    ctx: BuildContext<Type>,
+    ctx: BuildContext<Features>,
   ) => RenderableEffect<RenderableResult, RenderableResult, ExampleEnvironment>
 }
+
+export type ExampleEnvironment = ControlSnapshot | Notifications | VisualFinalizers
+
+export interface ExampleFeatures {
+  readonly finalizers: boolean
+  readonly timeline: boolean
+}
+
+export type FinalizersEnabled<Features extends ExampleFeatureInput> = Features extends {
+  finalizers: true
+}
+  ? true
+  : Features extends { finalizers: boolean }
+    ? Features["finalizers"] extends true
+      ? true
+      : false
+    : false
+
+export type TimelineEnabled<Features extends ExampleFeatureInput> = Features extends {
+  timeline: true
+}
+  ? true
+  : Features extends { timeline: boolean }
+    ? Features["timeline"] extends true
+      ? true
+      : false
+    : false
 
 // =============================================================================
 // Step Definition
@@ -166,17 +186,38 @@ export class Notifications extends ServiceMap.Service<
 >()("Notifications") {}
 
 // =============================================================================
+// Finalizers
+// =============================================================================
+
+export class VisualFinalizers extends ServiceMap.Service<
+  VisualFinalizers,
+  {
+    readonly register: (label: string) => Effect.Effect<string>
+    readonly run: <A, E, R>(id: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
+  }
+>()("VisualFinalizers") {}
+
+export type FinalizerBuildContext = {
+  readonly finalizers: {
+    readonly add: <R>(
+      label: string,
+      finalizer: Effect.Effect<void, never, R>,
+    ) => Effect.Effect<void, never, R | ExampleEnvironment | Scope.Scope>
+  }
+}
+
+// =============================================================================
 // Build Context
 // =============================================================================
 
-export interface BuildContext<Type extends ExampleType> {
+export type BaseBuildContext<Features extends ExampleFeatureInput> = {
   readonly addStep: {
     <A extends RenderableResult, E extends RenderableResult, R>(
       self: RenderableEffect<A, E, R>,
-      options: AddStepOptions<Type>,
+      options: AddStepOptions<Features>,
     ): RenderableEffect<A, E, R>
     (
-      options: AddStepOptions<Type>,
+      options: AddStepOptions<Features>,
     ): <A extends RenderableResult, E extends RenderableResult, R>(
       self: RenderableEffect<A, E, R>,
     ) => RenderableEffect<A, E, R>
@@ -189,22 +230,19 @@ export interface BuildContext<Type extends ExampleType> {
     readonly setCode: (input: CodeDefinitionOptions) => void
     readonly setResultHighlight: (input: CodeSnippetSelectorOptions) => void
   }
-  readonly finalizers: {
-    readonly add: <R>(
-      label: string,
-      finalizer: Effect.Effect<void, never, R>,
-    ) => Effect.Effect<void, never, R | ExampleEnvironment | Scope.Scope>
-  }
 }
 
-export type AddStepOptions<Type extends ExampleType> = {
+export type BuildContext<Features extends ExampleFeatureInput> = BaseBuildContext<Features> &
+  (FinalizersEnabled<Features> extends true ? FinalizerBuildContext : {})
+
+export type TimelineStepOptions = {
+  readonly addToTimeline?: boolean | undefined
+}
+
+export type AddStepOptions<Features extends ExampleFeatureInput> = {
   readonly label: string
   readonly highlight?: CodeSnippetSelectorOptions | undefined
-} & (Type extends "schedule"
-  ? {
-      readonly addToTimeline?: boolean | undefined
-    }
-  : never)
+} & (TimelineEnabled<Features> extends true ? TimelineStepOptions : {})
 
 // =============================================================================
 // Example Definition Constructor
@@ -222,8 +260,8 @@ class InvalidExampleControlIdError extends Error {
   }
 }
 
-export const defineExample = <Type extends ExampleType>(
-  options: ExampleDefinitionOptions<Type>,
+export const defineExample = <const Features extends ExampleFeatureInput = {}>(
+  options: ExampleDefinitionOptions<Features>,
 ): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
   const controls: Array<AnyExampleControl> = []
@@ -232,13 +270,13 @@ export const defineExample = <Type extends ExampleType>(
   let codeDefinitionOptions: CodeDefinitionOptions = options.code
   let resultHighlightDefinition: CodeSnippetSelectorOptions | undefined = options.resultHighlight
 
-  const registerStep = (options: AddStepOptions<Type>): StepDefinition => {
+  const registerStep = (options: AddStepOptions<Features>): StepDefinition => {
     const step: Types.Mutable<StepDefinition> = {
       id: crypto.randomUUID(),
       label: options.label,
     }
 
-    if (options.addToTimeline) {
+    if ("addToTimeline" in options && options.addToTimeline) {
       step.addToTimeline = true
     }
 
@@ -254,11 +292,11 @@ export const defineExample = <Type extends ExampleType>(
     return step
   }
 
-  const addStep: BuildContext<Type>["addStep"] = dual(
+  const addStep: BaseBuildContext<Features>["addStep"] = dual(
     2,
     <A extends RenderableResult, E extends RenderableResult, R>(
       self: RenderableEffect<A, E, R>,
-      options: AddStepOptions<Type>,
+      options: AddStepOptions<Features>,
     ): RenderableEffect<A, E, R> => {
       const step = registerStep(options)
       // Suspend to ensure that the renderable effect is not evaluated eagerly
@@ -324,7 +362,7 @@ export const defineExample = <Type extends ExampleType>(
       }),
     )
 
-  const program = options.build({
+  const context: BaseBuildContext<Features> = {
     addStep,
     controls: {
       register: registerControl,
@@ -338,10 +376,17 @@ export const defineExample = <Type extends ExampleType>(
         resultHighlightDefinition = next
       },
     },
+  }
+
+  const finalizersContext: FinalizerBuildContext = {
     finalizers: {
       add: (label, finalizer) => addVisualFinalizer(label, () => finalizer),
     },
-  })
+  }
+
+  const program = options.features?.finalizers === true
+    ? options.build({ ...context, ...finalizersContext } as any)
+    : options.build(context as any)
 
   const hasDynamicCode = typeof codeDefinitionOptions === "function"
   const hasDynamicResultHighlight = typeof resultHighlightDefinition === "function"
@@ -375,7 +420,6 @@ export const defineExample = <Type extends ExampleType>(
         )
 
   const definition: ExampleDefinition = {
-    type: options.type ?? "default",
     key: crypto.randomUUID(),
     title: options.label,
     subtitle: options.subtitle,
@@ -384,6 +428,10 @@ export const defineExample = <Type extends ExampleType>(
     controls,
     program,
     code: { atom: codeAtom },
+    features: {
+      finalizers: options.features?.finalizers === true,
+      timeline: options.features?.timeline === true,
+    },
   }
 
   Equal.byReferenceUnsafe(definition)

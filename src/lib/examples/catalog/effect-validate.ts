@@ -46,8 +46,6 @@ export const validateExample = defineExample({
        |const vibes = checkVibes(password)
        |
        |const result = Effect.validate(
-       |
-       |)
        |  [iceCream, battery, popsicle, toad, lollipop],
        |  performLick
        |)`,
@@ -55,7 +53,7 @@ export const validateExample = defineExample({
   },
   resultHighlight: HighlightSelector.LineRange({
     startLine: 5,
-    endLine: 9,
+    endLine: 8,
   }),
   build: ({ addStep }) => {
     const length = Effect.gen(function* () {

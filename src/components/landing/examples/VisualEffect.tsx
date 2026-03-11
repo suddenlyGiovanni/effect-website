@@ -18,7 +18,6 @@ import {
   StepContext,
   useExampleDefinition,
   useExampleState,
-  useFinalizerPanel,
   useStepDefinition,
   useStepState,
 } from "./VisualEffectProvider"
@@ -60,8 +59,8 @@ function VisualEffectSurface() {
       <VisualEffectControls isDied={isDied} />
       <VisualEffectConfigPanel isDied={isDied} />
       <VisualEffectNodes isDied={isDied} onHoverTargetChange={onHoverTargetChange} />
-      <VisualEffectFinalizerPanel />
-      {example.type === "schedule" && <VisualEffectScheduleTimeline />}
+      {example.features.finalizers && <VisualEffectFinalizerPanel />}
+      {example.features.timeline && <VisualEffectScheduleTimeline />}
       <VisualEffectCodeSnippet snippet={example.code} activeTarget={delayedTarget} />
     </motion.div>
   )

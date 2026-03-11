@@ -33,7 +33,7 @@ export function VisualEffectFinalizerPanel() {
       finalizer.phase === "Interrupted",
   )
 
-  return panel.finalizers.length === 0 ? null : (
+  return (
     <section className="border-b border-zinc-800 bg-zinc-950/80 px-4 py-4">
       <div
         ref={containerRef}

@@ -92,7 +92,7 @@ const getCodeSnippet = (outcome: ProgramOutcome): string =>
 export const addFinalizerExample = defineExample({
   label: "Effect.addFinalizer",
   description: "Register cleanup actions in a scope",
-  finalizerPanel: {},
+  features: { finalizers: true },
   code: {
     language: "typescript",
     source: getCodeSnippet("succeed"),

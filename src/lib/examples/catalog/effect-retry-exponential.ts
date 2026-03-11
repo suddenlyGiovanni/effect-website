@@ -8,10 +8,10 @@ import { PrimitiveResult } from "../results/primitive"
 const PARKING_ATTEMPTS = ["😤 Too Close!", "😡 Too Far!", "🤬 Neutral!", "😑 Focus."]
 
 export const retryExponentialExample = defineExample({
-  type: "schedule",
   label: "Effect.retry",
   subtitle: "exponential",
   description: "Retry a failing effect with gaps that widen after each failure",
+  features: { timeline: true },
   code: {
     language: "typescript",
     source: String.stripMargin(

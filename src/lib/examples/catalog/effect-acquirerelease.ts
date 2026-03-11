@@ -8,7 +8,7 @@ import * as Random from "effect/Random"
 export const acquireReleaseExample = defineExample({
   label: "Effect.acquireRelease",
   description: "Acquire resources with guaranteed cleanup",
-  finalizerPanel: {},
+  features: { finalizers: true },
   code: {
     language: "typescript",
     source: String.stripMargin(
@@ -34,10 +34,10 @@ export const acquireReleaseExample = defineExample({
        |  return yield* doWork(db, cache, logger)
        |})
        |
-       |const result = Effect.scoped(result)`,
+       |const result = Effect.scoped(program)`,
     ),
   },
-  resultHighlight: HighlightSelector.Text({ text: "Effect.scoped(result)" }),
+  resultHighlight: HighlightSelector.Text({ text: "Effect.scoped(program)" }),
   build: ({ addStep, finalizers }) => {
     let run = 0
 

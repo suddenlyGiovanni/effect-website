@@ -49,6 +49,11 @@ export type SoundCue =
       readonly exampleKey: string
       readonly stepId: string
     }
+  | {
+      readonly _tag: "FinalizerFinished"
+      readonly exampleKey: string
+      readonly finalizerId: string
+    }
 
 export const visualEffectExampleCueStepId = "__example__"
 
@@ -58,6 +63,8 @@ export const soundCueKey = (cue: SoundCue): string => {
       return `${cue._tag}:${cue.exampleKey}`
     case "ControlChanged":
       return `${cue._tag}:${cue.exampleKey}:${cue.controlId}`
+    case "FinalizerFinished":
+      return `${cue._tag}:${cue.exampleKey}:${cue.finalizerId}`
     case "StepRunning":
     case "StepSucceeded":
     case "StepFailed":

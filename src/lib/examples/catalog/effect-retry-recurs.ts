@@ -13,10 +13,10 @@ const SNOOZE_MESSAGES = [
 ] as const
 
 export const retryRecursExample = defineExample({
-  type: "schedule",
   label: "Effect.retry",
   subtitle: "times",
   description: "Retry an effect a fixed number of times",
+  features: { timeline: true },
   code: {
     language: "typescript",
     source: String.stripMargin(

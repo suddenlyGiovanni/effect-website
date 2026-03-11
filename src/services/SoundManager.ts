@@ -159,6 +159,11 @@ const makeToneEngine = Effect.gen(function* () {
     envelope: { attack: 0.004, decay: 0.12, sustain: 0, release: 0.16 },
   }).connect(reverb)
 
+  const finalizer = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: "triangle" },
+    envelope: { attack: 0.01, decay: 0.14, sustain: 0, release: 0.2 },
+  }).connect(reverb)
+
   const transport = Tone.getTransport()
 
   if (transport.state !== "started") {
@@ -274,6 +279,11 @@ const makeToneEngine = Effect.gen(function* () {
         notification.triggerAttackRelease("G5", "16n", now + 0.08, 0.3)
         break
       }
+      case "FinalizerFinished": {
+        finalizer.triggerAttackRelease("E5", "32n", now, 0.22)
+        finalizer.triggerAttackRelease("A5", "16n", now + 0.06, 0.18)
+        break
+      }
     }
   }
 
@@ -287,6 +297,7 @@ const makeToneEngine = Effect.gen(function* () {
     death.releaseAll()
     config.releaseAll()
     notification.releaseAll()
+    finalizer.releaseAll()
     isPlayingFailure = false
     isPlayingInterrupt = false
     chordWindowStart = undefined

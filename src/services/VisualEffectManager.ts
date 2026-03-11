@@ -293,6 +293,14 @@ export class VisualEffectManager extends ServiceMap.Service<
               phase: classifyFinalizerExit(exit),
             })
 
+            runSync(
+              soundManager.play({
+                _tag: "FinalizerFinished",
+                exampleKey: example.key,
+                finalizerId: id,
+              }),
+            )
+
             if (Exit.isSuccess(exit)) {
               return exit.value
             }
@@ -476,7 +484,7 @@ export class VisualEffectManager extends ServiceMap.Service<
               runId,
             })
 
-            if (example.type === "schedule") {
+            if (example.features.timeline) {
               registry.set(scheduleTimeAtom(example), startedAtMillis)
             }
 
@@ -500,7 +508,7 @@ export class VisualEffectManager extends ServiceMap.Service<
               Effect.forkChild,
             )
 
-            if (example.type === "schedule") {
+            if (example.features.timeline) {
               yield* Effect.forkChild(scheduleTimer(example))
             }
 

@@ -28,10 +28,10 @@ const NOTIFICATION_MESSAGES = [
 ] as const
 
 export const repeatSpacedExample = defineExample({
-  type: "schedule",
   label: "Effect.repeat",
   subtitle: "spaced",
   description: "Repeat an effect with a fixed delay between each execution",
+  features: { timeline: true },
   code: {
     language: "typescript",
     source: String.stripMargin(
