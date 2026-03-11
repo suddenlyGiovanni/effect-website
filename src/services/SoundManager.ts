@@ -14,12 +14,14 @@ const DEDUPE_WINDOW_MS = 60
 
 export interface ToneEngine {
   readonly play: (cue: SoundCue) => Effect.Effect<void>
+  readonly stopAll: Effect.Effect<void>
 }
 
 export class SoundManager extends ServiceMap.Service<
   SoundManager,
   {
     readonly play: (cue: SoundCue) => Effect.Effect<void>
+    readonly stopAll: Effect.Effect<void>
     readonly unlock: Effect.Effect<void>
   }
 >()("SoundManager", {
@@ -90,8 +92,18 @@ export class SoundManager extends ServiceMap.Service<
       isUnlocked = true
     })
 
+    const stopAll = Effect.gen(function* () {
+      if (!isUnlocked) {
+        return yield* Effect.void
+      }
+
+      const toneEngine = yield* Scope.provide(loadToneEngine, scope)
+      return yield* toneEngine.stopAll
+    })
+
     return {
       play,
+      stopAll,
       unlock,
     } as const
   }),
@@ -265,23 +277,25 @@ const makeToneEngine = Effect.gen(function* () {
     }
   }
 
-  yield* Effect.addFinalizer(() =>
-    Effect.sync(() => {
-      running.dispose()
-      success.dispose()
-      failure.dispose()
-      interrupted.dispose()
-      reset.dispose()
-      death.dispose()
-      config.dispose()
-      notification.dispose()
-      distortion.dispose()
-      reverb.dispose()
-      volume.dispose()
-    }),
-  )
+  const stopAll = Effect.sync(() => {
+    transport.cancel()
+    running.releaseAll()
+    success.releaseAll()
+    failure.releaseAll()
+    interrupted.releaseAll()
+    reset.releaseAll()
+    death.releaseAll()
+    config.releaseAll()
+    notification.releaseAll()
+    isPlayingFailure = false
+    isPlayingInterrupt = false
+    chordWindowStart = undefined
+  })
+
+  yield* Effect.addFinalizer(() => stopAll)
 
   return {
     play,
+    stopAll,
   } as const
 })

@@ -1,7 +1,11 @@
-import { useAtomMount } from "@effect/atom-react"
+import { useAtomMount, useAtomSet } from "@effect/atom-react"
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
+import {
+  prefersReducedMotionAtom,
+  resetExampleSilentlyAtom,
+  stopAllSoundAtom,
+} from "@/atoms/visual-effect"
 import type { ExampleDefinition } from "@/lib/examples/constructors"
-import { prefersReducedMotionAtom } from "@/atoms/visual-effect"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type ExampleCategory, EXAMPLES_CATALOG } from "@/lib/examples/catalog"
 import { cn } from "@/lib/utils"
@@ -24,6 +28,17 @@ export default function VisualEffects() {
   const rootElementReference = useRef<HTMLElement | undefined>(undefined)
   const resizeObserverReference = useRef<ResizeObserver | undefined>(undefined)
   const frameReference = useRef<number | undefined>(undefined)
+  const resetExampleSilently = useAtomSet(resetExampleSilentlyAtom)
+  const stopAllSounds = useAtomSet(stopAllSoundAtom)
+
+  const reset = useCallback(() => {
+    for (const entry of Object.values(EXAMPLES_CATALOG)) {
+      for (const example of entry.examples) {
+        resetExampleSilently(example)
+      }
+    }
+    stopAllSounds(void 0)
+  }, [resetExampleSilently, stopAllSounds])
 
   const updateIndicator = useCallback(() => {
     const rootElement = rootElementReference.current
@@ -126,6 +141,7 @@ export default function VisualEffects() {
 
   useEffect(() => {
     return () => {
+      reset()
       resizeObserverReference.current?.disconnect()
 
       const activeFrame = frameReference.current
@@ -134,14 +150,21 @@ export default function VisualEffects() {
         cancelAnimationFrame(activeFrame)
       }
     }
-  }, [])
+  }, [reset])
 
   return (
     <div
       ref={rootReference}
       className="border-t border-r border-zinc-800 shadow-2xl shadow-black/20"
     >
-      <Tabs value={category} onValueChange={(category) => setCategory(category)} className="gap-0">
+      <Tabs
+        value={category}
+        onValueChange={(nextCategory) => {
+          reset()
+          setCategory(nextCategory)
+        }}
+        className="gap-0"
+      >
         <div className="flex items-center justify-end border-b border-zinc-800 bg-zinc-950/90 px-4 py-3">
           <VisualEffectSoundToggle />
         </div>
@@ -163,7 +186,7 @@ export default function VisualEffects() {
           const entry = EXAMPLES_CATALOG[category]
           return (
             <TabsContent key={category} value={category} className="mt-0">
-              <SubTabsContent examples={entry.examples} />
+              <SubTabsContent examples={entry.examples} onTabChange={reset} />
             </TabsContent>
           )
         })}
@@ -224,13 +247,25 @@ function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorR
   )
 }
 
-function SubTabsContent({ examples }: { readonly examples: ReadonlyArray<ExampleDefinition> }) {
+function SubTabsContent({
+  examples,
+  onTabChange,
+}: {
+  readonly examples: ReadonlyArray<ExampleDefinition>
+  readonly onTabChange: () => void
+}) {
   if (examples.length === 0) {
     return null
   }
 
   return (
-    <Tabs defaultValue={examples[0]} className="gap-0">
+    <Tabs
+      defaultValue={examples[0]}
+      onValueChange={() => {
+        onTabChange()
+      }}
+      className="gap-0"
+    >
       <TabsList
         variant="line"
         className={cn(

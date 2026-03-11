@@ -1,4 +1,3 @@
-import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
@@ -90,14 +89,12 @@ export interface AnyExampleControl {
   readonly description: string | undefined
   readonly initialValue: unknown
   readonly atom: Atom.Atom<unknown>
-  readonly get: (registry: AtomRegistry.AtomRegistry) => unknown
   readonly render: () => React.ReactNode
 }
 
 export interface ExampleControl<A> extends AnyExampleControl {
   readonly initialValue: A
   readonly atom: Atom.Writable<A>
-  readonly get: (registry: AtomRegistry.AtomRegistry) => A
 }
 
 export interface RegisterControlOptions<A> {
@@ -197,11 +194,24 @@ export type AddStepOptions<Type extends ExampleType> = {
 // Example Definition Constructor
 // =============================================================================
 
+class DuplicateExampleControlIdError extends Error {
+  constructor(exampleLabel: string, controlId: string) {
+    super(`Duplicate control id \`${controlId}\` in example \`${exampleLabel}\``)
+  }
+}
+
+class InvalidExampleControlIdError extends Error {
+  constructor(exampleLabel: string) {
+    super(`Example \`${exampleLabel}\` registered a control with an empty id`)
+  }
+}
+
 export const defineExample = <Type extends ExampleType>(
   options: ExampleDefinitionOptions<Type>,
 ): ExampleDefinition => {
   const steps: Array<StepDefinition> = []
   const controls: Array<AnyExampleControl> = []
+  const controlIds = new Set<string>()
   const selectorsByTarget: Record<string, CodeSnippetSelectorOptions> = {}
   let codeDefinitionOptions: CodeDefinitionOptions = options.code
   let resultHighlightDefinition: CodeSnippetSelectorOptions | undefined = options.resultHighlight
@@ -249,17 +259,28 @@ export const defineExample = <Type extends ExampleType>(
   )
 
   const registerControl = <A>(control: RegisterControlOptions<A>): ExampleControl<A> => {
+    const normalizedControlId = control.id.trim()
+
+    if (normalizedControlId.length === 0) {
+      throw new InvalidExampleControlIdError(options.label)
+    }
+
+    if (controlIds.has(normalizedControlId)) {
+      throw new DuplicateExampleControlIdError(options.label, normalizedControlId)
+    }
+
+    controlIds.add(normalizedControlId)
+
     const atom = Atom.make(control.initialValue).pipe(
-      Atom.withLabel(`${options.label}:control:${control.id}`),
+      Atom.withLabel(`${options.label}:control:${normalizedControlId}`),
     )
 
     const registeredControl: ExampleControl<A> = {
-      id: control.id,
+      id: normalizedControlId,
       label: control.label,
       description: control.description,
       initialValue: control.initialValue,
       atom,
-      get: (registry) => registry.get(atom),
       render: () => React.createElement(control.render, { control: registeredControl }),
     }
 
@@ -292,45 +313,36 @@ export const defineExample = <Type extends ExampleType>(
     },
   })
 
-  const codeAtom = Atom.make((get) => {
-    const controlValues: ControlValues = {
-      get: (control) => get(control.atom),
-    }
+  const hasDynamicCode = typeof codeDefinitionOptions === "function"
+  const hasDynamicResultHighlight = typeof resultHighlightDefinition === "function"
+  const hasDynamicStepHighlight = Object.values(selectorsByTarget).some(
+    (selectorDefinition) => typeof selectorDefinition === "function",
+  )
 
-    const resolvedSelectorsByTarget: Record<string, ReadonlyArray<HighlightSelector>> = {}
+  const codeAtom =
+    hasDynamicCode || hasDynamicResultHighlight || hasDynamicStepHighlight
+      ? Atom.make((get) => {
+          const controlValues: ControlValues = {
+            get: (control) => get(control.atom),
+          }
 
-    for (const targetKey of Object.keys(selectorsByTarget)) {
-      const selectorDefinition = selectorsByTarget[targetKey]
-
-      if (selectorDefinition === undefined) {
-        continue
-      }
-
-      resolvedSelectorsByTarget[targetKey] = normalizeSelectorInput(
-        resolveSnippetSelectors(selectorDefinition, controlValues),
-        {
-          exampleLabel: options.label,
-          targetKey,
-        },
-      )
-    }
-
-    if (resultHighlightDefinition !== undefined) {
-      resolvedSelectorsByTarget[snippetResultTargetKey] = normalizeSelectorInput(
-        resolveSnippetSelectors(resultHighlightDefinition, controlValues),
-        {
-          exampleLabel: options.label,
-          targetKey: snippetResultTargetKey,
-        },
-      )
-    }
-
-    return resolveExampleCodeSnippet({
-      code: resolveCodeDefinition(codeDefinitionOptions, controlValues),
-      selectorsByTarget: resolvedSelectorsByTarget,
-      exampleLabel: options.label,
-    })
-  })
+          return resolveSnippetDefinition({
+            codeDefinition: codeDefinitionOptions,
+            selectorsByTarget,
+            resultHighlightDefinition,
+            controlValues,
+            exampleLabel: options.label,
+          })
+        })
+      : Atom.make(
+          resolveSnippetDefinition({
+            codeDefinition: codeDefinitionOptions,
+            selectorsByTarget,
+            resultHighlightDefinition,
+            controlValues: { get: (control) => control.initialValue },
+            exampleLabel: options.label,
+          }),
+        )
 
   const definition: ExampleDefinition = {
     type: options.type ?? "default",
@@ -371,4 +383,52 @@ const resolveSnippetSelectors = (
   }
 
   return definition
+}
+
+const resolveSnippetDefinition = ({
+  codeDefinition,
+  selectorsByTarget,
+  resultHighlightDefinition,
+  controlValues,
+  exampleLabel,
+}: {
+  readonly codeDefinition: CodeDefinitionOptions
+  readonly selectorsByTarget: Record<string, CodeSnippetSelectorOptions>
+  readonly resultHighlightDefinition: CodeSnippetSelectorOptions | undefined
+  readonly controlValues: ControlValues
+  readonly exampleLabel: string
+}): CodeSnippet => {
+  const resolvedSelectorsByTarget: Record<string, ReadonlyArray<HighlightSelector>> = {}
+
+  for (const targetKey of Object.keys(selectorsByTarget)) {
+    const selectorDefinition = selectorsByTarget[targetKey]
+
+    if (selectorDefinition === undefined) {
+      continue
+    }
+
+    resolvedSelectorsByTarget[targetKey] = normalizeSelectorInput(
+      resolveSnippetSelectors(selectorDefinition, controlValues),
+      {
+        exampleLabel,
+        targetKey,
+      },
+    )
+  }
+
+  if (resultHighlightDefinition !== undefined) {
+    resolvedSelectorsByTarget[snippetResultTargetKey] = normalizeSelectorInput(
+      resolveSnippetSelectors(resultHighlightDefinition, controlValues),
+      {
+        exampleLabel,
+        targetKey: snippetResultTargetKey,
+      },
+    )
+  }
+
+  return resolveExampleCodeSnippet({
+    code: resolveCodeDefinition(codeDefinition, controlValues),
+    selectorsByTarget: resolvedSelectorsByTarget,
+    exampleLabel,
+  })
 }

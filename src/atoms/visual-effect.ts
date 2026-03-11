@@ -34,23 +34,30 @@ export const resetExampleAtom = visualEffectsRuntime.fn<ExampleDefinition>()(
   { concurrent: true },
 )
 
-export interface ControlWriteSideEffectInput {
+export const resetExampleSilentlyAtom = visualEffectsRuntime.fn<ExampleDefinition>()(
+  (example) => VisualEffectManager.use((_) => _.reset(example, { silent: true })),
+  { concurrent: true },
+)
+
+export interface PlayControlChangedSoundInput {
   readonly example: ExampleDefinition
   readonly controlId: string
 }
 
-export const controlWriteSideEffectsAtom = visualEffectsRuntime.fn<ControlWriteSideEffectInput>()(
+export const playControlChangedSoundAtom = visualEffectsRuntime.fn<PlayControlChangedSoundInput>()(
   ({ example, controlId }) =>
-    Effect.andThen(
-      SoundManager.use((soundManager) =>
-        soundManager.play({
-          _tag: "ControlChanged",
-          exampleKey: example.key,
-          controlId,
-        }),
-      ),
-      VisualEffectManager.use((manager) => manager.reset(example)),
+    SoundManager.use((soundManager) =>
+      soundManager.play({
+        _tag: "ControlChanged",
+        exampleKey: example.key,
+        controlId,
+      }),
     ),
+  { concurrent: true },
+)
+
+export const stopAllSoundAtom = visualEffectsRuntime.fn<void>()(
+  () => SoundManager.use((_) => _.stopAll),
   { concurrent: true },
 )
 

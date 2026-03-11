@@ -31,7 +31,7 @@ export const eventuallyExample = defineExample({
     let retries = 0
 
     const swipeCard = Effect.gen(function* () {
-      const delay = yield* Random.nextIntBetween(400, 800)
+      const delay = yield* Random.nextIntBetween(400, 600)
       yield* Effect.sleep(delay)
 
       // Determine failure based on current retry count
@@ -57,6 +57,6 @@ export const eventuallyExample = defineExample({
       highlight: HighlightSelector.Text({ text: "swipeCard()" }),
     })
 
-    return swipeCardStep.pipe(Effect.retry(Schedule.fixed("1 second")))
+    return swipeCardStep.pipe(Effect.retry(Schedule.fixed("1.5 seconds")))
   },
 })

@@ -4,11 +4,13 @@ import * as React from "react"
 import type { ExampleControl, ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
 import type { SoundPreference } from "@/lib/examples/sound"
 import {
-  controlWriteSideEffectsAtom,
+  playControlChangedSoundAtom,
   resetExampleAtom,
+  resetExampleSilentlyAtom,
   soundPreferenceAtom,
   soundSettingsAtom,
   startExampleAtom,
+  stopAllSoundAtom,
   stopExampleAtom,
   unlockSoundAtom,
 } from "@/atoms/visual-effect"
@@ -86,8 +88,9 @@ export const useControlWrite = <A,>(control: ExampleControl<A>) => {
   const example = useExampleDefinition()
   const current = useAtomValue(control.atom)
   const set = useAtomSet(control.atom)
+  const resetExample = useAtomSet(resetExampleSilentlyAtom)
   const unlockSounds = useAtomSet(unlockSoundAtom)
-  const applyControlWriteSideEffects = useAtomSet(controlWriteSideEffectsAtom)
+  const playControlChangedSound = useAtomSet(playControlChangedSoundAtom)
 
   return React.useCallback(
     (next: A) => {
@@ -99,12 +102,14 @@ export const useControlWrite = <A,>(control: ExampleControl<A>) => {
 
       set(next)
 
-      applyControlWriteSideEffects({
+      playControlChangedSound({
         example,
         controlId: control.id,
       })
+
+      resetExample(example)
     },
-    [applyControlWriteSideEffects, control, current, example, set, unlockSounds],
+    [control, current, example, playControlChangedSound, set, unlockSounds],
   )
 }
 
@@ -117,10 +122,14 @@ export const useSoundSettings = () => useAtomValue(soundSettingsAtom)
 export const useSoundControls = () => {
   const unlockSounds = useAtomSet(unlockSoundAtom)
   const setSoundPreference = useAtomSet(soundPreferenceAtom)
+  const stopAllSounds = useAtomSet(stopAllSoundAtom)
 
   return {
     unlockSounds() {
       unlockSounds(void 0)
+    },
+    stopAllSounds() {
+      stopAllSounds(void 0)
     },
     setSoundPreference(preference: SoundPreference) {
       setSoundPreference(preference)

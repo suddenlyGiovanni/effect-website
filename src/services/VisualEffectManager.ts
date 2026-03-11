@@ -29,7 +29,6 @@ import {
   type VisualEffectNotification,
   type VisualEffectScheduleTimeline,
 } from "@/lib/examples/domain"
-import { ErrorResult } from "@/lib/examples/results/error"
 import { visualEffectExampleCueStepId } from "@/lib/examples/sound"
 import { SoundManager } from "@/services/SoundManager"
 
@@ -47,12 +46,16 @@ export const scheduleTimelineAtom = Atom.family((_definition: ExampleDefinition)
   Atom.make<VisualEffectScheduleTimeline>([]),
 )
 
+export interface ResetOptions {
+  readonly silent?: boolean | undefined
+}
+
 export class VisualEffectManager extends ServiceMap.Service<
   VisualEffectManager,
   {
     start: (example: ExampleDefinition) => Effect.Effect<void>
     stop: (example: ExampleDefinition) => Effect.Effect<void>
-    reset: (example: ExampleDefinition) => Effect.Effect<void>
+    reset: (example: ExampleDefinition, options?: ResetOptions) => Effect.Effect<void>
   }
 >()("VisualEffectManager") {
   static readonly layer = Layer.effectServices(
@@ -64,6 +67,7 @@ export class VisualEffectManager extends ServiceMap.Service<
       const fiberMap = yield* FiberMap.make<ExampleDefinition>()
       const services = yield* Effect.services()
       const runSync = Effect.runSyncWith(services)
+      const resettingExamples = new Set<string>()
 
       const playExampleTransition = (
         example: ExampleDefinition,
@@ -71,6 +75,10 @@ export class VisualEffectManager extends ServiceMap.Service<
         current: VisualEffectState,
       ): Effect.Effect<void> => {
         if (previous._tag === current._tag) {
+          return Effect.void
+        }
+
+        if (resettingExamples.has(example.key)) {
           return Effect.void
         }
 
@@ -122,6 +130,10 @@ export class VisualEffectManager extends ServiceMap.Service<
         current: VisualEffectState,
       ): Effect.Effect<void> => {
         if (previous._tag === current._tag) {
+          return Effect.void
+        }
+
+        if (resettingExamples.has(details.definition.key)) {
           return Effect.void
         }
 
@@ -364,7 +376,7 @@ export class VisualEffectManager extends ServiceMap.Service<
           const startedAtMillis = DateTime.toEpochMillis(startedAt)
           const snapshotRegistry = AtomRegistry.make({
             initialValues: example.controls.map(
-              (control) => [control.atom, control.get(registry)] as const,
+              (control) => [control.atom, registry.get(control.atom)] as const,
             ),
           })
 
@@ -418,19 +430,25 @@ export class VisualEffectManager extends ServiceMap.Service<
         stop: Effect.fnUntraced(function* (example) {
           yield* FiberMap.remove(fiberMap, example)
         }),
-        reset: Effect.fnUntraced(function* (example) {
-          yield* FiberMap.remove(fiberMap, example)
-          registry.set(exampleStateAtom(example), InitialState)
-          for (const step of example.steps) {
-            registry.set(stepStateAtom(step), InitialState)
-          }
-          registry.set(scheduleTimelineAtom(example), [])
-
-          yield* soundManager.play({
-            _tag: "ExampleReset",
-            exampleKey: example.key,
-          })
-        }),
+        reset: (example, options) =>
+          Effect.acquireUseRelease(
+            Effect.sync(() => resettingExamples.add(example.key)),
+            Effect.fnUntraced(function* () {
+              yield* FiberMap.remove(fiberMap, example)
+              registry.set(exampleStateAtom(example), InitialState)
+              for (const step of example.steps) {
+                registry.set(stepStateAtom(step), InitialState)
+              }
+              registry.set(scheduleTimelineAtom(example), [])
+              if (options?.silent !== true) {
+                yield* soundManager.play({
+                  _tag: "ExampleReset",
+                  exampleKey: example.key,
+                })
+              }
+            }),
+            () => Effect.sync(() => resettingExamples.delete(example.key)),
+          ),
       })
 
       return Tracer.Tracer.serviceMap(visualEffectTracer).pipe(

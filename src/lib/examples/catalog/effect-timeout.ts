@@ -49,7 +49,13 @@ export const timeoutExample = defineExample({
           return yield* Effect.fail(new ErrorResult(message))
         }),
       ),
-      Effect.tapError((error) => Notifications.use(({ notify }) => notify(error.message))),
+      Effect.tapError((error) =>
+        Notifications.use(({ notify }) =>
+          notify(error.message, {
+            showOnHover: true,
+          }),
+        ),
+      ),
     )
   },
 })
