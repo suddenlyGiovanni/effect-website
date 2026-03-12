@@ -1,29 +1,12 @@
 import { ChevronRight } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import * as React from "react"
+import { useContainerWidth } from "./useContainerWidth"
 import { useFinalizerPanel } from "./VisualEffectProvider"
 import { FINALIZER_CARD_WIDTH, VisualEffectFinalizerCard } from "./VisualEffectFinalizerCard"
 
 export function VisualEffectFinalizerPanel() {
   const panel = useFinalizerPanel()
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = React.useState(0)
-
-  React.useLayoutEffect(() => {
-    const element = containerRef.current
-
-    if (!element) {
-      return
-    }
-
-    const updateWidth = () => setContainerWidth(element.offsetWidth)
-    updateWidth()
-
-    const observer = new ResizeObserver(updateWidth)
-    observer.observe(element)
-
-    return () => observer.disconnect()
-  }, [])
+  const { containerRef, containerWidth } = useContainerWidth()
 
   const pendingFinalizers = panel.finalizers.filter((finalizer) => finalizer.phase === "Pending")
   const completedFinalizers = panel.finalizers.filter(

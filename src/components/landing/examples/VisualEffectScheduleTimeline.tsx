@@ -1,7 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as DateTime from "effect/DateTime"
-import * as Option from "effect/Option"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import { motion } from "motion/react"
 import * as React from "react"
 import type {
@@ -10,6 +7,7 @@ import type {
   VisualEffectState,
 } from "@/lib/visual-effect/domain"
 import { cn } from "@/lib/utils"
+import { useContainerWidth } from "./useContainerWidth"
 import { useExampleState, useScheduleTime, useScheduleTimeline } from "./VisualEffectProvider"
 
 const TIMELINE_CONFIG = {
@@ -40,46 +38,11 @@ const TIMELINE_COLORS = {
   tickMark: "var(--color-zinc-700)",
 } as const
 
-const containerElementAtom = Atom.make(Option.none<HTMLDivElement>())
-
-const containerWidthAtom = Atom.make((get) => {
-  if (typeof window === "undefined") {
-    return 0
-  }
-
-  const maybeElement = get(containerElementAtom)
-
-  return Option.match(maybeElement, {
-    onNone: () => 0,
-    onSome: (element) => {
-      const onResize = () => {
-        get.setSelf(element.offsetWidth)
-      }
-
-      const observer = new ResizeObserver(onResize)
-      observer.observe(element)
-      get.addFinalizer(() => observer.unobserve(element))
-
-      return element.offsetWidth
-    },
-  })
-})
-
 export function VisualEffectScheduleTimeline() {
-  const setElement = useAtomSet(containerElementAtom)
-  const containerWidth = useAtomValue(containerWidthAtom)
+  const { containerRef, containerWidth } = useContainerWidth()
   const exampleState = useExampleState()
   const currentTime = useScheduleTime()
   const timeline = useScheduleTimeline()
-
-  const containerRef = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      if (node !== null) {
-        setElement(Option.some(node))
-      }
-    },
-    [setElement],
-  )
 
   const currentTimeMillis = getCurrentTimeMillis(exampleState, timeline, currentTime)
   const timelineOriginMillis = getTimelineOriginMillis(exampleState, timeline, currentTimeMillis)
