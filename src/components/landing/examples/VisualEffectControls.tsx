@@ -1,6 +1,6 @@
 import { motion } from "motion/react"
 import * as React from "react"
-import { canReset } from "@/lib/examples/domain"
+import { canReset } from "@/lib/visual-effect/domain"
 import { VisualEffectControlsIcon } from "./VisualEffectControlsIcon"
 import {
   useExampleControls,

@@ -1,9 +1,9 @@
 import type { ThemedToken } from "shiki/types"
 import { useAtomValue } from "@effect/atom-react"
 import * as React from "react"
-import type { CodeSnippetDefinition } from "@/lib/examples/constructors"
-import type { ResolvedOffsetRange } from "@/lib/examples/snippet-highlights"
-import { getSnippetTokens } from "@/lib/examples/shiki-singleton"
+import type { CodeSnippetDefinition } from "@/lib/visual-effect/constructors"
+import type { ResolvedOffsetRange } from "@/lib/visual-effect/snippet-highlights"
+import { getSnippetTokens } from "@/lib/visual-effect/shiki-singleton"
 import { VisualEffectCodeSnippetHighlight } from "./VisualEffectCodeSnippetHighlight"
 
 const EMPTY_RANGES: ReadonlyArray<ResolvedOffsetRange> = []

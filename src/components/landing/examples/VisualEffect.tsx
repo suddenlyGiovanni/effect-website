@@ -1,13 +1,16 @@
 import { ArrowRight } from "lucide-react"
 import { MotionConfig, motion, useAnimate } from "motion/react"
 import * as React from "react"
-import type { ExampleDefinition } from "@/lib/examples/constructors"
+import type { ExampleDefinition } from "@/lib/visual-effect/constructors"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useEffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { useEffectNodeAnimationController } from "@/hooks/animation/useEffectNodeAnimationController"
 import { useNodeTransitionFlags } from "@/hooks/animation/useNodeTransitionFlags"
-import { useSnippetHoverState } from "@/hooks/examples/useSnippetHoverState"
-import { snippetResultTargetKey, toStepSnippetTargetKey } from "@/lib/examples/snippet-highlights"
+import { useSnippetHoverState } from "@/hooks/visual-effect/useSnippetHoverState"
+import {
+  snippetResultTargetKey,
+  toStepSnippetTargetKey,
+} from "@/lib/visual-effect/snippet-highlights"
 import { VisualEffectCodeSnippet } from "./VisualEffectCodeSnippet"
 import { VisualEffectConfigPanel } from "./VisualEffectConfigPanel"
 import { VisualEffectControls } from "./VisualEffectControls"

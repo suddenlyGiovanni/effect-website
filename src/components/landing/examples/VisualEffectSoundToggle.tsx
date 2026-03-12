@@ -1,6 +1,6 @@
 import { Volume2, VolumeX } from "lucide-react"
 import * as React from "react"
-import type { SoundPreference } from "@/lib/examples/sound"
+import type { SoundPreference } from "@/lib/visual-effect/sound"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 import { useSoundControls, useSoundSettings } from "./VisualEffectProvider"

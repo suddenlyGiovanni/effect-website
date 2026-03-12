@@ -1,8 +1,12 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as Equal from "effect/Equal"
 import * as React from "react"
-import type { ExampleControl, ExampleDefinition, StepDefinition } from "@/lib/examples/constructors"
-import type { SoundPreference } from "@/lib/examples/sound"
+import type {
+  ExampleControl,
+  ExampleDefinition,
+  StepDefinition,
+} from "@/lib/visual-effect/constructors"
+import type { SoundPreference } from "@/lib/visual-effect/sound"
 import {
   playControlChangedSoundAtom,
   resetExampleAtom,

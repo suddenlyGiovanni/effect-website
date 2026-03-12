@@ -8,7 +8,7 @@ import type {
   TimelineSegment,
   VisualEffectScheduleTimeline,
   VisualEffectState,
-} from "@/lib/examples/domain"
+} from "@/lib/visual-effect/domain"
 import { cn } from "@/lib/utils"
 import { useExampleState, useScheduleTime, useScheduleTimeline } from "./VisualEffectProvider"
 

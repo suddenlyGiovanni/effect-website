@@ -1,4 +1,4 @@
-import type { ExampleDefinition } from "@/lib/examples/constructors"
+import type { ExampleDefinition } from "@/lib/visual-effect/constructors"
 import { allExample } from "./catalog/effect-all"
 import { allShortCircuitExample } from "./catalog/effect-all-short-circuit"
 import { acquireReleaseExample } from "./catalog/effect-acquirerelease"

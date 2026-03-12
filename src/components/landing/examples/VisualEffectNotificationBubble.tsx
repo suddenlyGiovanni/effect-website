@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority"
 import { constVoid } from "effect/Function"
 import { animate, AnimatePresence, useMotionValue, useReducedMotion } from "motion/react"
 import * as React from "react"
-import type { VisualEffectNotification } from "@/lib/examples/domain"
+import type { VisualEffectNotification } from "@/lib/visual-effect/domain"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 

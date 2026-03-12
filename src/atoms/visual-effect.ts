@@ -2,8 +2,8 @@ import * as BrowserKeyValueStore from "@effect/platform-browser/BrowserKeyValueS
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Atom from "effect/unstable/reactivity/Atom"
-import type { ExampleDefinition } from "@/lib/examples/constructors"
-import { SoundPreference, type SoundSettings } from "@/lib/examples/sound"
+import type { ExampleDefinition } from "@/lib/visual-effect/constructors"
+import { SoundPreference, type SoundSettings } from "@/lib/visual-effect/sound"
 import { SoundManager } from "@/services/SoundManager"
 import { VisualEffectManager } from "@/services/VisualEffectManager"
 

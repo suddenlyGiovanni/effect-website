@@ -1,6 +1,6 @@
 import type { ThemedToken } from "shiki/types"
 import { createHighlighter, type Highlighter } from "shiki"
-import type { SnippetLanguage } from "@/lib/examples/snippet-highlights"
+import type { SnippetLanguage } from "@/lib/visual-effect/snippet-highlights"
 import { effectShikiTheme } from "./shiki-theme"
 
 let highlighterPromise: Promise<Highlighter> | undefined = undefined

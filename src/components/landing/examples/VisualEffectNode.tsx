@@ -9,7 +9,7 @@ import {
   type Variants,
 } from "motion/react"
 import * as React from "react"
-import type { VisualEffectNotification, VisualEffectState } from "@/lib/examples/domain"
+import type { VisualEffectNotification, VisualEffectState } from "@/lib/visual-effect/domain"
 import { type EffectMotionValues } from "@/hooks/animation/useEffectMotionValues"
 import { COLORS, SHADOW_COLORS, SPRINGS, VFX } from "@/lib/animation"
 import { cn } from "@/lib/utils"

@@ -5,9 +5,9 @@ import {
   resetExampleSilentlyAtom,
   stopAllSoundAtom,
 } from "@/atoms/visual-effect"
-import type { ExampleDefinition } from "@/lib/examples/constructors"
+import type { ExampleDefinition } from "@/lib/visual-effect/constructors"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { type ExampleCategory, EXAMPLES_CATALOG } from "@/lib/examples/catalog"
+import { type ExampleCategory, EXAMPLES_CATALOG } from "@/lib/visual-effect/catalog"
 import { cn } from "@/lib/utils"
 import { VisualEffect } from "./VisualEffect"
 import { VisualEffectSoundToggle } from "./VisualEffectSoundToggle"

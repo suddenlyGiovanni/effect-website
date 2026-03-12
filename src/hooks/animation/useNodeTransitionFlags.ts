@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react"
-import type { VisualEffectState } from "@/lib/examples/domain"
+import type { VisualEffectState } from "@/lib/visual-effect/domain"
 
 export interface TransitionFlags {
   readonly justStarted: boolean

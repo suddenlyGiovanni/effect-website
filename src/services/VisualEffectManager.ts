@@ -21,7 +21,7 @@ import {
   VisualFinalizers,
   type ExampleDefinition,
   type StepDefinition,
-} from "@/lib/examples/constructors"
+} from "@/lib/visual-effect/constructors"
 import {
   InitialFinalizerPanelState,
   makeTimelineSegment,
@@ -33,8 +33,8 @@ import {
   type VisualFinalizerState,
   type VisualEffectNotification,
   type VisualEffectScheduleTimeline,
-} from "@/lib/examples/domain"
-import { visualEffectExampleCueStepId } from "@/lib/examples/sound"
+} from "@/lib/visual-effect/domain"
+import { visualEffectExampleCueStepId } from "@/lib/visual-effect/sound"
 import { SoundManager } from "@/services/SoundManager"
 
 export const exampleStateAtom = Atom.family((_definition: ExampleDefinition) =>

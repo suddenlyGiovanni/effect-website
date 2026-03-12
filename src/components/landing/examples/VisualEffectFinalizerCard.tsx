@@ -1,7 +1,7 @@
 import { AlertTriangle, Check, OctagonMinus, Square } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import * as React from "react"
-import type { VisualFinalizerEntry } from "@/lib/examples/domain"
+import type { VisualFinalizerEntry } from "@/lib/visual-effect/domain"
 
 const CARD_WIDTH = 200
 

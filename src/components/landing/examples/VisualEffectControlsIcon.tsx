@@ -6,7 +6,7 @@ import {
   type TargetAndTransition,
   type Transition,
 } from "motion/react"
-import type { VisualEffectState } from "@/lib/examples/domain"
+import type { VisualEffectState } from "@/lib/visual-effect/domain"
 
 export function VisualEffectControlsIcon({
   isHovered,
