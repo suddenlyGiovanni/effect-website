@@ -81,6 +81,7 @@ function VisualEffectNodes({
       className="border-b bg-background p-6"
       initial={false}
       animate={{ borderColor }}
+      onPointerLeave={() => onHoverTargetChange(null)}
       transition={{ borderColor: { duration: 0.2, ease: "easeInOut" } }}
     >
       <div className="flex items-center justify-start gap-6">
@@ -129,8 +130,8 @@ export function VisualEffectStepNode({
     <VisualEffectNode
       label={definition.label}
       motionValues={motionValues}
-      onMouseEnter={() => onHoverTargetChange(target)}
-      onMouseLeave={() => onHoverTargetChange(null)}
+      onPointerEnter={() => onHoverTargetChange(target)}
+      onPointerLeave={() => onHoverTargetChange(null)}
       state={stepState}
       scope={scope}
     />
@@ -158,8 +159,8 @@ export function VisualEffectResultNode({
     <VisualEffectNode
       label="result"
       motionValues={motionValues}
-      onMouseEnter={() => onHoverTargetChange(snippetResultTargetKey)}
-      onMouseLeave={() => onHoverTargetChange(null)}
+      onPointerEnter={() => onHoverTargetChange(snippetResultTargetKey)}
+      onPointerLeave={() => onHoverTargetChange(null)}
       state={exampleState}
       scope={scope}
     />

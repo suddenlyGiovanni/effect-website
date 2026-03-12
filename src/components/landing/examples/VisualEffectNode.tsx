@@ -20,39 +20,39 @@ const FILTER_TRANSITION = { duration: 0.16, ease: "easeOut" } as const
 export function VisualEffectNode({
   label,
   motionValues,
-  onMouseEnter,
-  onMouseLeave,
+  onPointerEnter,
+  onPointerLeave,
   scope,
   state,
 }: {
   readonly label: string
   readonly motionValues: EffectMotionValues
-  readonly onMouseEnter?: React.MouseEventHandler<HTMLDivElement>
-  readonly onMouseLeave?: React.MouseEventHandler<HTMLDivElement>
+  readonly onPointerEnter?: React.PointerEventHandler<HTMLDivElement>
+  readonly onPointerLeave?: React.PointerEventHandler<HTMLDivElement>
   readonly scope: AnimationScope
   readonly state: VisualEffectState
 }) {
   const [isHovered, setIsHovered] = React.useState(false)
   const notificationPresentation = useVisibleNotification(state, isHovered)
 
-  const handleMouseEnter = React.useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerEnter = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
       setIsHovered(true)
-      onMouseEnter?.(event)
+      onPointerEnter?.(event)
     },
-    [onMouseEnter],
+    [onPointerEnter],
   )
 
-  const handleMouseLeave = React.useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerLeave = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
       setIsHovered(false)
-      onMouseLeave?.(event)
+      onPointerLeave?.(event)
     },
-    [onMouseLeave],
+    [onPointerLeave],
   )
 
   return (
-    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div>
       <motion.div
         className="relative flex h-14 items-center justify-center"
         style={{ width: motionValues.nodeWidth }}
@@ -61,6 +61,8 @@ export function VisualEffectNode({
           notification={notificationPresentation?.notification}
           scope={scope}
           motionValues={motionValues}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
           state={state}
           variant={notificationPresentation?.variant}
         >
@@ -150,12 +152,16 @@ function VisualEffectContainer({
   notification,
   scope,
   motionValues,
+  onPointerEnter,
+  onPointerLeave,
   state,
   variant,
 }: React.PropsWithChildren<{
   readonly notification: VisualEffectNotification | undefined
   readonly scope: AnimationScope
   readonly motionValues: EffectMotionValues
+  readonly onPointerEnter: React.PointerEventHandler<HTMLDivElement>
+  readonly onPointerLeave: React.PointerEventHandler<HTMLDivElement>
   readonly state: VisualEffectState
   readonly variant?: "info" | "failure" | "death"
 }>) {
@@ -184,6 +190,8 @@ function VisualEffectContainer({
         variants={VISUAL_EFFECT_NODE_VARIANTS}
         animate={state._tag}
         initial={false}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
         style={{
           width: motionValues.nodeWidth,
           height: motionValues.nodeHeight,

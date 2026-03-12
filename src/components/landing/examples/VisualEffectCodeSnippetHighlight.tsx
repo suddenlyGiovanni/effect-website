@@ -18,7 +18,14 @@ export function VisualEffectCodeSnippetHighlight({
   readonly ranges: ReadonlyArray<ResolvedOffsetRange>
 }) {
   const [rect, setRect] = React.useState<HighlightRect | null>(null)
+  const [displayRect, setDisplayRect] = React.useState<HighlightRect | null>(null)
   const reduceMotion = useReducedMotion()
+
+  React.useEffect(() => {
+    if (rect !== null) {
+      setDisplayRect(rect)
+    }
+  }, [rect])
 
   React.useLayoutEffect(() => {
     const container = containerRef.current
@@ -117,25 +124,45 @@ export function VisualEffectCodeSnippetHighlight({
     }
   }, [containerRef, ranges])
 
-  const transition = reduceMotion ? { duration: 0.12 } : SPRINGS.default
+  const opacityTransition = reduceMotion
+    ? { duration: 0.12 }
+    : { duration: 0.18, ease: "easeOut" as const }
+  const geometryTransition = reduceMotion ? { duration: 0.12 } : SPRINGS.default
+
+  if (displayRect === null) {
+    return null
+  }
 
   return (
     <motion.div
       aria-hidden="true"
       className="pointer-events-none absolute top-0 left-0 z-10 rounded-md"
-      initial={false}
-      animate={
-        rect
-          ? {
-              opacity: 1,
-              x: rect.x,
-              y: rect.y,
-              width: rect.width,
-              height: rect.height,
-            }
-          : { opacity: 0 }
-      }
-      transition={transition}
+      initial={{
+        opacity: 0,
+        x: displayRect.x,
+        y: displayRect.y,
+        width: displayRect.width,
+        height: displayRect.height,
+      }}
+      animate={{
+        opacity: rect === null ? 0 : 1,
+        x: displayRect.x,
+        y: displayRect.y,
+        width: displayRect.width,
+        height: displayRect.height,
+      }}
+      transition={{
+        opacity: opacityTransition,
+        x: geometryTransition,
+        y: geometryTransition,
+        width: geometryTransition,
+        height: geometryTransition,
+      }}
+      onAnimationComplete={() => {
+        if (rect === null) {
+          setDisplayRect(null)
+        }
+      }}
       style={{
         background: "rgba(56, 189, 248, 0.15)",
         border: "1px solid rgba(56, 189, 248, 0.6)",
