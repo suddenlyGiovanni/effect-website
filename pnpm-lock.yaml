@@ -35,6 +35,15 @@ importers:
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
+      '@shikijs/core':
+        specifier: 4.0.2
+        version: 4.0.2
+      '@shikijs/engine-javascript':
+        specifier: 4.0.2
+        version: 4.0.2
+      '@shikijs/langs':
+        specifier: 4.0.2
+        version: 4.0.2
       '@tailwindcss/typography':
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.2.1)

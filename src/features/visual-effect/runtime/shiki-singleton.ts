@@ -1,21 +1,29 @@
 import type { ThemedToken } from "shiki/types"
-import { createHighlighter, type Highlighter } from "shiki"
+import type { HighlighterCore } from "@shikijs/core"
 import type { SnippetLanguage } from "@/features/visual-effect/model/snippet-highlights"
 import { effectShikiTheme } from "./shiki-theme"
 
-let highlighterPromise: Promise<Highlighter> | undefined = undefined
+let highlighterPromise: Promise<HighlighterCore> | undefined = undefined
 
 const tokensBySnippetKey = new Map<string, Promise<ReadonlyArray<ReadonlyArray<ThemedToken>>>>()
 
-export const getHighlighter = (): Promise<Highlighter> => {
+export const getHighlighter = (): Promise<HighlighterCore> => {
   if (highlighterPromise !== undefined) {
     return highlighterPromise
   }
 
-  highlighterPromise = createHighlighter({
-    themes: [effectShikiTheme],
-    langs: ["typescript", "javascript"],
-  })
+  highlighterPromise = Promise.all([
+    import("@shikijs/core"),
+    import("@shikijs/engine-javascript"),
+    import("@shikijs/langs/typescript"),
+    import("@shikijs/langs/javascript"),
+  ]).then(([{ createHighlighterCore }, { createJavaScriptRegexEngine }, typescript, javascript]) =>
+    createHighlighterCore({
+      themes: [effectShikiTheme],
+      langs: [typescript, javascript],
+      engine: createJavaScriptRegexEngine(),
+    }),
+  )
 
   return highlighterPromise
 }
