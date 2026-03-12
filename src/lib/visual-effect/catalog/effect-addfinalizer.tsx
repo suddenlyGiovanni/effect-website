@@ -141,8 +141,13 @@ export const addFinalizerExample = defineExample({
               }),
             ),
           )
-        case "interrupt":
+        case "interrupt": {
+          yield* Effect.sleep("2 seconds")
+          yield* notifications.notify("⚠️ Interrupt Me! ⚠️", {
+            duration: "365 days",
+          })
           return yield* Effect.never.pipe(Effect.as(new PrimitiveResult("Never Happens")))
+        }
       }
     })
 

@@ -112,10 +112,9 @@ export const acquireReleaseExample = defineExample({
         default: {
           yield* Effect.sleep("500 millis")
           yield* notifications.notify("Interrupt Me!", {
-            duration: "5 seconds",
-            showOnHover: true,
+            duration: "365 days",
           })
-          return new PrimitiveResult("Interrupted")
+          return yield* Effect.never.pipe(Effect.as(new PrimitiveResult("Interrupted")))
         }
       }
     })

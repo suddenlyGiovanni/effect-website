@@ -100,6 +100,7 @@ function useVisibleNotification(
     setVisibleNotification(semanticNotification)
 
     const notificationDuration = Duration.toMillis(semanticNotification.notification.duration)
+    console.log({ notificationDuration })
 
     const timeout = window.setTimeout(() => {
       setVisibleNotification((current) =>
