@@ -54,10 +54,10 @@ export const LANDING_NAVIGATION_LINKS: ReadonlyArray<NavigationLink> = [
     cta: "none",
   },
   {
-    id: "podcasts",
+    id: "podcast",
     kind: "internal",
-    label: "Podcasts",
-    href: "/podcasts/",
+    label: "Podcast",
+    href: "/podcast/",
     group: "primary",
     surfaces: ["desktop", "mobile"],
     cta: "none",

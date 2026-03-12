@@ -3,7 +3,7 @@ import SkipLink from "@/components/SkipLink.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
 import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
-import { FEATURED_EPISODES, type FeaturedEpisode } from "@/lib/podcast/featured-episodes"
+import { FEATURED_EPISODES, type FeaturedEpisode } from "@/features/podcast/data/featured-episodes"
 
 export const getStaticPaths = () => {
   return FEATURED_EPISODES.map((featuredEpisode) => {

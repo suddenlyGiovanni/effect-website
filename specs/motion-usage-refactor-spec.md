@@ -98,7 +98,7 @@ Use a single controller hook with `useAnimate` and central cleanup registry.
 Use runtime `state._tag` directly for animation selection, plus transition flags.
 
 ```ts
-import type { VisualEffectState } from "@/atoms/visual-effect"
+import type { VisualEffectState } from "@/features/visual-effect/state/atoms"
 
 export type NodeTag = VisualEffectState["_tag"]
 
@@ -393,7 +393,7 @@ export function useEffectMotionValues(): EffectMotionValues {
 
 ```ts
 import * as React from "react"
-import type { VisualEffectState } from "@/atoms/visual-effect"
+import type { VisualEffectState } from "@/features/visual-effect/state/atoms"
 
 export interface TransitionFlags {
   readonly justStarted: boolean
@@ -442,7 +442,7 @@ import {
 } from "motion/react"
 import type { EffectMotionValues } from "./useEffectMotionValues"
 import type { TransitionFlags } from "./useNodeTransitionFlags"
-import type { VisualEffectState } from "@/atoms/visual-effect"
+import type { VisualEffectState } from "@/features/visual-effect/state/atoms"
 import { SPRINGS, TIMINGS } from "@/lib/animation"
 
 interface NodeAnimationControllerInput {
@@ -603,7 +603,7 @@ export function useEffectNodeAnimationController(input: NodeAnimationControllerI
 ```ts
 import type { Variants } from "motion/react"
 import { COLORS, SPRINGS } from "@/lib/animation"
-import type { VisualEffectState } from "@/atoms/visual-effect"
+import type { VisualEffectState } from "@/features/visual-effect/state/atoms"
 
 export const effectNodeVariants: Record<VisualEffectState["_tag"], Variants[string]> = {
   Idle: {
