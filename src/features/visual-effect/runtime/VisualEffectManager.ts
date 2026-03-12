@@ -17,23 +17,8 @@ import { SoundManager } from "@/features/visual-effect/runtime/SoundManager"
 import { exitToState, setStateNotification } from "./notifications"
 import { makeDispatchFinalizerEvent, makeVisualFinalizers } from "./finalizers"
 import { playExampleTransition, playStepTransition } from "./sound-transitions"
-import {
-  exampleStateAtom,
-  scheduleTimeAtom,
-  scheduleTimelineAtom,
-  stepStateAtom,
-  type ResetOptions,
-} from "./state"
+import { exampleStateAtom, scheduleTimeAtom, scheduleTimelineAtom, stepStateAtom, type ResetOptions } from "./state"
 import { scheduleTimer, updateScheduleTimeline } from "./timeline"
-
-export {
-  exampleStateAtom,
-  finalizersAtom,
-  scheduleTimeAtom,
-  scheduleTimelineAtom,
-  stepStateAtom,
-  type ResetOptions,
-} from "./state"
 
 export class VisualEffectManager extends ServiceMap.Service<
   VisualEffectManager,

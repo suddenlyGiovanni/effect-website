@@ -17,10 +17,10 @@ import {
 import {
   exampleStateAtom,
   finalizersAtom,
-  stepStateAtom,
   scheduleTimelineAtom,
   scheduleTimeAtom,
-} from "@/features/visual-effect/runtime/VisualEffectManager"
+  stepStateAtom,
+} from "@/features/visual-effect/runtime/state"
 
 // =============================================================================
 // Example Definition Context
