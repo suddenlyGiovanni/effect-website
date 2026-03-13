@@ -1,5 +1,9 @@
 ---
-import { ArrowRight, GitFork, History, Layers, VectorSquare } from "@lucide/astro"
+import { Image } from "astro:assets"
+import { ArrowRight, ArrowUpRight, GitFork, History, Layers, VectorSquare } from "@lucide/astro"
+import EffectLogo from "@/assets/logos/effect/combination-mark/svg/effect-logo-white.svg"
+import MasterclassLogo from "@/assets/logos/masterclass/Masterclass.svg"
+import _14aiLogo from "@/assets/logos/14ai/14ai.svg"
 import GitHubIcon from "@/assets/logos/github/GitHub.svg"
 ---
 
@@ -38,7 +42,7 @@ import GitHubIcon from "@/assets/logos/github/GitHub.svg"
       </div>
     </div>
 
-    <div class="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0">
+    <div class="mb-8 lg:mb-12 px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0">
       <div class="flex flex-col pr-8 pl-4 lg:pl-0 lg:border-r lg:border-dashed lg:border-zinc-700">
         <VectorSquare class="size-5 mb-2 text-lg text-zinc-300"/>
         <h3 class="text-base">Type-safe data flows</h3>
@@ -74,34 +78,74 @@ import GitHubIcon from "@/assets/logos/github/GitHub.svg"
     </div>
 
     <!-- Features -->
-    <div class="mt-16 px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- Card -->
-      <div class="relative flex flex-col bg-card hover:bg-zinc-900 border border-secondary hover:border-secondary/90 rounded-lg overflow-hidden transition-colors">
+    <div class="px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="group relative flex flex-col bg-card hover:bg-zinc-900 border border-secondary hover:border-secondary/90 rounded-lg overflow-hidden transition-colors cursor-pointer">
         <!-- Decorative Accent Line -->
-        <div class="absolute top-0 right-0 left-0 h-0.5 bg-violet-500" aria-hidden="true" />
+        <div class="pointer-events-none absolute top-0 right-0 left-0 h-0.5 bg-violet-500" aria-hidden="true" />
         <!-- Decorative Gradient Background -->
-        <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_100%_at_100%_100%,rgba(139,92,246,0.4)_0%,rgba(168,85,247,0.2)_40%,transparent_70%)] group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_100%_at_100%_100%,rgba(139,92,246,0.4)_0%,rgba(168,85,247,0.2)_40%,transparent_70%)] group-hover:opacity-100 transition-opacity" aria-hidden="true" />
         <!-- Content -->
-        <div class="flex flex-col gap-4 p-8">
-          <h4 class="transition-colors">
+        <div class="relative flex flex-col gap-4 p-8">
+          <!-- Title -->
+          <h4>
             <a 
-              class="after:absolute after:content-[''] after:inset-0 after:z-1 no-underline cursor-pointer group transition-colors"
+              class="after:absolute after:content-[''] after:-inset-px after:z-1 no-underline"
               href=""
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span class="text-sm text-muted-foreground font-mono font-medium uppercase group-hover:text-white">
+              <span class="text-sm text-muted-foreground font-mono font-medium uppercase group-hover:text-white transition-colors">
                 // Voice AI Orchestration Layer
               </span>
             </a>
           </h4>
-
+          <!-- Dashed Divider -->
+          <div class="w-full h-px bg-[repeating-linear-gradient(to_right,rgb(39_39_42)_0px,rgb(39_39_42)_2px,transparent_2px,transparent_4px)]" aria-hidden="true"/>
+          <!-- Logos -->
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-5">
+              <Image class="h-6 w-auto" src={EffectLogo} alt="Effect Logo" />
+              <span class="text-zinc-600">&vert;</span>
+              <Image class="h-4 w-auto" src={MasterclassLogo} alt="Masterclass Logo" />
+            </div>
+            <ArrowUpRight class="size-4" />
+          </div>
         </div>
+      </div>
 
-
+      <div class="group relative flex flex-col bg-card hover:bg-zinc-900 border border-secondary hover:border-secondary/90 rounded-lg overflow-hidden transition-colors cursor-pointer">
+        <!-- Decorative Accent Line -->
+        <div class="pointer-events-none absolute top-0 right-0 left-0 h-0.5 bg-emerald-400" aria-hidden="true" />
+        <!-- Decorative Gradient Background -->
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_100%_at_100%_100%,rgba(16,185,129,0.35)_0%,rgba(52,211,153,0.2)_40%,transparent_70%)] group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+        <!-- Content -->
+        <div class="relative flex flex-col gap-4 p-8">
+          <!-- Title -->
+          <h4>
+            <a 
+              class="after:absolute after:content-[''] after:-inset-px after:z-1 no-underline"
+              href=""
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="text-sm text-muted-foreground font-mono font-medium uppercase group-hover:text-white transition-colors">
+                // AI for Customer Support
+              </span>
+            </a>
+          </h4>
+          <!-- Dashed Divider -->
+          <div class="w-full h-px bg-[repeating-linear-gradient(to_right,rgb(39_39_42)_0px,rgb(39_39_42)_2px,transparent_2px,transparent_4px)]" aria-hidden="true"/>
+          <!-- Logos -->
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-5">
+              <Image class="h-6 w-auto" src={EffectLogo} alt="Effect Logo" />
+              <span class="text-zinc-600">&vert;</span>
+              <Image class="h-4 w-auto" src={_14aiLogo} alt="14.ai Logo" />
+            </div>
+            <ArrowUpRight class="size-4" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
-
-
