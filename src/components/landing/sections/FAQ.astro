@@ -1,0 +1,38 @@
+---
+import DiscordLogo from "@/assets/logos/discord/Discord.svg"
+import FrequentlyAskedQuestions from "../blocks/FrequentlyAskedQuestions"
+---
+
+<section id="faq" class="relative w-full py-24 md:pt-40 md:pb-24">
+  <div class="mx-auto w-full max-w-295 px-4">
+    <div class="mb-5">
+      <p class="mb-3 font-mono text-sm text-muted-foreground font-medium uppercase tracking-wider">
+        // FAQ
+      </p>
+      <h2 class="max-w-lg text-3xl md:text-4xl font-semibold text-white leading-tight">
+        Questions we get asked a lot
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2">
+      <div>
+        <p class="max-w-lg text-xl text-muted-foreground leading-relaxed">
+          Can&apos;t find what you&apos;re looking for&quest; Our community is always happy to help&excl;
+        </p>
+        <a 
+          class="inline-flex justify-center items-center gap-4 mt-5 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:border-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-50 rounded-md no-underline group"
+          href="https://discord.gg/effect-ts"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <DiscordLogo class="size-4" fill="currentColor" />
+          <span>Ask us on Discord</span>
+        </a>
+      </div>
+
+      <div class="mt-8 md:mt-0 md:ml-4">
+        <FrequentlyAskedQuestions client:load />
+      </div>
+    </div>
+  </div>
+</section>

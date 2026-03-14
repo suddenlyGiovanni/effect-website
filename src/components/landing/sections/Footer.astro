@@ -1,0 +1,217 @@
+---
+import { Image } from "astro:assets"
+import EffectLogoBlack from "@/assets/logos/effect/combination-mark/svg/effect-logo-black.svg"
+import EffectLogoWhite from "@/assets/logos/effect/combination-mark/svg/effect-logo-white.svg"
+import BlueSkyLogo from "@/assets/logos/bluesky/BlueSky.svg"
+import DiscordLogo from "@/assets/logos/discord/Discord.svg"
+import GitHubLogo from "@/assets/logos/github/GitHub.svg"
+import LinkedInLogo from "@/assets/logos/linkedin/LinkedIn.svg"
+import TwitterLogo from "@/assets/logos/twitter/Twitter.svg"
+import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg"
+import FooterLink from "./FooterLink.astro"
+
+const SOCIAL_LINKS = [
+  {
+    ariaLabel: "Follow Effect on X (Twitter)",
+    href: "https://x.com/EffectTS_",
+    icon: TwitterLogo,
+  },
+  {
+    ariaLabel: "Subscribe to Effect on YouTube",
+    href: "https://www.youtube.com/@EffectTS",
+    icon: YouTubeLogo
+  },
+  {
+    ariaLabel: "Visit Effect on GitHub",
+    href: "https://github.com/Effect-TS",
+    icon: GitHubLogo
+  },
+  {
+    ariaLabel: "Join Effect Discord server",
+    href: "https://discord.gg/effect-ts",
+    icon: DiscordLogo
+  },
+  {
+    ariaLabel: "Follow Effect on Bluesky",
+    href: "https://bsky.app/profile/effect-ts.bsky.social",
+    icon: BlueSkyLogo
+  },
+  {
+    ariaLabel: "Follow Effect on LinkedIn",
+    href: "https://www.linkedin.com/company/effect-ts",
+    icon: LinkedInLogo
+  },
+]
+---
+
+<footer class="relative w-full py-16 md:px-8 md:py-20">
+  <!-- Background Gradient  -->
+  <div 
+    class="absolute inset-0 hidden dark:block bg-linear-to-b from-zinc-950/0 via-zinc-950/0 to-zinc-900/50 pointer-events-none" 
+    aria-hidden="true" 
+  />
+
+  <div class="mx-auto w-full max-w-295 px-4">
+    <div class="flex flex-col">
+      <!-- Links -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-0 gap-y-8 mb-12 md:mb-20">
+        <div class="flex flex-1 flex-col gap-4 lg:pl-4">
+			    <h3 class="text-sm text-zinc-900 dark:text-zinc-100 font-mono font-semibold uppercase">
+						Resources
+					</h3>
+          <ul class="flex flex-col items-start m-0 p-0 gap-2 list-none">
+            <li>
+              <FooterLink href="/docs/">Documentation</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="/docs/additional-resources/api-reference/">API Reference</FooterLink>
+            </li>
+          </ul>
+        </div>
+        <div class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800">
+			    <h3 class="text-sm text-zinc-900 dark:text-zinc-100 font-mono font-semibold uppercase">
+						DevTools
+					</h3>
+          <ul class="flex flex-col items-start m-0 p-0 gap-2 list-none">
+            <li>
+              <FooterLink href="/play/">Effect Playground</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="https://github.com/Effect-TS/language-service">Effect LSP</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="https://marketplace.visualstudio.com/items?itemName=effectful-tech.effect-vscode">Effect VSCode Extension</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="https://effect.solutions/">Effect Solutions</FooterLink>
+            </li>
+					</ul>
+        </div>
+        <div class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800">
+          <h3 class="font-mono font-semibold text-sm text-zinc-900 uppercase dark:text-zinc-100">
+            Community
+          </h3>
+          <ul class="flex flex-col items-start m-0 p-0 gap-2 list-none">
+            <li>
+              <FooterLink href="/podcast/">Podcast</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="/events/">Events &amp; Meetups</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="/merch/">Effect Merch</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="/community/resources/">Community Resources</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="https://discord.gg/effect-ts/">Discord</FooterLink>
+            </li>
+          </ul>
+        </div>
+        <div class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800">
+          <h3 class="font-mono font-semibold text-sm text-zinc-900 uppercase dark:text-zinc-100">
+            Other
+          </h3>
+          <ul class="flex flex-col items-start m-0 p-0 gap-2 list-none">
+            <li>
+              <FooterLink href="/blog/">Blog</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="/additional-resources/myths/">Myths about Effect</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="/brand-guidelines/">Brand Guidelines</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="https://www.youtube.com/playlist?list=PLDf3uQLaK2B9vHzUNyvOSvoMv61LW7792">Workshops</FooterLink>
+            </li>
+            <li>
+              <FooterLink href="https://effectful.co/">Effectful</FooterLink>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Social & Branding -->
+      <div class="flex flex-col gap-10 md:gap-8">
+        <!-- Top Border -->
+				<hr class="mx-4 h-px bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
+
+				<div class="flex flex-col items-center gap-8 md:grid md:grid-cols-3">
+          <!-- Logo -->
+          <div class="md:pl-4">
+            <a href="/" aria-label="Go to Effect homepage">
+              <Image 
+                class="block h-7 w-auto dark:hidden"
+                src={EffectLogoBlack}
+                alt="Effect Logo"
+              />
+              <Image 
+                class="block h-7 w-auto dark:block"
+                src={EffectLogoWhite}
+                alt="Effect Logo"
+              />
+            </a>
+          </div>
+
+          <!-- Social Icons -->
+          <div class="flex items-center justify-center gap-6 md:gap-5">
+            {SOCIAL_LINKS.map(({ ariaLabel, href, icon: Icon }) => {
+              return (
+                <a 
+                  class="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+                  href={href} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label={ariaLabel}
+                >
+                  <Icon class="size-6" fill="currentColor" />
+                </a>
+              )
+            })}
+          </div>
+
+          <div class="md:pr-4 md:text-right">
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+              MIT Licensed
+            </p>
+          </div>
+        </div>
+
+        <!-- Bottom Border -->
+        <hr class="h-px mx-4 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
+      </div>
+
+      <!-- Copyright -->
+      <div class="flex flex-col items-center justify-between gap-4 px-4 pt-10 pb-16 md:flex-row md:gap-8 md:pt-8 md:pb-16">
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+          © {new Date().getFullYear()} Effectful Technologies Inc. All
+          rights reserved.
+        </p>
+        <div class="flex items-center gap-5">
+          <div class="flex items-center gap-4">
+            <FooterLink
+              href="mailto:contact@effectful.co"
+              class="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+            >
+              Email Us
+            </FooterLink>
+            <FooterLink
+              href="#"
+              class="border-b border-transparent text-sm font-medium text-zinc-600 transition-colors hover:border-current hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+            >
+              Terms
+            </FooterLink>
+            <FooterLink
+              href="#"
+              class="border-b border-transparent text-sm font-medium text-zinc-600 transition-colors hover:border-current hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              >
+              Privacy
+            </FooterLink>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

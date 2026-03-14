@@ -12,8 +12,8 @@ import PnpmIcon from "@/assets/logos/pnpm/Pnpm.svg"
 import YarnIcon from "@/assets/logos/yarn/Yarn.svg"
 ---
 
-<effect-install-command class="block px-1 rounded-md ring ring-inset ring-zinc-700 bg-zinc-900/50 overflow-hidden">
-  <div role="tablist" aria-label="Install command package managers" class="flex border-b border-zinc-800">
+<effect-install-command class="block rounded-md border border-zinc-800 overflow-hidden">
+  <div role="tablist" aria-label="Install command package managers" class="flex bg-zinc-900 border-b border-zinc-800">
     {PACKAGE_MANAGERS.map((packageManager) => {
       const selected = packageManager === DEFAULT_PACKAGE_MANAGER
 
@@ -63,7 +63,7 @@ import YarnIcon from "@/assets/logos/yarn/Yarn.svg"
     })}
   </div>
 
-  <div id="install-command-panel" role="tabpanel" class="flex justify-between items-center px-5 py-2">
+  <div id="install-command-panel" role="tabpanel" class="flex justify-between items-center px-5 py-2 bg-zinc-950">
     <code data-role="command" class="truncate font-mono text-sm text-zinc-200">
       {getInstallCommand(DEFAULT_PACKAGE_MANAGER)}
     </code>
