@@ -3,11 +3,24 @@ import starlight from "@astrojs/starlight"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig, fontProviders } from "astro/config"
 
+import vercel from "@astrojs/vercel"
+
 const GoogleFontProvider = fontProviders.google()
 
 // https://astro.build/config
 export default defineConfig({
   site: "https://effect.website",
+
+  adapter: vercel(),
+
+  experimental: {
+    svgo: true,
+  },
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
+
   integrations: [
     react(),
     starlight({
@@ -32,6 +45,7 @@ export default defineConfig({
       ],
     }),
   ],
+
   fonts: [
     {
       provider: GoogleFontProvider,
@@ -49,10 +63,5 @@ export default defineConfig({
       fallbacks: ["ui-monospace", "SFMono-Regular", "monospace"],
     },
   ],
-  experimental: {
-    svgo: true,
-  },
-  vite: {
-    plugins: [tailwindcss()],
-  },
 })
+
