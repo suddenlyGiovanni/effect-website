@@ -2,9 +2,9 @@
 import { ArrowRight, Check } from "@lucide/astro"
 ---
 
-<section id="mental-model" class="relative w-full overflow-hidden py-24 md:pt-40 md:pb-24">
+<section id="mental-model" class="relative w-full overflow-hidden">
   <div class="relative mx-auto w-full max-w-295 px-4">
-    <div class="grid grid-cols-1 gap-12 md:grid-cols-2">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
       <div>
         <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
           // The Mental Model
@@ -34,7 +34,7 @@ import { ArrowRight, Check } from "@lucide/astro"
 
         <a
           href="/docs/"
-          class="group mt-8 inline-flex items-center gap-2 text-base font-medium text-white no-underline transition-colors hover:text-zinc-300 hover:no-underline"
+          class="group mt-4 md:mt-8 inline-flex items-center gap-2 text-base font-medium text-white no-underline transition-colors hover:text-zinc-300 hover:no-underline"
         >
           <span>Why Effect</span>
           <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -92,7 +92,7 @@ import { ArrowRight, Check } from "@lucide/astro"
             </div>
           </div>
 
-          <div class="mt-8 border border-zinc-700 bg-zinc-900/50 p-6 font-mono text-sm">
+          <div class="mt-4 md:mt-8 border border-zinc-700 bg-zinc-900/50 p-6 font-mono text-sm">
             <div class="mental-model-code-line">
               <span class="text-white">Effect</span><span class="text-zinc-500">.</span><span class="text-zinc-300">gen</span><span class="text-zinc-500">(</span><span class="text-violet-400">function*</span><span class="text-zinc-500">() {"{"}</span>
             </div>

@@ -1,6 +1,7 @@
 ---
-import InstallCommand from "@/components/landing/blocks/InstallCommand.astro"
 import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import EffectImport from "../blocks/EffectImport.astro"
+import InstallCommand from "../blocks/InstallCommand.astro"
 ---
 
 <section class="hero-section relative w-full overflow-hidden">
@@ -23,16 +24,9 @@ import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
 
   <div class="relative mx-auto w-full max-w-295 px-4 pt-20 md:pt-24">
     <div class="mx-auto max-w-4xl text-center">
-      <p class="mb-3 font-mono text-sm text-zinc-300 md:text-[1.1rem]">
-        <span class="text-violet-400">import</span>
-        <span>{" { "}</span>
-        <span class="text-white">Effect</span>
-        <span>{" } "}</span>
-        <span class="text-violet-400">from</span>
-        <span class="text-emerald-400">{' "effect"'}</span>
-      </p>
+      <EffectImport />
 
-      <h1 id={PAGE_TITLE_ID} class="text-4xl font-bold leading-tighter text-white md:text-[4rem]">
+      <h1 id={PAGE_TITLE_ID} class="text-4xl font-bold leading-tighter text-white md:text-6xl">
         The missing standard library for TypeScript applications
       </h1>
 
@@ -47,7 +41,7 @@ import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
     </div>
   </div>
 
-  <div class="relative z-10 mx-auto mt-12 w-full max-w-295 px-4 pb-20 md:pb-[96px]">
+  <div class="relative z-10 mx-auto mt-12 w-full max-w-295 px-4">
     <div class="mx-auto flex aspect-video max-w-5xl items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
       <div class="flex flex-col items-center gap-3 text-zinc-500">
         <svg viewBox="0 0 24 24" class="h-16 w-16" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">

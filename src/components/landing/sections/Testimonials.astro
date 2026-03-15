@@ -4,15 +4,17 @@ import { ArrowUpRight, Play } from "@lucide/astro"
 import { FEATURED_EPISODES, getPodcastEpisodeHref } from "@/features/podcast/data/featured-episodes"
 ---
 
-<section id="testimonials" class="relative w-full py-24 md:pt-40 md:pb-24">
+<section id="testimonials" class="relative w-full">
   <div class="relative mx-auto w-full max-w-295 px-4">
-    <div class="mb-12">
+    <div class="mb-8 md:mb-12">
       <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
         // Who uses Effect
       </p>
-      <h2 class="text-3xl font-semibold text-white md:text-4xl">Real-world production systems</h2>
+      <h2 class="text-3xl md:text-4xl text-white font-semibold">
+        Real-world production systems
+      </h2>
 
-      <div class="mt-8 flex flex-wrap items-center gap-6">
+      <div class="mt-4 md:mt-8 flex flex-wrap items-center gap-4 md:gap-6">
         <a href="/podcast/" class="inline-flex items-center gap-1 text-base font-medium text-zinc-300 no-underline transition-colors hover:text-white hover:no-underline">
           Cause & Effect Podcast
           <ArrowUpRight class="h-4 w-4" aria-hidden="true" />

@@ -1,0 +1,72 @@
+---
+import type { ImageMetadata } from "astro"
+import type { SvgComponent } from "astro/types"
+import BlueSkyLogo from "@/assets/logos/bluesky/BlueSky.svg"
+import DiscordLogo from "@/assets/logos/discord/Discord.svg"
+import GitHubLogo from "@/assets/logos/github/GitHub.svg"
+import LinkedInLogo from "@/assets/logos/linkedin/LinkedIn.svg"
+import TwitterLogo from "@/assets/logos/twitter/Twitter.svg"
+import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg"
+import { cn } from "@/lib/utils"
+
+type SocialVariant = 
+  | "bluesky"
+  | "discord"
+  | "github"
+  | "linkedin"
+  | "twitter"
+  | "youtube"
+
+interface Props {
+  readonly class?: string | undefined
+  readonly iconClass?: string | undefined
+  readonly variant: SocialVariant
+}
+
+const { class: className, iconClass, variant, ...props } = Astro.props
+
+const SOCIAL_DESCRIPTIONS: Record<SocialVariant, string> = {
+  bluesky: "Follow Effect on Bluesky",
+  discord: "Join the Effect Discord server",
+  github: "Contribute to Effect on GitHub",
+  linkedin: "Follow Effect on LinkedIn",
+  twitter: "Follow Effect on X (Twitter)",
+  youtube: "Subscribe to Effect on YouTube"
+}
+
+const SOCIAL_ICONS: Record<SocialVariant, SvgComponent & ImageMetadata> = {
+  bluesky: BlueSkyLogo,
+  discord: DiscordLogo,
+  github: GitHubLogo,
+  linkedin: LinkedInLogo,
+  twitter: TwitterLogo,
+  youtube: YouTubeLogo,
+}
+
+const SOCIAL_LINKS: Record<SocialVariant, string> = {
+  bluesky: "https://bsky.app/profile/effect-ts.bsky.social",
+  discord: "https://discord.gg/effect-ts",
+  github: "https://github.com/Effect-TS",
+  linkedin: "https://www.linkedin.com/company/effect-ts",
+  twitter: "https://x.com/EffectTS_",
+  youtube: "https://www.youtube.com/@EffectTS"
+}
+
+const ariaLabel = SOCIAL_DESCRIPTIONS[variant]
+const href = SOCIAL_LINKS[variant]
+const Icon = SOCIAL_ICONS[variant]
+---
+
+<a 
+  class={cn(
+    "text-muted-foreground hover:text-foreground transition-colors",
+    className
+  )} 
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label={ariaLabel}
+  {...props}
+>
+  <Icon class={cn("size-6", iconClass)} />
+</a>

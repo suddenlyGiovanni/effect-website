@@ -2,49 +2,11 @@
 import { Image } from "astro:assets"
 import EffectLogoBlack from "@/assets/logos/effect/combination-mark/svg/effect-logo-black.svg"
 import EffectLogoWhite from "@/assets/logos/effect/combination-mark/svg/effect-logo-white.svg"
-import BlueSkyLogo from "@/assets/logos/bluesky/BlueSky.svg"
-import DiscordLogo from "@/assets/logos/discord/Discord.svg"
-import GitHubLogo from "@/assets/logos/github/GitHub.svg"
-import LinkedInLogo from "@/assets/logos/linkedin/LinkedIn.svg"
-import TwitterLogo from "@/assets/logos/twitter/Twitter.svg"
-import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg"
+import SocialLink from "@/components/SocialLink.astro"
 import FooterLink from "./FooterLink.astro"
-
-const SOCIAL_LINKS = [
-  {
-    ariaLabel: "Follow Effect on X (Twitter)",
-    href: "https://x.com/EffectTS_",
-    icon: TwitterLogo,
-  },
-  {
-    ariaLabel: "Subscribe to Effect on YouTube",
-    href: "https://www.youtube.com/@EffectTS",
-    icon: YouTubeLogo
-  },
-  {
-    ariaLabel: "Visit Effect on GitHub",
-    href: "https://github.com/Effect-TS",
-    icon: GitHubLogo
-  },
-  {
-    ariaLabel: "Join Effect Discord server",
-    href: "https://discord.gg/effect-ts",
-    icon: DiscordLogo
-  },
-  {
-    ariaLabel: "Follow Effect on Bluesky",
-    href: "https://bsky.app/profile/effect-ts.bsky.social",
-    icon: BlueSkyLogo
-  },
-  {
-    ariaLabel: "Follow Effect on LinkedIn",
-    href: "https://www.linkedin.com/company/effect-ts",
-    icon: LinkedInLogo
-  },
-]
 ---
 
-<footer class="relative w-full py-16 md:px-8 md:py-20">
+<footer class="relative w-full">
   <!-- Background Gradient  -->
   <div 
     class="absolute inset-0 hidden dark:block bg-linear-to-b from-zinc-950/0 via-zinc-950/0 to-zinc-900/50 pointer-events-none" 
@@ -54,7 +16,7 @@ const SOCIAL_LINKS = [
   <div class="mx-auto w-full max-w-295 px-4">
     <div class="flex flex-col">
       <!-- Links -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-0 gap-y-8 mb-12 md:mb-20">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-0 gap-y-8 mb-8 md:mb-20">
         <div class="flex flex-1 flex-col gap-4 lg:pl-4">
 			    <h3 class="text-sm text-zinc-900 dark:text-zinc-100 font-mono font-semibold uppercase">
 						Resources
@@ -134,7 +96,7 @@ const SOCIAL_LINKS = [
       </div>
 
       <!-- Social & Branding -->
-      <div class="flex flex-col gap-10 md:gap-8">
+      <div class="flex flex-col gap-8 md:gap-10">
         <!-- Top Border -->
 				<hr class="mx-4 h-px bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
 
@@ -157,19 +119,12 @@ const SOCIAL_LINKS = [
 
           <!-- Social Icons -->
           <div class="flex items-center justify-center gap-6 md:gap-5">
-            {SOCIAL_LINKS.map(({ ariaLabel, href, icon: Icon }) => {
-              return (
-                <a 
-                  class="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
-                  href={href} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  aria-label={ariaLabel}
-                >
-                  <Icon class="size-6" fill="currentColor" />
-                </a>
-              )
-            })}
+            <SocialLink variant="twitter" />
+            <SocialLink variant="youtube" />
+            <SocialLink variant="github" />
+            <SocialLink variant="discord" />
+            <SocialLink variant="bluesky" />
+            <SocialLink variant="linkedin" />
           </div>
 
           <div class="md:pr-4 md:text-right">
@@ -184,7 +139,7 @@ const SOCIAL_LINKS = [
       </div>
 
       <!-- Copyright -->
-      <div class="flex flex-col items-center justify-between gap-4 px-4 pt-10 pb-16 md:flex-row md:gap-8 md:pt-8 md:pb-16">
+      <div class="flex flex-col items-center justify-between gap-4 md:gap-8 px-4 pt-8 pb-16 md:flex-row">
         <p class="text-sm text-zinc-600 dark:text-zinc-400">
           © {new Date().getFullYear()} Effectful Technologies Inc. All
           rights reserved.
