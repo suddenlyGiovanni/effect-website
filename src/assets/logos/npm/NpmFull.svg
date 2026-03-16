@@ -1,10 +1,15 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_814_3300)">
-<path d="M12.4004 13.1429H11.0671V10.5714H12.4004V13.1429ZM24.4004 8V15.7143H12.4004V17H7.06706V15.7143H0.400391V8H24.4004ZM7.06706 9.28571H1.73372V14.4286H4.40039V10.5714H5.73372V14.4286H7.06706V9.28571ZM13.7337 9.28571H8.40039V15.7143H11.0671V14.4286H13.7337V9.28571ZM23.0671 9.28571H15.0671V14.4286H17.7337V10.5714H19.0671V14.4286H20.4004V10.5714H21.7337V14.4286H23.0671V9.28571Z" fill="white"/>
-</g>
-<defs>
-<clipPath id="clip0_814_3300">
-<rect width="24" height="24" fill="white"/>
-</clipPath>
-</defs>
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <title>npm</title>
+  <g id="Layer_2" data-name="Layer 2">
+    <g id="invisible_box" data-name="invisible box">
+      <rect width="48" height="48" fill="none"/>
+    </g>
+    <g id="Q3_icons" data-name="Q3 icons">
+      <g>
+        <rect x="21.6" y="19.9" width="2.4" height="4.84"/>
+        <path d="M2,15V29.7H14.2v2.5H24V29.7H46V15ZM14.2,27.2H11.8V19.9H9.3v7.3H4.5V17.5h9.7Zm12.3,0H21.6v2.5H16.7V17.5h9.8Zm17.1,0H41.2V19.9H38.7v7.3H36.2V19.9H33.8v7.3H28.9V17.5H43.6Z"/>
+      </g>
+    </g>
+  </g>
 </svg>

@@ -8,7 +8,6 @@ import Footer from "@/components/Footer.astro"
 import GridRails from "@/components/GridRails.astro"
 import Link from "@/components/Link.astro"
 import SocialLink from "@/components/SocialLink.astro"
-import SkipLink from "@/components/SkipLink.astro"
 import SectionDivider from "@/components/layout/SectionDivider.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
 import EpisodeCard from "@/features/podcast/components/EpisodeCard.astro"
@@ -27,7 +26,6 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
   <DitheredOverlay />
 
   <div class="relative z-10">
-    <SkipLink />
     <Navigation />
     <GridRails />
 

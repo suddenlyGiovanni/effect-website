@@ -1,21 +1,51 @@
 ---
+import type { ImageMetadata } from "astro"
+import type { SvgComponent } from "astro/types"
 import { Check, Copy } from "@lucide/astro"
 import {
   DEFAULT_PACKAGE_MANAGER,
   getInstallCommand,
   PACKAGE_MANAGERS,
+  type PackageManager,
 } from "@/lib/install-command"
-import BunIcon from "@/assets/logos/bun/Bun.svg"
-import DenoIcon from "@/assets/logos/deno/Deno.svg"
-import NpmFullIcon from "@/assets/logos/npm/NpmFull.svg"
-import PnpmIcon from "@/assets/logos/pnpm/Pnpm.svg"
-import YarnIcon from "@/assets/logos/yarn/Yarn.svg"
+import BunLogo from "@/assets/logos/bun/Bun.svg"
+import DenoLogo from "@/assets/logos/deno/Deno.svg"
+import NpmFullLogo from "@/assets/logos/npm/NpmFull.svg"
+import PnpmLogo from "@/assets/logos/pnpm/Pnpm.svg"
+import YarnLogo from "@/assets/logos/yarn/Yarn.svg"
+
+const PACKAGE_MANAGER_ICONS: Record<PackageManager, {
+  readonly icon: ImageMetadata & SvgComponent
+  readonly className: string 
+}> = {
+  bun: { 
+    icon: BunLogo, 
+    className: "h-5 w-auto"
+  },
+  deno: { 
+    icon: DenoLogo, 
+    className: "h-5 w-auto"
+  },
+  npm: { 
+    icon: NpmFullLogo, 
+    className: "h-7 w-auto fill-white"
+  },
+  pnpm: { 
+    icon: PnpmLogo, 
+    className: "h-5 w-auto"
+  },
+  yarn: { 
+    icon: YarnLogo, 
+    className: "h-5 w-auto"
+  },
+}
 ---
 
 <effect-install-command class="block rounded-md border border-zinc-800 overflow-hidden">
   <div role="tablist" aria-label="Install command package managers" class="flex bg-zinc-900 border-b border-zinc-800">
     {PACKAGE_MANAGERS.map((packageManager) => {
       const selected = packageManager === DEFAULT_PACKAGE_MANAGER
+      const { className, icon: Icon } = PACKAGE_MANAGER_ICONS[packageManager]
 
       return (
         <button
@@ -30,26 +60,8 @@ import YarnIcon from "@/assets/logos/yarn/Yarn.svg"
             "relative flex-1 appearance-none border-0 bg-transparent px-3 py-2 text-center cursor-pointer transition-colors",
             selected ? "text-white" : "text-zinc-500 hover:text-zinc-300",
           ]}
-        >
-          {(() => {
-            switch (packageManager) {
-              case "bun": {
-                return <BunIcon class="h-5 w-auto" />
-              }
-              case "deno": {
-                return <DenoIcon class="h-5 w-auto" />
-              }
-              case "npm": {
-                return <NpmFullIcon class="h-7 w-auto" />
-              }
-              case "pnpm": {
-                return <PnpmIcon class="h-5 w-auto" />
-              }
-              case "yarn": {
-                return <YarnIcon class="h-5 w-auto" />
-              }
-            }
-          })()}
+        > 
+          <Icon class={className} />
           <span
             data-role="tab-indicator"
             aria-hidden="true"

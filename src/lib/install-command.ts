@@ -4,10 +4,10 @@ export const DEFAULT_PACKAGE_MANAGER: PackageManager = "bun"
 
 export const PACKAGE_MANAGERS: ReadonlyArray<PackageManager> = [
   DEFAULT_PACKAGE_MANAGER,
-  "deno",
   "npm",
-  "yarn",
   "pnpm",
+  "yarn",
+  "deno",
 ]
 
 const INSTALL_COMMAND_BY_PACKAGE_MANAGER: Readonly<Record<PackageManager, string>> = {

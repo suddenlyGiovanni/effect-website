@@ -3,6 +3,7 @@ import "../styles/global.css";
 
 import { Font } from "astro:assets"
 import { SEO } from "astro-seo"
+import SkipLink from "@/components/SkipLink.astro"
 import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/open-graph"
 
 interface Props {
@@ -39,7 +40,6 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
     <!-- SEO -->
     <SEO 
       title={title}
-      description={description}
       canonical={canonicalUrl}
       openGraph={{
         basic: {
@@ -54,28 +54,25 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
         },
         optional: {
           siteName: "Effect",
-          description,
+          ...(description ? { description } : undefined)
         }
       }}
       twitter={{
         card: "summary_large_image",
         title,
-        description,
-        image: ogImageUrl
+        image: ogImageUrl,
+        ...(description ? { description } : undefined)
       }}
       extend={{
         link: [
           { rel: "icon", type: "image/png", href: "/favicon.png" }
         ],
-        // <!-- Remix Icon -->
-        // <!-- <link -->
-        // <!--   href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css" -->
-        // <!--   rel="stylesheet" -->
-        // <!-- /> -->
       }}
+      {...(description ? { description } : undefined)}
     />
   </head>
   <body class="min-h-screen bg-zinc-950 text-white antialiased">
+    <SkipLink />
     <slot />
   </body>
 </html>

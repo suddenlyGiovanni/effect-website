@@ -31,7 +31,7 @@ export function VisualEffectSoundToggle() {
 
   return (
     <div className="flex items-center gap-2.5">
-      <span className="flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.28em] text-zinc-500 uppercase">
+      <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground font-semibold tracking-[0.28em] uppercase">
         {settings.enabled ? (
           <Volume2 className="size-3 shrink-0" />
         ) : (
