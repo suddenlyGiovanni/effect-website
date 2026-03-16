@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect"
 import { defineExample } from "../model/define-example"
-import { HighlightSelector } from "../model/snippet-definition"
 import { Notifications } from "../model/example-definition"
+import { HighlightSelector } from "../model/snippet-definition"
 
 export const dieExample = defineExample({
   label: "Effect.die",

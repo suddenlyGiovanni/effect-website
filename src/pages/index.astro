@@ -1,4 +1,7 @@
 ---
+import DitheredOverlay from "@/components/DitheredOverlay.astro"
+import Footer from "@/components/Footer.astro"
+import GridRails from "@/components/GridRails.astro"
 import SkipLink from "@/components/SkipLink.astro"
 import AgenticSystems from "@/components/landing/sections/AgenticSystems.astro"
 import CallToAction from "@/components/landing/sections/CallToAction.astro"
@@ -6,31 +9,24 @@ import CodingWithAi from "@/components/landing/sections/CodingWithAi.astro"
 import Hero from "@/components/landing/sections/Hero.astro"
 import Examples from "@/components/landing/sections/Examples.astro"
 import FAQ from "@/components/landing/sections/FAQ.astro"
-import Footer from "@/components/landing/sections/Footer.astro"
 import MentalModel from "@/components/landing/sections/MentalModel.astro"
 import ProblemStatement from "@/components/landing/sections/ProblemStatement.astro"
 import Quotes from "@/components/landing/sections/Quotes.astro"
 import Testimonials from "@/components/landing/sections/Testimonials.astro"
-import LandingRails from "@/components/landing/layout/LandingRails.astro"
-import SectionDivider from "@/components/landing/layout/SectionDivider.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
+import SectionDivider from "@/components/layout/SectionDivider.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
 ---
 
 <BaseLayout 
   description="An open-source ecosystem for software that is scalable, reliable, and maintainable from the start. One package, everything you need."
 >
-  <!-- Dithered Background Overlay -->
-  <div
-    aria-hidden="true"
-    class="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
-    style='background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Crect x=%270%27 y=%270%27 width=%271%27 height=%271%27 fill=%27white%27/%3E%3Crect x=%272%27 y=%272%27 width=%271%27 height=%271%27 fill=%27white%27/%3E%3C/svg%3E"); background-size: 4px 4px; background-repeat: repeat;'
-  ></div>
+  <DitheredOverlay />
 
   <div class="relative z-10">
     <SkipLink />
     <Navigation />
-    <LandingRails />
+    <GridRails />
 
     <main class="pt-16">
       <Hero />

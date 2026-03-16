@@ -1,7 +1,50 @@
 ---
+import type { ImageMetadata } from "astro"
 import { Image } from "astro:assets"
 import { ArrowUpRight, Play } from "@lucide/astro"
-import { FEATURED_EPISODES, getPodcastEpisodeHref } from "@/features/podcast/data/featured-episodes"
+import AdamRankinTestimonialThumbnail from "@/assets/images/testimonials/adam-rankin.webp"
+import AttilaVecerekTestimonialThumbnail from "@/assets/images/testimonials/attila-vecerek.webp"
+import LouisVichyTestimonialThumbnail from "@/assets/images/testimonials/louis-vichy.webp"
+import SamuelBrioleTestimonialThumbnail from "@/assets/images/testimonials/samuel-briole.webp"
+
+type FeaturedEpisode = {
+  readonly slug: string
+  readonly company: string
+  readonly useCase: string
+  readonly guest: string
+  readonly thumbnail: ImageMetadata
+}
+
+const FEATURED_PODCAST_EPISODES: ReadonlyArray<FeaturedEpisode> = [
+  {
+    slug: "episode-7",
+    company: "Warp",
+    useCase: "HR Systems",
+    guest: "Adam Rankin",
+    thumbnail: AdamRankinTestimonialThumbnail,
+  },
+  {
+    slug: "episode-6",
+    company: "OpenRouter",
+    useCase: "Internal Tooling",
+    guest: "Louis Vichy",
+    thumbnail: LouisVichyTestimonialThumbnail,
+  },
+  {
+    slug: "episode-1",
+    company: "Zendesk",
+    useCase: "Enterprise Customer Support",
+    guest: "Attila Vecerek",
+    thumbnail: AttilaVecerekTestimonialThumbnail,
+  },
+  {
+    slug: "episode-5",
+    company: "Spiko",
+    useCase: "Fintech Infrastructure",
+    guest: "Samuel Briole",
+    thumbnail: SamuelBrioleTestimonialThumbnail,
+  },
+]
 ---
 
 <section id="testimonials" class="relative w-full">
@@ -41,9 +84,9 @@ import { FEATURED_EPISODES, getPodcastEpisodeHref } from "@/features/podcast/dat
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {FEATURED_EPISODES.map((episode) => (
+      {FEATURED_PODCAST_EPISODES.map((episode) => (
         <a
-          href={getPodcastEpisodeHref(episode.slug)}
+          href={`/podcast/episodes/${episode.slug}/`}
           class="group relative flex flex-col overflow-hidden no-underline transition-all hover:border-zinc-500 hover:no-underline"
         >
           <div class="relative aspect-video w-full overflow-hidden rounded-md border border-zinc-800 bg-zinc-900">

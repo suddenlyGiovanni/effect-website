@@ -21,10 +21,7 @@ export function VisualEffectFinalizerCard({
   React.useEffect(() => {
     const previousPhase = previousPhaseRef.current
 
-    if (
-      previousPhase !== finalizer.phase &&
-      (isSucceeded || isFailed || isInterrupted)
-    ) {
+    if (previousPhase !== finalizer.phase && (isSucceeded || isFailed || isInterrupted)) {
       setJustCompleted(true)
       const timeout = globalThis.setTimeout(() => setJustCompleted(false), 600)
       previousPhaseRef.current = finalizer.phase
@@ -85,7 +82,9 @@ export function VisualEffectFinalizerCard({
             animate={{ scale: [1, 1.3, 1], opacity: [0.35, 0, 0.35] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             className="absolute inset-0 rounded"
-            style={{ background: "radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%)" }}
+            style={{
+              background: "radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%)",
+            }}
           />
         )}
         {isRunning && <Square className="relative z-10 size-3.5 fill-current" />}
@@ -99,7 +98,10 @@ export function VisualEffectFinalizerCard({
           className="absolute inset-0 rounded-lg"
           animate={{ opacity: [0, 0.25, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          style={{ background: "radial-gradient(ellipse at center, rgba(59, 130, 246, 0.18) 0%, transparent 70%)" }}
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(59, 130, 246, 0.18) 0%, transparent 70%)",
+          }}
         />
       )}
 

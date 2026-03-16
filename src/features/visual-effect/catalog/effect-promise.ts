@@ -1,8 +1,8 @@
 import * as Effect from "effect/Effect"
+import * as Random from "effect/Random"
 import * as String from "effect/String"
 import { defineExample } from "../model/define-example"
 import { HighlightSelector } from "../model/snippet-definition"
-import * as Random from "effect/Random"
 import { TemperatureResult } from "../ui/results/temperature"
 
 export const promiseExample = defineExample({

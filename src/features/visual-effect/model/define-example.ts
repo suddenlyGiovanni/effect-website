@@ -5,8 +5,6 @@ import { dual } from "effect/Function"
 import * as Types from "effect/Types"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
-import { toStepSnippetTargetKey } from "./snippet-highlights"
-import { resolveSnippetDefinition } from "./snippet-definition"
 import type { RenderableResult } from "./domain"
 import {
   ControlSnapshot,
@@ -26,6 +24,8 @@ import {
   type RegisterControlOptions,
   type StepDefinition,
 } from "./example-definition"
+import { resolveSnippetDefinition } from "./snippet-definition"
+import { toStepSnippetTargetKey } from "./snippet-highlights"
 
 class DuplicateExampleControlIdError extends Error {
   constructor(exampleLabel: string, controlId: string) {
@@ -156,9 +156,10 @@ export const defineExample = <const Features extends ExampleFeatureInput = {}>(
     },
   }
 
-  const program = options.features?.finalizers === true
-    ? options.build({ ...context, ...finalizersContext } as any)
-    : options.build(context as any)
+  const program =
+    options.features?.finalizers === true
+      ? options.build({ ...context, ...finalizersContext } as any)
+      : options.build(context as any)
 
   const hasDynamicCode = typeof codeDefinitionOptions === "function"
   const hasDynamicResultHighlight = typeof resultHighlightDefinition === "function"

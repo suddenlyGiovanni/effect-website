@@ -1,3 +1,9 @@
+import type {
+  CodeDefinitionOptions,
+  CodeSnippetSelectorConfig,
+  CodeSnippetSelectorOptions,
+  ControlValues,
+} from "./example-definition"
 import {
   normalizeSelectorInput,
   resolveExampleCodeSnippet,
@@ -6,12 +12,6 @@ import {
   type CodeSnippetConfig,
   HighlightSelector,
 } from "./snippet-highlights"
-import type {
-  CodeDefinitionOptions,
-  CodeSnippetSelectorConfig,
-  CodeSnippetSelectorOptions,
-  ControlValues,
-} from "./example-definition"
 
 export { type CodeSnippetConfig, HighlightSelector }
 

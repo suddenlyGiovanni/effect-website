@@ -1,5 +1,8 @@
 import * as Atom from "effect/unstable/reactivity/Atom"
-import type { ExampleDefinition, StepDefinition } from "@/features/visual-effect/model/example-definition"
+import type {
+  ExampleDefinition,
+  StepDefinition,
+} from "@/features/visual-effect/model/example-definition"
 import {
   InitialFinalizerPanelState,
   InitialState,

@@ -3,8 +3,8 @@ import { identity } from "effect/Function"
 import * as Random from "effect/Random"
 import * as String from "effect/String"
 import { defineExample } from "../model/define-example"
-import { HighlightSelector } from "../model/snippet-definition"
 import { Notifications } from "../model/example-definition"
+import { HighlightSelector } from "../model/snippet-definition"
 import { PrimitiveResult } from "../ui/results/primitive"
 
 const LICK_EMOJIS = ["👅", "😋", "👄", "😛"]

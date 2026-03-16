@@ -1,13 +1,13 @@
 import * as Array from "effect/Array"
 import * as Effect from "effect/Effect"
 import * as Atom from "effect/unstable/reactivity/Atom"
-import { ExampleStep } from "@/features/visual-effect/model/example-definition"
 import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
 import {
   makeTimelineSegment,
   type VisualEffectScheduleTimeline,
   type VisualEffectState,
 } from "@/features/visual-effect/model/domain"
+import { ExampleStep } from "@/features/visual-effect/model/example-definition"
 import { exampleStateAtom, scheduleTimeAtom, scheduleTimelineAtom } from "./state"
 
 interface Registry {
@@ -31,37 +31,36 @@ export const updateScheduleTimeline = (
     return
   }
 
-  registry.update(scheduleTimelineAtom(details.definition), (segments: VisualEffectScheduleTimeline) => {
-    if (Array.isReadonlyArrayNonEmpty(segments)) {
-      const previousSegment = segments[segments.length - 1]
+  registry.update(
+    scheduleTimelineAtom(details.definition),
+    (segments: VisualEffectScheduleTimeline) => {
+      if (Array.isReadonlyArrayNonEmpty(segments)) {
+        const previousSegment = segments[segments.length - 1]
 
-      if (previousSegment === undefined) {
-        return segments
+        if (previousSegment === undefined) {
+          return segments
+        }
+
+        const nextSegmentKind = state._tag === "Running" ? "Running" : "Waiting"
+
+        if (previousSegment.kind === nextSegmentKind) {
+          return segments
+        }
+
+        const transitionTime = state._tag === "Running" ? state.startedAt : state.endedAt
+        const nextSegment = makeTimelineSegment(nextSegmentKind, transitionTime)
+        previousSegment.endedAt = transitionTime
+
+        return Array.append(segments, nextSegment)
       }
 
-      const nextSegmentKind = state._tag === "Running" ? "Running" : "Waiting"
-
-      if (previousSegment.kind === nextSegmentKind) {
-        return segments
-      }
-
-      const transitionTime = state._tag === "Running" ? state.startedAt : state.endedAt
-      const nextSegment = makeTimelineSegment(nextSegmentKind, transitionTime)
-      previousSegment.endedAt = transitionTime
-
-      return Array.append(segments, nextSegment)
-    }
-
-    const kind = state._tag === "Running" ? "Running" : "Waiting"
-    return Array.of(makeTimelineSegment(kind, exampleState.startedAt))
-  })
+      const kind = state._tag === "Running" ? "Running" : "Waiting"
+      return Array.of(makeTimelineSegment(kind, exampleState.startedAt))
+    },
+  )
 }
 
-export const scheduleTimer = (
-  clock: ClockLike,
-  registry: Registry,
-  example: ExampleDefinition,
-) =>
+export const scheduleTimer = (clock: ClockLike, registry: Registry, example: ExampleDefinition) =>
   Effect.callback((_resume) => {
     let frame = 0
 

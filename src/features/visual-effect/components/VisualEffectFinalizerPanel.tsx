@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useContainerWidth } from "@/features/visual-effect/hooks/useContainerWidth"
-import { useFinalizerPanel } from "./VisualEffectProvider"
 import { FINALIZER_CARD_WIDTH, VisualEffectFinalizerCard } from "./VisualEffectFinalizerCard"
+import { useFinalizerPanel } from "./VisualEffectProvider"
 
 export function VisualEffectFinalizerPanel() {
   const panel = useFinalizerPanel()

@@ -1,3 +1,4 @@
+import type React from "react"
 import {
   Accordion,
   AccordionContent,
@@ -5,7 +6,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { cn } from "@/lib/utils"
-import type React from "react"
 
 const FAQS: ReadonlyArray<{
   readonly question: string
@@ -31,7 +31,7 @@ const FAQS: ReadonlyArray<{
           … But that's because it's doing something TypeScript can't do on its own.
         </p>
         <p className="mt-4">That "weirdness" unlocks:</p>
-        <ul className="mt-2 my-0 list-disc space-y-1">
+        <ul className="my-0 mt-2 list-disc space-y-1">
           <li>Typed, composable errors.</li>
           <li>Dependency injection with no globals.</li>
           <li>Interruptible workflows.</li>
@@ -174,13 +174,13 @@ export default function FrequentlyAskedQuestions() {
               "px-4",
               "bg-zinc-950 hover:bg-zinc-900 data-panel-open:bg-zinc-950",
               "text-base text-zinc-300 hover:text-white data-panel-open:text-white",
-              "data-panel-open:border-b-muted-foreground data-panel-open:rounded-b-none",
+              "data-panel-open:rounded-b-none data-panel-open:border-b-muted-foreground",
               "cursor-pointer hover:no-underline",
             )}
           >
             {question}
           </AccordionTrigger>
-          <AccordionContent className="px-4! md:px-5! py-4! bg-zinc-950 rounded-b-md">
+          <AccordionContent className="rounded-b-md bg-zinc-950 px-4! py-4! md:px-5!">
             {answer}
           </AccordionContent>
         </AccordionItem>

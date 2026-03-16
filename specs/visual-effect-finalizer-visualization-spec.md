@@ -120,9 +120,12 @@ defineExample({
     finalizers.enable()
 
     const program = Effect.gen(function* () {
-      yield* finalizers.add("Clean up", Effect.sync(() => {
-        // cleanup logic
-      }))
+      yield* finalizers.add(
+        "Clean up",
+        Effect.sync(() => {
+          // cleanup logic
+        }),
+      )
     })
 
     return addStep(program, { label: "effect" }).pipe(Effect.scoped)
@@ -264,7 +267,9 @@ export const addFinalizerExample = defineExample({
       }),
       {
         label: "effect",
-        highlight: HighlightSelector.Text({ text: 'Effect.addFinalizer(() => Console.log("cleanup"))' }),
+        highlight: HighlightSelector.Text({
+          text: 'Effect.addFinalizer(() => Console.log("cleanup"))',
+        }),
       },
     )
 
@@ -308,10 +313,7 @@ export class VisualFinalizers extends ServiceMap.Service<
   {
     readonly register: (label: string) => Effect.Effect<VisualFinalizerId>
     readonly start: (id: VisualFinalizerId) => Effect.Effect<void>
-    readonly end: (
-      id: VisualFinalizerId,
-      exit: Exit.Exit<void, never>,
-    ) => Effect.Effect<void>
+    readonly end: (id: VisualFinalizerId, exit: Exit.Exit<void, never>) => Effect.Effect<void>
     readonly run: <R>(
       id: VisualFinalizerId,
       effect: Effect.Effect<void, never, R>,
@@ -400,9 +402,7 @@ const acquireRelease = <A, E, R, R2>(
         const visual = yield* VisualFinalizers
         const id = yield* visual.register(options.label)
 
-        yield* Effect.addFinalizer((exit) =>
-          visual.run(id, options.release(resource, exit)),
-        )
+        yield* Effect.addFinalizer((exit) => visual.run(id, options.release(resource, exit)))
 
         return resource
       }),
@@ -421,12 +421,7 @@ The card appears only once the resource has actually been acquired and a release
 `src/lib/examples/domain.ts` should gain a dedicated finalizer panel model.
 
 ```ts
-export type VisualFinalizerPhase =
-  | "Pending"
-  | "Running"
-  | "Succeeded"
-  | "Failed"
-  | "Interrupted"
+export type VisualFinalizerPhase = "Pending" | "Running" | "Succeeded" | "Failed" | "Interrupted"
 
 export interface VisualFinalizerEntry {
   readonly id: string
@@ -502,7 +497,12 @@ export type VisualFinalizerEvent =
       readonly registrationIndex: number
       readonly at: DateTime.Utc
     }
-  | { readonly _tag: "Started"; readonly runId: number; readonly id: string; readonly at: DateTime.Utc }
+  | {
+      readonly _tag: "Started"
+      readonly runId: number
+      readonly id: string
+      readonly at: DateTime.Utc
+    }
   | {
       readonly _tag: "Finished"
       readonly runId: number
@@ -531,15 +531,18 @@ const reduceFinalizerPanel = (
       return {
         ...state,
         status: state.status === "Idle" ? "Active" : state.status,
-        finalizers: [...state.finalizers, {
-          id: event.id,
-          label: event.label,
-          registrationIndex: event.registrationIndex,
-          registeredAt: event.at,
-          phase: "Pending",
-          startedAt: undefined,
-          endedAt: undefined,
-        }],
+        finalizers: [
+          ...state.finalizers,
+          {
+            id: event.id,
+            label: event.label,
+            registrationIndex: event.registrationIndex,
+            registeredAt: event.at,
+            phase: "Pending",
+            startedAt: undefined,
+            endedAt: undefined,
+          },
+        ],
       }
     case "Started":
       return {

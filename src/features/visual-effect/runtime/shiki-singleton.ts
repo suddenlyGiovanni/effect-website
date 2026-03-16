@@ -1,5 +1,5 @@
-import type { ThemedToken } from "shiki/types"
 import type { HighlighterCore } from "@shikijs/core"
+import type { ThemedToken } from "shiki/types"
 import type { SnippetLanguage } from "@/features/visual-effect/model/snippet-highlights"
 import { effectShikiTheme } from "./shiki-theme"
 

@@ -5,15 +5,18 @@ import BlueSkyLogo from "@/assets/logos/bluesky/BlueSky.svg"
 import DiscordLogo from "@/assets/logos/discord/Discord.svg"
 import GitHubLogo from "@/assets/logos/github/GitHub.svg"
 import LinkedInLogo from "@/assets/logos/linkedin/LinkedIn.svg"
+import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg"
 import TwitterLogo from "@/assets/logos/twitter/Twitter.svg"
 import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg"
 import { cn } from "@/lib/utils"
+import Link from "./Link.astro"
 
 type SocialVariant = 
   | "bluesky"
   | "discord"
   | "github"
   | "linkedin"
+  | "spotify"
   | "twitter"
   | "youtube"
 
@@ -30,8 +33,9 @@ const SOCIAL_DESCRIPTIONS: Record<SocialVariant, string> = {
   discord: "Join the Effect Discord server",
   github: "Contribute to Effect on GitHub",
   linkedin: "Follow Effect on LinkedIn",
+  spotify: "Listen to the Cause & Effect Podcast on Spotify",
   twitter: "Follow Effect on X (Twitter)",
-  youtube: "Subscribe to Effect on YouTube"
+  youtube: "Subscribe to Effect on YouTube",
 }
 
 const SOCIAL_ICONS: Record<SocialVariant, SvgComponent & ImageMetadata> = {
@@ -39,6 +43,7 @@ const SOCIAL_ICONS: Record<SocialVariant, SvgComponent & ImageMetadata> = {
   discord: DiscordLogo,
   github: GitHubLogo,
   linkedin: LinkedInLogo,
+  spotify: SpotifyLogo,
   twitter: TwitterLogo,
   youtube: YouTubeLogo,
 }
@@ -48,8 +53,9 @@ const SOCIAL_LINKS: Record<SocialVariant, string> = {
   discord: "https://discord.gg/effect-ts",
   github: "https://github.com/Effect-TS",
   linkedin: "https://www.linkedin.com/company/effect-ts",
+  spotify: "https://open.spotify.com/show/4QTFiem4o0G9V2vXtv8vMU",
   twitter: "https://x.com/EffectTS_",
-  youtube: "https://www.youtube.com/@EffectTS"
+  youtube: "https://www.youtube.com/@EffectTS",
 }
 
 const ariaLabel = SOCIAL_DESCRIPTIONS[variant]
@@ -57,9 +63,9 @@ const href = SOCIAL_LINKS[variant]
 const Icon = SOCIAL_ICONS[variant]
 ---
 
-<a 
+<Link
   class={cn(
-    "text-muted-foreground hover:text-foreground transition-colors",
+    "text-muted-foreground hover:text-foreground transition-colors no-underline",
     className
   )} 
   href={href}
@@ -69,4 +75,5 @@ const Icon = SOCIAL_ICONS[variant]
   {...props}
 >
   <Icon class={cn("size-6", iconClass)} />
-</a>
+  <slot />
+</Link>

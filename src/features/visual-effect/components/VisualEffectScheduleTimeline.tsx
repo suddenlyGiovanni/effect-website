@@ -6,8 +6,8 @@ import type {
   VisualEffectScheduleTimeline,
   VisualEffectState,
 } from "@/features/visual-effect/model/domain"
-import { cn } from "@/lib/utils"
 import { useContainerWidth } from "@/features/visual-effect/hooks/useContainerWidth"
+import { cn } from "@/lib/utils"
 import { useExampleState, useScheduleTime, useScheduleTimeline } from "./VisualEffectProvider"
 
 const TIMELINE_CONFIG = {

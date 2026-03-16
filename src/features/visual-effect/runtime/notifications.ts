@@ -76,7 +76,9 @@ export const setStateNotification = (
   }
 }
 
-const getStateNotification = (state: VisualEffectState): Option.Option<VisualEffectNotification> => {
+const getStateNotification = (
+  state: VisualEffectState,
+): Option.Option<VisualEffectNotification> => {
   switch (state._tag) {
     case "Running":
     case "Succeeded":

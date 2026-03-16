@@ -3,13 +3,13 @@ import * as DateTime from "effect/DateTime"
 import * as Effect from "effect/Effect"
 import * as Exit from "effect/Exit"
 import * as Atom from "effect/unstable/reactivity/Atom"
-import { VisualFinalizers } from "@/features/visual-effect/model/example-definition"
 import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
 import {
   reduceFinalizerPanel,
   type VisualFinalizerEvent,
   type VisualFinalizerState,
 } from "@/features/visual-effect/model/domain"
+import { VisualFinalizers } from "@/features/visual-effect/model/example-definition"
 import type { SoundManager } from "./SoundManager"
 import { finalizersAtom } from "./state"
 

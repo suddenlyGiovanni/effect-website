@@ -4,8 +4,8 @@ import * as Layer from "effect/Layer"
 import * as Scope from "effect/Scope"
 import * as ServiceMap from "effect/ServiceMap"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
-import { prefersReducedMotionAtom, soundPreferenceAtom } from "@/features/visual-effect/state/atoms"
 import { soundCueKey, type SoundCue } from "@/features/visual-effect/model/sound"
+import { prefersReducedMotionAtom, soundPreferenceAtom } from "@/features/visual-effect/state/atoms"
 
 const PENTATONIC_SCALE = ["C", "D", "E", "G", "A"] as const
 const BASE_OCTAVE = 3

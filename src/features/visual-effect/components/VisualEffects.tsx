@@ -1,13 +1,13 @@
 import { useAtomMount, useAtomSet } from "@effect/atom-react"
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
+import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { type ExampleCategory, EXAMPLES_CATALOG } from "@/features/visual-effect/catalog"
 import {
   prefersReducedMotionAtom,
   resetExampleSilentlyAtom,
   stopAllSoundAtom,
 } from "@/features/visual-effect/state/atoms"
-import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { type ExampleCategory, EXAMPLES_CATALOG } from "@/features/visual-effect/catalog"
 import { cn } from "@/lib/utils"
 import { VisualEffect } from "./VisualEffect"
 import { VisualEffectSoundToggle } from "./VisualEffectSoundToggle"

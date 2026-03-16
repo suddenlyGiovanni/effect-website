@@ -10,14 +10,25 @@ import * as Option from "effect/Option"
 import * as ServiceMap from "effect/ServiceMap"
 import * as Tracer from "effect/Tracer"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
-import { ControlSnapshot, ExampleStep, Notifications, VisualFinalizers } from "@/features/visual-effect/model/example-definition"
 import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
 import { InitialState, VisualEffectState } from "@/features/visual-effect/model/domain"
+import {
+  ControlSnapshot,
+  ExampleStep,
+  Notifications,
+  VisualFinalizers,
+} from "@/features/visual-effect/model/example-definition"
 import { SoundManager } from "@/features/visual-effect/runtime/SoundManager"
-import { exitToState, setStateNotification } from "./notifications"
 import { makeDispatchFinalizerEvent, makeVisualFinalizers } from "./finalizers"
+import { exitToState, setStateNotification } from "./notifications"
 import { playExampleTransition, playStepTransition } from "./sound-transitions"
-import { exampleStateAtom, scheduleTimeAtom, scheduleTimelineAtom, stepStateAtom, type ResetOptions } from "./state"
+import {
+  exampleStateAtom,
+  scheduleTimeAtom,
+  scheduleTimelineAtom,
+  stepStateAtom,
+  type ResetOptions,
+} from "./state"
 import { scheduleTimer, updateScheduleTimeline } from "./timeline"
 
 export class VisualEffectManager extends ServiceMap.Service<
@@ -241,7 +252,10 @@ export class VisualEffectManager extends ServiceMap.Service<
                 Effect.fnUntraced(function* (exit) {
                   const endedAt = yield* DateTime.now
                   const currentState = registry.get(exampleStateAtom(example))
-                  yield* setExampleState(example, exitToState(exit, startedAt, endedAt, currentState))
+                  yield* setExampleState(
+                    example,
+                    exitToState(exit, startedAt, endedAt, currentState),
+                  )
                 }),
               ),
               Effect.forkChild,

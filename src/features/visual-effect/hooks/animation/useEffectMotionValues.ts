@@ -1,4 +1,10 @@
-import { type MotionValue, useMotionValue, useSpring, useTransform, useVelocity } from "motion/react"
+import {
+  type MotionValue,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useVelocity,
+} from "motion/react"
 import { useMemo } from "react"
 import { COLORS, SPRINGS } from "@/lib/animation"
 

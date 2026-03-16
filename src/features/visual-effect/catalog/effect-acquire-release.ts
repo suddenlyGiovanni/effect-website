@@ -1,11 +1,11 @@
 import * as Effect from "effect/Effect"
+import * as Random from "effect/Random"
 import * as String from "effect/String"
 import { defineExample } from "../model/define-example"
-import { HighlightSelector } from "../model/snippet-definition"
 import { Notifications } from "../model/example-definition"
+import { HighlightSelector } from "../model/snippet-definition"
 import { ErrorResult } from "../ui/results/error"
 import { PrimitiveResult } from "../ui/results/primitive"
-import * as Random from "effect/Random"
 
 export const acquireReleaseExample = defineExample({
   label: "Effect.acquireRelease",

@@ -9,7 +9,10 @@ import {
   type Variants,
 } from "motion/react"
 import * as React from "react"
-import type { VisualEffectNotification, VisualEffectState } from "@/features/visual-effect/model/domain"
+import type {
+  VisualEffectNotification,
+  VisualEffectState,
+} from "@/features/visual-effect/model/domain"
 import { type EffectMotionValues } from "@/features/visual-effect/hooks/animation/useEffectMotionValues"
 import { COLORS, SHADOW_COLORS, SPRINGS, VFX } from "@/lib/animation"
 import { cn } from "@/lib/utils"
@@ -100,7 +103,6 @@ function useVisibleNotification(
     setVisibleNotification(semanticNotification)
 
     const notificationDuration = Duration.toMillis(semanticNotification.notification.duration)
-    console.log({ notificationDuration })
 
     const timeout = window.setTimeout(() => {
       setVisibleNotification((current) =>

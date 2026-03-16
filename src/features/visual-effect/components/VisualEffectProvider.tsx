@@ -1,8 +1,19 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as Equal from "effect/Equal"
 import * as React from "react"
-import type { ExampleControl, ExampleDefinition, StepDefinition } from "@/features/visual-effect/model/example-definition"
+import type {
+  ExampleControl,
+  ExampleDefinition,
+  StepDefinition,
+} from "@/features/visual-effect/model/example-definition"
 import type { SoundPreference } from "@/features/visual-effect/model/sound"
+import {
+  exampleStateAtom,
+  finalizersAtom,
+  scheduleTimelineAtom,
+  scheduleTimeAtom,
+  stepStateAtom,
+} from "@/features/visual-effect/runtime/state"
 import {
   playControlChangedSoundAtom,
   resetExampleAtom,
@@ -14,13 +25,6 @@ import {
   stopExampleAtom,
   unlockSoundAtom,
 } from "@/features/visual-effect/state/atoms"
-import {
-  exampleStateAtom,
-  finalizersAtom,
-  scheduleTimelineAtom,
-  scheduleTimeAtom,
-  stepStateAtom,
-} from "@/features/visual-effect/runtime/state"
 
 // =============================================================================
 // Example Definition Context

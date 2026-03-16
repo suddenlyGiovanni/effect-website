@@ -1,8 +1,8 @@
 import * as Effect from "effect/Effect"
 import * as String from "effect/String"
 import { defineExample } from "../model/define-example"
-import { HighlightSelector } from "../model/snippet-definition"
 import { Notifications } from "../model/example-definition"
+import { HighlightSelector } from "../model/snippet-definition"
 import { PrimitiveResult } from "../ui/results/primitive"
 
 export const sleepExample = defineExample({

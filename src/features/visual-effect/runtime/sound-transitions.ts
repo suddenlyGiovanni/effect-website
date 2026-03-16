@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect"
-import { ExampleStep } from "@/features/visual-effect/model/example-definition"
-import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
 import type { VisualEffectState } from "@/features/visual-effect/model/domain"
+import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
+import { ExampleStep } from "@/features/visual-effect/model/example-definition"
 import { visualEffectExampleCueStepId } from "@/features/visual-effect/model/sound"
 import type { SoundManager } from "./SoundManager"
 
