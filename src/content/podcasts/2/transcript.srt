@@ -5130,7 +5130,6 @@ I'm working on. And it is actually
 something that we're thinking
 
 1282
-
 00:41:35,125 --> 00:41:37,416
 about, that we could possibly
 

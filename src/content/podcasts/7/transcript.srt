@@ -279,7 +279,6 @@ Did that happen at Warp?
 Did that already happen
 
 71
-
 00:02:20,880 --> 00:02:22,560
 as sort of a prior role?
 
@@ -713,7 +712,6 @@ where you feel like okay like all roads
 
 179
 00:06:11,122 --> 00:06:11,200
-where you feel like okay like all roads
 where you feel like okay like all roads
 
 180
@@ -5084,7 +5082,6 @@ different to necessitate another service.
 But all that to say pretty simple, we
 
 1271
-
 00:45:53,200 --> 00:45:55,200
 like to work in a monolith.
 
@@ -5626,7 +5623,6 @@ thinking about it is automating process
 heavy workflows sort of on the back end,
 
 1406
-
 00:50:59,920 --> 00:51:01,680
 which is, you know, what if an
 

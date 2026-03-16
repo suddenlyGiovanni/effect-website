@@ -1,0 +1,53 @@
+---
+import { Image } from "astro:assets"
+import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
+import Link from "@/components/Link.astro"
+import SocialLink from "@/components/SocialLink.astro"
+import type { PodcastEpisode } from "@/features/podcast/collection"
+import {
+  formatPodcastDate,
+  formatPodcastDuration,
+  getPodcastOrganization,
+} from "@/features/podcast/utils"
+
+interface Props {
+  readonly podcast: PodcastEpisode
+}
+
+const { podcast } = Astro.props
+const organization = getPodcastOrganization(podcast)
+---
+
+<section class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm">
+  <p class="mb-4 text-xs font-mono uppercase tracking-[0.24em] text-white/45">Featured guest</p>
+  <h2 class="text-3xl font-semibold tracking-tight text-white">{podcast.guest}</h2>
+  <p class="mt-3 text-sm text-white/60">
+    {organization && <span>{organization}</span>}
+    {organization && <span aria-hidden="true" class="px-2 text-white/25">&bull;</span>}
+    <span>{formatPodcastDate(podcast.date)}</span>
+    <span aria-hidden="true" class="px-2 text-white/25">&bull;</span>
+    <span>{formatPodcastDuration(podcast.duration)}</span>
+  </p>
+
+  <div class="mt-6 border-t border-white/10 pt-5">
+    <p class="mb-4 text-xs font-mono uppercase tracking-[0.24em] text-white/45">Listen on</p>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <Link
+        class="group inline-flex items-center gap-3 text-white no-underline"
+        href="https://podcasts.apple.com/us/podcast/cause-effect/id1781879869"
+      >
+        <Image
+          class="h-5 w-auto translate-x-0.5"
+          src={ApplePodcastsLogo}
+          alt="Listen to the Cause & Effect Podcast on Apple Podcasts"
+          loading="eager"
+        />
+        <span class="text-sm text-white/85 group-hover:underline group-hover:underline-offset-2">Apple Podcasts</span>
+      </Link>
+
+      <SocialLink variant="spotify" class="group inline-flex items-center gap-2 [&>svg]:fill-green-500">
+        <span class="text-sm text-white/85 group-hover:underline group-hover:underline-offset-2">Spotify</span>
+      </SocialLink>
+    </div>
+  </div>
+</section>

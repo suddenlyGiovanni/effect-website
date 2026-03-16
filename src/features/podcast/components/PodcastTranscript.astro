@@ -1,0 +1,76 @@
+---
+import fs from "node:fs/promises"
+import type { CollectionEntry } from "astro:content"
+import { AstroError } from "astro/errors"
+import SrtParser from "srt-parser-2"
+import { getTranscriptPath } from "@/features/podcast/utils"
+
+interface Props {
+  readonly entry: CollectionEntry<"podcasts">
+}
+
+const { entry } = Astro.props
+
+let transcript: ReturnType<SrtParser["fromSrt"]> = []
+
+if (entry) {
+  const path = getTranscriptPath(entry)
+  let content: Buffer
+  try {
+    content = await fs.readFile(path)
+  } catch {
+    throw new AstroError(
+      `Failed to read transcript file from \`${path}\`.`,
+      `Make sure the transcript file path provided in the video entry frontmatter is correct.
+
+- Entry: \`${entry.filePath}\`
+- Transcript: \`${path}\``
+    )
+  }
+  transcript = new SrtParser().fromSrt(content.toString())
+}
+
+function formatStartTime(startTime: string) {
+  startTime = startTime.replace(/,\d+$/, "")
+  const segments = startTime.split(":")
+  const time = [segments.at(1), segments.at(2)]
+  if (segments.at(0) !== "00") time.unshift(segments.at(0))
+  return time.join(":")
+}
+---
+
+{
+  transcript.length > 0 && (
+    <section class="mt-6">
+      <h2 class="mb-4 text-xl text-white font-semibold tracking-tight ">
+        Transcript
+      </h2>
+      <div class="relative">
+        <blockquote class="max-h-125 space-y-2 pr-4 overflow-y-auto scrollbar-thin">
+          {transcript.map((sub) => {
+            return (
+              <p class="flex gap-4">
+                <code class="w-12 shrink-0 text-sm text-muted-foreground font-mono">
+                  {formatStartTime(sub.startTime)}
+                </code>
+                <span class="flex-1 text-sm text-zinc-300 leading-relaxed">
+                  {sub.text}
+                </span>
+              </p>
+            )
+          })}
+        </blockquote>
+        <div
+          aria-hidden="true"
+          class="bottom-gradient absolute right-0 bottom-0 left-0 h-16 pointer-events-none"
+        />
+      </div>
+    </section>
+  )
+}
+
+<style>
+.bottom-gradient {
+  background: linear-gradient(to bottom, transparent, rgb(9 9 11))
+}
+</style> 

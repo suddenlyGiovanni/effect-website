@@ -47,6 +47,7 @@
     "satori": "^0.25.0",
     "sharp": "^0.34.2",
     "shiki": "^4.0.2",
+    "srt-parser-2": "^1.2.3",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1",
     "tone": "^15.1.22",

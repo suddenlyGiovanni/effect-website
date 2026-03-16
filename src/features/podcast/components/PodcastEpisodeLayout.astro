@@ -1,0 +1,132 @@
+---
+import type { CollectionEntry } from "astro:content"
+import { Maximize2Icon, Minimize2Icon } from "@lucide/astro"
+import PodcastEpisodeBody from "@/features/podcast/components/PodcastEpisodeBody.astro"
+import PodcastGuestCard from "@/features/podcast/components/PodcastGuestCard.astro"
+import PodcastVideo from "@/features/podcast/components/PodcastVideo.astro"
+import PodcastTranscript from "@/features/podcast/components/PodcastTranscript.astro"
+
+interface Props {
+  readonly entry: CollectionEntry<"podcasts">
+}
+
+const { entry } = Astro.props
+const podcast = entry.data
+---
+
+<podcast-episode-layout class="block" data-expanded="false">
+  <div class="podcast-episode-grid grid gap-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)] lg:items-start">
+    <PodcastVideo podcast={podcast} />
+
+    <button
+      type="button"
+      class="podcast-video-toggle inline-flex w-fit appearance-none items-center gap-2 border-0 bg-transparent p-0 text-left text-sm text-white/55 transition-colors hover:text-white/80"
+      aria-expanded="false"
+    >
+      <Maximize2Icon class="podcast-expand-icon size-4" aria-hidden="true" />
+      <Minimize2Icon class="podcast-collapse-icon hidden size-4" aria-hidden="true" />
+      <span class="podcast-expand-label">Expand video</span>
+      <span class="podcast-collapse-label hidden">Collapse video</span>
+    </button>
+
+    <PodcastEpisodeBody>
+      <slot name="body" />
+    </PodcastEpisodeBody>
+
+    <aside class="podcast-sidebar">
+      <div class="space-y-8 lg:sticky lg:top-24">
+        <PodcastGuestCard podcast={podcast} />
+        <PodcastTranscript entry={entry} />
+      </div>
+    </aside>
+  </div>
+</podcast-episode-layout>
+
+<script>
+  class PodcastEpisodeLayoutElement extends HTMLElement {
+    connectedCallback() {
+      const button = this.querySelector<HTMLButtonElement>(".podcast-video-toggle")
+
+      if (!button) {
+        return
+      }
+
+      button.addEventListener("click", () => {
+        const expanded = this.dataset.expanded === "true"
+        const next = String(!expanded)
+
+        this.dataset.expanded = next
+        button.setAttribute("aria-expanded", next)
+      })
+    }
+  }
+
+  if (!customElements.get("podcast-episode-layout")) {
+    customElements.define("podcast-episode-layout", PodcastEpisodeLayoutElement)
+  }
+</script>
+
+<style>
+  :global(.podcast-video) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .podcast-video-toggle {
+    align-self: start;
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  :global(.podcast-body) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .podcast-sidebar {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+
+  :global(podcast-episode-layout[data-expanded="true"] .podcast-expand-icon),
+  :global(podcast-episode-layout[data-expanded="true"] .podcast-expand-label) {
+    display: none;
+  }
+
+  :global(podcast-episode-layout[data-expanded="true"] .podcast-collapse-icon),
+  :global(podcast-episode-layout[data-expanded="true"] .podcast-collapse-label) {
+    display: inline-flex;
+  }
+
+  @media (min-width: 1024px) {
+    :global(podcast-episode-layout[data-expanded="true"] .podcast-video) {
+      grid-column: 1 / -1;
+      grid-row: 1;
+    }
+
+    :global(podcast-episode-layout[data-expanded="true"] .podcast-video-toggle) {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    :global(podcast-episode-layout[data-expanded="true"] .podcast-body) {
+      grid-column: 1;
+      grid-row: 3;
+    }
+
+    :global(podcast-episode-layout[data-expanded="true"] .podcast-sidebar) {
+      grid-column: 2;
+      grid-row: 3;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    :global(.podcast-video),
+    :global(.podcast-video-toggle),
+    :global(.podcast-body),
+    :global(.podcast-sidebar) {
+      grid-column: 1;
+      grid-row: auto;
+    }
+  }
+</style>

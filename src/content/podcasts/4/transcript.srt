@@ -1352,7 +1352,6 @@ as much fun writing it, is Go.
 Like the two software stacks that I've
 
 339
-
 00:11:39,833 --> 00:11:41,958
 felt I've built the most scalable and the
 
@@ -1749,7 +1748,6 @@ It could have been another like popular
 library, let's say like underscore JS
 
 438
-
 00:15:14,458 --> 00:15:16,458
 would have enforced that more
 
@@ -3266,7 +3264,6 @@ in front of you you're forced to deal
 with it and it's just like within writing
 
 817
-
 00:28:42,750 --> 00:28:43,916
 a couple hundred lines
 
@@ -4964,7 +4961,6 @@ confident that Effect will fulfill the
 promises that we have here.
 
 1241
-
 00:44:26,875 --> 00:44:29,041
 Maybe briefly to cover Ramda for the
 

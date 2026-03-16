@@ -1,49 +1,67 @@
 ---
-import path from "node:path"
-import { getCollection, render } from 'astro:content';
-import SkipLink from "@/components/SkipLink.astro"
+import { getCollection, render } from "astro:content"
+import { ArrowLeftIcon } from "@lucide/astro"
+import DitheredOverlay from "@/components/DitheredOverlay.astro"
+import GridRails from "@/components/GridRails.astro"
+import Link from "@/components/Link.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
+import PodcastEpisodeLayout from "@/features/podcast/components/PodcastEpisodeLayout.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
+import { slugifyPodcast } from "@/features/podcast/utils"
 import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
-
-  const podcasts = await getCollection("podcasts")
-  podcasts.map(podcast => {
-    return ({
-      params: { slug: podcast.id },
-      props: { podcast },
-    });
-  })
 
 export async function getStaticPaths() {
   const podcasts = await getCollection("podcasts")
-  return podcasts.map(podcast => {
+  return podcasts.map(entry => {
+    const slug = slugifyPodcast(entry.data)
     return {
-      params: { 
-        slug: podcast.id 
-      },
-      props: { 
-        podcast,
-        transcript: ""
-      },
+      params: { slug },
+      props: { entry },
     }
   })
 }
 
-const { podcast, transcript } = Astro.props
-const { Content } = await render(podcast)
+const { entry } = Astro.props
+const podcast = entry.data
+const { Content } = await render(entry)
 ---
 
-<BaseLayout description={`Podcast #${podcast.id}`}>
-  <div class="relative z-10">
-    <SkipLink />
-    <Navigation />
+<BaseLayout 
+  title={`Cause & Effect Podcast Episode #${podcast.episode}`} 
+  description="Exploring how engineers are using Effect to build reliable, production-grade software in TypeScript"
+>
+  <DitheredOverlay />
 
-    <main class="mx-auto w-full max-w-295 px-4 pt-32 pb-24">
-      <p class="mb-3 font-mono text-sm uppercase tracking-wider text-zinc-400">// Cause & Effect</p>
-      <h1 id={PAGE_TITLE_ID} class="text-3xl font-semibold tracking-tight text-white md:text-5xl">
-        Episode Page Coming Soon
-      </h1>
-      <Content />
+  <div class="relative z-10">
+    <Navigation />
+    <GridRails />
+
+    <main id={PAGE_TITLE_ID} class="pt-16">
+      <section class="relative w-full py-12 overflow-hidden">
+        <div class="relative mx-auto max-w-295 px-4">
+          <Link 
+            href="/podcast/" 
+            class="inline-flex items-center gap-2 mb-12 text-sm text-muted-foreground hover:text-white transition-colors"
+          >
+            <ArrowLeftIcon class="" />
+            <span>All episodes</span>
+          </Link>
+          <p class="mb-2 text-sm text-muted-foreground font-mono font-medium tracking-wider uppercase">
+            // Episode #{podcast.episode}
+          </p>
+          <h1 class="text-4xl text-white font-bold">
+            {podcast.title}
+          </h1>
+        </div>
+      </section>
+
+      <section class="w-full py-8 border-t border-zinc-800">
+        <div class="relative mx-auto max-w-295 px-4">
+          <PodcastEpisodeLayout entry={entry}>
+            <Content slot="body" />
+          </PodcastEpisodeLayout>
+        </div>
+      </section>
     </main>
   </div>
 </BaseLayout>
