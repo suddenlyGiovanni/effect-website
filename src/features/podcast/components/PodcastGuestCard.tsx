@@ -1,12 +1,10 @@
 import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
 import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg?react"
 import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg?react"
-import type { PodcastEpisode } from "../collection"
-import { formatPodcastDate, formatPodcastDuration } from "../utils"
+import { usePodcastEpisode } from "./PodcastEpisodeProvider"
 
-export function PodcastGuestCard({ podcast }: { readonly podcast: PodcastEpisode }) {
-  const publicationDate = formatPodcastDate(podcast.date)
-  const duration = formatPodcastDuration(podcast.duration)
+export function PodcastGuestCard() {
+  const episode = usePodcastEpisode()
 
   return (
     <div className="rounded-lg border border-zinc-700 bg-card p-4">
@@ -14,14 +12,14 @@ export function PodcastGuestCard({ podcast }: { readonly podcast: PodcastEpisode
         Featured Guest
       </p>
 
-      <p className="text-lg font-semibold text-white">{podcast.guest}</p>
+      <p className="text-lg font-semibold text-white">{episode.guest}</p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         <span>Warp</span>
         <span>·</span>
-        <span>{publicationDate}</span>
+        <span>{episode.formattedPublicationDate}</span>
         <span>·</span>
-        <span>{duration}</span>
+        <span>{episode.formattedDuration}</span>
       </div>
 
       <hr className="my-4 h-px bg-secondary" />

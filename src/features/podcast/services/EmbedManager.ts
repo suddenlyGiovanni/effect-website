@@ -4,66 +4,68 @@ import * as Option from "effect/Option"
 import * as Schema from "effect/Schema"
 import * as ServiceMap from "effect/ServiceMap"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
+import { podcastPlayerAtom } from "../atoms"
+import { EMPTY_DEBUG_SNAPSHOT, VIDEO_EMBED_HANDSHAKE_RETRY_DELAYS } from "../constants"
 import {
   type PlayerSnapshot,
-  emptyDebugSnapshot,
-  connectionErrorAtom,
-  connectionPhaseAtom,
-  iframeElementAtom,
-  playerSnapshotAtom,
-  debugSnapshotAtom,
-} from "../atoms/state"
-import { YouTubeEvent } from "../model/domain"
-
-export interface ConnectEmbedInput {
-  readonly connectionId: string
-  readonly targetOrigin: string
-  readonly title: string
-  readonly videoId: string
-}
+  YouTubeEvent,
+  PodcastEpisode,
+  PlayVideoCommand,
+  EmbedCommand,
+  PauseVideoCommand,
+  SeekToCommand,
+} from "../domain"
 
 interface ConnectionEntry {
   readonly disconnect: () => void
   readonly sendPlay: () => void
   readonly sendPause: () => void
+  readonly sendSeekTo: (seconds: number) => void
 }
 
-const YOUTUBE_HANDSHAKE_RETRY_DELAYS = [0, 100, 300, 1000] as const
-
-export class YouTubeEmbedManager extends ServiceMap.Service<
-  YouTubeEmbedManager,
+export class EmbedManager extends ServiceMap.Service<
+  EmbedManager,
   {
-    readonly connect: (input: ConnectEmbedInput) => Effect.Effect<void>
-    readonly disconnect: (connectionId: string) => Effect.Effect<void>
-    readonly play: (connectionId: string) => Effect.Effect<void>
-    readonly pause: (connectionId: string) => Effect.Effect<void>
+    readonly connect: (episode: PodcastEpisode, targetOrigin: string) => Effect.Effect<void>
+    readonly disconnect: (episode: PodcastEpisode) => Effect.Effect<void>
+    readonly play: (episode: PodcastEpisode) => Effect.Effect<void>
+    readonly pause: (episode: PodcastEpisode) => Effect.Effect<void>
+    readonly seekTo: (episode: PodcastEpisode, timestamp: number) => Effect.Effect<boolean>
   }
->()("YouTubeEmbedManager", {
+>()("EmbedManager", {
   make: Effect.gen(function* () {
     const registry = yield* AtomRegistry.AtomRegistry
     const connections = new Map<string, ConnectionEntry>()
 
+    // @effect-diagnostics-next-line schemaSyncInEffect:off
+    const encodeEmbedCommand = Schema.encodeUnknownSync(Schema.fromJsonString(EmbedCommand))
     const decodeEvent = Schema.decodeUnknownOption(Schema.fromJsonString(YouTubeEvent))
 
-    const disconnect = Effect.fn("YouTubeEmbedManager.disconnect")((connectionId: string) =>
+    const disconnect = Effect.fn("YouTubeEmbedManager.disconnect")((episode: PodcastEpisode) =>
       Effect.sync(() => {
-        const entry = connections.get(connectionId)
+        const player = podcastPlayerAtom(episode)
+        const entry = connections.get(episode.id)
 
         if (entry) {
-          connections.delete(connectionId)
+          connections.delete(episode.id)
           entry.disconnect()
         }
 
-        registry.set(connectionPhaseAtom(connectionId), "idle")
-        registry.set(connectionErrorAtom(connectionId), Option.none())
-        registry.set(debugSnapshotAtom(connectionId), emptyDebugSnapshot)
+        registry.set(player.embedConnectionPhaseAtom, "connecting")
+        registry.set(player.embedConnectionErrorAtom, Option.none())
+        registry.set(player.debugSnapshotAtom, EMPTY_DEBUG_SNAPSHOT)
       }),
     )
 
-    const connect = Effect.fn("YouTubeEmbedManager.connect")(function* (input: ConnectEmbedInput) {
-      yield* disconnect(input.connectionId)
+    const connect = Effect.fn("YouTubeEmbedManager.connect")(function* (
+      episode: PodcastEpisode,
+      targetOrigin: string,
+    ) {
+      const player = podcastPlayerAtom(episode)
 
-      const iframeOption = registry.get(iframeElementAtom(input.connectionId))
+      yield* disconnect(episode)
+
+      const iframeOption = registry.get(player.iframeElementAtom)
 
       if (Option.isNone(iframeOption)) {
         return yield* Effect.void
@@ -73,41 +75,49 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
       let snapshot: PlayerSnapshot = {
         currentTime: 0,
         status: "loading",
-        title: input.title,
-        videoId: input.videoId,
+        title: episode.title,
+        videoId: episode.youtube.id,
       }
 
-      registry.set(connectionPhaseAtom(input.connectionId), "connecting")
-      registry.set(connectionErrorAtom(input.connectionId), Option.none())
-      registry.set(playerSnapshotAtom(input.connectionId), snapshot)
-      registry.set(debugSnapshotAtom(input.connectionId), emptyDebugSnapshot)
+      registry.set(player.embedConnectionPhaseAtom, "connecting")
+      registry.set(player.embedConnectionErrorAtom, Option.none())
+      registry.set(player.playerSnapshotAtom, snapshot)
+      registry.set(player.debugSnapshotAtom, EMPTY_DEBUG_SNAPSHOT)
 
       const sendListeningRequest = () => {
-        iframe.contentWindow?.postMessage(makeListeningMessage(), input.targetOrigin)
+        const message = JSON.stringify({ event: "listening", id: 1 })
+        iframe.contentWindow?.postMessage(message, targetOrigin)
       }
 
       const sendPlay = () => {
-        iframe.contentWindow?.postMessage(makeCommandMessage("playVideo"), input.targetOrigin)
-        const current = registry.get(debugSnapshotAtom(input.connectionId))
-        registry.set(debugSnapshotAtom(input.connectionId), {
-          ...current,
-          lastCommand: "playVideo",
-        })
+        const command = new PlayVideoCommand()
+        const message = encodeEmbedCommand(command)
+        iframe.contentWindow?.postMessage(message, targetOrigin)
+        registry.update(player.debugSnapshotAtom, (snapshot) => ({
+          ...snapshot,
+          lastCommand: command.func,
+        }))
       }
 
       const sendPause = () => {
-        iframe.contentWindow?.postMessage(makeCommandMessage("pauseVideo"), input.targetOrigin)
-        const current = registry.get(debugSnapshotAtom(input.connectionId))
-        registry.set(debugSnapshotAtom(input.connectionId), {
-          ...current,
-          lastCommand: "pauseVideo",
-        })
+        const command = new PauseVideoCommand()
+        const message = encodeEmbedCommand(command)
+        iframe.contentWindow?.postMessage(message, targetOrigin)
+        registry.update(player.debugSnapshotAtom, (snapshot) => ({
+          ...snapshot,
+          lastCommand: command.func,
+        }))
+      }
+
+      const sendSeekTo = (seconds: number) => {
+        const command = new SeekToCommand({ args: [normalizeSeconds(seconds), true] })
+        const message = encodeEmbedCommand(command)
+        iframe.contentWindow?.postMessage(message, targetOrigin)
       }
 
       const handshakeTimeouts = new Set<number>()
-
       const scheduleHandshake = () => {
-        for (const delay of YOUTUBE_HANDSHAKE_RETRY_DELAYS) {
+        for (const delay of VIDEO_EMBED_HANDSHAKE_RETRY_DELAYS) {
           const timeout = window.setTimeout(() => {
             handshakeTimeouts.delete(timeout)
             sendListeningRequest()
@@ -117,14 +127,14 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
       }
 
       const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== input.targetOrigin) return
+        if (event.origin !== targetOrigin) return
         if (event.source !== iframe.contentWindow) return
 
         const parsed = decodeEvent(event.data)
         if (Option.isNone(parsed)) return
 
-        const currentDebug = registry.get(debugSnapshotAtom(input.connectionId))
-        registry.set(debugSnapshotAtom(input.connectionId), {
+        const currentDebug = registry.get(player.debugSnapshotAtom)
+        registry.set(player.debugSnapshotAtom, {
           eventCount: currentDebug.eventCount + 1,
           lastCommand: currentDebug.lastCommand,
           lastEvent: parsed.value.event,
@@ -132,12 +142,12 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
           lastRawInfo: "info" in parsed.value ? stringifyDebugInfo(parsed.value.info) : "",
         })
 
-        if (registry.get(connectionPhaseAtom(input.connectionId)) !== "error") {
-          registry.set(connectionPhaseAtom(input.connectionId), "connected")
+        if (registry.get(player.embedConnectionPhaseAtom) !== "error") {
+          registry.set(player.embedConnectionPhaseAtom, "connected")
         }
 
         snapshot = mapPlayerStatus(parsed.value, snapshot)
-        registry.set(playerSnapshotAtom(input.connectionId), snapshot)
+        registry.set(player.playerSnapshotAtom, snapshot)
 
         if (
           snapshot.status === "ready" ||
@@ -145,13 +155,13 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
           snapshot.status === "paused" ||
           snapshot.status === "ended"
         ) {
-          registry.set(connectionPhaseAtom(input.connectionId), "connected")
+          registry.set(player.embedConnectionPhaseAtom, "connected")
         }
 
         if (snapshot.status === "error") {
-          registry.set(connectionPhaseAtom(input.connectionId), "error")
+          registry.set(player.embedConnectionPhaseAtom, "error")
           registry.set(
-            connectionErrorAtom(input.connectionId),
+            player.embedConnectionErrorAtom,
             Option.some(
               parsed.value.event === "onError"
                 ? `YouTube player reported error ${parsed.value.info}`
@@ -165,7 +175,7 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
       iframe.addEventListener("load", scheduleHandshake)
       scheduleHandshake()
 
-      connections.set(input.connectionId, {
+      connections.set(episode.id, {
         disconnect: () => {
           window.removeEventListener("message", handleMessage)
           iframe.removeEventListener("load", scheduleHandshake)
@@ -176,12 +186,14 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
         },
         sendPause,
         sendPlay,
+        sendSeekTo,
       })
     })
 
-    const play = Effect.fn("YouTubeEmbedManager.play")((connectionId: string) =>
+    const play = Effect.fn("YouTubeEmbedManager.play")((episode: PodcastEpisode) =>
       Effect.sync(() => {
-        const entry = connections.get(connectionId)
+        const player = podcastPlayerAtom(episode)
+        const entry = connections.get(episode.id)
 
         if (!entry) {
           return
@@ -189,17 +201,17 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
 
         entry.sendPlay()
 
-        const snapshot = registry.get(playerSnapshotAtom(connectionId))
-        registry.set(playerSnapshotAtom(connectionId), {
+        registry.update(player.playerSnapshotAtom, (snapshot) => ({
           ...snapshot,
-          status: "playing",
-        })
+          status: "playing" as const,
+        }))
       }),
     )
 
-    const pause = Effect.fn("YouTubeEmbedManager.pause")((connectionId: string) =>
+    const pause = Effect.fn("YouTubeEmbedManager.pause")((episode: PodcastEpisode) =>
       Effect.sync(() => {
-        const entry = connections.get(connectionId)
+        const player = podcastPlayerAtom(episode)
+        const entry = connections.get(episode.id)
 
         if (!entry) {
           return
@@ -207,31 +219,48 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
 
         entry.sendPause()
 
-        const snapshot = registry.get(playerSnapshotAtom(connectionId))
-        registry.set(playerSnapshotAtom(connectionId), {
+        registry.update(player.playerSnapshotAtom, (snapshot) => ({
           ...snapshot,
-          status: "paused",
-        })
+          status: "paused" as const,
+        }))
       }),
     )
 
+    const seekTo = Effect.fn("YouTubeEmbedManager.seekTo")(
+      (episode: PodcastEpisode, timestamp: number) =>
+        Effect.sync(() => {
+          const entry = connections.get(episode.id)
+
+          if (!entry) {
+            return false
+          }
+
+          const seconds = normalizeSeconds(timestamp)
+
+          entry.sendSeekTo(seconds)
+
+          return true
+        }),
+    )
+
     const togglePlayback = Effect.fn("YouTubeEmbedManager.togglePlayback")(function* (
-      connectionId: string,
+      episode: PodcastEpisode,
     ) {
-      const entry = connections.get(connectionId)
+      const player = podcastPlayerAtom(episode)
+      const entry = connections.get(episode.id)
 
       if (!entry) {
         return yield* Effect.void
       }
 
-      const snapshot = registry.get(playerSnapshotAtom(connectionId))
+      const snapshot = registry.get(player.playerSnapshotAtom)
 
       if (snapshot.status === "playing") {
-        yield* pause(connectionId)
+        yield* pause(episode)
         return yield* Effect.void
       }
 
-      yield* play(connectionId)
+      yield* play(episode)
     })
 
     return {
@@ -239,6 +268,7 @@ export class YouTubeEmbedManager extends ServiceMap.Service<
       disconnect,
       pause,
       play,
+      seekTo,
       togglePlayback,
     } as const
   }),
@@ -254,19 +284,7 @@ const stringifyDebugInfo = (value: unknown): string => {
   }
 }
 
-const makeListeningMessage = () =>
-  JSON.stringify({
-    event: "listening",
-    id: 1,
-  })
-
-const makeCommandMessage = (func: "playVideo" | "pauseVideo", args: ReadonlyArray<unknown> = []) =>
-  JSON.stringify({
-    event: "command",
-    func,
-    args,
-    id: 1,
-  })
+const normalizeSeconds = (seconds: number) => (Number.isFinite(seconds) ? Math.max(0, seconds) : 0)
 
 const mapPlayerStatus = (
   message: YouTubeEvent,

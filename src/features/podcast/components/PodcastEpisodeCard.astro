@@ -1,9 +1,11 @@
 ---
+import * as DateTime from "effect/DateTime"
+import * as Duration from "effect/Duration"
 import type { PodcastEpisode } from "../collection"
 import { 
-  formatPodcastDate, 
   formatPodcastDuration, 
-  getYouTubeThumbnailUrl, 
+  formatPodcastPublicationDate, 
+  getPodcastThumbnail, 
   slugifyPodcast 
 } from "../utils"
 
@@ -15,10 +17,10 @@ const { podcast } = Astro.props
 
 const slug = slugifyPodcast(podcast)
 const href = `/podcast/episodes/${slug}/`
-const publicationDate = formatPodcastDate(podcast.date)
-const duration = formatPodcastDuration(podcast.duration)
+const publicationDate = formatPodcastPublicationDate(DateTime.makeUnsafe(podcast.date))
+const duration = formatPodcastDuration(Duration.seconds(podcast.duration))
 const episodeNumber = String(podcast.episode).padStart(2, "0")
-const thumbnailUrl = getYouTubeThumbnailUrl(podcast.youtubeId)
+const thumbnailUrl = getPodcastThumbnail(podcast.youtubeId)
 ---
 
 <div class="group relative flex flex-col md:flex-row gap-8 my-4 p-4 hover:bg-zinc-900/60 rounded-md transition-colors">

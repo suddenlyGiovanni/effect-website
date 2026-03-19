@@ -2,11 +2,11 @@ import { docsLoader } from "@astrojs/starlight/loaders"
 import { docsSchema } from "@astrojs/starlight/schema"
 import { glob } from "astro/loaders"
 import { defineCollection } from "astro:content"
-import { PodcastEpisode } from "./features/podcast/collection"
+import { PodcastEpisodeEntry } from "./features/podcast/collection"
 
 const podcasts = defineCollection({
   loader: glob({ base: "./src/content/podcasts", pattern: "**/*.{md,mdx}" }),
-  schema: PodcastEpisode,
+  schema: PodcastEpisodeEntry,
 })
 
 export const collections = {

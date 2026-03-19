@@ -3,14 +3,33 @@ import * as React from "react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { PodcastChapter } from "../collection"
+import type { PodcastChapter } from "../domain"
+import {
+  useActiveChapter,
+  usePodcastEpisode,
+  useSetPreconnected,
+  useSeekToChapter,
+} from "./PodcastEpisodeProvider"
 
-export function PodcastChapters({
-  chapters,
-}: {
-  readonly chapters: ReadonlyArray<PodcastChapter>
-}) {
-  const [activeChapter, setActiveChapter] = React.useState(chapters[0]?.title ?? "")
+export function PodcastChapters() {
+  const episode = usePodcastEpisode()
+  const setPreconnected = useSetPreconnected()
+  const activeChapter = useActiveChapter()
+  const seekToChapter = useSeekToChapter()
+
+  const handleSeek = React.useCallback(
+    (chapter: PodcastChapter) => {
+      seekToChapter(chapter)
+    },
+    [seekToChapter],
+  )
+
+  const handlePreconnect = React.useCallback(() => {
+    setPreconnected((preconnected) => {
+      if (preconnected) return preconnected
+      return true
+    })
+  }, [setPreconnected])
 
   return (
     <Collapsible defaultOpen={false} className="rounded-lg border border-zinc-700 bg-card">
@@ -20,21 +39,23 @@ export function PodcastChapters({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="border-t bg-card">
-          <ScrollArea className="h-64 p-2">
+          <ScrollArea className="h-64 p-2 lg:max-h-[min(16rem,35vh)]">
             <ul className="pr-2">
-              {chapters.map((chapter, index) => {
-                const isActive = activeChapter === chapter.title
+              {episode.chapters.map((chapter, index) => {
+                const isActive = chapter === activeChapter
                 return (
-                  <li key={chapter.title} className="group m-0 list-none p-0">
+                  <li key={chapter.id} className="group m-0 list-none p-0">
                     <button
                       type="button"
-                      onClick={() => setActiveChapter(chapter.title)}
-                      aria-label={`Jump to ${chapter.start}: ${chapter.title}`}
+                      onClick={() => handleSeek(chapter)}
+                      onFocus={handlePreconnect}
+                      onPointerOver={handlePreconnect}
+                      aria-label={`Jump to ${chapter.startLabel}: ${chapter.title}`}
                       className={cn(
                         "flex w-full cursor-pointer items-center gap-3 bg-inherit px-3 py-2.5 text-left transition-colors hover:bg-accent/50",
                         isActive && "bg-accent",
                         index === 0 && "rounded-t-md",
-                        index === chapters.length - 1 && "rounded-b-md",
+                        index === episode.chapters.length - 1 && "rounded-b-md",
                       )}
                     >
                       <span
@@ -64,7 +85,7 @@ export function PodcastChapters({
                         </p>
                       </div>
                       <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                        {chapter.start}
+                        {chapter.startLabel}
                       </span>
                     </button>
                   </li>

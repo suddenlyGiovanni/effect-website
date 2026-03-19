@@ -1,36 +1,32 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { pauseAtom, playAtom } from "../atoms/controls"
-import { connectionPhaseAtom, debugSnapshotAtom, playerSnapshotAtom } from "../atoms/state"
+import {
+  useDebugSnapshot,
+  usePlayerSnapshot,
+  usePodcastEpisode,
+  useVideoEmbedConnectionPhase,
+  useVideoEmbedControls,
+} from "./PodcastEpisodeProvider"
 
-export function YouTubeEmbedDebugPanel({
-  id,
-  videoId,
-  youtubeUrl,
-}: {
-  readonly id: string
-  readonly videoId: string
-  readonly youtubeUrl: string
-}) {
+export function PodcastVideoEmbedDebugger({ youtubeUrl }: { readonly youtubeUrl: string }) {
+  const episode = usePodcastEpisode()
+  const connectionPhase = useVideoEmbedConnectionPhase()
+  const snapshot = usePlayerSnapshot()
+  const debugSnapshot = useDebugSnapshot()
+  const { play, pause } = useVideoEmbedControls()
   const [minimized, setMinimized] = React.useState(false)
-  const connectionPhase = useAtomValue(connectionPhaseAtom(id))
-  const snapshot = useAtomValue(playerSnapshotAtom(id))
-  const debugSnapshot = useAtomValue(debugSnapshotAtom(id))
-  const play = useAtomSet(playAtom)
-  const pause = useAtomSet(pauseAtom)
 
-  const handleMinimize = () => {
+  const handleMinimize = React.useCallback(() => {
     setMinimized((minimized) => !minimized)
-  }
+  }, [setMinimized])
 
-  const handlePlayVideo = () => {
-    play(id)
-  }
+  const handlePlayVideo = React.useCallback(() => {
+    play()
+  }, [play])
 
-  const handlePauseVideo = () => {
-    pause(id)
-  }
+  const handlePauseVideo = React.useCallback(() => {
+    pause()
+  }, [pause])
 
   return (
     <div className="pointer-events-none absolute right-3 bottom-3 left-3 z-3 flex flex-col gap-3 rounded-xl border border-white/10 bg-black/70 px-3 py-2 font-mono text-[11px] tracking-[0.12em] text-white/75 uppercase shadow-lg backdrop-blur-sm">
@@ -80,7 +76,7 @@ export function YouTubeEmbedDebugPanel({
       {!minimized && (
         <React.Fragment>
           <div className="grid gap-1 text-[10px] tracking-[0.08em] text-white/65 md:grid-cols-2">
-            <span>video: {snapshot.videoId || videoId}</span>
+            <span>video: {snapshot.videoId || episode.youtube.id}</span>
             <span>events: {debugSnapshot.eventCount}</span>
             <span>last-event: {debugSnapshot.lastEvent}</span>
             <span>last-command: {debugSnapshot.lastCommand}</span>
