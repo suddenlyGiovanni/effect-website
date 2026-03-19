@@ -1,3 +1,4 @@
+import type { YouTubePosterQuality } from "../youtube/components/YouTubeEmbed"
 import type { PodcastEpisode } from "./collection"
 
 const podcastMonthFormatter = new Intl.DateTimeFormat("en-US", {
@@ -60,4 +61,18 @@ export function formatPodcastDuration(durationInSeconds: number): string {
   const seconds = durationInSeconds % 60
 
   return `${minutes}:${String(seconds).padStart(2, "0")}`
+}
+
+export function getYouTubeThumbnailUrl(
+  id: string,
+  options?: {
+    readonly format?: "webp" | "jpg" | undefined
+    readonly poster?: YouTubePosterQuality | undefined
+  },
+) {
+  const encodedId = globalThis.encodeURIComponent(id)
+  const format = options?.format ?? "jpg"
+  const vi = format === "webp" ? "vi_webp" : "vi"
+  const poster = options?.poster ?? "hqdefault"
+  return `https://i.ytimg.com/${vi}/${encodedId}/${poster}.${format}`
 }

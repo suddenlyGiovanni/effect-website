@@ -30,14 +30,6 @@ export const PodcastEpisode = z.object({
    */
   guest: z.string().min(1),
   /**
-   * The URL slug for the podcast episode.
-   */
-  slug: z.string().min(1),
-  /**
-   * The artwork for the episode.
-   */
-  thumbnailUrl: z.url(),
-  /**
    * The date when an episode was released.
    */
   date: z.iso.date(),
@@ -45,6 +37,10 @@ export const PodcastEpisode = z.object({
    * The duration of an episode in seconds.
    */
   duration: z.number().int().min(1),
+  /**
+   * The identifier of the YouTube video.
+   */
+  youtubeId: z.string().min(1),
   /**
    * The episode content, file size, and file type information.
    */
@@ -63,26 +59,13 @@ export const PodcastEpisode = z.object({
     type: z.string().min(1),
   }),
   /**
-   * The details of the YouTube video associated with the podcast.
-   */
-  youtube: z.object({
-    /**
-     * The URL or identifier of the YouTube video.
-     */
-    id: z.union([z.url(), z.string().min(1)]),
-    /**
-     * The title of the YouTube video.
-     */
-    title: z.string(),
-  }),
-  /**
    * The list of tags associated with the podcast episode.
    */
   tags: z.array(z.string()),
   /**
    * Chapter markers shown alongside the video.
    */
-  chapters: z.array(PodcastChapter).default([]),
+  chapters: z.array(PodcastChapter),
 })
 
 export type PodcastEpisode = z.infer<typeof PodcastEpisode>

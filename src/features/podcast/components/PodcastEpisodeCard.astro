@@ -1,6 +1,11 @@
 ---
 import type { PodcastEpisode } from "../collection"
-import { formatPodcastDate, formatPodcastDuration, slugifyPodcast } from "../utils"
+import { 
+  formatPodcastDate, 
+  formatPodcastDuration, 
+  getYouTubeThumbnailUrl, 
+  slugifyPodcast 
+} from "../utils"
 
 interface Props {
   readonly podcast: PodcastEpisode
@@ -13,13 +18,14 @@ const href = `/podcast/episodes/${slug}/`
 const publicationDate = formatPodcastDate(podcast.date)
 const duration = formatPodcastDuration(podcast.duration)
 const episodeNumber = String(podcast.episode).padStart(2, "0")
+const thumbnailUrl = getYouTubeThumbnailUrl(podcast.youtubeId)
 ---
 
 <div class="group relative flex flex-col md:flex-row gap-8 my-4 p-4 hover:bg-zinc-900/60 rounded-md transition-colors">
   <div class="w-full shrink-0 md:w-[40%] aspect-video overflow-hidden">
     <img 
       class="h-full w-full object-cover rounded-md transition-transform duration-300 group-hover:scale-[1.02]"
-      src={podcast.thumbnailUrl} 
+      src={thumbnailUrl} 
       alt={podcast.title} 
       decoding="async"
       loading="lazy"
