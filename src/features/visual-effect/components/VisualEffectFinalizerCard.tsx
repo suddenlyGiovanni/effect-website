@@ -21,14 +21,21 @@ export function VisualEffectFinalizerCard({
   React.useEffect(() => {
     const previousPhase = previousPhaseRef.current
 
+    let timeout: NodeJS.Timeout
+
     if (previousPhase !== finalizer.phase && (isSucceeded || isFailed || isInterrupted)) {
       setJustCompleted(true)
-      const timeout = globalThis.setTimeout(() => setJustCompleted(false), 600)
+      timeout = globalThis.setTimeout(() => setJustCompleted(false), 600)
       previousPhaseRef.current = finalizer.phase
-      return () => globalThis.clearTimeout(timeout)
     }
 
     previousPhaseRef.current = finalizer.phase
+
+    return () => {
+      if (timeout) {
+        globalThis.clearTimeout(timeout)
+      }
+    }
   }, [finalizer.phase, isFailed, isInterrupted, isSucceeded])
 
   const cardClassName = isPending

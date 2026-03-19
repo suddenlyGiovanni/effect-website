@@ -3,6 +3,7 @@ import starlight from "@astrojs/starlight"
 import vercel from "@astrojs/vercel"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig, fontProviders } from "astro/config"
+import svgr from "vite-plugin-svgr"
 
 const GoogleFontProvider = fontProviders.google()
 
@@ -17,7 +18,7 @@ export default defineConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), svgr()],
   },
 
   integrations: [

@@ -60,14 +60,14 @@ export function VisualEffectControlsIcon({
         background: getBackgroundColor(state),
         scale: isPressed ? 0.95 : isHovered ? 1.05 : 1,
       }}
-      transition={
-        prefersReducedMotion
+      transition={{
+        ...(prefersReducedMotion
           ? undefined
           : {
               scale: { type: "spring", stiffness: 300, damping: 20 },
               background: { duration: 0.2, ease: "easeInOut" },
-            }
-      }
+            }),
+      }}
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span

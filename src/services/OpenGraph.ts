@@ -10,14 +10,14 @@ import satori, { type SatoriOptions } from "satori"
 import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/open-graph"
 
 export interface OgTemplateProps {
-  title: string
-  description?: string
-  subtitle?: string
+  readonly title: string
+  readonly description?: string | undefined
+  readonly subtitle?: string | undefined
 }
 
 interface OgTemplateAssets {
-  logoDataUri: string
-  dashDataUri: string
+  readonly logoDataUri: string
+  readonly dashDataUri: string
 }
 
 type SatoriFont = NonNullable<SatoriOptions["fonts"]>[number]

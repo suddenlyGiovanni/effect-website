@@ -1,38 +1,4 @@
-import type { CollectionEntry } from "astro:content"
-import * as NodePath from "node:path"
 import type { PodcastEpisode } from "./collection"
-
-const genericPodcastTags = new Set(["typescript", "effect"])
-
-export function getTranscriptPath(podcast: CollectionEntry<"podcasts">): string {
-  const episodeDir = NodePath.dirname(podcast.filePath ?? "")
-  return NodePath.join(NodePath.resolve(), episodeDir, "transcript.srt")
-}
-
-export function getPodcastYouTubeVideoId(videoIdOrUrl: string): string {
-  try {
-    const url = new URL(videoIdOrUrl)
-
-    if (url.hostname === "youtu.be") {
-      const id = url.pathname.replace(/^\//, "")
-      return id.length > 0 ? id : videoIdOrUrl
-    }
-
-    if (url.hostname.includes("youtube.com")) {
-      const id = url.searchParams.get("v")
-      return id && id.length > 0 ? id : videoIdOrUrl
-    }
-  } catch {
-    return videoIdOrUrl
-  }
-
-  return videoIdOrUrl
-}
-
-export function getPodcastYouTubeEmbedUrl(videoIdOrUrl: string): string {
-  const id = getPodcastYouTubeVideoId(videoIdOrUrl)
-  return `https://www.youtube.com/embed/${id}`
-}
 
 const podcastMonthFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -94,8 +60,4 @@ export function formatPodcastDuration(durationInSeconds: number): string {
   const seconds = durationInSeconds % 60
 
   return `${minutes}:${String(seconds).padStart(2, "0")}`
-}
-
-export function getPodcastOrganization(podcast: PodcastEpisode): string | undefined {
-  return podcast.tags.find((tag) => !genericPodcastTags.has(tag.toLocaleLowerCase("en-US")))
 }

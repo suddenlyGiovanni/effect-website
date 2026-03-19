@@ -1,5 +1,17 @@
 import { z } from "astro/zod"
 
+export const PodcastChapter = z.object({
+  /**
+   * The display timestamp for the chapter.
+   */
+  start: z.string().regex(/^(?:\d{2}:)?\d{2}:\d{2}$/),
+  /**
+   * The chapter title.
+   */
+  title: z.string().min(1),
+})
+export type PodcastChapter = z.infer<typeof PodcastChapter>
+
 export const PodcastEpisode = z.object({
   /**
    * The ordinal number of the episode.
@@ -67,6 +79,10 @@ export const PodcastEpisode = z.object({
    * The list of tags associated with the podcast episode.
    */
   tags: z.array(z.string()),
+  /**
+   * Chapter markers shown alongside the video.
+   */
+  chapters: z.array(PodcastChapter).default([]),
 })
 
 export type PodcastEpisode = z.infer<typeof PodcastEpisode>

@@ -38,7 +38,7 @@ export const useContainerWidth = () => {
 
   const containerRef = React.useCallback(
     (node: HTMLDivElement | null) => {
-      setElement(node === null ? Option.none() : Option.some(node))
+      setElement(Option.fromNullOr(node))
     },
     [setElement],
   )

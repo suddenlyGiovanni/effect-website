@@ -10,7 +10,7 @@ import Link from "@/components/Link.astro"
 import SocialLink from "@/components/SocialLink.astro"
 import SectionDivider from "@/components/layout/SectionDivider.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
-import EpisodeCard from "@/features/podcast/components/EpisodeCard.astro"
+import PodcastEpisodeCard from "@/features/podcast/components/PodcastEpisodeCard.astro"
 import { sortPodcastsByPublishDate } from "@/features/podcast/utils"
 import BaseLayout from "@/layouts/BaseLayout.astro"
 import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
@@ -123,7 +123,7 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
             {podcasts.map((podcast, index) => {
               return (
                 <Fragment>
-                  <EpisodeCard podcast={podcast} />
+                  <PodcastEpisodeCard podcast={podcast} />
                   {index < podcasts.length - 1 && (
                     <hr aria-hidden="true" class="h-px w-full bg-zinc-800" />
                   )}

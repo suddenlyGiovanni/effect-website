@@ -58,7 +58,7 @@ export const repeatSpacedExample = defineExample({
         )
       }
 
-      const notification = NOTIFICATION_MESSAGES[index]
+      const notification = NOTIFICATION_MESSAGES[index]!
       index += 1
 
       return new PrimitiveResult(notification)

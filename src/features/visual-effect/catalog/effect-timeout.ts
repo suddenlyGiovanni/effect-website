@@ -47,7 +47,7 @@ export const timeoutExample = defineExample({
       Effect.catch(
         Effect.fnUntraced(function* () {
           const index = yield* Random.nextIntBetween(0, 3)
-          const message = FAILURE_MESSAGES[index]
+          const message = FAILURE_MESSAGES[index]!
           return yield* Effect.fail(new ErrorResult(message))
         }),
       ),

@@ -158,7 +158,7 @@ function VisualEffectContainer({
   onPointerEnter,
   onPointerLeave,
   state,
-  variant,
+  variant = "info",
 }: React.PropsWithChildren<{
   readonly notification: VisualEffectNotification | undefined
   readonly scope: AnimationScope
@@ -166,7 +166,7 @@ function VisualEffectContainer({
   readonly onPointerEnter: React.PointerEventHandler<HTMLDivElement>
   readonly onPointerLeave: React.PointerEventHandler<HTMLDivElement>
   readonly state: VisualEffectState
-  readonly variant?: "info" | "failure" | "death"
+  readonly variant?: "info" | "failure" | "death" | undefined
 }>) {
   const isDied = state._tag === "Died"
 

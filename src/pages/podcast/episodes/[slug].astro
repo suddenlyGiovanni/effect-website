@@ -5,9 +5,10 @@ import DitheredOverlay from "@/components/DitheredOverlay.astro"
 import GridRails from "@/components/GridRails.astro"
 import Link from "@/components/Link.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
-import PodcastEpisodeLayout from "@/features/podcast/components/PodcastEpisodeLayout.astro"
-import BaseLayout from "@/layouts/BaseLayout.astro"
 import { slugifyPodcast } from "@/features/podcast/utils"
+import { PodcastEpisode } from "@/features/podcast/components/PodcastEpisode"
+import { readPodcastTranscript } from "@/features/podcast/lib/transcript"
+import BaseLayout from "@/layouts/BaseLayout.astro"
 import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
 
 export async function getStaticPaths() {
@@ -23,6 +24,7 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props
 const podcast = entry.data
+const transcript = await readPodcastTranscript(entry)
 const { Content } = await render(entry)
 ---
 
@@ -39,13 +41,6 @@ const { Content } = await render(entry)
     <main id={PAGE_TITLE_ID} class="pt-16">
       <section class="relative w-full py-12 overflow-hidden">
         <div class="relative mx-auto max-w-295 px-4">
-          <Link 
-            href="/podcast/" 
-            class="inline-flex items-center gap-2 mb-12 text-sm text-muted-foreground hover:text-white transition-colors"
-          >
-            <ArrowLeftIcon class="" />
-            <span>All episodes</span>
-          </Link>
           <p class="mb-2 text-sm text-muted-foreground font-mono font-medium tracking-wider uppercase">
             // Episode #{podcast.episode}
           </p>
@@ -57,9 +52,22 @@ const { Content } = await render(entry)
 
       <section class="w-full py-8 border-t border-zinc-800">
         <div class="relative mx-auto max-w-295 px-4">
-          <PodcastEpisodeLayout entry={entry}>
-            <Content slot="body" />
-          </PodcastEpisodeLayout>
+          <PodcastEpisode 
+            client:load 
+            podcast={podcast} 
+            transcript={transcript} 
+          >
+            <div class="prose prose-zine dark:prose-invert prose-h2:mt-0">
+              <Link 
+                href="/podcast/" 
+                class="inline-flex items-center gap-1 mt-2 mb-6 text-sm text-muted-foreground hover:text-white transition-colors no-underline hover:underline hover:underline-offset-2"
+              >
+                <ArrowLeftIcon class="h-4" />
+                <span>All episodes</span>
+              </Link>
+              <Content />
+            </div>
+          </PodcastEpisode>
         </div>
       </section>
     </main>

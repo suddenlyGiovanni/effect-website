@@ -41,7 +41,7 @@ export const retryRecursExample = defineExample({
 
       yield* Effect.sleep("500 millis")
 
-      const message = SNOOZE_MESSAGES[Math.min(index, SNOOZE_MESSAGES.length - 1)]
+      const message = SNOOZE_MESSAGES[Math.min(index, SNOOZE_MESSAGES.length - 1)]!
       index += 1
 
       return yield* Effect.fail(new ErrorResult(message)).pipe(

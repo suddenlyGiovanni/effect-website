@@ -226,9 +226,12 @@
     margin: 0;
   }
 
-  :where(ul[role="list"], ol[role="list"]) {
+  :where(ul, ol) {
     margin: 0;
     padding: 0;
+  }
+
+  :where(ul[role="list"], ol[role="list"]) {
     list-style: none;
   }
 

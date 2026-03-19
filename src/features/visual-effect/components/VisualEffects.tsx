@@ -23,7 +23,7 @@ const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
 export default function VisualEffects() {
   useAtomMount(prefersReducedMotionAtom)
 
-  const [category, setCategory] = useState<ExampleCategory>(ORDERED_CATEGORIES[0])
+  const [category, setCategory] = useState<ExampleCategory>(ORDERED_CATEGORIES[0]!)
   const [indicatorRect, setIndicatorRect] = useState<IndicatorRect | undefined>(undefined)
   const rootElementReference = useRef<HTMLElement | undefined>(undefined)
   const resizeObserverReference = useRef<ResizeObserver | undefined>(undefined)

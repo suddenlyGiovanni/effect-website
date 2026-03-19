@@ -36,7 +36,7 @@ export const retryExponentialExample = defineExample({
         return new PrimitiveResult("🚗 Parked!")
       }
 
-      const result = PARKING_ATTEMPTS[index]
+      const result = PARKING_ATTEMPTS[index]!
       index += 1
 
       return yield* Effect.fail(new ErrorResult(result)).pipe(

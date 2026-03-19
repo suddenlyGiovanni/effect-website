@@ -218,7 +218,7 @@ const resolveSelector = (input: {
         })
       }
 
-      const startOffset = matches[occurrence - 1]
+      const startOffset = matches[occurrence - 1]!
       const endOffset = startOffset + input.selector.text.length
 
       return ensureValidRange(
@@ -251,8 +251,8 @@ const resolveSelector = (input: {
         })
       }
 
-      const startOffset = lineStarts[startLine - 1]
-      const endOffset = endLine === lineCount ? input.source.length : lineStarts[endLine]
+      const startOffset = lineStarts[startLine - 1]!
+      const endOffset = endLine === lineCount ? input.source.length : lineStarts[endLine]!
 
       return ensureValidRange(
         { startOffset, endOffset },
@@ -357,11 +357,11 @@ const mergeRanges = (
     return first.startOffset - second.startOffset
   })
 
-  const mergedRanges: Array<ResolvedOffsetRange> = [sortedRanges[0]]
+  const mergedRanges: Array<ResolvedOffsetRange> = [sortedRanges[0]!]
 
   for (let index = 1; index < sortedRanges.length; index++) {
-    const nextRange = sortedRanges[index]
-    const previousRange = mergedRanges[mergedRanges.length - 1]
+    const nextRange = sortedRanges[index]!
+    const previousRange = mergedRanges[mergedRanges.length - 1]!
 
     if (nextRange.startOffset <= previousRange.endOffset) {
       mergedRanges[mergedRanges.length - 1] = {

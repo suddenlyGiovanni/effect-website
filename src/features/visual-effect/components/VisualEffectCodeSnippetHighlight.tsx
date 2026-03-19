@@ -81,14 +81,14 @@ export function VisualEffectCodeSnippetHighlight({
         return
       }
 
-      const firstRect = matchedRects[0]
+      const firstRect = matchedRects[0]!
       let left = firstRect.left
       let top = firstRect.top
       let right = firstRect.right
       let bottom = firstRect.bottom
 
       for (let index = 1; index < matchedRects.length; index++) {
-        const currentRect = matchedRects[index]
+        const currentRect = matchedRects[index]!
         left = Math.min(left, currentRect.left)
         top = Math.min(top, currentRect.top)
         right = Math.max(right, currentRect.right)

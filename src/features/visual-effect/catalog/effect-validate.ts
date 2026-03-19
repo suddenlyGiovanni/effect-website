@@ -33,7 +33,7 @@ class Password extends ServiceMap.Service<Password, string>()("Password", {
     const index = yield* Random.nextIntBetween(0, PASSWORDS.length, {
       halfOpen: true,
     })
-    return PASSWORDS[index]
+    return PASSWORDS[index]!
   }),
 }) {}
 

@@ -45,7 +45,7 @@ export const eventuallyExample = defineExample({
         const index = yield* Random.nextIntBetween(0, FAILURE_MESSAGES.length, {
           halfOpen: true,
         })
-        const message = FAILURE_MESSAGES[index]
+        const message = FAILURE_MESSAGES[index]!
         return yield* Effect.fail(new ErrorResult(message)).pipe(
           Effect.tapError((error) => Notifications.use(({ notify }) => notify(error.message))),
         )

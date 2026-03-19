@@ -38,7 +38,7 @@ function TooltipContent({
   const resolvedMotionStyle =
     motionStyle === undefined
       ? undefined
-      : (popupStyle: HTMLMotionProps<"div">["style"]) => ({
+      : (popupStyle: HTMLMotionProps<"div">["style"] | undefined) => ({
           ...popupStyle,
           ...motionStyle,
         })
@@ -63,8 +63,10 @@ function TooltipContent({
               ? presence
                 ? (popupProps) => (
                     <motion.div
-                      {...(popupProps as HTMLMotionProps<"div">)}
-                      style={resolvedMotionStyle?.(popupProps.style) ?? popupProps.style}
+                      {...(popupProps as any)}
+                      style={
+                        resolvedMotionStyle?.(popupProps.style as any) ?? (popupProps.style as any)
+                      }
                       initial={{ opacity: 0, scale: 0.85, y: 12, filter: "blur(8px)" }}
                       animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
                       exit={{ opacity: 0, scale: 0.85, y: 12, filter: "blur(8px)" }}
@@ -73,8 +75,10 @@ function TooltipContent({
                   )
                 : (popupProps, state) => (
                     <motion.div
-                      {...(popupProps as HTMLMotionProps<"div">)}
-                      style={resolvedMotionStyle?.(popupProps.style) ?? popupProps.style}
+                      {...(popupProps as any)}
+                      style={
+                        resolvedMotionStyle?.(popupProps.style as any) ?? (popupProps.style as any)
+                      }
                       initial={false}
                       animate={{
                         opacity: state.open ? 1 : 0,

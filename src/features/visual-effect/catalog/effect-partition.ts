@@ -44,7 +44,7 @@ export const partitionExample = defineExample({
         const index = yield* Random.nextIntBetween(0, LICK_EMOJIS.length, {
           halfOpen: true,
         })
-        const emoji = LICK_EMOJIS[index]
+        const emoji = LICK_EMOJIS[index]!
         return new PrimitiveResult(emoji)
       }
 
