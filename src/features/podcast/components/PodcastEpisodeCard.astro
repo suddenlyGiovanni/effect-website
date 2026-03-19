@@ -19,7 +19,7 @@ const slug = slugifyPodcast(podcast)
 const href = `/podcast/episodes/${slug}/`
 const publicationDate = formatPodcastPublicationDate(DateTime.makeUnsafe(podcast.date))
 const duration = formatPodcastDuration(Duration.seconds(podcast.duration))
-const episodeNumber = String(podcast.episode).padStart(2, "0")
+const episodeNumber = String(podcast.episodeNumber).padStart(2, "0")
 const thumbnailUrl = getPodcastThumbnail(podcast.youtubeId)
 ---
 
