@@ -1,38 +1,35 @@
 ---
-import { getCollection, render } from "astro:content"
-import { ArrowLeftIcon } from "@lucide/astro"
-import DitheredOverlay from "@/components/DitheredOverlay.astro"
-import GridRails from "@/components/GridRails.astro"
-import Link from "@/components/Link.astro"
-import Navigation from "@/components/navigation/Navigation.astro"
-import { slugifyPodcast } from "@/features/podcast/utils"
-import { PodcastEpisode } from "@/features/podcast/components/PodcastEpisode"
-import { readPodcastTranscript } from "@/features/podcast/utils"
-import BaseLayout from "@/layouts/BaseLayout.astro"
-import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import { getCollection, render } from "astro:content";
+import DitheredOverlay from "@/components/DitheredOverlay.astro";
+import GridRails from "@/components/GridRails.astro";
+import Navigation from "@/components/navigation/Navigation.astro";
+import { PodcastEpisodeRoot } from "@/features/podcast/components/PodcastEpisodeRoot";
+import {
+  readPodcastTranscript,
+  slugifyPodcast,
+} from "@/features/podcast/utils";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { PAGE_TITLE_ID } from "@/lib/constants/skip-link";
 
 export async function getStaticPaths() {
-  const podcasts = await getCollection("podcasts")
-  return podcasts.map(entry => {
-    const slug = slugifyPodcast(entry.data)
+  const entries = await getCollection("podcasts");
+  return entries.map((entry) => {
+    const slug = slugifyPodcast(entry.data);
     return {
       params: { slug },
       props: { entry },
-    }
-  })
+    };
+  });
 }
 
-const { entry } = Astro.props
-const podcast = entry.data
+const { entry } = Astro.props;
 
-const transcript = await readPodcastTranscript(entry)
-const { Content } = await render(entry)
+const episode = entry.data;
+const transcript = await readPodcastTranscript(entry);
+const { Content } = await render(entry);
 ---
 
-<BaseLayout 
-  title={`Cause & Effect Podcast Episode #${podcast.episode}`} 
-  description="Exploring how engineers are using Effect to build reliable, production-grade software in TypeScript"
->
+<BaseLayout>
   <DitheredOverlay />
 
   <div class="relative z-10">
@@ -42,26 +39,28 @@ const { Content } = await render(entry)
     <main id={PAGE_TITLE_ID} class="pt-16">
       <section class="relative w-full py-8 lg:py-12 overflow-hidden">
         <div class="relative mx-auto max-w-295 px-4">
-          <p class="mb-2 text-sm text-muted-foreground font-mono font-medium tracking-wider uppercase">
-            // Episode #{podcast.episode}
+          <p
+            class="mb-2 text-sm text-muted-foreground font-mono font-medium tracking-wider uppercase"
+          >
+            // Episode #{episode.episodeNumber}
           </p>
           <h1 class="text-4xl text-white font-bold">
-            {podcast.title}
+            {episode.title}
           </h1>
         </div>
       </section>
 
       <section class="w-full py-8 border-t border-zinc-800">
         <div class="relative mx-auto max-w-295 px-4">
-          <PodcastEpisode 
-            client:load 
-            podcast={podcast} 
-            transcript={transcript} 
+          <PodcastEpisodeRoot
+            client:load
+            podcast={entry.data}
+            transcript={transcript}
           >
             <div class="prose prose-zine dark:prose-invert prose-h2:mt-0">
               <Content />
             </div>
-          </PodcastEpisode>
+          </PodcastEpisodeRoot>
         </div>
       </section>
     </main>

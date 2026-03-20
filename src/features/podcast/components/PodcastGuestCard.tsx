@@ -1,7 +1,7 @@
 import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
 import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg?react"
 import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg?react"
-import { usePodcastEpisode } from "./PodcastEpisodeProvider"
+import { usePodcastEpisode } from "../context/PodcastEpisodeContext"
 
 export function PodcastGuestCard() {
   const episode = usePodcastEpisode()

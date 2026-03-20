@@ -5,31 +5,22 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import type { PodcastChapter } from "../domain"
 import {
+  useChapters,
   useActiveChapter,
-  usePodcastEpisode,
-  useSetPreconnected,
-  useSeekToChapter,
-} from "./PodcastEpisodeProvider"
+  useSetActiveChapter,
+} from "../context/PodcastChapterContext"
 
 export function PodcastChapters() {
-  const episode = usePodcastEpisode()
-  const setPreconnected = useSetPreconnected()
+  const chapters = useChapters()
   const activeChapter = useActiveChapter()
-  const seekToChapter = useSeekToChapter()
+  const setActiveChapter = useSetActiveChapter()
 
   const handleSeek = React.useCallback(
     (chapter: PodcastChapter) => {
-      seekToChapter(chapter)
+      setActiveChapter(chapter)
     },
-    [seekToChapter],
+    [setActiveChapter],
   )
-
-  const handlePreconnect = React.useCallback(() => {
-    setPreconnected((preconnected) => {
-      if (preconnected) return preconnected
-      return true
-    })
-  }, [setPreconnected])
 
   return (
     <Collapsible defaultOpen={false} className="rounded-lg border border-zinc-700 bg-card">
@@ -37,25 +28,25 @@ export function PodcastChapters() {
         <h2 className="text-sm font-semibold">Chapters</h2>
         <ChevronDownIcon className="size-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
       </CollapsibleTrigger>
+
       <CollapsibleContent>
         <div className="border-t bg-card">
           <ScrollArea className="h-64 p-2 lg:max-h-[min(16rem,35vh)]">
             <ul className="pr-2">
-              {episode.chapters.map((chapter, index) => {
-                const isActive = chapter === activeChapter
+              {chapters.map((chapter, index) => {
+                const isActive = activeChapter ? activeChapter === chapter : index === 0
+
                 return (
                   <li key={chapter.id} className="group m-0 list-none p-0">
                     <button
                       type="button"
                       onClick={() => handleSeek(chapter)}
-                      onFocus={handlePreconnect}
-                      onPointerOver={handlePreconnect}
                       aria-label={`Jump to ${chapter.startLabel}: ${chapter.title}`}
                       className={cn(
                         "flex w-full cursor-pointer items-center gap-3 bg-inherit px-3 py-2.5 text-left transition-colors hover:bg-accent/50",
                         isActive && "bg-accent",
                         index === 0 && "rounded-t-md",
-                        index === episode.chapters.length - 1 && "rounded-b-md",
+                        index === chapters.length - 1 && "rounded-b-md",
                       )}
                     >
                       <span

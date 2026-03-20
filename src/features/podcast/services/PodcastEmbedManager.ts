@@ -163,11 +163,7 @@ export class PodcastEmbedManager extends ServiceMap.Service<
       ),
       seekTo: Atom.fn<number>()((seconds) =>
         offerCommand(new SeekToCommand({ args: [seconds, true] }), (state, requestedAt) => {
-          const pending = new SeekRequested({
-            seconds,
-            allowSeekAhead: true,
-            requestedAt,
-          })
+          const pending = new SeekRequested({ seconds, allowSeekAhead: true, requestedAt })
           return setPendingCommand(state, pending)
         }),
       ),
@@ -231,7 +227,7 @@ export const PlayerInfoPatch = Schema.Struct({
   playerState: Schema.optional(PlayerStateCode),
   translationLanguages: Schema.optional(Schema.Array(Schema.String)),
   videoData: Schema.optional(VideoDataPatch),
-  videoLoadedFraction: Schema.optional(Schema.Number),
+  videoLoadedFraction: Schema.optional(Schema.NullOr(Schema.Number)),
   videoUrl: Schema.optional(Schema.String),
   volume: Schema.optional(Schema.Number),
 })

@@ -1,15 +1,8 @@
-import * as Option from "effect/Option"
 import * as React from "react"
 import { cn, cssVars } from "@/lib/utils"
-import {
-  usePodcastEpisode,
-  usePreconnectedValue,
-  useSetIframeElement,
-  useVideoEmbedConnectionError,
-  useVideoEmbedControls,
-} from "./PodcastEpisodeProvider"
-import { PodcastVideoEmbedDebugger } from "./PodcastVideoEmbedDebugger"
-import { PodcastVideoEmbedPlayButton } from "./PodcastVideoEmbedPlayButton"
+import { useConnectEmbed } from "../context/EmbedManagerContext"
+import { usePodcastEpisode } from "../context/PodcastEpisodeContext"
+import { YOUTUBE_NOCOOKIE_URL } from "../services/PodcastEmbedManager"
 
 export type YouTubePosterQuality =
   | "default"
@@ -18,149 +11,187 @@ export type YouTubePosterQuality =
   | "sddefault"
   | "maxresdefault"
 
-export interface PodcastVideoEmbedProps {
-  readonly autoplay?: boolean | undefined
-  readonly cookie?: boolean | undefined
-  readonly debug?: boolean | undefined
-  readonly enableJSApi?: boolean | undefined
-  readonly lazyLoad?: boolean | undefined
-  readonly muted?: boolean | undefined
-  readonly poster?: YouTubePosterQuality | undefined
-  readonly webp?: boolean | undefined
+/**
+ * SEO metadata for a YouTube video that follows the schema.org `VideoObject`
+ * structure.
+ *
+ * See: https://developers.google.com/search/docs/appearance/structured-data/video
+ *
+ * All fields are optional but providing them improves search engine
+ * discoverability and enables rich results (video carousels, thumbnails in
+ * search results).
+ */
+export interface YouTubeVideoSEO {
+  /**
+   * The title of the video. If not provided, falls back to the component's
+   * `title` prop.
+   */
+  readonly name?: string | undefined
+  /**
+   * A description of the video content.
+   *
+   * Recommended: 50-160 characters for optimal search result display.
+   */
+  readonly description?: string | undefined
+  /**
+   * ISO 8601 date when the video was uploaded to YouTube.
+   */
+  readonly uploadDate?: string | undefined
+  /**
+   * ISO 8601 duration format. Required for video rich results.
+   * Format: PT#H#M#S where # is the number of hours, minutes, seconds
+   */
+  readonly duration?: string | undefined
+  /**
+   * Custom thumbnail URL. If not provided, auto-generated from video ID.
+   * Recommended: At least 1200px wide for best quality in search results.
+   */
+  readonly thumbnailUrl?: string | undefined
+  /**
+   * Direct URL to watch the video. Auto-generated if not provided.
+   * @example "https://www.youtube.com/watch?v=L2vS_050c-M"
+   */
+  readonly contentUrl?: string | undefined
+  /**
+   * The embed URL. Auto-generated from video ID if not provided.
+   */
+  readonly embedUrl?: string | undefined
 }
 
-const YOUTUBE_URL = "https://www.youtube.com"
-const YOUTUBE_NOCOOKIE_URL = "https://www.youtube-nocookie.com"
-const POSTER_BACKGROUND_IMAGE =
+const YOUTUBE_PLAY_BUTTON_SVG =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="%23f00"/><path d="M45 24 27 14v20" fill="%23fff"/></svg>'
+
+const FALLBACK_POSTER_BACKGROUND_IMAGE =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAADGCAYAAAAT+OqFAAAAdklEQVQoz42QQQ7AIAgEF/T/D+kbq/RWAlnQyyazA4aoAB4FsBSA/bFjuF1EOL7VbrIrBuusmrt4ZZORfb6ehbWdnRHEIiITaEUKa5EJqUakRSaEYBJSCY2dEstQY7AuxahwXFrvZmWl2rh4JZ07z9dLtesfNj5q0FU3A5ObbwAAAABJRU5ErkJggg=="
 
-export function PodcastVideoEmbed(props: PodcastVideoEmbedProps) {
+export function PodcastVideoEmbed({
+  aspectHeight = 9,
+  aspectWidth = 16,
+  posterQuality = "hqdefault",
+  seo,
+  webp = true,
+}: {
+  readonly aspectHeight?: number | undefined
+  readonly aspectWidth?: number | undefined
+  readonly posterQuality?: YouTubePosterQuality | undefined
+  readonly seo?: YouTubeVideoSEO | undefined
+  readonly webp?: boolean | undefined
+}) {
   const episode = usePodcastEpisode()
-  const setIframeElement = useSetIframeElement()
-  const preconnected = usePreconnectedValue()
-  const { connect, disconnect } = useVideoEmbedControls()
-  const connectionError = useVideoEmbedConnectionError()
-  const [previewing, setPreviewing] = React.useState(true)
-
-  const aspectRatio = `${(9 / 16) * 100}%`
+  const connect = useConnectEmbed()
+  const [isPreviewing, setPreviewing] = React.useState(true)
+  const [isPreconnected, setPreconnected] = React.useState(false)
 
   const posterUrl = React.useMemo(() => {
     const id = globalThis.encodeURIComponent(episode.youtube.id)
-    const format = props.webp ? "webp" : "jpg"
-    const vi = props.webp ? "vi_webp" : "vi"
-    const poster = props.poster ?? "hqdefault"
-    return `https://i.ytimg.com/${vi}/${id}/${poster}.${format}`
-  }, [episode.youtube.id, props.poster, props.webp])
+    const format = webp ? "webp" : "jpg"
+    const vi = webp ? "vi_webp" : "vi"
+    return `https://i.ytimg.com/${vi}/${id}/${posterQuality}.${format}`
+  }, [episode.youtube.id, posterQuality, webp])
 
-  const youtubeUrl = React.useMemo(
-    () => (props.cookie ? YOUTUBE_URL : YOUTUBE_NOCOOKIE_URL),
-    [props.cookie],
-  )
+  const handleClick = React.useCallback(() => {
+    if (!isPreviewing) return
+    setPreviewing(false)
+  }, [isPreviewing, setPreviewing])
 
-  const iframeSrc = React.useMemo(() => {
-    const url = new URL(getYouTubeEmbedUrl(episode.youtube.id))
-    if (typeof window !== "undefined") {
-      url.searchParams.set("origin", window.location.origin)
-    }
-    if (props.cookie !== true) {
-      url.hostname = new URL(YOUTUBE_NOCOOKIE_URL).hostname
-    }
-    if (props.autoplay) {
-      url.searchParams.set("autoplay", "1")
-    }
-    if (props.muted) {
-      url.searchParams.set("mute", "1")
-      url.searchParams.set("muted", "1")
-    }
-    return url.toString()
-  }, [props.autoplay, props.cookie, episode.youtube.id, props.muted])
+  const handlePreconnect = React.useCallback(() => {
+    if (isPreconnected) return
+    setPreconnected(true)
+  }, [isPreconnected, setPreconnected])
 
-  const iframeRef = React.useCallback(
-    (iframe: HTMLIFrameElement | null) => {
-      if (iframe) {
-        setIframeElement(Option.some(iframe))
-      } else {
-        setIframeElement(Option.none())
+  const targetRef = React.useCallback(
+    (element: HTMLDivElement | null) => {
+      if (!isPreviewing && element !== null) {
+        connect(element)
       }
     },
-    [setIframeElement],
+    [isPreviewing],
   )
-
-  React.useEffect(() => {
-    if (previewing || !props.enableJSApi || typeof window === "undefined") {
-      return
-    }
-    connect(youtubeUrl)
-    return () => disconnect()
-  }, [connect, disconnect, previewing, props.enableJSApi, youtubeUrl])
 
   return (
     <React.Fragment>
-      {!props.lazyLoad && <link rel="preload" href={posterUrl} as="image" />}
+      {/* YouTube Poster Preload */}
+      <link rel="preload" href={posterUrl} as="image" />
 
-      {preconnected && (
+      {/* YouTube Preconnect */}
+      {isPreconnected && (
         <React.Fragment>
-          <link rel="preconnect" href={youtubeUrl} />
+          <link rel="preconnect" href={YOUTUBE_NOCOOKIE_URL} />
           <link rel="preconnect" href="https://www.google.com" />
         </React.Fragment>
       )}
 
+      {/* SEO: Metadata for the YouTube video following the VideoObject schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: generateVideoStructuredData(
+            episode.youtube.id,
+            episode.title,
+            posterUrl,
+            YOUTUBE_NOCOOKIE_URL,
+            seo,
+          ),
+        }}
+      />
+
+      {/* SEO: Include a noscript fallback for accessibility / web crawlers */}
+      <noscript>
+        <a
+          href={`https://www.youtube.com/watch?v=${episode.youtube.id}`}
+          aria-label={`Watch ${episode.title} on YouTube`}
+        >
+          Watch &quot;{episode.title}&quot; on YouTube
+        </a>
+      </noscript>
+
       <article
         style={cssVars({
-          "--aspect-ratio": aspectRatio,
-          "--container-url": `url('${POSTER_BACKGROUND_IMAGE}')`,
-          ...(props.lazyLoad ? {} : { backgroundImage: `url('${posterUrl}')` }),
+          "--aspect-ratio": `${(aspectHeight / aspectWidth) * 100}%`,
+          "--container-url": `url('${FALLBACK_POSTER_BACKGROUND_IMAGE}')`,
+          backgroundImage: `url('${posterUrl}')`,
         })}
         className={cn(
           "group relative aspect-video overflow-hidden rounded-lg bg-cover bg-position-[50%] contain-layout contain-size",
           "after:block after:pb-(--aspect-ratio) after:content-['']",
-          previewing &&
+          isPreviewing &&
             "before:pointer-events-none before:absolute before:top-0 before:box-content before:block before:h-[60px] before:w-full before:bg-(image:--container-url) before:bg-top before:bg-repeat-x before:pb-[50px] before:opacity-0 before:transition-all before:duration-200 before:content-['']",
         )}
         data-title={episode.title}
       >
-        {props.lazyLoad && !previewing && (
-          <img
-            className="absolute top-0 left-0 size-full object-cover object-center"
-            src={posterUrl}
-            alt={`${episode.title} - YouTube thumbnail`}
-            loading="lazy"
-          />
+        {isPreviewing && (
+          <button
+            type="button"
+            onClick={handleClick}
+            onPointerOver={handlePreconnect}
+            onFocus={handlePreconnect}
+            aria-label={`Watch ${episode.title}`}
+            style={cssVars({
+              "--button-url": `url('${YOUTUBE_PLAY_BUTTON_SVG}')`,
+            })}
+            className="absolute inset-0 z-1 cursor-pointer rounded-lg border border-zinc-700 bg-transparent p-0"
+          >
+            <span className="sr-only">Watch {episode.title}</span>
+            <span
+              aria-hidden="true"
+              className={cn(
+                "absolute top-1/2 left-1/2 h-12 w-17 -translate-1/2",
+                "bg-transparent bg-(image:--button-url) bg-size-[100%_100%] bg-no-repeat",
+                "opacity-80 grayscale transition-[filter,opacity] duration-100 ease-out",
+                "group-hover:opacity-100 group-hover:filter-none",
+              )}
+            />
+          </button>
         )}
 
-        {previewing && (
-          <PodcastVideoEmbedPlayButton title={episode.title} onClick={() => setPreviewing(false)} />
-        )}
-
-        {!previewing && (
-          <iframe
-            ref={iframeRef}
-            src={iframeSrc}
-            title={episode.title}
-            width="560"
-            height="315"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-            className="absolute top-0 right-0 left-0 m-0 block h-full w-full border-0 bg-black p-0 outline-0"
-          />
-        )}
-
-        {!previewing && props.enableJSApi && props.debug && (
-          <PodcastVideoEmbedDebugger youtubeUrl={youtubeUrl} />
-        )}
-
-        {Option.isSome(connectionError) && !previewing && (
-          <div className="absolute top-3 right-3 left-3 z-4 rounded-lg border border-red-400/25 bg-red-950/80 px-3 py-2 text-xs text-red-100 shadow-lg backdrop-blur-sm">
-            <p className="font-medium tracking-[0.16em] uppercase">youtube error</p>
-            <p className="mt-1 text-red-50/90">{connectionError.value}</p>
-          </div>
-        )}
-
-        {previewing && (
+        {!isPreviewing && (
           <div
-            className="pointer-events-none absolute inset-0 z-2 animate-pulse bg-black/10"
-            aria-hidden="true"
+            ref={targetRef}
+            className={cn(
+              "[&>iframe]:absolute [&>iframe]:top-0 [&>iframe]:right-0 [&>iframe]:left-0",
+              "[&>iframe]:block [&>iframe]:h-full [&>iframe]:w-full",
+              "[&>iframe]:border-0 [&>iframe]:bg-black [&>iframe]:p-0 [&>iframe]:outline-0",
+            )}
           />
         )}
       </article>
@@ -168,11 +199,29 @@ export function PodcastVideoEmbed(props: PodcastVideoEmbedProps) {
   )
 }
 
-const getYouTubeEmbedUrl = (videoId: string): string => {
-  const id = globalThis.encodeURIComponent(videoId)
-  const url = new URL(`https://www.youtube.com/embed/${id}`)
-  url.searchParams.set("enablejsapi", "1")
-  url.searchParams.set("playsinline", "1")
-  url.searchParams.set("rel", "0")
-  return url.toString()
+/**
+ * Generates JSON-LD structured data for the VideoObject schema.
+ *
+ * @see https://schema.org/VideoObject
+ * @see https://developers.google.com/search/docs/appearance/structured-data/video
+ */
+function generateVideoStructuredData(
+  videoId: string,
+  title: string,
+  posterUrl: string,
+  youtubeUrl: string,
+  seo?: YouTubeVideoSEO,
+): string {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: seo?.name || title,
+    thumbnailUrl: [seo?.thumbnailUrl || posterUrl],
+    embedUrl: seo?.embedUrl || `${youtubeUrl}/embed/${videoId}`,
+    contentUrl: seo?.contentUrl || `https://www.youtube.com/watch?v=${videoId}`,
+    ...(seo?.description && { description: seo.description }),
+    ...(seo?.uploadDate && { uploadDate: seo.uploadDate }),
+    ...(seo?.duration && { duration: seo.duration }),
+  }
+  return JSON.stringify(structuredData)
 }

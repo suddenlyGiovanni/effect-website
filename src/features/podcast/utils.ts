@@ -8,7 +8,6 @@ import SrtParser from "srt-parser-2"
 import type { PodcastChapterEntry, PodcastEpisodeEntry } from "./collection"
 import type {
   PodcastChapter,
-  PodcastEpisode,
   PodcastTranscriptCue,
   PodcastThumbnailPosterQuality,
   SrtCue,
@@ -29,7 +28,7 @@ function slugifySegment(value: string): string {
     .replace(/^-+|-+$/g, "")
 }
 
-export function slugifyPodcast(podcast: PodcastEpisode): string {
+export function slugifyPodcast(podcast: PodcastEpisodeEntry): string {
   const trimmedTitle = podcast.title.trim()
   const trimmedGuest = podcast.guest.trim()
   const guestSuffix = ` with ${trimmedGuest}`
