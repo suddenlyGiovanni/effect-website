@@ -1,4 +1,5 @@
 import * as Array from "effect/Array"
+import * as Clock from "effect/Clock"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
@@ -21,6 +22,7 @@ export class PodcastEmbedManager extends ServiceMap.Service<
   PodcastEmbedManager,
   {
     readonly debugAtom: Atom.Atom<ReadonlyArray<string>>
+    readonly stateAtom: Atom.Atom<EmbedState>
     readonly connect: Atom.AtomResultFn<HTMLElement, void, never>
     readonly play: Atom.AtomResultFn<void, void, never>
     readonly pause: Atom.AtomResultFn<void, void, never>
@@ -28,8 +30,10 @@ export class PodcastEmbedManager extends ServiceMap.Service<
   }
 >()("PodcastEmbedManager", {
   make: Effect.fnUntraced(function* (episode: PodcastEpisode) {
+    const clock = yield* Clock.Clock
     const queue = yield* Queue.unbounded<EmbedCommand>()
     const debugAtom = Atom.make<ReadonlyArray<string>>([])
+    const stateAtom = Atom.make<EmbedState>(makeInitialEmbedState())
     const atomRegistry = yield* AtomRegistry.AtomRegistry
 
     const services = yield* Effect.services()
@@ -77,13 +81,19 @@ export class PodcastEmbedManager extends ServiceMap.Service<
                   connected = true
                 }
 
-                yield* decodeEvent(event.data)
+                const data = yield* decodeEvent(event.data)
+                const now = yield* Clock.currentTimeMillis
+                atomRegistry.update(stateAtom, (state) =>
+                  reduceEmbedState(state, episode, data, now),
+                )
               }),
             ),
           )
         }
 
         const handleLoad = () => {
+          const now = clock.currentTimeMillisUnsafe()
+          atomRegistry.update(stateAtom, (state) => beginHandshake(state, now))
           runFork(attemptHandshake)
         }
 
@@ -123,16 +133,43 @@ export class PodcastEmbedManager extends ServiceMap.Service<
 
     const connect = Effect.fn("EmbedManager.connect")(function* (element: HTMLElement) {
       const iframe = yield* RcRef.get(ref)
+      const now = yield* Clock.currentTimeMillis
       element.appendChild(iframe)
+      atomRegistry.update(stateAtom, (state) => markMounted(state, now))
+    })
+
+    const offerCommand = Effect.fn("EmbedManager.offerCommand")(function* (
+      command: EmbedCommand,
+      updateState: (state: EmbedState, requestedAt: number) => EmbedState,
+    ) {
+      const now = yield* Clock.currentTimeMillis
+      atomRegistry.update(stateAtom, (state) => updateState(state, now))
+      yield* Queue.offer(queue, command)
     })
 
     return {
       debugAtom,
+      stateAtom,
       connect: Atom.fn<HTMLElement>()((element) => connect(element)),
-      play: Atom.fn<void>()(() => Effect.asVoid(Queue.offer(queue, new PlayVideoCommand()))),
-      pause: Atom.fn<void>()(() => Effect.asVoid(Queue.offer(queue, new PauseVideoCommand()))),
+      play: Atom.fn<void>()(() =>
+        offerCommand(new PlayVideoCommand(), (state, requestedAt) =>
+          setPendingCommand(state, new PlayRequested({ requestedAt })),
+        ),
+      ),
+      pause: Atom.fn<void>()(() =>
+        offerCommand(new PauseVideoCommand(), (state, requestedAt) =>
+          setPendingCommand(state, new PauseRequested({ requestedAt })),
+        ),
+      ),
       seekTo: Atom.fn<number>()((seconds) =>
-        Effect.asVoid(Queue.offer(queue, new SeekToCommand({ args: [seconds, true] }))),
+        offerCommand(new SeekToCommand({ args: [seconds, true] }), (state, requestedAt) => {
+          const pending = new SeekRequested({
+            seconds,
+            allowSeekAhead: true,
+            requestedAt,
+          })
+          return setPendingCommand(state, pending)
+        }),
       ),
     } as const
   }),
@@ -240,13 +277,15 @@ export class YouTubeApiInfoDeliveryEvent extends Schema.Class<YouTubeApiInfoDeli
       translationLanguages: Schema.Array(Schema.String),
     }),
     namespaces: Schema.Array(Schema.String),
-    remote: Schema.Struct({
-      casting: Schema.Boolean,
-      currentReceiver: VideoReceiver,
-      options: Schema.Array(Schema.String),
-      quickCast: Schema.Boolean,
-      receivers: Schema.Array(VideoReceiver),
-    }),
+    remote: Schema.optional(
+      Schema.Struct({
+        casting: Schema.Boolean,
+        currentReceiver: VideoReceiver,
+        options: Schema.Array(Schema.String),
+        quickCast: Schema.Boolean,
+        receivers: Schema.Array(VideoReceiver),
+      }),
+    ),
   }),
 }) {}
 
@@ -377,13 +416,6 @@ export const EmbedFailureReason = Schema.Union([
 ]).pipe(Schema.toTaggedUnion("_tag"))
 export type EmbedFailureReason = typeof EmbedFailureReason.Type
 
-export const ActiveDiagnostics = Schema.Struct({
-  lastEvent: Schema.optional(Schema.String),
-  lastError: Schema.optional(ErrorCode),
-  lastUpdatedAt: Schema.Number,
-})
-export type ActiveDiagnostics = typeof ActiveDiagnostics.Type
-
 export class PlaybackUnstarted extends Schema.Class<PlaybackUnstarted>("PlaybackUnstarted")({
   _tag: Schema.tag("Unstarted"),
   video: VideoMetadata,
@@ -440,12 +472,6 @@ export const PlaybackState = Schema.Union([
 ]).pipe(Schema.toTaggedUnion("_tag"))
 export type PlaybackState = typeof PlaybackState.Type
 
-export const ActiveSession = Schema.Struct({
-  connectedAt: Schema.Number,
-  lastMessageAt: Schema.Number,
-})
-export type ActiveSession = typeof ActiveSession.Type
-
 export class EmbedStateNotMounted extends Schema.Class<EmbedStateNotMounted>(
   "EmbedStateNotMounted",
 )({
@@ -468,10 +494,8 @@ export class EmbedStateHandshaking extends Schema.Class<EmbedStateHandshaking>(
 
 export class EmbedStateActive extends Schema.Class<EmbedStateActive>("EmbedStateActive")({
   _tag: Schema.tag("Active"),
-  session: ActiveSession,
   playback: PlaybackState,
   pending: PendingCommand,
-  diagnostics: ActiveDiagnostics,
 }) {}
 
 export class EmbedStateFailed extends Schema.Class<EmbedStateFailed>("EmbedStateFailed")({
@@ -494,3 +518,320 @@ export const EmbedState = Schema.Union([
   EmbedStateFailed,
 ]).pipe(Schema.toTaggedUnion("_tag"))
 export type EmbedState = typeof EmbedState.Type
+
+function makeInitialEmbedState(): EmbedState {
+  return new EmbedStateNotMounted()
+}
+
+function makeDefaultVideoMetadata(episode: PodcastEpisode): VideoMetadata {
+  return {
+    videoId: episode.youtube.id,
+    title: episode.title,
+    author: episode.guest,
+    videoUrl: `https://www.youtube.com/watch?v=${episode.youtube.id}`,
+  }
+}
+
+function makeDefaultPlaybackState(episode: PodcastEpisode): PlaybackState {
+  return new PlaybackUnstarted({
+    video: makeDefaultVideoMetadata(episode),
+    durationSeconds: Duration.toSeconds(episode.duration),
+  })
+}
+
+function makeNoPendingCommand(): PendingCommand {
+  return new NoPendingCommand()
+}
+
+function markMounted(state: EmbedState, startedAt: number): EmbedState {
+  switch (state._tag) {
+    case "NotMounted":
+      return new EmbedStateMounting({ iframeMounted: true, startedAt })
+    case "Mounting":
+      return new EmbedStateMounting({
+        iframeMounted: true,
+        startedAt: state.startedAt,
+      })
+    default:
+      return state
+  }
+}
+
+function beginHandshake(state: EmbedState, startedAt: number): EmbedState {
+  switch (state._tag) {
+    case "NotMounted":
+    case "Mounting":
+      return new EmbedStateHandshaking({ iframeMounted: true, startedAt })
+    default:
+      return state
+  }
+}
+
+function setPendingCommand(state: EmbedState, pending: PendingCommand): EmbedState {
+  if (state._tag !== "Active") {
+    return state
+  }
+  return new EmbedStateActive({
+    playback: state.playback,
+    pending,
+  })
+}
+
+function reduceEmbedState(
+  state: EmbedState,
+  episode: PodcastEpisode,
+  event: YouTubeEvent,
+  timestamp: number,
+): EmbedState {
+  switch (event.event) {
+    case "onError":
+      return new EmbedStateFailed({
+        stage: "runtime",
+        reason: new YouTubeErrorFailureReason({ code: event.info }),
+        lastKnownVideo: getLastKnownVideo(state),
+        failedAt: timestamp,
+      })
+    case "onReady":
+      return ensureActiveState(state, episode, event.event, timestamp)
+    case "apiInfoDelivery":
+      return ensureActiveState(state, episode, event.event, timestamp)
+    case "initialDelivery":
+    case "infoDelivery":
+      return applyPlayerInfoPatchToState(state, episode, event.event, event.info, timestamp)
+    case "onStateChange":
+      return applyPlayerInfoPatchToState(
+        state,
+        episode,
+        event.event,
+        { playerState: event.info },
+        timestamp,
+      )
+  }
+}
+
+function ensureActiveState(
+  state: EmbedState,
+  episode: PodcastEpisode,
+  _eventName: string,
+  _timestamp: number,
+): EmbedState {
+  if (state._tag === "Active") {
+    return new EmbedStateActive({
+      playback: state.playback,
+      pending: state.pending,
+    })
+  }
+
+  return new EmbedStateActive({
+    playback: makeDefaultPlaybackState(episode),
+    pending: makeNoPendingCommand(),
+  })
+}
+
+function applyPlayerInfoPatchToState(
+  state: EmbedState,
+  episode: PodcastEpisode,
+  eventName: string,
+  patch: PlayerInfoPatch,
+  timestamp: number,
+): EmbedState {
+  const activeState = ensureActiveState(state, episode, eventName, timestamp)
+  if (activeState._tag !== "Active") {
+    return activeState
+  }
+
+  const playback = applyPlayerInfoPatch(activeState.playback, patch)
+
+  return new EmbedStateActive({
+    playback,
+    pending: resolvePendingCommand(activeState.pending, playback),
+  })
+}
+
+function applyPlayerInfoPatch(playback: PlaybackState, patch: PlayerInfoPatch): PlaybackState {
+  const video = mergeVideoMetadata(playback.video, patch)
+  const playerState = patch.playerState ?? getPlayerStateCode(playback)
+  const currentTime = patch.currentTime ?? getCurrentTimeSeconds(playback)
+  const duration = patch.duration ?? getDurationSeconds(playback)
+
+  switch (playerState) {
+    case -1:
+      return new PlaybackUnstarted({
+        video,
+        ...(duration !== undefined ? { durationSeconds: duration } : {}),
+      })
+    case 0:
+      return new PlaybackEnded({
+        video,
+        currentTimeSeconds: currentTime ?? duration ?? 0,
+        durationSeconds: duration ?? currentTime ?? 0,
+      })
+    case 1:
+      return new PlaybackPlaying(
+        makeRunningPlaybackFields(video, playback, patch, currentTime, duration),
+      )
+    case 2:
+      return new PlaybackPaused(
+        makeRunningPlaybackFields(video, playback, patch, currentTime, duration),
+      )
+    case 3:
+      return new PlaybackBuffering(
+        makeRunningPlaybackFields(video, playback, patch, currentTime, duration),
+      )
+    case 5:
+      return new PlaybackCued({
+        video,
+        currentTimeSeconds: currentTime ?? 0,
+        durationSeconds: duration ?? 0,
+      })
+  }
+}
+
+function makeRunningPlaybackFields(
+  video: VideoMetadata,
+  playback: PlaybackState,
+  patch: PlayerInfoPatch,
+  currentTime: number | undefined,
+  duration: number | undefined,
+) {
+  const volume = patch.volume ?? getVolume(playback)
+  const loadedFraction = patch.videoLoadedFraction ?? getLoadedFraction(playback)
+  const quality = patch.playbackQuality ?? getQuality(playback)
+
+  return {
+    video,
+    currentTimeSeconds: currentTime ?? 0,
+    durationSeconds: duration ?? 0,
+    playbackRate: patch.playbackRate ?? getPlaybackRate(playback) ?? 1,
+    ...(volume !== undefined ? { volume } : {}),
+    muted: patch.muted ?? getMuted(playback) ?? false,
+    ...(loadedFraction !== undefined ? { loadedFraction } : {}),
+    ...(quality !== undefined ? { quality } : {}),
+  }
+}
+
+function mergeVideoMetadata(video: VideoMetadata, patch: PlayerInfoPatch): VideoMetadata {
+  const title = patch.videoData?.title ?? video.title
+  const author = patch.videoData?.author ?? video.author
+  const videoUrl = patch.videoUrl ?? video.videoUrl
+
+  return {
+    videoId: patch.videoData?.video_id ?? video.videoId,
+    ...(title !== undefined ? { title } : {}),
+    ...(author !== undefined ? { author } : {}),
+    ...(videoUrl !== undefined ? { videoUrl } : {}),
+  }
+}
+
+function resolvePendingCommand(pending: PendingCommand, playback: PlaybackState): PendingCommand {
+  switch (pending._tag) {
+    case "None":
+      return pending
+    case "PlayRequested":
+      return playback._tag === "Playing" ? makeNoPendingCommand() : pending
+    case "PauseRequested":
+      return playback._tag === "Paused" ? makeNoPendingCommand() : pending
+    case "SeekRequested": {
+      const currentTime = getCurrentTimeSeconds(playback)
+      return currentTime !== undefined && Math.abs(currentTime - pending.seconds) < 1
+        ? makeNoPendingCommand()
+        : pending
+    }
+  }
+}
+
+function getLastKnownVideo(state: EmbedState): VideoMetadata | undefined {
+  switch (state._tag) {
+    case "Active":
+      return state.playback.video
+    case "Failed":
+      return state.lastKnownVideo
+    default:
+      return undefined
+  }
+}
+
+function getPlayerStateCode(playback: PlaybackState): PlayerStateCode {
+  switch (playback._tag) {
+    case "Unstarted":
+      return -1
+    case "Ended":
+      return 0
+    case "Playing":
+      return 1
+    case "Paused":
+      return 2
+    case "Buffering":
+      return 3
+    case "Cued":
+      return 5
+  }
+}
+
+function getCurrentTimeSeconds(playback: PlaybackState): number | undefined {
+  switch (playback._tag) {
+    case "Unstarted":
+      return undefined
+    default:
+      return playback.currentTimeSeconds
+  }
+}
+
+function getDurationSeconds(playback: PlaybackState): number | undefined {
+  return playback.durationSeconds
+}
+
+function getPlaybackRate(playback: PlaybackState): number | undefined {
+  switch (playback._tag) {
+    case "Playing":
+    case "Paused":
+    case "Buffering":
+      return playback.playbackRate
+    default:
+      return undefined
+  }
+}
+
+function getVolume(playback: PlaybackState): number | undefined {
+  switch (playback._tag) {
+    case "Playing":
+    case "Paused":
+    case "Buffering":
+      return playback.volume
+    default:
+      return undefined
+  }
+}
+
+function getMuted(playback: PlaybackState): boolean | undefined {
+  switch (playback._tag) {
+    case "Playing":
+    case "Paused":
+    case "Buffering":
+      return playback.muted
+    default:
+      return undefined
+  }
+}
+
+function getLoadedFraction(playback: PlaybackState): number | undefined {
+  switch (playback._tag) {
+    case "Playing":
+    case "Paused":
+    case "Buffering":
+      return playback.loadedFraction
+    default:
+      return undefined
+  }
+}
+
+function getQuality(playback: PlaybackState): string | undefined {
+  switch (playback._tag) {
+    case "Playing":
+    case "Paused":
+    case "Buffering":
+      return playback.quality
+    default:
+      return undefined
+  }
+}

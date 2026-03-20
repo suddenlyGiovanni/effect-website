@@ -1,15 +1,22 @@
 import { useAtomSet, useAtomSuspense, useAtomValue } from "@effect/atom-react"
 import * as DateTime from "effect/DateTime"
 import * as Duration from "effect/Duration"
+import { ArrowLeftIcon, ChevronDownIcon, PlayIcon } from "lucide-react"
 import * as React from "react"
+import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
+import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg?react"
+import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg?react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   embedManagerAtom,
   YOUTUBE_NOCOOKIE_URL,
+  type EmbedState,
   type PodcastEmbedManager,
 } from "@/features/podcast/services/PodcastEmbedManager"
 import { cn, cssVars } from "@/lib/utils"
 import type { PodcastEpisodeEntry } from "../collection"
-import { PodcastEpisode, PodcastEpisodeId, type SrtCue } from "../domain"
+import { PodcastChapter, PodcastEpisode, PodcastEpisodeId, type SrtCue } from "../domain"
 import { normalizePodcastChapters, normalizePodcastTranscript } from "../utils"
 
 // =============================================================================
@@ -29,6 +36,8 @@ const EmbedManagerContext = React.createContext<PodcastEmbedManager["Service"]>(
 const useEmbedManager = () => React.useContext(EmbedManagerContext)
 
 const useDebugInfo = () => useAtomValue(useEmbedManager().debugAtom)
+
+const useEmbedState = () => useAtomValue(useEmbedManager().stateAtom)
 
 const useConnectEmbed = () => useAtomSet(useEmbedManager().connect)
 
@@ -91,16 +100,210 @@ export function TestPodcastEmbed({
   return (
     <PodcastEpisodeContext.Provider value={podcastEpisode}>
       <EmbedManagerContext.Provider value={manager}>
-        <div className="p-8">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="relative h-108">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <div className="mb-4 lg:mb-0">
               <PodcastEpisodeEmbed />
+              <a
+                href="/podcast/"
+                className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground no-underline transition-colors hover:text-white hover:underline hover:underline-offset-2 lg:mb-6"
+              >
+                <ArrowLeftIcon className="h-4" />
+                <span>All episodes</span>
+              </a>
             </div>
-            <PodcastEmbedDebugger />
+
+            {/* Mobile */}
+            <div className="mb-4 lg:hidden">
+              <PodcastGuestCard />
+            </div>
+
+            <div className="mb-4 lg:hidden">
+              <PodcastChapters />
+            </div>
+
+            {/*
+            <div className="mb-6 lg:hidden">
+              <PodcastTranscript playerId={episode.id} transcript={episode.transcript} />
+            </div>
+
+            {children}
+            */}
           </div>
+
+          {/* Desktop */}
+          <aside className="top-20 col-span-1 hidden lg:sticky lg:flex lg:h-[calc(100svh-10rem)] lg:max-h-[calc(100svh-10rem)] lg:min-h-0 lg:flex-col lg:self-start">
+            <div className="space-y-4 lg:flex-1">
+              <PodcastGuestCard />
+              <PodcastChapters />
+              {/*<PodcastTranscript playerId={episode.id} transcript={episode.transcript} />*/}
+            </div>
+          </aside>
         </div>
+
+        <EmbedDebugger />
       </EmbedManagerContext.Provider>
     </PodcastEpisodeContext.Provider>
+  )
+}
+
+export function PodcastGuestCard() {
+  const episode = usePodcastEpisode()
+
+  return (
+    <div className="rounded-lg border border-zinc-700 bg-card p-4">
+      <p className="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        Featured Guest
+      </p>
+
+      <p className="text-lg font-semibold text-white">{episode.guest}</p>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <span>Warp</span>
+        <span>·</span>
+        <span>{episode.formattedPublicationDate}</span>
+        <span>·</span>
+        <span>{episode.formattedDuration}</span>
+      </div>
+
+      <hr className="my-4 h-px bg-secondary" />
+
+      <div>
+        <p className="mb-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+          Listen on
+        </p>
+
+        <div className="flex items-center justify-between">
+          <a
+            className="group flex items-center text-white no-underline transition-colors"
+            href="https://open.spotify.com/show/4QTFiem4o0G9V2vXtv8vMU"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Listen to the Cause & Effect Podcast on Spotify"
+          >
+            <SpotifyLogo className="mr-1 size-6 fill-green-500" />
+            <span className="text-sm group-hover:underline group-hover:underline-offset-2">
+              Spotify
+            </span>
+          </a>
+          <a
+            className="group flex items-center text-white no-underline transition-colors"
+            href="https://www.youtube.com/@EffectTS"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Subscribe to Effect on YouTube"
+          >
+            <YouTubeLogo className="mr-1 size-6 [&_.youtube-body]:fill-red-500 [&_.youtube-play]:fill-white" />
+            <span className="text-sm group-hover:underline group-hover:underline-offset-2">
+              YouTube
+            </span>
+          </a>
+          <a
+            className="group flex items-center text-white no-underline transition-colors"
+            href="https://podcasts.apple.com/us/podcast/cause-effect/id1781879869"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Listen to the Cause & Effect Podcast on Apple Podcasts"
+          >
+            <img
+              className="mr-1.5 h-5 w-auto"
+              src={ApplePodcastsLogo.src}
+              alt="Listen to the Cause & Effect Podcast on Apple Podcasts"
+              loading="lazy"
+            />
+            <span className="text-sm group-hover:underline group-hover:underline-offset-2">
+              Apple Podcasts
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function PodcastChapters() {
+  const episode = usePodcastEpisode()
+  const state = useEmbedState()
+  const { seekTo } = useEmbedControls()
+
+  const handleSeek = React.useCallback(
+    (chapter: PodcastChapter) => {
+      seekTo(chapter.startSeconds)
+    },
+    [seekTo],
+  )
+
+  const activeChapter = episode.chapters.findLast((chapter) => {
+    if (state._tag === "Active" && "currentTimeSeconds" in state.playback) {
+      return chapter.startSeconds <= state.playback.currentTimeSeconds
+    }
+    return false
+  })
+
+  return (
+    <Collapsible defaultOpen={false} className="rounded-lg border border-zinc-700 bg-card">
+      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-lg bg-card px-4 py-3 transition-colors hover:bg-accent/50 data-panel-open:rounded-b-none">
+        <h2 className="text-sm font-semibold">Chapters</h2>
+        <ChevronDownIcon className="size-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="border-t bg-card">
+          <ScrollArea className="h-64 p-2 lg:max-h-[min(16rem,35vh)]">
+            <ul className="pr-2">
+              {episode.chapters.map((chapter, index) => {
+                const isActive = activeChapter ? activeChapter === chapter : index === 0
+
+                return (
+                  <li key={chapter.id} className="group m-0 list-none p-0">
+                    <button
+                      type="button"
+                      onClick={() => handleSeek(chapter)}
+                      aria-label={`Jump to ${chapter.startLabel}: ${chapter.title}`}
+                      className={cn(
+                        "flex w-full cursor-pointer items-center gap-3 bg-inherit px-3 py-2.5 text-left transition-colors hover:bg-accent/50",
+                        isActive && "bg-accent",
+                        index === 0 && "rounded-t-md",
+                        index === episode.chapters.length - 1 && "rounded-b-md",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium",
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground group-hover:text-foreground",
+                        )}
+                      >
+                        {isActive ? (
+                          <PlayIcon className="size-3 transition-none" fill="currentColor" />
+                        ) : (
+                          index + 1
+                        )}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn(
+                            "truncate text-sm font-medium transition-colors",
+                            isActive
+                              ? "text-foreground"
+                              : "text-muted-foreground group-hover:text-foreground",
+                          )}
+                        >
+                          {chapter.title}
+                        </p>
+                      </div>
+                      <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                        {chapter.startLabel}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </ScrollArea>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -326,9 +529,10 @@ function PodcastEpisodeEmbed({
   )
 }
 
-function PodcastEmbedDebugger() {
+export function EmbedDebugger() {
   const { play, pause, seekTo } = useEmbedControls()
   const debugInfo = useDebugInfo()
+  const state = useEmbedState()
   const [selectedLabels, setSelectedLabels] = React.useState<ReadonlySet<string>>(() => new Set())
   const [seekSeconds, setSeekSeconds] = React.useState("0")
 
@@ -386,7 +590,7 @@ function PodcastEmbedDebugger() {
   }, [])
 
   const submitSeekTo = React.useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    (event: React.SubmitEvent<HTMLFormElement>) => {
       event.preventDefault()
 
       const seconds = Number(seekSeconds)
@@ -409,83 +613,89 @@ function PodcastEmbedDebugger() {
       </header>
 
       <div className="space-y-4">
-        <section className="space-y-3 rounded-xl border border-emerald-900/60 bg-linear-to-br from-emerald-950/30 via-emerald-950/10 to-zinc-900/90 p-4 shadow-[inset_0_1px_0_rgba(16,185,129,0.08)]">
-          <div className="flex items-center justify-between gap-3 border-b border-emerald-950/60 pb-3">
-            <div>
-              <p className="text-xs font-medium tracking-[0.18em] text-emerald-300/80 uppercase">
-                Events
-              </p>
-              <p className="mt-1 text-sm text-zinc-400">
-                Inspect raw embed messages and narrow by event type.
-              </p>
-            </div>
-            <div className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
-              {filteredEvents.length} shown
-            </div>
+        <section className="space-y-2 rounded-xl border border-sky-900/60 bg-linear-to-br from-sky-950/40 via-sky-950/15 to-zinc-900/90 p-3 shadow-[inset_0_1px_0_rgba(56,189,248,0.08)]">
+          <p className="text-xs font-medium tracking-[0.18em] text-sky-300/80 uppercase">
+            Controls
+          </p>
+
+          <div className="flex flex-wrap items-end gap-2 rounded-lg border border-sky-900/50 bg-black/15 p-2.5">
+            <button
+              type="button"
+              onClick={() => play()}
+              className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-sm font-medium text-emerald-200 transition hover:border-emerald-400/60 hover:bg-emerald-500/15"
+            >
+              Play
+            </button>
+            <button
+              type="button"
+              onClick={() => pause()}
+              className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-sm font-medium text-amber-100 transition hover:border-amber-400/60 hover:bg-amber-500/15"
+            >
+              Pause
+            </button>
+            <form onSubmit={submitSeekTo} className="flex flex-wrap items-end gap-2">
+              <label className="flex min-w-34 flex-col gap-1">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  inputMode="decimal"
+                  value={seekSeconds}
+                  onChange={(event) => setSeekSeconds(event.target.value)}
+                  placeholder="seconds"
+                  className="rounded-md border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 font-mono text-sm text-zinc-100 transition outline-none placeholder:text-zinc-500 focus:border-sky-500/60"
+                />
+              </label>
+              <button
+                type="submit"
+                className="rounded-md border border-sky-500/40 bg-sky-500/10 px-2.5 py-1.5 text-sm font-medium text-sky-100 transition hover:border-sky-400/60 hover:bg-sky-500/15"
+              >
+                Seek
+              </button>
+            </form>
           </div>
+        </section>
 
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_14rem]">
-            <div className="no-scrollbar max-h-96 space-y-3 overflow-y-auto pr-1">
-              {debugInfo.length === 0 && (
-                <div className="rounded-xl border border-dashed border-zinc-700/70 bg-zinc-950/60 px-4 py-3 text-sm text-zinc-400">
-                  Waiting for YouTube embed events...
-                </div>
-              )}
-
-              {filteredEvents
-                .slice()
-                .reverse()
-                .map((event, index) => {
-                  return (
-                    <article
-                      key={`${event.label}-${index}`}
-                      className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/80"
-                    >
-                      <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-3 py-2">
-                        <div className="min-w-0">
-                          <p className="truncate font-mono text-xs text-zinc-200">{event.label}</p>
-                          <p className="text-[11px] tracking-[0.22em] text-zinc-500 uppercase">
-                            Event #{filteredEvents.length - index}
-                          </p>
-                        </div>
-                        <div className="rounded-full bg-zinc-800 px-2 py-1 font-mono text-[11px] text-zinc-400">
-                          {event.parsed === null ? "raw" : "json"}
-                        </div>
-                      </div>
-
-                      <pre className="overflow-x-auto px-3 py-3 font-mono text-xs leading-5 text-zinc-300">
-                        <code>{formatDebugEvent(event.parsed, event.raw)}</code>
-                      </pre>
-                    </article>
-                  )
-                })}
-
-              {filteredEvents.length === 0 && (
-                <div className="rounded-xl border border-dashed border-zinc-700/70 bg-zinc-950/40 px-4 py-6 text-center text-sm text-zinc-400">
-                  No events match current filters.
-                </div>
-              )}
+        <div className="grid gap-4 xl:grid-cols-2 xl:items-stretch">
+          <section className="space-y-3 rounded-xl border border-amber-900/60 bg-linear-to-br from-amber-950/25 via-amber-950/10 to-zinc-900/90 p-4 shadow-[inset_0_1px_0_rgba(245,158,11,0.08)]">
+            <div className="flex items-center justify-between gap-3 border-b border-amber-950/60 pb-3">
+              <div>
+                <p className="text-xs font-medium tracking-[0.18em] text-amber-300/80 uppercase">
+                  State
+                </p>
+              </div>
+              <div className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 font-mono text-xs font-medium text-amber-200">
+                {state._tag}
+              </div>
             </div>
 
-            <aside className="space-y-3 rounded-lg border border-emerald-900/50 bg-black/15 p-3 lg:sticky lg:top-0 lg:self-start">
-              <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-start">
-                <div>
-                  <p className="text-xs font-medium tracking-[0.18em] text-emerald-300/80 uppercase">
-                    Event types
-                  </p>
-                  <p className="text-xs text-zinc-400">Click chips to filter the feed.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  disabled={selectedLabels.size === 0}
-                  className="rounded-md border border-zinc-700 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:cursor-default disabled:opacity-40"
-                >
-                  Clear
-                </button>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              <StatePill label="state" value={state._tag} />
+              <StatePill label="playback" value={getEmbedPlaybackLabel(state)} />
+              <StatePill label="pending" value={getEmbedPendingLabel(state)} />
+            </div>
 
-              <div className="flex flex-wrap gap-2 lg:flex-col lg:items-stretch">
+            <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/80">
+              <pre className="overflow-x-auto px-3 py-3 font-mono text-xs leading-5 text-zinc-300">
+                <code>{JSON.stringify(state, null, 2)}</code>
+              </pre>
+            </div>
+          </section>
+
+          <section className="flex min-h-0 flex-col space-y-3 rounded-xl border border-emerald-900/60 bg-linear-to-br from-emerald-950/30 via-emerald-950/10 to-zinc-900/90 p-4 shadow-[inset_0_1px_0_rgba(16,185,129,0.08)] xl:h-full">
+            <div className="flex items-center justify-between gap-3 border-b border-emerald-950/60 pb-3">
+              <div>
+                <p className="text-xs font-medium tracking-[0.18em] text-emerald-300/80 uppercase">
+                  Events
+                </p>
+              </div>
+              <div className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
+                {filteredEvents.length} shown
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2">
+              <div className="flex min-w-0 flex-1 flex-wrap gap-2">
                 {eventCounts.map(([label, count]) => {
                   const isActive = selectedLabels.size === 0 || selectedLabels.has(label)
 
@@ -495,7 +705,7 @@ function PodcastEmbedDebugger() {
                       type="button"
                       onClick={() => toggleLabel(label)}
                       className={cn(
-                        "inline-flex items-center justify-between gap-2 rounded-full border px-3 py-1.5 text-xs transition lg:w-full",
+                        "inline-flex items-center justify-between gap-2 rounded-full border px-3 py-1.5 text-xs transition",
                         isActive
                           ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
                           : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200",
@@ -509,59 +719,64 @@ function PodcastEmbedDebugger() {
                   )
                 })}
               </div>
-            </aside>
-          </div>
-        </section>
 
-        <section className="space-y-4 rounded-xl border border-sky-900/60 bg-linear-to-br from-sky-950/40 via-sky-950/15 to-zinc-900/90 p-4 shadow-[inset_0_1px_0_rgba(56,189,248,0.08)]">
-          <div className="border-b border-sky-950/60 pb-3">
-            <p className="text-xs font-medium tracking-[0.18em] text-sky-300/80 uppercase">
-              Controls
-            </p>
-            <p className="mt-1 text-sm text-zinc-400">
-              Send commands to the active YouTube iframe.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-end gap-3 rounded-lg border border-sky-900/50 bg-black/15 p-3">
-            <button
-              type="button"
-              onClick={() => play()}
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-200 transition hover:border-emerald-400/60 hover:bg-emerald-500/15"
-            >
-              Play
-            </button>
-            <button
-              type="button"
-              onClick={() => pause()}
-              className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-100 transition hover:border-amber-400/60 hover:bg-amber-500/15"
-            >
-              Pause
-            </button>
-            <form onSubmit={submitSeekTo} className="flex flex-wrap items-end gap-2">
-              <label className="flex min-w-40 flex-col gap-1">
-                <span className="text-[11px] font-medium tracking-[0.18em] text-zinc-500 uppercase">
-                  Seek to seconds
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  inputMode="decimal"
-                  value={seekSeconds}
-                  onChange={(event) => setSeekSeconds(event.target.value)}
-                  className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 transition outline-none placeholder:text-zinc-500 focus:border-sky-500/60"
-                />
-              </label>
               <button
-                type="submit"
-                className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-sm font-medium text-sky-100 transition hover:border-sky-400/60 hover:bg-sky-500/15"
+                type="button"
+                onClick={clearFilters}
+                disabled={selectedLabels.size === 0}
+                className="shrink-0 rounded-md border border-zinc-700 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:cursor-default disabled:opacity-40"
               >
-                Seek
+                Clear
               </button>
-            </form>
-          </div>
-        </section>
+            </div>
+
+            <div className="min-h-0 flex-1">
+              <div className="no-scrollbar min-h-0 space-y-3 overflow-y-auto pr-1 xl:h-full">
+                {debugInfo.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-zinc-700/70 bg-zinc-950/60 px-4 py-3 text-sm text-zinc-400">
+                    Waiting for YouTube embed events...
+                  </div>
+                )}
+
+                {filteredEvents
+                  .slice()
+                  .reverse()
+                  .map((event, index) => {
+                    return (
+                      <article
+                        key={`${event.label}-${index}`}
+                        className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/80"
+                      >
+                        <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate font-mono text-xs text-zinc-200">
+                              {event.label}
+                            </p>
+                            <p className="text-[11px] tracking-[0.22em] text-zinc-500 uppercase">
+                              Event #{filteredEvents.length - index}
+                            </p>
+                          </div>
+                          <div className="rounded-full bg-zinc-800 px-2 py-1 font-mono text-[11px] text-zinc-400">
+                            {event.parsed === null ? "raw" : "json"}
+                          </div>
+                        </div>
+
+                        <pre className="overflow-x-auto px-3 py-3 font-mono text-xs leading-5 text-zinc-300">
+                          <code>{formatDebugEvent(event.parsed, event.raw)}</code>
+                        </pre>
+                      </article>
+                    )
+                  })}
+
+                {filteredEvents.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-zinc-700/70 bg-zinc-950/40 px-4 py-6 text-center text-sm text-zinc-400">
+                    No events match current filters.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </section>
   )
@@ -589,4 +804,23 @@ const getDebugEventLabel = (event: unknown): string => {
 const formatDebugEvent = (parsed: unknown | null, raw: string): string => {
   if (parsed === null) return raw
   return JSON.stringify(parsed, null, 2)
+}
+
+function StatePill({ label, value }: { readonly label: string; readonly value: string }) {
+  return (
+    <div className="rounded-full border border-amber-500/20 bg-amber-500/8 px-3 py-1.5 text-xs text-amber-100/90">
+      <span className="text-zinc-400">{label}: </span>
+      <span className="font-mono">{value}</span>
+    </div>
+  )
+}
+
+const getEmbedPlaybackLabel = (state: EmbedState): string => {
+  if (state._tag !== "Active") return "-"
+  return state.playback._tag
+}
+
+const getEmbedPendingLabel = (state: EmbedState): string => {
+  if (state._tag !== "Active") return "-"
+  return state.pending._tag
 }
