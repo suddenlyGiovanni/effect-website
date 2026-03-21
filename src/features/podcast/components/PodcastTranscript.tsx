@@ -1,115 +1,160 @@
-import { ChevronDownIcon } from "lucide-react"
-import * as React from "react"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
-import type { PodcastTranscriptCue } from "../domain"
-import { useEmbedState } from "../context/EmbedManagerContext"
-import { usePodcastEpisode } from "../context/PodcastEpisodeContext"
+import { ChevronDownIcon } from "lucide-react";
+import * as React from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import type { PodcastTranscriptCue } from "../domain";
+import { useEmbedState } from "../context/EmbedManagerContext";
+import { usePodcastEpisode } from "../context/PodcastEpisodeContext";
 import {
   useActiveTranscriptCue,
   usePauseAutoScroll,
   useResumeAutoScroll,
   useSeekToCue,
   useShouldAutoFollowTranscript,
-} from "../context/PodcastTranscriptContext"
+} from "../context/PodcastTranscriptContext";
 
 export function PodcastTranscript() {
-  const episode = usePodcastEpisode()
-  const embedState = useEmbedState()
-  const activeTranscriptCue = useActiveTranscriptCue()
-  const seekToCue = useSeekToCue()
-  const pauseAutoScroll = usePauseAutoScroll()
-  const resumeAutoScroll = useResumeAutoScroll()
-  const shouldAutoFollowTranscript = useShouldAutoFollowTranscript()
-  const rootRef = React.useRef<HTMLDivElement | null>(null)
-  const cueElementMapRef = React.useRef(new Map<string, HTMLButtonElement>())
-  const suppressScrollEventRef = React.useRef(false)
-  const activeCueId = activeTranscriptCue?.id ?? episode.transcript[0]?.id
+  const autoScrollSettleDelayMs = 150;
+  const episode = usePodcastEpisode();
+  const embedState = useEmbedState();
+  const activeTranscriptCue = useActiveTranscriptCue();
+  const seekToCue = useSeekToCue();
+  const pauseAutoScroll = usePauseAutoScroll();
+  const resumeAutoScroll = useResumeAutoScroll();
+  const shouldAutoFollowTranscript = useShouldAutoFollowTranscript();
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const cueElementMapRef = React.useRef(new Map<string, HTMLButtonElement>());
+  const suppressScrollEventRef = React.useRef(false);
+  const suppressScrollTimeoutRef = React.useRef<number | undefined>(undefined);
+  const [isOpen, setIsOpen] = React.useState(true);
+  const activeCueId = activeTranscriptCue?.id ?? episode.transcript[0]?.id;
+
+  const clearSuppressScrollTimeout = React.useCallback(() => {
+    if (suppressScrollTimeoutRef.current !== undefined) {
+      window.clearTimeout(suppressScrollTimeoutRef.current);
+      suppressScrollTimeoutRef.current = undefined;
+    }
+  }, []);
+
+  const scheduleSuppressScrollRelease = React.useCallback(() => {
+    clearSuppressScrollTimeout();
+    suppressScrollTimeoutRef.current = window.setTimeout(() => {
+      suppressScrollEventRef.current = false;
+      suppressScrollTimeoutRef.current = undefined;
+    }, autoScrollSettleDelayMs);
+  }, [autoScrollSettleDelayMs, clearSuppressScrollTimeout]);
 
   const handleSeek = React.useCallback(
     (cue: PodcastTranscriptCue) => {
-      if (embedState._tag !== "Active") return
-      resumeAutoScroll()
-      seekToCue(cue)
+      if (embedState._tag !== "Active") return;
+      resumeAutoScroll();
+      seekToCue(cue);
     },
     [embedState, resumeAutoScroll, seekToCue],
-  )
+  );
 
-  const setCueElement = React.useCallback((cueId: string, element: HTMLButtonElement | null) => {
-    if (element) {
-      cueElementMapRef.current.set(cueId, element)
-    } else {
-      cueElementMapRef.current.delete(cueId)
-    }
-  }, [])
+  const setCueElement = React.useCallback(
+    (cueId: string, element: HTMLButtonElement | null) => {
+      if (element) {
+        cueElementMapRef.current.set(cueId, element);
+      } else {
+        cueElementMapRef.current.delete(cueId);
+      }
+    },
+    [],
+  );
 
   React.useEffect(() => {
-    const root = rootRef.current
+    const root = rootRef.current;
 
     if (root === null) {
-      return
+      return;
     }
 
-    const viewport = root.querySelector('[data-slot="scroll-area-viewport"]')
+    const viewport = root.querySelector('[data-slot="scroll-area-viewport"]');
 
     if (!(viewport instanceof HTMLElement)) {
-      return
+      return;
     }
 
     const handleScroll = () => {
-      if (suppressScrollEventRef.current) return
-      pauseAutoScroll()
-    }
+      if (suppressScrollEventRef.current) {
+        scheduleSuppressScrollRelease();
+        return;
+      }
+      pauseAutoScroll();
+    };
 
-    viewport.addEventListener("scroll", handleScroll, { passive: true })
+    viewport.addEventListener("scroll", handleScroll, { passive: true });
 
-    return () => viewport.removeEventListener("scroll", handleScroll)
-  }, [pauseAutoScroll])
+    return () => viewport.removeEventListener("scroll", handleScroll);
+  }, [pauseAutoScroll, scheduleSuppressScrollRelease]);
 
   React.useEffect(() => {
-    if (!shouldAutoFollowTranscript || activeCueId === undefined || typeof window === "undefined") {
-      return
+    if (
+      !isOpen ||
+      !shouldAutoFollowTranscript ||
+      activeCueId === undefined ||
+      typeof window === "undefined"
+    ) {
+      return;
     }
 
-    const element = cueElementMapRef.current.get(activeCueId)
-    const root = rootRef.current
+    const element = cueElementMapRef.current.get(activeCueId);
+    const root = rootRef.current;
 
     if (!element || !root) {
-      return
+      return;
     }
 
-    const viewport = root.querySelector('[data-slot="scroll-area-viewport"]')
+    const viewport = root.querySelector('[data-slot="scroll-area-viewport"]');
 
     if (!(viewport instanceof HTMLElement)) {
-      return
+      return;
     }
 
-    suppressScrollEventRef.current = true
+    suppressScrollEventRef.current = true;
+    scheduleSuppressScrollRelease();
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const viewportRect = viewport.getBoundingClientRect()
-    const elementRect = element.getBoundingClientRect()
-    const elementTop = elementRect.top - viewportRect.top + viewport.scrollTop
-    const targetTop = Math.max(0, elementTop - viewport.clientHeight / 2 + elementRect.height / 2)
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const viewportRect = viewport.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const elementTop = elementRect.top - viewportRect.top + viewport.scrollTop;
+    const targetTop = Math.max(
+      0,
+      elementTop - viewport.clientHeight / 2 + elementRect.height / 2,
+    );
 
     viewport.scrollTo({
       top: targetTop,
       behavior: prefersReducedMotion ? "auto" : "smooth",
-    })
-
-    const timeout = window.setTimeout(() => {
-      suppressScrollEventRef.current = false
-    }, 250)
+    });
 
     return () => {
-      window.clearTimeout(timeout)
-      suppressScrollEventRef.current = false
-    }
-  }, [activeCueId, shouldAutoFollowTranscript])
+      clearSuppressScrollTimeout();
+      suppressScrollEventRef.current = false;
+    };
+  }, [
+    activeCueId,
+    clearSuppressScrollTimeout,
+    isOpen,
+    scheduleSuppressScrollRelease,
+    shouldAutoFollowTranscript,
+  ]);
 
   return (
-    <Collapsible defaultOpen={true} className="rounded-lg border border-zinc-700 bg-card">
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="rounded-lg border border-zinc-700 bg-card"
+    >
       <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-lg bg-card px-4 py-3 transition-colors hover:bg-accent/50 data-panel-open:rounded-b-none">
         <h2 className="text-sm font-semibold">Transcript</h2>
         <ChevronDownIcon className="size-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
@@ -119,7 +164,7 @@ export function PodcastTranscript() {
           <ScrollArea className="h-80 p-2 lg:max-h-[min(20rem,40vh)]">
             <ul className="space-y-1 pr-2">
               {episode.transcript.map((cue) => {
-                const isActive = cue === activeTranscriptCue
+                const isActive = cue === activeTranscriptCue;
 
                 return (
                   <li key={cue.id} className="list-none">
@@ -149,12 +194,12 @@ export function PodcastTranscript() {
                       </span>
                     </button>
                   </li>
-                )
+                );
               })}
             </ul>
           </ScrollArea>
         </div>
       </CollapsibleContent>
     </Collapsible>
-  )
+  );
 }
