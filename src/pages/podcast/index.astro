@@ -1,26 +1,26 @@
 ---
-import { Image } from "astro:assets"
-import { getCollection } from "astro:content"
-import { RssIcon } from "@lucide/astro"
-import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
-import DitheredOverlay from "@/components/DitheredOverlay.astro"
-import Footer from "@/components/Footer.astro"
-import GridRails from "@/components/GridRails.astro"
-import Link from "@/components/Link.astro"
-import SocialLink from "@/components/SocialLink.astro"
-import SectionDivider from "@/components/layout/SectionDivider.astro"
-import Navigation from "@/components/navigation/Navigation.astro"
-import PodcastEpisodeCard from "@/features/podcast/components/PodcastEpisodeCard.astro"
-import { sortPodcastsByPublishDate } from "@/features/podcast/utils"
-import BaseLayout from "@/layouts/BaseLayout.astro"
-import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import { RssIcon } from "@lucide/astro";
+import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp";
+import DitheredOverlay from "@/components/DitheredOverlay.astro";
+import Footer from "@/components/Footer.astro";
+import GridRails from "@/components/GridRails.astro";
+import Link from "@/components/Link.astro";
+import SocialLink from "@/components/SocialLink.astro";
+import SectionDivider from "@/components/layout/SectionDivider.astro";
+import Navigation from "@/components/navigation/Navigation.astro";
+import PodcastEpisodeCard from "@/features/podcast/components/PodcastEpisodeCard.astro";
+import { sortPodcastsByPublishDate } from "@/features/podcast/utils";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { PAGE_TITLE_ID } from "@/lib/constants/skip-link";
 
-const collection = await getCollection("podcasts")
-const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
+const collection = await getCollection("podcasts");
+const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data));
 ---
 
-<BaseLayout 
-  title="Cause & Effect Podcast" 
+<BaseLayout
+  title="Cause & Effect Podcast"
   description="Exploring how engineers are using Effect to build reliable, production-grade software in TypeScript"
 >
   <DitheredOverlay />
@@ -30,51 +30,89 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
     <GridRails />
 
     <main id={PAGE_TITLE_ID} class="pt-16">
-      <section id="hero" class="hero-section relative w-full pt-12 md:pt-24 pb-8 md:pb-24 overflow-hidden">
+      <section
+        id="hero"
+        class="hero-section relative w-full pt-12 md:pt-24 pb-8 md:pb-24 overflow-hidden"
+      >
         <!-- Stripe-like grid background - full width, centered -->
         <div
           aria-hidden="true"
           class="hero-grid pointer-events-none absolute inset-0"
-        />
+        >
+        </div>
         <!-- Fade out grid at top and bottom -->
         <div
           aria-hidden="true"
           class="hero-fade pointer-events-none absolute inset-0"
-        />
+        >
+        </div>
 
         <div class="relative mx-auto max-w-295 px-4">
-          <div class="flex flex-col lg:flex-row justify-between items-start gap-8 lg:gap-12">
+          <div
+            class="flex flex-col lg:flex-row justify-between items-start gap-8 lg:gap-12"
+          >
             <div class="max-w-xl">
-              <p class="mb-3 text-sm text-muted-foreground font-mono uppercase tracking-wider">
+              <p
+                class="mb-3 text-sm text-muted-foreground font-mono uppercase tracking-wider"
+              >
                 // The Podcast 🎙️
               </p>
-              <h1 class="text-4xl md:text-6xl text-white font-bold leading-snug">
+              <h1
+                class="text-4xl md:text-6xl text-white font-bold leading-snug"
+              >
                 Cause & Effect
               </h1>
-              <p class="mt-4 text-base md:text-xl text-muted-foreground leading-snug">
+              <p
+                class="mt-4 text-base md:text-xl text-muted-foreground leading-snug"
+              >
                 Exploring how engineers are using Effect to build
                 production-grade software in TypeScript.
               </p>
-              <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 lg:hidden">
-                <Link 
+              <div
+                class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 lg:hidden"
+              >
+                <Link
                   class="flex items-center gap-3 text-white transition-colors no-underline group"
                   href="https://podcasts.apple.com/us/podcast/cause-effect/id1781879869"
                 >
-                  <Image class="h-5 w-auto translate-x-0.5" src={ApplePodcastsLogo} alt="Listen to the Cause & Effect Podcast on Apple Podcasts" loading="eager" />
-                  <span class="text-sm text-white group-hover:underline group-hover:underline-offset-2">Apple Podcasts</span>
+                  <Image
+                    class="h-5 w-auto translate-x-0.5"
+                    src={ApplePodcastsLogo}
+                    alt="Listen to the Cause & Effect Podcast on Apple Podcasts"
+                    loading="eager"
+                  />
+                  <span
+                    class="text-sm text-white group-hover:underline group-hover:underline-offset-2"
+                    >Apple Podcasts</span
+                  >
                 </Link>
-                <SocialLink variant="spotify" class="flex items-center gap-2 group [&>svg]:fill-green-500">
-                  <span class="text-sm text-white group-hover:underline group-hover:underline-offset-2">Spotify</span>
+                <SocialLink
+                  variant="spotify"
+                  class="flex items-center gap-2 group [&>svg]:fill-green-500"
+                >
+                  <span
+                    class="text-sm text-white group-hover:underline group-hover:underline-offset-2"
+                    >Spotify</span
+                  >
                 </SocialLink>
-                <SocialLink variant="youtube" class="flex items-center gap-2 group [&_.youtube-body]:fill-red-500 [&_.youtube-play]:fill-white">
-                  <span class="text-sm text-white group-hover:underline group-hover:underline-offset-2">YouTube</span>
+                <SocialLink
+                  variant="youtube-podcast"
+                  class="flex items-center gap-2 group [&_.youtube-body]:fill-red-500 [&_.youtube-play]:fill-white"
+                >
+                  <span
+                    class="text-sm text-white group-hover:underline group-hover:underline-offset-2"
+                    >YouTube</span
+                  >
                 </SocialLink>
-                <Link 
-                  class="flex items-center gap-2 text-white transition-colors no-underline group" 
+                <Link
+                  class="flex items-center gap-2 text-white transition-colors no-underline group"
                   href="/podcast/rss.xml"
                 >
                   <RssIcon class="size-5" />
-                  <span class="text-sm group-hover:underline group-hover:underline-offset-2">RSS</span>
+                  <span
+                    class="text-sm group-hover:underline group-hover:underline-offset-2"
+                    >RSS</span
+                  >
                 </Link>
               </div>
             </div>
@@ -82,33 +120,70 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
             <div class="hidden lg:block">
               <div class="relative px-6 py-4">
                 <!-- Corner Brackets  -->
-                <span aria-hidden="true" class="absolute top-0 left-0 h-3 w-3 border-t border-l border-zinc-700" />
-                <span aria-hidden="true" class="absolute top-0 right-0 h-3 w-3 border-t border-r border-zinc-700" />
-                <span aria-hidden="true" class="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-zinc-700" />
-                <span aria-hidden="true" class="absolute right-0 bottom-0 h-3 w-3 border-r border-b border-zinc-700" />
-                <p class="mb-4 font-mono text-xs text-muted-foreground tracking-wider uppercase">
+                <span
+                  aria-hidden="true"
+                  class="absolute top-0 left-0 h-3 w-3 border-t border-l border-zinc-700"
+                ></span>
+                <span
+                  aria-hidden="true"
+                  class="absolute top-0 right-0 h-3 w-3 border-t border-r border-zinc-700"
+                ></span>
+                <span
+                  aria-hidden="true"
+                  class="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-zinc-700"
+                ></span>
+                <span
+                  aria-hidden="true"
+                  class="absolute right-0 bottom-0 h-3 w-3 border-r border-b border-zinc-700"
+                ></span>
+                <p
+                  class="mb-4 font-mono text-xs text-muted-foreground tracking-wider uppercase"
+                >
                   // Available on
                 </p>
                 <div class="flex flex-col gap-3">
-                  <Link 
+                  <Link
                     class="flex items-center gap-3 text-white transition-colors no-underline group"
                     href="https://podcasts.apple.com/us/podcast/cause-effect/id1781879869"
                   >
-                    <Image class="h-5 w-auto translate-x-0.5" src={ApplePodcastsLogo} alt="Listen to the Cause & Effect Podcast on Apple Podcasts" loading="eager" />
-                    <span class="text-sm text-white group-hover:underline group-hover:underline-offset-2">Apple Podcasts</span>
+                    <Image
+                      class="h-5 w-auto translate-x-0.5"
+                      src={ApplePodcastsLogo}
+                      alt="Listen to the Cause & Effect Podcast on Apple Podcasts"
+                      loading="eager"
+                    />
+                    <span
+                      class="text-sm text-white group-hover:underline group-hover:underline-offset-2"
+                      >Apple Podcasts</span
+                    >
                   </Link>
-                  <SocialLink variant="spotify" class="flex items-center gap-2 group [&>svg]:fill-green-500">
-                    <span class="text-sm text-white group-hover:underline group-hover:underline-offset-2">Spotify</span>
+                  <SocialLink
+                    variant="spotify"
+                    class="flex items-center gap-2 group [&>svg]:fill-green-500"
+                  >
+                    <span
+                      class="text-sm text-white group-hover:underline group-hover:underline-offset-2"
+                      >Spotify</span
+                    >
                   </SocialLink>
-                  <SocialLink variant="youtube" class="flex items-center gap-2 group [&_.youtube-body]:fill-red-500 [&_.youtube-play]:fill-white">
-                    <span class="text-sm text-white group-hover:underline group-hover:underline-offset-2">YouTube</span>
+                  <SocialLink
+                    variant="youtube-podcast"
+                    class="flex items-center gap-2 group [&_.youtube-body]:fill-red-500 [&_.youtube-play]:fill-white"
+                  >
+                    <span
+                      class="text-sm text-white group-hover:underline group-hover:underline-offset-2"
+                      >YouTube</span
+                    >
                   </SocialLink>
-                  <Link 
-                    class="flex items-center gap-3 text-white transition-colors no-underline group" 
+                  <Link
+                    class="flex items-center gap-3 text-white transition-colors no-underline group"
                     href="/podcast/rss.xml"
                   >
                     <RssIcon class="size-5 translate-x-0.5" />
-                    <span class="text-sm group-hover:underline group-hover:underline-offset-2">RSS</span>
+                    <span
+                      class="text-sm group-hover:underline group-hover:underline-offset-2"
+                      >RSS</span
+                    >
                   </Link>
                 </div>
               </div>
@@ -117,19 +192,24 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
         </div>
       </section>
 
-      <section id="episodes" class="relative w-full gap-16 border-t border-zinc-800 bg-zinc-950">
+      <section
+        id="episodes"
+        class="relative w-full gap-16 border-t border-zinc-800 bg-zinc-950"
+      >
         <div class="mx-auto max-w-295 px-4">
           <div class="flex flex-col">
-            {podcasts.map((podcast, index) => {
-              return (
-                <Fragment>
-                  <PodcastEpisodeCard podcast={podcast} />
-                  {index < podcasts.length - 1 && (
-                    <hr aria-hidden="true" class="h-px w-full bg-zinc-800" />
-                  )}
-                </Fragment>
-              )
-            })}
+            {
+              podcasts.map((podcast, index) => {
+                return (
+                  <Fragment>
+                    <PodcastEpisodeCard podcast={podcast} />
+                    {index < podcasts.length - 1 && (
+                      <hr aria-hidden="true" class="h-px w-full bg-zinc-800" />
+                    )}
+                  </Fragment>
+                );
+              })
+            }
           </div>
         </div>
       </section>
@@ -143,8 +223,16 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
 
 <style>
   .hero-section {
-    --hero-grid-gradient-x: linear-gradient(to right, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-gradient-y: linear-gradient(to bottom, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
+    --hero-grid-gradient-x: linear-gradient(
+      to right,
+      rgb(24, 24, 27, 0.8) 1px,
+      transparent 1px
+    );
+    --hero-grid-gradient-y: linear-gradient(
+      to bottom,
+      rgb(24, 24, 27, 0.8) 1px,
+      transparent 1px
+    );
     --hero-grid-size: 196.6px 186px;
     --hero-grid-position: calc(50% + 97px) 0;
     --hero-fade-gradient: linear-gradient(

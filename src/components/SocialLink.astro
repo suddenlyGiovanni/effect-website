@@ -1,17 +1,17 @@
 ---
-import type { ImageMetadata } from "astro"
-import type { SvgComponent } from "astro/types"
-import BlueSkyLogo from "@/assets/logos/bluesky/BlueSky.svg"
-import DiscordLogo from "@/assets/logos/discord/Discord.svg"
-import GitHubLogo from "@/assets/logos/github/GitHub.svg"
-import LinkedInLogo from "@/assets/logos/linkedin/LinkedIn.svg"
-import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg"
-import TwitterLogo from "@/assets/logos/twitter/Twitter.svg"
-import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg"
-import { cn } from "@/lib/utils"
-import Link from "./Link.astro"
+import type { ImageMetadata } from "astro";
+import type { SvgComponent } from "astro/types";
+import BlueSkyLogo from "@/assets/logos/bluesky/BlueSky.svg";
+import DiscordLogo from "@/assets/logos/discord/Discord.svg";
+import GitHubLogo from "@/assets/logos/github/GitHub.svg";
+import LinkedInLogo from "@/assets/logos/linkedin/LinkedIn.svg";
+import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg";
+import TwitterLogo from "@/assets/logos/twitter/Twitter.svg";
+import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg";
+import { cn } from "@/lib/utils";
+import Link from "./Link.astro";
 
-type SocialVariant = 
+type SocialVariant =
   | "bluesky"
   | "discord"
   | "github"
@@ -19,14 +19,15 @@ type SocialVariant =
   | "spotify"
   | "twitter"
   | "youtube"
+  | "youtube-podcast";
 
 interface Props {
-  readonly class?: string | undefined
-  readonly iconClass?: string | undefined
-  readonly variant: SocialVariant
+  readonly class?: string | undefined;
+  readonly iconClass?: string | undefined;
+  readonly variant: SocialVariant;
 }
 
-const { class: className, iconClass, variant, ...props } = Astro.props
+const { class: className, iconClass, variant, ...props } = Astro.props;
 
 const SOCIAL_DESCRIPTIONS: Record<SocialVariant, string> = {
   bluesky: "Follow Effect on Bluesky",
@@ -36,7 +37,8 @@ const SOCIAL_DESCRIPTIONS: Record<SocialVariant, string> = {
   spotify: "Listen to the Cause & Effect Podcast on Spotify",
   twitter: "Follow Effect on X (Twitter)",
   youtube: "Subscribe to Effect on YouTube",
-}
+  "youtube-podcast": "Subscribe to the Cause & Effect Podcast on YouTube",
+};
 
 const SOCIAL_ICONS: Record<SocialVariant, SvgComponent & ImageMetadata> = {
   bluesky: BlueSkyLogo,
@@ -46,7 +48,8 @@ const SOCIAL_ICONS: Record<SocialVariant, SvgComponent & ImageMetadata> = {
   spotify: SpotifyLogo,
   twitter: TwitterLogo,
   youtube: YouTubeLogo,
-}
+  "youtube-podcast": YouTubeLogo,
+};
 
 const SOCIAL_LINKS: Record<SocialVariant, string> = {
   bluesky: "https://bsky.app/profile/effect-ts.bsky.social",
@@ -55,19 +58,21 @@ const SOCIAL_LINKS: Record<SocialVariant, string> = {
   linkedin: "https://www.linkedin.com/company/effect-ts",
   spotify: "https://open.spotify.com/show/4QTFiem4o0G9V2vXtv8vMU",
   twitter: "https://x.com/EffectTS_",
-  youtube: "https://www.youtube.com/@EffectTS",
-}
+  youtube: "https://www.youtube.com/@effect-ts",
+  "youtube-podcast":
+    "https://youtube.com/playlist?list=PLDf3uQLaK2B_jaZ5Fy7IPNq0FIViV_CQl&si=ljmf2aKH5H09GQ7r",
+};
 
-const ariaLabel = SOCIAL_DESCRIPTIONS[variant]
-const href = SOCIAL_LINKS[variant]
-const Icon = SOCIAL_ICONS[variant]
+const ariaLabel = SOCIAL_DESCRIPTIONS[variant];
+const href = SOCIAL_LINKS[variant];
+const Icon = SOCIAL_ICONS[variant];
 ---
 
 <Link
   class={cn(
     "text-muted-foreground hover:text-foreground transition-colors no-underline",
-    className
-  )} 
+    className,
+  )}
   href={href}
   target="_blank"
   rel="noopener noreferrer"

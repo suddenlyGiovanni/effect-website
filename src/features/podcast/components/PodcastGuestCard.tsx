@@ -44,7 +44,7 @@ export function PodcastGuestCard() {
           </a>
           <a
             className="group flex items-center text-white no-underline transition-colors"
-            href="https://www.youtube.com/@EffectTS"
+            href="https://youtube.com/playlist?list=PLDf3uQLaK2B_jaZ5Fy7IPNq0FIViV_CQl&si=ljmf2aKH5H09GQ7r"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Subscribe to Effect on YouTube"
