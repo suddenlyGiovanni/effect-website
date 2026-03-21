@@ -31,7 +31,7 @@ export class PodcastEmbedManager extends ServiceMap.Service<
   make: Effect.fnUntraced(function* (episode: PodcastEpisode) {
     const queue = yield* Queue.unbounded<EmbedCommand>()
     const debugAtom = Atom.make<ReadonlyArray<string>>([])
-    const stateAtom = Atom.make<EmbedState>(makeInitialEmbedState())
+    const stateAtom = Atom.make<EmbedState>({ _tag: "NotMounted" })
     const atomRegistry = yield* AtomRegistry.AtomRegistry
 
     const services = yield* Effect.services()
@@ -145,17 +145,17 @@ export class PodcastEmbedManager extends ServiceMap.Service<
       connect: Atom.fn<HTMLElement>()((element) => connect(element)),
       play: Atom.fn<void>()(() =>
         offerCommand(new PlayVideoCommand(), (state) =>
-          setPendingCommand(state, new PlayRequested()),
+          setPendingCommand(state, { _tag: "PlayRequested" }),
         ),
       ),
       pause: Atom.fn<void>()(() =>
         offerCommand(new PauseVideoCommand(), (state) =>
-          setPendingCommand(state, new PauseRequested()),
+          setPendingCommand(state, { _tag: "PauseRequested" }),
         ),
       ),
       seekTo: Atom.fn<number>()((seconds) =>
         offerCommand(new SeekToCommand({ args: [seconds, true] }), (state) =>
-          setPendingCommand(state, new SeekRequested({ seconds })),
+          setPendingCommand(state, { _tag: "SeekRequested", seconds }),
         ),
       ),
     } as const
@@ -333,127 +333,40 @@ export type EmbedCommand = typeof EmbedCommand.Type
 // Embed State Model
 // =============================================================================
 
-export class NoPendingCommand extends Schema.Class<NoPendingCommand>("NoPendingCommand")({
-  _tag: Schema.tag("None"),
-}) {}
-
-export class PlayRequested extends Schema.Class<PlayRequested>("PlayRequested")({
-  _tag: Schema.tag("PlayRequested"),
-}) {}
-
-export class PauseRequested extends Schema.Class<PauseRequested>("PauseRequested")({
-  _tag: Schema.tag("PauseRequested"),
-}) {}
-
-export class SeekRequested extends Schema.Class<SeekRequested>("SeekRequested")({
-  _tag: Schema.tag("SeekRequested"),
-  seconds: Schema.Number,
-}) {}
-
-export const PendingCommand = Schema.Union([
-  NoPendingCommand,
-  PlayRequested,
-  PauseRequested,
-  SeekRequested,
-]).pipe(Schema.toTaggedUnion("_tag"))
+export const PendingCommand = Schema.TaggedUnion({
+  None: {},
+  PlayRequested: {},
+  PauseRequested: {},
+  SeekRequested: { seconds: Schema.Number },
+})
 export type PendingCommand = typeof PendingCommand.Type
 
-export class PlaybackUnstarted extends Schema.Class<PlaybackUnstarted>("PlaybackUnstarted")({
-  _tag: Schema.tag("Unstarted"),
-}) {}
+export const PlaybackTimeFields = { currentTimeSeconds: Schema.Number } as const
 
-export class PlaybackCued extends Schema.Class<PlaybackCued>("PlaybackCued")({
-  _tag: Schema.tag("Cued"),
-  currentTimeSeconds: Schema.Number,
-}) {}
-
-export const PlaybackTimeFields = {
-  currentTimeSeconds: Schema.Number,
-} as const
-
-export class PlaybackPlaying extends Schema.Class<PlaybackPlaying>("PlaybackPlaying")({
-  _tag: Schema.tag("Playing"),
-  ...PlaybackTimeFields,
-}) {}
-
-export class PlaybackPaused extends Schema.Class<PlaybackPaused>("PlaybackPaused")({
-  _tag: Schema.tag("Paused"),
-  ...PlaybackTimeFields,
-}) {}
-
-export class PlaybackBuffering extends Schema.Class<PlaybackBuffering>("PlaybackBuffering")({
-  _tag: Schema.tag("Buffering"),
-  ...PlaybackTimeFields,
-}) {}
-
-export class PlaybackEnded extends Schema.Class<PlaybackEnded>("PlaybackEnded")({
-  _tag: Schema.tag("Ended"),
-  currentTimeSeconds: Schema.Number,
-}) {}
-
-export const PlaybackState = Schema.Union([
-  PlaybackUnstarted,
-  PlaybackCued,
-  PlaybackPlaying,
-  PlaybackPaused,
-  PlaybackBuffering,
-  PlaybackEnded,
-])
+export const PlaybackState = Schema.TaggedUnion({
+  Unstarted: {},
+  Cued: PlaybackTimeFields,
+  Playing: PlaybackTimeFields,
+  Paused: PlaybackTimeFields,
+  Buffering: PlaybackTimeFields,
+  Ended: PlaybackTimeFields,
+})
 export type PlaybackState = typeof PlaybackState.Type
 
-export class EmbedStateNotMounted extends Schema.Class<EmbedStateNotMounted>(
-  "EmbedStateNotMounted",
-)({
-  _tag: Schema.tag("NotMounted"),
-}) {}
-
-export class EmbedStateMounting extends Schema.Class<EmbedStateMounting>("EmbedStateMounting")({
-  _tag: Schema.tag("Mounting"),
-}) {}
-
-export class EmbedStateHandshaking extends Schema.Class<EmbedStateHandshaking>(
-  "EmbedStateHandshaking",
-)({
-  _tag: Schema.tag("Handshaking"),
-}) {}
-
-export class EmbedStateActive extends Schema.Class<EmbedStateActive>("EmbedStateActive")({
-  _tag: Schema.tag("Active"),
-  playback: PlaybackState,
-  pending: PendingCommand,
-}) {}
-
-export class EmbedStateFailed extends Schema.Class<EmbedStateFailed>("EmbedStateFailed")({
-  _tag: Schema.tag("Failed"),
-}) {}
-
-export const EmbedState = Schema.Union([
-  EmbedStateNotMounted,
-  EmbedStateMounting,
-  EmbedStateHandshaking,
-  EmbedStateActive,
-  EmbedStateFailed,
-]).pipe(Schema.toTaggedUnion("_tag"))
+export const EmbedState = Schema.TaggedUnion({
+  NotMounted: {},
+  Mounting: {},
+  Handshaking: {},
+  Active: { playback: PlaybackState, pending: PendingCommand },
+  Failed: {},
+})
 export type EmbedState = typeof EmbedState.Type
-
-function makeInitialEmbedState(): EmbedState {
-  return new EmbedStateNotMounted()
-}
-
-function makeDefaultPlaybackState(): PlaybackState {
-  return new PlaybackUnstarted()
-}
-
-function makeNoPendingCommand(): PendingCommand {
-  return new NoPendingCommand()
-}
 
 function markMounted(state: EmbedState): EmbedState {
   switch (state._tag) {
     case "NotMounted":
-      return new EmbedStateMounting()
     case "Mounting":
-      return new EmbedStateMounting()
+      return { _tag: "Mounting" }
     default:
       return state
   }
@@ -463,7 +376,7 @@ function beginHandshake(state: EmbedState): EmbedState {
   switch (state._tag) {
     case "NotMounted":
     case "Mounting":
-      return new EmbedStateHandshaking()
+      return { _tag: "Handshaking" }
     default:
       return state
   }
@@ -473,16 +386,17 @@ function setPendingCommand(state: EmbedState, pending: PendingCommand): EmbedSta
   if (state._tag !== "Active") {
     return state
   }
-  return new EmbedStateActive({
+  return {
+    _tag: "Active",
     playback: state.playback,
     pending,
-  })
+  }
 }
 
 function reduceEmbedState(state: EmbedState, event: YouTubeEvent): EmbedState {
   switch (event.event) {
     case "onError":
-      return new EmbedStateFailed()
+      return { _tag: "Failed" }
     case "onReady":
       return ensureActiveState(state)
     case "apiInfoDelivery":
@@ -499,16 +413,18 @@ function reduceEmbedState(state: EmbedState, event: YouTubeEvent): EmbedState {
 
 function ensureActiveState(state: EmbedState): EmbedState {
   if (state._tag === "Active") {
-    return new EmbedStateActive({
+    return {
+      _tag: "Active",
       playback: state.playback,
       pending: state.pending,
-    })
+    }
   }
 
-  return new EmbedStateActive({
-    playback: makeDefaultPlaybackState(),
-    pending: makeNoPendingCommand(),
-  })
+  return {
+    _tag: "Active",
+    playback: { _tag: "Unstarted" },
+    pending: { _tag: "None" },
+  }
 }
 
 function applyPlayerInfoPatchToState(state: EmbedState, patch: PlayerInfoPatch): EmbedState {
@@ -519,10 +435,11 @@ function applyPlayerInfoPatchToState(state: EmbedState, patch: PlayerInfoPatch):
 
   const playback = applyPlayerInfoPatch(activeState.playback, patch)
 
-  return new EmbedStateActive({
+  return {
+    _tag: "Active",
     playback,
     pending: resolvePendingCommand(activeState.pending, playback),
-  })
+  }
 }
 
 function applyPlayerInfoPatch(playback: PlaybackState, patch: PlayerInfoPatch): PlaybackState {
@@ -531,29 +448,21 @@ function applyPlayerInfoPatch(playback: PlaybackState, patch: PlayerInfoPatch): 
 
   switch (playerState) {
     case -1:
-      return new PlaybackUnstarted()
+      return { _tag: "Unstarted" }
     case 0:
-      return new PlaybackEnded({
+      return {
+        _tag: "Ended",
         currentTimeSeconds: currentTime ?? patch.duration ?? 0,
-      })
+      }
     case 1:
-      return makeTimedPlaybackState(PlaybackPlaying, currentTime)
+      return { _tag: "Playing", currentTimeSeconds: currentTime ?? 0 }
     case 2:
-      return makeTimedPlaybackState(PlaybackPaused, currentTime)
+      return { _tag: "Paused", currentTimeSeconds: currentTime ?? 0 }
     case 3:
-      return makeTimedPlaybackState(PlaybackBuffering, currentTime)
+      return { _tag: "Buffering", currentTimeSeconds: currentTime ?? 0 }
     case 5:
-      return new PlaybackCued({
-        currentTimeSeconds: currentTime ?? 0,
-      })
+      return { _tag: "Cued", currentTimeSeconds: currentTime ?? 0 }
   }
-}
-
-function makeTimedPlaybackState<A extends PlaybackPlaying | PlaybackPaused | PlaybackBuffering>(
-  ctor: new (fields: { currentTimeSeconds: number }) => A,
-  currentTime: number | undefined,
-): A {
-  return new ctor({ currentTimeSeconds: currentTime ?? 0 })
 }
 
 function resolvePendingCommand(pending: PendingCommand, playback: PlaybackState): PendingCommand {
@@ -561,13 +470,13 @@ function resolvePendingCommand(pending: PendingCommand, playback: PlaybackState)
     case "None":
       return pending
     case "PlayRequested":
-      return playback._tag === "Playing" ? makeNoPendingCommand() : pending
+      return playback._tag === "Playing" ? { _tag: "None" } : pending
     case "PauseRequested":
-      return playback._tag === "Paused" ? makeNoPendingCommand() : pending
+      return playback._tag === "Paused" ? { _tag: "None" } : pending
     case "SeekRequested": {
       const currentTime = getCurrentTimeSeconds(playback)
       return currentTime !== undefined && Math.abs(currentTime - pending.seconds) < 1
-        ? makeNoPendingCommand()
+        ? { _tag: "None" }
         : pending
     }
   }
