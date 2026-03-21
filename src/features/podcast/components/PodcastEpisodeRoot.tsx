@@ -7,9 +7,7 @@ import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
 import { PodcastEpisodeEntry } from "../collection"
 import { EmbedManagerContext } from "../context/EmbedManagerContext"
-import { PodcastChapterContext } from "../context/PodcastChapterContext"
-import { PodcastEpisodeContext } from "../context/PodcastEpisodeContext"
-import { PodcastTranscriptContext } from "../context/PodcastTranscriptContext"
+import { PodcastContext } from "../context/PodcastContext"
 import {
   PodcastChapter,
   PodcastEpisode,
@@ -85,6 +83,11 @@ export function PodcastEpisodeProviders({
   readonly episode: PodcastEpisode
 }>) {
   const embedManager = useAtomSuspense(embedManagerAtom(episode)).value
+  const [isEmbedPreviewing, setEmbedPreviewing] = React.useState(true)
+
+  const activateEmbed = React.useCallback(() => {
+    setEmbedPreviewing(false)
+  }, [])
 
   const transcriptFollowModeAtom = React.useMemo(() => Atom.make<TranscriptFollowMode>("auto"), [])
   const lastTranscriptUserScrollAtAtom = React.useMemo(
@@ -92,6 +95,29 @@ export function PodcastEpisodeProviders({
     [],
   )
   const transcriptAutoFollowPauseTokenAtom = React.useMemo(() => Atom.make(0), [])
+
+  const activateEmbedPlayback = React.useMemo(
+    () =>
+      Effect.fnUntraced(function* (get: Atom.FnContext) {
+        activateEmbed()
+
+        const state = get(embedManager.stateAtom)
+
+        if (state._tag === "Active") {
+          return state
+        }
+
+        return yield* Effect.sync(() => get(embedManager.stateAtom)).pipe(
+          Effect.filterOrFail(
+            (state): state is Extract<EmbedState, { _tag: "Active" }> => state._tag === "Active",
+            () => "embed_not_active",
+          ),
+          Effect.retry(Schedule.spaced("100 millis")),
+          Effect.orDie,
+        )
+      }),
+    [activateEmbed, embedManager.stateAtom],
+  )
 
   const trueChapterAtom = React.useMemo(
     () =>
@@ -110,7 +136,9 @@ export function PodcastEpisodeProviders({
         reducer: (_, chapter) => chapter,
         fn: Atom.fn<PodcastChapter>()(
           Effect.fnUntraced(function* (chapter, get) {
+            yield* activateEmbedPlayback(get)
             yield* get.setResult(embedManager.seekTo, chapter.startSeconds)
+            yield* get.setResult(embedManager.play, undefined)
 
             const trueChapter = get(trueChapterAtom)
 
@@ -127,7 +155,13 @@ export function PodcastEpisodeProviders({
           }),
         ),
       }),
-    [activeChapterAtom, embedManager.seekTo, trueChapterAtom],
+    [
+      activeChapterAtom,
+      activateEmbedPlayback,
+      embedManager.play,
+      embedManager.seekTo,
+      trueChapterAtom,
+    ],
   )
 
   const trueTranscriptCueAtom = React.useMemo(
@@ -215,13 +249,10 @@ export function PodcastEpisodeProviders({
             get.set(transcriptAutoFollowPauseTokenAtom, token)
             get.set(transcriptFollowModeAtom, "auto")
 
-            const state = get(embedManager.stateAtom)
-
-            if (state._tag !== "Active") {
-              return
-            }
+            yield* activateEmbedPlayback(get)
 
             yield* get.setResult(embedManager.seekTo, cue.startSeconds)
+            yield* get.setResult(embedManager.play, undefined)
 
             const trueCue = get(trueTranscriptCueAtom)
 
@@ -240,8 +271,9 @@ export function PodcastEpisodeProviders({
       }),
     [
       activeTranscriptCueAtom,
+      activateEmbedPlayback,
+      embedManager.play,
       embedManager.seekTo,
-      embedManager.stateAtom,
       transcriptAutoFollowPauseTokenAtom,
       transcriptFollowModeAtom,
       trueTranscriptCueAtom,
@@ -249,29 +281,23 @@ export function PodcastEpisodeProviders({
   )
 
   return (
-    <PodcastEpisodeContext.Provider value={episode}>
-      <PodcastChapterContext.Provider
-        value={{
-          chapters: episode.chapters,
-          activeChapterAtom,
-          setActiveChapterAtom,
-        }}
-      >
-        <PodcastTranscriptContext.Provider
-          value={{
-            activeTranscriptCueAtom,
-            setActiveTranscriptCueAtom,
-            shouldAutoFollowTranscriptAtom,
-            pauseTranscriptAutoFollowAtom,
-            resumeTranscriptAutoFollowAtom,
-          }}
-        >
-          <EmbedManagerContext.Provider value={embedManager}>
-            {children}
-          </EmbedManagerContext.Provider>
-        </PodcastTranscriptContext.Provider>
-      </PodcastChapterContext.Provider>
-    </PodcastEpisodeContext.Provider>
+    <PodcastContext.Provider
+      value={{
+        episode,
+        chapters: episode.chapters,
+        activeChapterAtom,
+        setActiveChapterAtom,
+        activeTranscriptCueAtom,
+        setActiveTranscriptCueAtom,
+        shouldAutoFollowTranscriptAtom,
+        pauseTranscriptAutoFollowAtom,
+        resumeTranscriptAutoFollowAtom,
+        activateEmbed,
+        isPreviewing: isEmbedPreviewing,
+      }}
+    >
+      <EmbedManagerContext.Provider value={embedManager}>{children}</EmbedManagerContext.Provider>
+    </PodcastContext.Provider>
   )
 }
 

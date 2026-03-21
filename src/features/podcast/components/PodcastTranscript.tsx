@@ -8,20 +8,18 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { PodcastTranscriptCue } from "../domain";
-import { useEmbedState } from "../context/EmbedManagerContext";
-import { usePodcastEpisode } from "../context/PodcastEpisodeContext";
 import {
   useActiveTranscriptCue,
   usePauseAutoScroll,
+  usePodcastEpisode,
   useResumeAutoScroll,
   useSeekToCue,
   useShouldAutoFollowTranscript,
-} from "../context/PodcastTranscriptContext";
+} from "../context/PodcastContext";
 
 export function PodcastTranscript() {
   const autoScrollSettleDelayMs = 150;
   const episode = usePodcastEpisode();
-  const embedState = useEmbedState();
   const activeTranscriptCue = useActiveTranscriptCue();
   const seekToCue = useSeekToCue();
   const pauseAutoScroll = usePauseAutoScroll();
@@ -51,11 +49,10 @@ export function PodcastTranscript() {
 
   const handleSeek = React.useCallback(
     (cue: PodcastTranscriptCue) => {
-      if (embedState._tag !== "Active") return;
       resumeAutoScroll();
       seekToCue(cue);
     },
-    [embedState, resumeAutoScroll, seekToCue],
+    [resumeAutoScroll, seekToCue],
   );
 
   const setCueElement = React.useCallback(

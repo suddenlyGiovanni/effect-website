@@ -4,11 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import type { PodcastChapter } from "../domain"
-import {
-  useChapters,
-  useActiveChapter,
-  useSetActiveChapter,
-} from "../context/PodcastChapterContext"
+import { useActiveChapter, useChapters, useSetActiveChapter } from "../context/PodcastContext"
 
 export function PodcastChapters() {
   const chapters = useChapters()

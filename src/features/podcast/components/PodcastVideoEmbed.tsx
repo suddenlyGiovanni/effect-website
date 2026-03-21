@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn, cssVars } from "@/lib/utils"
 import { useConnectEmbed } from "../context/EmbedManagerContext"
-import { usePodcastEpisode } from "../context/PodcastEpisodeContext"
+import { usePodcastEpisode, usePodcastVideoEmbed } from "../context/PodcastContext"
 import { YOUTUBE_NOCOOKIE_URL } from "../services/PodcastEmbedManager"
 
 export type YouTubePosterQuality =
@@ -79,7 +79,7 @@ export function PodcastVideoEmbed({
 }) {
   const episode = usePodcastEpisode()
   const connect = useConnectEmbed()
-  const [isPreviewing, setPreviewing] = React.useState(true)
+  const { activateEmbed, isPreviewing } = usePodcastVideoEmbed()
   const [isPreconnected, setPreconnected] = React.useState(false)
 
   const posterUrl = React.useMemo(() => {
@@ -91,8 +91,8 @@ export function PodcastVideoEmbed({
 
   const handleClick = React.useCallback(() => {
     if (!isPreviewing) return
-    setPreviewing(false)
-  }, [isPreviewing, setPreviewing])
+    activateEmbed()
+  }, [activateEmbed, isPreviewing])
 
   const handlePreconnect = React.useCallback(() => {
     if (isPreconnected) return
