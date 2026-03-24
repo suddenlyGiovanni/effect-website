@@ -6,7 +6,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation"
 export interface YouTubeVideo {
   readonly id: string
   readonly title: string
-  readonly chapters: ReadonlyArray<YouTubeVideoChapter>
 }
 
 export interface YouTubeVideoChapter {

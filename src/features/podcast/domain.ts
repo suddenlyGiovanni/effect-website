@@ -44,18 +44,18 @@ export type PodcastEpisodeId = typeof PodcastEpisodeId.Type
 export class PodcastChapter extends Schema.Class<PodcastChapter>("PodcastChapter")({
   id: Schema.String,
   title: Schema.String,
-  startLabel: Schema.String,
-  startSeconds: Schema.Int,
+  label: Schema.String,
+  startTimeSeconds: Schema.Int,
 }) {}
 
 export class PodcastTranscriptCue extends Schema.Class<PodcastTranscriptCue>(
   "PodcastTranscriptCue",
 )({
   id: Schema.String,
-  startLabel: Schema.String,
-  startSeconds: Schema.Int,
-  endSeconds: Schema.Int,
+  label: Schema.String,
   text: Schema.String,
+  startTimeSeconds: Schema.Int,
+  endTimeSeconds: Schema.Int,
 }) {}
 
 export class PodcastYouTubeInfo extends Schema.Class<PodcastYouTubeInfo>("PodcastYouTubeInfo")({

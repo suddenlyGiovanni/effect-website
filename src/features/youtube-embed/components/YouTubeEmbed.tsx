@@ -1,7 +1,14 @@
 import * as React from "react"
 import { cn, cssVars } from "@/lib/utils"
 import { YOUTUBE_NOCOOKIE_URL } from "../constants"
-import { useEmbedConnect, useEmbedControls, useEmbedPreview, useEmbedVideo } from "../context"
+import {
+  useEmbedConnect,
+  useEmbedControls,
+  useEmbedDebug,
+  useEmbedPreview,
+  useEmbedVideo,
+} from "../context"
+import { YouTubeEmbedDebugger } from "./YouTubeEmbedDebugger"
 
 export type YouTubePosterQuality =
   | "default"
@@ -78,6 +85,7 @@ export function YouTubeEmbed({
 }) {
   const connect = useEmbedConnect()
   const { play } = useEmbedControls()
+  const debug = useEmbedDebug()
   const [isPreviewing, setPreviewing] = useEmbedPreview()
   const video = useEmbedVideo()
   const [isPreconnected, setPreconnected] = React.useState(false)
@@ -109,7 +117,7 @@ export function YouTubeEmbed({
   )
 
   return (
-    <React.Fragment>
+    <div className="relative isolate">
       {/* YouTube Poster Preload */}
       <link rel="preload" href={posterUrl} as="image" />
 
@@ -195,7 +203,9 @@ export function YouTubeEmbed({
           />
         )}
       </article>
-    </React.Fragment>
+
+      {debug && <YouTubeEmbedDebugger />}
+    </div>
   )
 }
 

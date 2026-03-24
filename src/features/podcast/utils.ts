@@ -123,8 +123,8 @@ export function normalizePodcastChapters(
   return chapters.map((chapter, index) => ({
     id: `chapter-${index}-${slugifySegment(chapter.title)}`,
     title: chapter.title,
-    startLabel: chapter.start,
-    startSeconds: parseTimestampToSeconds(chapter.start),
+    label: chapter.start,
+    startTimeSeconds: parseTimestampToSeconds(chapter.start),
   }))
 }
 
@@ -178,9 +178,9 @@ export function normalizePodcastTranscript(
 ): ReadonlyArray<PodcastTranscriptCue> {
   return transcript.map((cue, index) => ({
     id: cue.id.length > 0 ? `cue-${cue.id}` : `cue-${index}`,
-    endSeconds: parseTimestampToSeconds(cue.endTime),
-    startLabel: formatTranscriptTimestamp(cue.startTime),
-    startSeconds: parseTimestampToSeconds(cue.startTime),
+    label: formatTranscriptTimestamp(cue.startTime),
     text: cue.text,
+    startTimeSeconds: parseTimestampToSeconds(cue.startTime),
+    endTimeSeconds: parseTimestampToSeconds(cue.endTime),
   }))
 }

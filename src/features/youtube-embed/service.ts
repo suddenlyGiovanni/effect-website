@@ -1,3 +1,4 @@
+import { Latch } from "effect"
 import * as Array from "effect/Array"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
@@ -15,12 +16,8 @@ import {
   EmbedState,
   PlaybackState,
   PlayerInfoPatch,
-  PlayVideoCommand,
-  PauseVideoCommand,
-  SeekToCommand,
   YouTubeEvent,
   type YouTubeVideo,
-  type YouTubeVideoChapter,
 } from "./domain"
 
 const IFRAME_ALLOW = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
@@ -33,28 +30,24 @@ export interface EmbedManagerOptions {
 export class EmbedManager extends ServiceMap.Service<
   EmbedManager,
   {
+    readonly previewAtom: Atom.Writable<boolean>
     readonly debugAtom: Atom.Atom<ReadonlyArray<string>>
     readonly stateAtom: Atom.Writable<EmbedState, EmbedCommand>
-    readonly previewAtom: Atom.Writable<boolean>
-    // readonly chapterAtom: Atom.Atom<YouTubeVideoChapter | undefined>
     readonly connect: Atom.AtomResultFn<HTMLElement, void>
-    // readonly play: Atom.AtomResultFn<void, void>
-    // readonly pause: Atom.AtomResultFn<void, void>
-    // readonly seekTo: Atom.AtomResultFn<number, void>
-    // readonly setChapter: Atom.AtomResultFn<YouTubeVideoChapter, void>
   }
 >()("EmbedManager", {
   make: Effect.fnUntraced(function* (video: YouTubeVideo, options?: EmbedManagerOptions) {
     const registry = yield* AtomRegistry.AtomRegistry
     const queue = yield* Queue.unbounded<EmbedCommand>()
+    const latch = yield* Latch.make()
+
+    const previewAtom = Atom.make(true)
     const debugAtom = Atom.make<ReadonlyArray<string>>([])
     const stateAtom = Atom.make<EmbedState>(EmbedState.NotMounted())
-    const previewAtom = Atom.make(true)
-    // const chapterAtomReadonly = Atom.readable((get) => {
-    //   const state = get(stateAtom)
-    //   return getCurrentChapter(video, state)
-    // })
-    // const chapterAtom = Atom.optimistic(chapterAtomReadonly)
+    const writableStateAtom = Atom.writable(
+      (get) => get(stateAtom),
+      (_, command: EmbedCommand) => Queue.offerUnsafe(queue, command),
+    )
 
     const services = yield* Effect.services()
     const runFork = Effect.runForkWith(services)
@@ -78,12 +71,10 @@ export class EmbedManager extends ServiceMap.Service<
           iframe.contentWindow?.postMessage(message, YOUTUBE_NOCOOKIE_URL)
         }
 
-        let connected = false
-
         const attemptHandshake = Effect.repeat(Effect.sync(sendListeningRequest), {
           times: 5,
           schedule: Schedule.exponential("200 millis"),
-          while: () => Effect.succeed(connected),
+          while: () => latch.open,
         })
 
         const handleMessage = (event: MessageEvent): void => {
@@ -99,9 +90,7 @@ export class EmbedManager extends ServiceMap.Service<
 
                 // After validating that an event originates from our iframe,
                 // mark connection as established
-                if (!connected) {
-                  connected = true
-                }
+                yield* latch.open
 
                 const data = yield* decodeEvent(event.data)
                 registry.update(stateAtom, (state) => reduceEmbedState(state, data))
@@ -137,19 +126,19 @@ export class EmbedManager extends ServiceMap.Service<
       idleTimeToLive: Duration.infinity,
     })
 
-    yield* Queue.take(queue).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (command) {
-          if (command.func === "activateEmbed") {
-            registry.update(stateAtom, markMounted)
-          } else {
-            const iframe = yield* RcRef.get(ref)
-            const message = yield* encodeCommand(command)
-            iframe.contentWindow?.postMessage(message, YOUTUBE_NOCOOKIE_URL)
-          }
-        }, Effect.scoped),
+    yield* latch.await.pipe(
+      Effect.andThen(
+        Queue.take(queue).pipe(
+          Effect.flatMap(
+            Effect.fnUntraced(function* (command) {
+              const iframe = yield* RcRef.get(ref)
+              const message = yield* encodeCommand(command)
+              iframe.contentWindow?.postMessage(message, YOUTUBE_NOCOOKIE_URL)
+            }, Effect.scoped),
+          ),
+          Effect.forever,
+        ),
       ),
-      Effect.forever,
       Effect.forkScoped,
     )
 
@@ -159,55 +148,11 @@ export class EmbedManager extends ServiceMap.Service<
       registry.update(stateAtom, markMounted)
     })
 
-    // const play = Queue.offer(queue, new PlayVideoCommand()).pipe(
-    //   Effect.asVoid,
-    //   Effect.withSpan("EmbedManager.play"),
-    // )
-    //
-    // const pause = Queue.offer(queue, new PauseVideoCommand()).pipe(
-    //   Effect.asVoid,
-    //   Effect.withSpan("EmbedManager.pause"),
-    // )
-    //
-    // const seekTo = Effect.fn("EmbedManager.seekTo")(function* (seconds: number) {
-    //   yield* Queue.offer(queue, new SeekToCommand({ args: [seconds, true] }))
-    // })
-    //
-    // const setChapter = Atom.fn<YouTubeVideoChapter>()(
-    //   Effect.fnUntraced(function* (chapter, get) {
-    //     atomRegistry.update(stateAtom, ensureActiveState)
-    //     yield* seekTo(chapter.startTimeSeconds)
-    //     yield* play
-    //     yield* Effect.sync(() => get(chapterAtomReadonly)).pipe(
-    //       Effect.filterOrFail(
-    //         (actualChapter) => actualChapter?.id === chapter.id,
-    //         () => "unconfirmed_update" as const,
-    //       ),
-    //       Effect.retry({
-    //         while: (error) => error === "unconfirmed_update",
-    //         schedule: Schedule.spaced("100 millis"),
-    //       }),
-    //       Effect.ignore,
-    //     )
-    //   }),
-    // )
-
     return {
-      debugAtom,
-      stateAtom: Atom.writable(
-        (get) => get(stateAtom),
-        (_, command: EmbedCommand) => Queue.offerUnsafe(queue, command),
-      ),
       previewAtom: previewAtom,
-      // chapterAtom,
+      debugAtom,
+      stateAtom: writableStateAtom,
       connect: Atom.fn<HTMLElement>()((element) => connect(element)),
-      // play: Atom.fn<void>()(() => play),
-      // pause: Atom.fn<void>()(() => pause),
-      // seekTo: Atom.fn<number>()((seconds) => seekTo(seconds)),
-      // setChapter: Atom.optimisticFn(chapterAtom, {
-      //   reducer: (_, update) => update,
-      //   fn: setChapter,
-      // }),
     } as const
   }),
 }) {
@@ -292,36 +237,9 @@ const getPlayerStateCode = PlaybackState.$match({
   Cued: () => "CUED" as const,
 })
 
-const getPlaybackTimeSeconds = (playback: PlaybackState): number => {
+export const getPlaybackTimeSeconds = (playback: PlaybackState): number => {
   if (playback._tag === "Unstarted") {
     return 0
   }
   return playback.currentTimeSeconds
 }
-
-// const getCurrentChapter = (
-//   video: YouTubeVideo,
-//   state: EmbedState,
-// ): YouTubeVideoChapter | undefined => {
-//   // When the embed is inactive the first chapter is the "current" one
-//   if (state._tag !== "Active") {
-//     return video.chapters[0]
-//   }
-//
-//   const currentTimeSeconds = getPlaybackTimeSeconds(state.playback)
-//
-//   // If the current playback time is not defined, the video has not started
-//   // so again the first chapter is the "current" one - this is mostly a defensive
-//   // check, as an active embed state should always have a current playback time
-//   if (!currentTimeSeconds) {
-//     return video.chapters[0]
-//   }
-//
-//   // The "current" chapter is the last chapter where the chapter start time
-//   // is less than or equal to the current time
-//   const currentChapter = video.chapters.findLast((chapter) => {
-//     return chapter.startTimeSeconds <= currentTimeSeconds
-//   })
-//
-//   return currentChapter ?? video.chapters[0]
-// }

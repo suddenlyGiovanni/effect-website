@@ -5,6 +5,7 @@ import { embedManagerAtom, EmbedManagerAtomParams } from "./atoms"
 import { EmbedCommand, type YouTubeVideo } from "./domain"
 
 export interface YouTubeEmbedContext {
+  readonly debug: boolean
   readonly manager: EmbedManager["Service"]
   readonly video: YouTubeVideo
 }
@@ -17,13 +18,17 @@ export const useEmbedManager = () => useEmbedContext().manager
 
 export const useEmbedVideo = () => useEmbedContext().video
 
-// export const useDebugInfo = () => useAtomValue(useEmbedManager().debugAtom)
+export const useEmbedDebug = () => useEmbedContext().debug
+
+export const useEmbedDebugInfo = () => useAtomValue(useEmbedManager().debugAtom)
 
 export const useEmbedConnect = () => useAtomSet(useEmbedManager().connect)
 
 export const useEmbedState = () => useAtomValue(useEmbedManager().stateAtom)
 
 export const useEmbedPreview = () => useAtom(useEmbedManager().previewAtom)
+
+export const useSetEmbedPreview = () => useAtomSet(useEmbedManager().previewAtom)
 
 export const useEmbedControls = () => {
   const manager = useEmbedManager()
@@ -57,7 +62,7 @@ export function YouTubeEmbedProvider({
   const manager = useAtomSuspense(managerAtom).value
 
   return (
-    <YouTubeEmbedContext.Provider value={{ manager, video }}>
+    <YouTubeEmbedContext.Provider value={{ debug, manager, video }}>
       {children}
     </YouTubeEmbedContext.Provider>
   )

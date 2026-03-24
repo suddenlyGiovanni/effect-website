@@ -1,15 +1,56 @@
+import { useAtomSet, useAtomValue } from "@effect/atom-react"
+import * as Effect from "effect/Effect"
+import * as Schedule from "effect/Schedule"
+import * as Atom from "effect/unstable/reactivity/Atom"
 import { ChevronDownIcon, PlayIcon } from "lucide-react"
 import * as React from "react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { EmbedState, getPlaybackTimeSeconds, useEmbedManager } from "@/features/youtube-embed"
 import { cn } from "@/lib/utils"
-import type { PodcastChapter } from "../domain"
-import { useActiveChapter, useChapters, useSetActiveChapter } from "../context/PodcastContext"
+import { usePodcastEpisode } from "../context"
+import { EmbedCommand, type PodcastChapter } from "../domain"
 
 export function PodcastChapters() {
-  const chapters = useChapters()
-  const activeChapter = useActiveChapter()
-  const setActiveChapter = useSetActiveChapter()
+  const { chapters } = usePodcastEpisode()
+  const embedManager = useEmbedManager()
+
+  const { activeChapterAtom, setActiveChapterAtom } = React.useMemo(() => {
+    const chapterAtomReadonly = Atom.readable((get) => {
+      const state = get(embedManager.stateAtom)
+      return getActiveChapter(chapters, state)
+    })
+
+    const activeChapterAtom = Atom.optimistic(chapterAtomReadonly)
+
+    const setActiveChapterAtom = Atom.fn<PodcastChapter>()(
+      Effect.fnUntraced(function* (chapter, get) {
+        get.set(embedManager.previewAtom, false)
+
+        const command = new EmbedCommand.cases.seekTo({
+          args: [chapter.startTimeSeconds, true],
+        })
+        get.set(embedManager.stateAtom, command)
+
+        yield* Effect.sync(() => get(chapterAtomReadonly)).pipe(
+          Effect.filterOrFail(
+            (actualChapter) => actualChapter?.id === chapter.id,
+            () => "unconfirmed_update" as const,
+          ),
+          Effect.retry({
+            while: (error) => error === "unconfirmed_update",
+            schedule: Schedule.spaced("100 millis"),
+          }),
+          Effect.ignore,
+        )
+      }),
+    )
+
+    return { activeChapterAtom, setActiveChapterAtom } as const
+  }, [chapters, embedManager])
+
+  const activeChapter = useAtomValue(activeChapterAtom)
+  const setActiveChapter = useAtomSet(setActiveChapterAtom)
 
   const handleSeek = React.useCallback(
     (chapter: PodcastChapter) => {
@@ -37,7 +78,7 @@ export function PodcastChapters() {
                     <button
                       type="button"
                       onClick={() => handleSeek(chapter)}
-                      aria-label={`Jump to ${chapter.startLabel}: ${chapter.title}`}
+                      aria-label={`Jump to ${chapter.label}: ${chapter.title}`}
                       className={cn(
                         "flex w-full cursor-pointer items-center gap-3 bg-inherit px-3 py-2.5 text-left transition-colors hover:bg-accent/50",
                         isActive && "bg-accent",
@@ -72,7 +113,7 @@ export function PodcastChapters() {
                         </p>
                       </div>
                       <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                        {chapter.startLabel}
+                        {chapter.label}
                       </span>
                     </button>
                   </li>
@@ -84,4 +125,31 @@ export function PodcastChapters() {
       </CollapsibleContent>
     </Collapsible>
   )
+}
+
+const getActiveChapter = (
+  chapters: ReadonlyArray<PodcastChapter>,
+  state: EmbedState,
+): PodcastChapter | undefined => {
+  // When the embed is inactive the first chapter is the "active" one
+  if (state._tag !== "Active") {
+    return chapters[0]
+  }
+
+  const currentTimeSeconds = getPlaybackTimeSeconds(state.playback)
+
+  // If the current playback time is not defined, the video has not started
+  // so again the first chapter is the "active" one - this is mostly a defensive
+  // check, as an active embed state should always have a current playback time
+  if (!currentTimeSeconds) {
+    return chapters[0]
+  }
+
+  // The "active" chapter is the last chapter where the chapter start time
+  // is less than or equal to the current time
+  const activeChapter = chapters.findLast((chapter) => {
+    return chapter.startTimeSeconds <= currentTimeSeconds
+  })
+
+  return activeChapter ?? chapters[0]
 }
