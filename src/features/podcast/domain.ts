@@ -62,13 +62,21 @@ export class PodcastYouTubeInfo extends Schema.Class<PodcastYouTubeInfo>("Podcas
   id: Schema.String,
 }) {}
 
+export class PodcastLinks extends Schema.Class<PodcastLinks>("PodcastLinks")({
+  apple: Schema.String,
+  spotify: Schema.String,
+  youtube: Schema.String,
+}) {}
+
 export class PodcastEpisode extends Schema.Class<PodcastEpisode>("PodcastEpisode")({
   id: PodcastEpisodeId,
   number: Schema.Int,
   title: Schema.String,
   guest: Schema.String,
+  company: Schema.String,
   chapters: Schema.Array(PodcastChapter),
   transcript: Schema.Array(PodcastTranscriptCue),
+  links: PodcastLinks,
   youtube: PodcastYouTubeInfo,
   duration: Schema.Duration,
   publishedOn: Schema.DateTimeUtc,

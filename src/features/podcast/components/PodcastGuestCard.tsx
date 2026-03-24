@@ -1,6 +1,13 @@
+import _14AiLogo from "@/assets/logos/14ai/14ai.svg?react"
 import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
+import MasterclassLogo from "@/assets/logos/masterclass/Masterclass.svg?react"
+import OpenRouterLogo from "@/assets/logos/openrouter/OpenRouter.svg?react"
+import SpikoLogo from "@/assets/logos/spiko/Spiko.svg?react"
 import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg?react"
+import VercelLogo from "@/assets/logos/vercel/Vercel.svg?react"
+import WarpLogo from "@/assets/logos/warp/Warp.svg?react"
 import YouTubeLogo from "@/assets/logos/youtube/YouTube.svg?react"
+import ZendeskLogo from "@/assets/logos/zendesk/Zendesk.svg?react"
 import { usePodcastEpisode } from "../context"
 
 export function PodcastGuestCard() {
@@ -15,7 +22,7 @@ export function PodcastGuestCard() {
       <p className="text-lg font-semibold text-white">{episode.guest}</p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <span>Warp</span>
+        <CompanyLogo company={episode.company} />
         <span>·</span>
         <span>{episode.formattedPublicationDate}</span>
         <span>·</span>
@@ -32,7 +39,7 @@ export function PodcastGuestCard() {
         <div className="flex items-center justify-between">
           <a
             className="group flex items-center text-white no-underline transition-colors"
-            href="https://podcasts.apple.com/us/podcast/cause-effect/id1781879869"
+            href={episode.links.apple}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Listen to the Cause & Effect Podcast on Apple Podcasts"
@@ -49,7 +56,7 @@ export function PodcastGuestCard() {
           </a>
           <a
             className="group flex items-center text-white no-underline transition-colors"
-            href="https://open.spotify.com/show/4QTFiem4o0G9V2vXtv8vMU"
+            href={episode.links.spotify}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Listen to the Cause & Effect Podcast on Spotify"
@@ -61,7 +68,7 @@ export function PodcastGuestCard() {
           </a>
           <a
             className="group flex items-center text-white no-underline transition-colors"
-            href="https://youtube.com/playlist?list=PLDf3uQLaK2B_jaZ5Fy7IPNq0FIViV_CQl&si=ljmf2aKH5H09GQ7r"
+            href={episode.links.youtube}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Subscribe to Effect on YouTube"
@@ -75,4 +82,25 @@ export function PodcastGuestCard() {
       </div>
     </div>
   )
+}
+
+function CompanyLogo({ company }: { readonly company: string }) {
+  switch (company) {
+    case "14.ai":
+      return <_14AiLogo className="h-4 w-auto" />
+    case "masterclass":
+      return <MasterclassLogo className="h-3 w-auto" />
+    case "openrouter":
+      return <OpenRouterLogo className="h-4 w-auto" />
+    case "spiko":
+      return <SpikoLogo className="h-4 w-auto" />
+    case "vercel":
+      return <VercelLogo className="h-4 w-auto" />
+    case "warp":
+      return <WarpLogo className="h-4 w-auto" />
+    case "zendesk":
+      return <ZendeskLogo className="h-4 w-auto" />
+    default:
+      return null
+  }
 }

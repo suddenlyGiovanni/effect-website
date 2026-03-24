@@ -30,6 +30,10 @@ export const PodcastEpisodeEntry = z.object({
    */
   guest: z.string().min(1),
   /**
+   * The company that the podcast guest is employed by.
+   */
+  company: z.string().min(1),
+  /**
    * The date when an episode was released.
    */
   date: z.iso.date(),
@@ -57,6 +61,23 @@ export const PodcastEpisodeEntry = z.object({
      * The type of the podcast media file.
      */
     type: z.string().min(1),
+  }),
+  /**
+   * The direct links to the podcast episode on external platforms.
+   */
+  links: z.object({
+    /**
+     * The link to the podcast episode on Apple Podcasts.
+     */
+    apple: z.string().min(1),
+    /**
+     * The link to the podcast episode on Spotify.
+     */
+    spotify: z.string().min(1),
+    /**
+     * The link to the podcast episode on YouTube.
+     */
+    youtube: z.string().min(1),
   }),
   /**
    * The list of tags associated with the podcast episode.
