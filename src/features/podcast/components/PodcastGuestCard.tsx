@@ -32,6 +32,23 @@ export function PodcastGuestCard() {
         <div className="flex items-center justify-between">
           <a
             className="group flex items-center text-white no-underline transition-colors"
+            href="https://podcasts.apple.com/us/podcast/cause-effect/id1781879869"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Listen to the Cause & Effect Podcast on Apple Podcasts"
+          >
+            <img
+              className="mr-1.5 h-5 w-auto"
+              src={ApplePodcastsLogo.src}
+              alt="Listen to the Cause & Effect Podcast on Apple Podcasts"
+              loading="lazy"
+            />
+            <span className="text-sm group-hover:underline group-hover:underline-offset-2">
+              Apple Podcasts
+            </span>
+          </a>
+          <a
+            className="group flex items-center text-white no-underline transition-colors"
             href="https://open.spotify.com/show/4QTFiem4o0G9V2vXtv8vMU"
             target="_blank"
             rel="noopener noreferrer"
@@ -52,23 +69,6 @@ export function PodcastGuestCard() {
             <YouTubeLogo className="mr-1 size-6 [&_.youtube-body]:fill-red-500 [&_.youtube-play]:fill-white" />
             <span className="text-sm group-hover:underline group-hover:underline-offset-2">
               YouTube
-            </span>
-          </a>
-          <a
-            className="group flex items-center text-white no-underline transition-colors"
-            href="https://podcasts.apple.com/us/podcast/cause-effect/id1781879869"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Listen to the Cause & Effect Podcast on Apple Podcasts"
-          >
-            <img
-              className="mr-1.5 h-5 w-auto"
-              src={ApplePodcastsLogo.src}
-              alt="Listen to the Cause & Effect Podcast on Apple Podcasts"
-              loading="lazy"
-            />
-            <span className="text-sm group-hover:underline group-hover:underline-offset-2">
-              Apple Podcasts
             </span>
           </a>
         </div>
