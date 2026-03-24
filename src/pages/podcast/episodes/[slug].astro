@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import DitheredOverlay from "@/components/DitheredOverlay.astro";
 import GridRails from "@/components/GridRails.astro";
 import Navigation from "@/components/navigation/Navigation.astro";
+import Link from "@/components/Link.astro";
 import { PodcastEpisodeRoot } from "@/features/podcast/components/PodcastEpisodeRoot";
 import {
   readPodcastTranscript,
@@ -25,6 +26,7 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 
 const episode = entry.data;
+const episodeNumber = String(episode.episodeNumber).padStart(2, "0");
 const transcript = await readPodcastTranscript(entry);
 const { Content } = await render(entry);
 ---
@@ -39,11 +41,19 @@ const { Content } = await render(entry);
     <main id={PAGE_TITLE_ID} class="pt-16">
       <section class="relative w-full py-8 lg:py-12 overflow-hidden">
         <div class="relative mx-auto max-w-295 px-4">
-          <p
-            class="mb-2 text-sm text-muted-foreground font-mono font-medium tracking-wider uppercase"
+          <div
+            class="mb-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground font-mono font-medium uppercase"
           >
-            // Episode #{episode.episodeNumber}
-          </p>
+            <Link
+              href="/podcast/"
+              class="text-inherit hover:text-white no-underline hover:underline hover:underline-offset-4"
+            >
+              Cause & Effect
+            </Link>
+            <span>🎙️</span>
+            <span aria-hidden="true">/</span>
+            <span>Episode #{episodeNumber}</span>
+          </div>
           <h1 class="text-4xl text-white font-bold">
             {episode.title}
           </h1>

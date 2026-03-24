@@ -1,4 +1,3 @@
-import { ArrowLeftIcon } from "lucide-react"
 import * as React from "react"
 import { YouTubeEmbed } from "@/features/youtube-embed"
 import { PodcastChapters } from "./PodcastChapters"
@@ -11,7 +10,6 @@ export function PodcastEpisodeLayout({ children }: React.PropsWithChildren) {
       <div className="lg:col-span-2">
         <div className="mb-4 lg:mb-0">
           <YouTubeEmbed />
-          <BackToAllEpisodes />
         </div>
         <div className="mb-4 lg:hidden">
           <PodcastGuestCard />
@@ -32,17 +30,5 @@ export function PodcastEpisodeLayout({ children }: React.PropsWithChildren) {
         </div>
       </aside>
     </div>
-  )
-}
-
-function BackToAllEpisodes() {
-  return (
-    <a
-      href="/podcast/"
-      className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground no-underline transition-colors hover:text-white hover:underline hover:underline-offset-2 lg:mb-6"
-    >
-      <ArrowLeftIcon className="h-4" />
-      <span>All episodes</span>
-    </a>
   )
 }
