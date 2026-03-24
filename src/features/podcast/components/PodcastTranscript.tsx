@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 import type { PodcastTranscriptCue, TranscriptFollowMode } from "../domain"
 import { usePodcastEpisode } from "../context"
 
-const AUTO_SCROLL_SETTLE_DELAY_MS = 150
+const AUTO_SCROLL_SETTLE_WINDOW_MS = 120
 const AUTO_FOLLOW_RESUME_DELAY_MS = "5 seconds"
 
 const isDesktopViewportAtom = Atom.make((get) => {
@@ -43,7 +43,7 @@ export function PodcastTranscript() {
   const rootRef = React.useRef<HTMLDivElement | null>(null)
   const cueElementMapRef = React.useRef(new Map<string, HTMLButtonElement>())
   const suppressScrollEventRef = React.useRef(false)
-  const suppressScrollTimeoutRef = React.useRef<number | undefined>(undefined)
+  const scrollSettleFrameRef = React.useRef<number | undefined>(undefined)
   const [isOpen, setIsOpen] = React.useState(true)
 
   const {
@@ -89,32 +89,35 @@ export function PodcastTranscript() {
       return get(isDesktopViewportAtom) && get(autoFollowModeAtom) === "auto"
     })
 
-    const setActiveTranscriptCueAtom = Atom.fn<PodcastTranscriptCue>()(
-      Effect.fnUntraced(function* (cue, get) {
-        const token = get(autoFollowPauseTokenAtom) + 1
-        get.set(autoFollowPauseTokenAtom, token)
-        get.set(autoFollowModeAtom, "auto")
+    const setActiveTranscriptCueAtom = Atom.optimisticFn(activeTranscriptCueAtom, {
+      reducer: (_, update) => update,
+      fn: Atom.fn<PodcastTranscriptCue>()(
+        Effect.fnUntraced(function* (cue, get) {
+          get.set(embedManager.previewAtom, false)
 
-        get.set(embedManager.previewAtom, false)
+          const token = get(autoFollowPauseTokenAtom) + 1
+          get.set(autoFollowPauseTokenAtom, token)
+          get.set(autoFollowModeAtom, "auto")
 
-        const command = new EmbedCommand.cases.seekTo({
-          args: [cue.startTimeSeconds, true],
-        })
-        get.set(embedManager.stateAtom, command)
+          const command = new EmbedCommand.cases.seekTo({
+            args: [cue.startTimeSeconds, true],
+          })
+          get.set(embedManager.stateAtom, command)
 
-        yield* Effect.sync(() => get(transcriptCueAtomReadonly)).pipe(
-          Effect.filterOrFail(
-            (actualCue) => actualCue?.id === cue.id,
-            () => "unconfirmed_update" as const,
-          ),
-          Effect.retry({
-            while: (error) => error === "unconfirmed_update",
-            schedule: Schedule.spaced("100 millis"),
-          }),
-          Effect.ignore,
-        )
-      }),
-    )
+          yield* Effect.sync(() => get(transcriptCueAtomReadonly)).pipe(
+            Effect.filterOrFail(
+              (actualCue) => actualCue?.id === cue.id,
+              () => "unconfirmed_update" as const,
+            ),
+            Effect.retry({
+              while: (error) => error === "unconfirmed_update",
+              schedule: Schedule.spaced("100 millis"),
+            }),
+            Effect.ignore,
+          )
+        }),
+      ),
+    })
 
     return {
       activeTranscriptCueAtom,
@@ -133,20 +136,42 @@ export function PodcastTranscript() {
 
   const activeCueId = activeTranscriptCue?.id ?? transcript[0]?.id
 
-  const clearSuppressScrollTimeout = React.useCallback(() => {
-    if (suppressScrollTimeoutRef.current !== undefined) {
-      window.clearTimeout(suppressScrollTimeoutRef.current)
-      suppressScrollTimeoutRef.current = undefined
+  const clearScrollSettleFrame = React.useCallback(() => {
+    if (scrollSettleFrameRef.current !== undefined) {
+      window.cancelAnimationFrame(scrollSettleFrameRef.current)
+      scrollSettleFrameRef.current = undefined
     }
   }, [])
 
-  const scheduleSuppressScrollRelease = React.useCallback(() => {
-    clearSuppressScrollTimeout()
-    suppressScrollTimeoutRef.current = window.setTimeout(() => {
-      suppressScrollEventRef.current = false
-      suppressScrollTimeoutRef.current = undefined
-    }, AUTO_SCROLL_SETTLE_DELAY_MS)
-  }, [clearSuppressScrollTimeout])
+  const waitForScrollToSettle = React.useCallback(
+    (viewport: HTMLElement) => {
+      clearScrollSettleFrame()
+
+      let lastTop = viewport.scrollTop
+      let stableSince = window.performance.now()
+
+      const check = () => {
+        const now = window.performance.now()
+        const nextTop = viewport.scrollTop
+
+        if (Math.abs(nextTop - lastTop) > 1) {
+          lastTop = nextTop
+          stableSince = now
+        }
+
+        if (now - stableSince >= AUTO_SCROLL_SETTLE_WINDOW_MS) {
+          suppressScrollEventRef.current = false
+          scrollSettleFrameRef.current = undefined
+          return
+        }
+
+        scrollSettleFrameRef.current = window.requestAnimationFrame(check)
+      }
+
+      scrollSettleFrameRef.current = window.requestAnimationFrame(check)
+    },
+    [clearScrollSettleFrame],
+  )
 
   const handleSeek = React.useCallback(
     (cue: PodcastTranscriptCue) => {
@@ -179,7 +204,6 @@ export function PodcastTranscript() {
 
     const handleScroll = () => {
       if (suppressScrollEventRef.current) {
-        scheduleSuppressScrollRelease()
         return
       }
       pauseAutoFollow()
@@ -188,7 +212,7 @@ export function PodcastTranscript() {
     viewport.addEventListener("scroll", handleScroll, { passive: true })
 
     return () => viewport.removeEventListener("scroll", handleScroll)
-  }, [pauseAutoFollow, scheduleSuppressScrollRelease])
+  }, [pauseAutoFollow])
 
   React.useEffect(() => {
     if (
@@ -214,7 +238,6 @@ export function PodcastTranscript() {
     }
 
     suppressScrollEventRef.current = true
-    scheduleSuppressScrollRelease()
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const viewportRect = viewport.getBoundingClientRect()
@@ -227,17 +250,17 @@ export function PodcastTranscript() {
       behavior: prefersReducedMotion ? "auto" : "smooth",
     })
 
+    if (prefersReducedMotion || Math.abs(viewport.scrollTop - targetTop) <= 1) {
+      suppressScrollEventRef.current = false
+    } else {
+      waitForScrollToSettle(viewport)
+    }
+
     return () => {
-      clearSuppressScrollTimeout()
+      clearScrollSettleFrame()
       suppressScrollEventRef.current = false
     }
-  }, [
-    activeCueId,
-    clearSuppressScrollTimeout,
-    isOpen,
-    scheduleSuppressScrollRelease,
-    shouldAutoFollow,
-  ])
+  }, [activeCueId, clearScrollSettleFrame, isOpen, shouldAutoFollow, waitForScrollToSettle])
 
   return (
     <Collapsible
