@@ -11,15 +11,10 @@ Code for [https://effect.website](https://effect.website) -- the Effect document
 - **TypeScript** (strict), path alias `@/*` -> `./src/*`
 - **pnpm**, **Oxc** toolchain (oxlint, oxfmt), **Nix** dev shell
 
-## Reference Repos (`.repos`)
+## Reference Repos (`repos`)
 
-- `.repos/` is a local, gitignored workspace for reference codebases.
-- The old website should exist at `.repos/landing`.
-  - If missing, clone it first: `git clone git@github.com:mirelaprifti/landing.git .repos/landing`
-  - Use it to reference previous implementations of website components / logic
-- Effect v4 reference examples should exist at `.repos/effect-smol`.
-  - If missing, clone it first: `git clone https://github.com/Effect-TS/effect-smol .repos/effect-smol`
-  - Use it to reference how to work with Effect v4, in particular the `.repos/effect-smol/LLMS.md`
+- Use `repos/effect-smol` as the local Effect v4 reference codebase.
+- Always read `repos/effect-smol/LLMS.md` before making Effect-specific changes or giving Effect-specific guidance.
 
 ## Interactive UI Components
 
