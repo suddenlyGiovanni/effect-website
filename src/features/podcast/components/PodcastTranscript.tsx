@@ -1,5 +1,4 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react"
-import * as Clock from "effect/Clock"
 import * as Effect from "effect/Effect"
 import * as Schedule from "effect/Schedule"
 import * as Atom from "effect/unstable/reactivity/Atom"
@@ -18,7 +17,7 @@ import type { PodcastTranscriptCue, TranscriptFollowMode } from "../domain"
 import { usePodcastEpisode } from "../context"
 
 const AUTO_SCROLL_SETTLE_WINDOW_MS = 120
-const AUTO_FOLLOW_RESUME_DELAY_MS = "5 seconds"
+const AUTO_FOLLOW_RESUME_DELAY_MS = 5_000
 
 const isDesktopViewportAtom = Atom.make((get) => {
   if (typeof window === "undefined") {
@@ -44,19 +43,12 @@ export function PodcastTranscript() {
   const cueElementMapRef = React.useRef(new Map<string, HTMLButtonElement>())
   const suppressScrollEventRef = React.useRef(false)
   const scrollSettleFrameRef = React.useRef<number | undefined>(undefined)
+  const autoFollowResumeTimeoutRef = React.useRef<number | undefined>(undefined)
+  const autoFollowPauseTokenRef = React.useRef(0)
   const [isOpen, setIsOpen] = React.useState(true)
+  const [autoFollowMode, setAutoFollowMode] = React.useState<TranscriptFollowMode>("auto")
 
-  const {
-    activeTranscriptCueAtom,
-    setActiveTranscriptCueAtom,
-    shouldAutoFollowAtom,
-    pauseAutoFollowAtom,
-    resumeAutoFollowAtom,
-  } = React.useMemo(() => {
-    const autoFollowModeAtom = Atom.make<TranscriptFollowMode>("auto")
-
-    const autoFollowPauseTokenAtom = Atom.make(0)
-
+  const { activeTranscriptCueAtom, setActiveTranscriptCueAtom } = React.useMemo(() => {
     const transcriptCueAtomReadonly = Atom.readable((get) => {
       const state = get(embedManager.stateAtom)
       return getActiveTranscriptCue(transcript, state)
@@ -64,40 +56,11 @@ export function PodcastTranscript() {
 
     const activeTranscriptCueAtom = Atom.optimistic(transcriptCueAtomReadonly)
 
-    const pauseAutoFollowAtom = Atom.fn<void>()(
-      Effect.fnUntraced(function* (_, get) {
-        const token = get(autoFollowPauseTokenAtom) + 1
-        get.set(autoFollowPauseTokenAtom, token)
-        get.set(autoFollowModeAtom, "paused-by-user")
-        yield* Effect.sleep(AUTO_FOLLOW_RESUME_DELAY_MS)
-        if (get(autoFollowPauseTokenAtom) !== token) {
-          return
-        }
-        get.set(autoFollowModeAtom, "auto")
-      }),
-      { concurrent: true },
-    )
-
-    const resumeAutoFollowAtom = Atom.fn<void>()((_, get) => {
-      const token = get(autoFollowPauseTokenAtom) + 1
-      get.set(autoFollowPauseTokenAtom, token)
-      get.set(autoFollowModeAtom, "auto")
-      return Effect.void
-    })
-
-    const shouldAutoFollowAtom = Atom.readable((get) => {
-      return get(isDesktopViewportAtom) && get(autoFollowModeAtom) === "auto"
-    })
-
     const setActiveTranscriptCueAtom = Atom.optimisticFn(activeTranscriptCueAtom, {
       reducer: (_, update) => update,
       fn: Atom.fn<PodcastTranscriptCue>()(
         Effect.fnUntraced(function* (cue, get) {
           get.set(embedManager.previewAtom, false)
-
-          const token = get(autoFollowPauseTokenAtom) + 1
-          get.set(autoFollowPauseTokenAtom, token)
-          get.set(autoFollowModeAtom, "auto")
 
           const command = new EmbedCommand.cases.seekTo({
             args: [cue.startTimeSeconds, true],
@@ -122,19 +85,44 @@ export function PodcastTranscript() {
     return {
       activeTranscriptCueAtom,
       setActiveTranscriptCueAtom,
-      shouldAutoFollowAtom,
-      pauseAutoFollowAtom,
-      resumeAutoFollowAtom,
     } as const
   }, [transcript, embedManager])
 
   const activeTranscriptCue = useAtomValue(activeTranscriptCueAtom)
   const setActiveTranscriptCue = useAtomSet(setActiveTranscriptCueAtom)
-  const shouldAutoFollow = useAtomValue(shouldAutoFollowAtom)
-  const pauseAutoFollow = useAtomSet(pauseAutoFollowAtom)
-  const resumeAutoFollow = useAtomSet(resumeAutoFollowAtom)
+  const isDesktopViewport = useAtomValue(isDesktopViewportAtom)
 
   const activeCueId = activeTranscriptCue?.id ?? transcript[0]?.id
+  const shouldAutoFollow = isDesktopViewport && autoFollowMode === "auto"
+
+  const clearAutoFollowResumeTimeout = React.useCallback(() => {
+    if (autoFollowResumeTimeoutRef.current !== undefined) {
+      window.clearTimeout(autoFollowResumeTimeoutRef.current)
+      autoFollowResumeTimeoutRef.current = undefined
+    }
+  }, [])
+
+  const pauseAutoFollow = React.useCallback(() => {
+    const token = autoFollowPauseTokenRef.current + 1
+    autoFollowPauseTokenRef.current = token
+    setAutoFollowMode("paused-by-user")
+    clearAutoFollowResumeTimeout()
+
+    autoFollowResumeTimeoutRef.current = window.setTimeout(() => {
+      if (autoFollowPauseTokenRef.current !== token) {
+        return
+      }
+
+      setAutoFollowMode("auto")
+      autoFollowResumeTimeoutRef.current = undefined
+    }, AUTO_FOLLOW_RESUME_DELAY_MS)
+  }, [clearAutoFollowResumeTimeout])
+
+  const resumeAutoFollow = React.useCallback(() => {
+    autoFollowPauseTokenRef.current += 1
+    clearAutoFollowResumeTimeout()
+    setAutoFollowMode("auto")
+  }, [clearAutoFollowResumeTimeout])
 
   const clearScrollSettleFrame = React.useCallback(() => {
     if (scrollSettleFrameRef.current !== undefined) {
@@ -188,6 +176,13 @@ export function PodcastTranscript() {
       cueElementMapRef.current.delete(cueId)
     }
   }, [])
+
+  React.useEffect(() => {
+    return () => {
+      clearAutoFollowResumeTimeout()
+      clearScrollSettleFrame()
+    }
+  }, [clearAutoFollowResumeTimeout, clearScrollSettleFrame])
 
   React.useEffect(() => {
     const root = rootRef.current
@@ -318,12 +313,12 @@ export function PodcastTranscript() {
 }
 
 const getActiveTranscriptCue = (
-  chapters: ReadonlyArray<PodcastTranscriptCue>,
+  transcript: ReadonlyArray<PodcastTranscriptCue>,
   state: EmbedState,
 ): PodcastTranscriptCue | undefined => {
   // When the embed is inactive the first cue is the "active" one
   if (state._tag !== "Active") {
-    return chapters[0]
+    return transcript[0]
   }
 
   const currentTimeSeconds = getPlaybackTimeSeconds(state.playback)
@@ -332,14 +327,18 @@ const getActiveTranscriptCue = (
   // so again the first cue is the "active" one - this is mostly a defensive
   // check, as an active embed state should always have a current playback time
   if (!currentTimeSeconds) {
-    return chapters[0]
+    return transcript[0]
   }
 
   // The "active" cue is the cue where the current playback time falls within
   // the bounds of the cue
-  const activeCue = chapters.find((cue) => {
+  const activeCue = transcript.find((cue) => {
     return cue.startTimeSeconds <= currentTimeSeconds && currentTimeSeconds < cue.endTimeSeconds
   })
 
-  return activeCue ?? chapters[0]
+  if (activeCue !== undefined) {
+    return activeCue
+  }
+
+  return transcript.findLast((cue) => cue.startTimeSeconds <= currentTimeSeconds) ?? transcript[0]
 }
