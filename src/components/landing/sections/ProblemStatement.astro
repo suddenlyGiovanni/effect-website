@@ -1,5 +1,14 @@
 ---
-import { Activity, ArrowDown, Check, Clock3, FileCheck2, GitBranch, Network, ShieldCheck } from "@lucide/astro"
+import {
+  Activity,
+  ArrowDown,
+  Check,
+  Clock3,
+  FileCheck2,
+  GitBranch,
+  Network,
+  ShieldCheck,
+} from "@lucide/astro"
 import ComplexityChart from "@/components/landing/blocks/ComplexityChart.astro"
 
 type ProblemFeatureIcon =
@@ -98,47 +107,49 @@ const PROBLEM_FEATURES: ReadonlyArray<ProblemFeature> = [
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {PROBLEM_FEATURES.map((feature) => (
-        <article class="flex flex-col border border-zinc-800 bg-zinc-950 p-5">
-          <p class="text-base font-medium leading-snug text-zinc-400">{feature.problem}</p>
+      {
+        PROBLEM_FEATURES.map((feature) => (
+          <article class="flex flex-col border border-zinc-800 bg-zinc-950 p-5">
+            <p class="text-base font-medium leading-snug text-zinc-400">{feature.problem}</p>
 
-          <div class="my-4 flex items-center gap-2">
-            <div class="h-px flex-1 bg-zinc-800"></div>
-            <ArrowDown class="h-4 w-4 text-white" aria-hidden="true" />
-            <div class="h-px flex-1 bg-zinc-800"></div>
-          </div>
+            <div class="my-4 flex items-center gap-2">
+              <div class="h-px flex-1 bg-zinc-800" />
+              <ArrowDown class="h-4 w-4 text-white" aria-hidden="true" />
+              <div class="h-px flex-1 bg-zinc-800" />
+            </div>
 
-          <h3 class="flex items-center gap-2 font-mono text-base font-medium uppercase text-white">
-            <span class="flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-800">
-              {feature.icon === "typed-errors" ? (
-                <ShieldCheck class="h-4 w-4 text-zinc-200" aria-hidden="true" />
-              ) : feature.icon === "dependency-injection" ? (
-                <Network class="h-4 w-4 text-zinc-200" aria-hidden="true" />
-              ) : feature.icon === "structured-concurrency" ? (
-                <GitBranch class="h-4 w-4 text-zinc-200" aria-hidden="true" />
-              ) : feature.icon === "scheduling" ? (
-                <Clock3 class="h-4 w-4 text-zinc-200" aria-hidden="true" />
-              ) : feature.icon === "built-in-tracing" ? (
-                <Activity class="h-4 w-4 text-zinc-200" aria-hidden="true" />
-              ) : (
-                <FileCheck2 class="h-4 w-4 text-zinc-200" aria-hidden="true" />
-              )}
-            </span>
-            {feature.title}
-          </h3>
+            <h3 class="flex items-center gap-2 font-mono text-base font-medium uppercase text-white">
+              <span class="flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-800">
+                {feature.icon === "typed-errors" ? (
+                  <ShieldCheck class="h-4 w-4 text-zinc-200" aria-hidden="true" />
+                ) : feature.icon === "dependency-injection" ? (
+                  <Network class="h-4 w-4 text-zinc-200" aria-hidden="true" />
+                ) : feature.icon === "structured-concurrency" ? (
+                  <GitBranch class="h-4 w-4 text-zinc-200" aria-hidden="true" />
+                ) : feature.icon === "scheduling" ? (
+                  <Clock3 class="h-4 w-4 text-zinc-200" aria-hidden="true" />
+                ) : feature.icon === "built-in-tracing" ? (
+                  <Activity class="h-4 w-4 text-zinc-200" aria-hidden="true" />
+                ) : (
+                  <FileCheck2 class="h-4 w-4 text-zinc-200" aria-hidden="true" />
+                )}
+              </span>
+              {feature.title}
+            </h3>
 
-          <ul class="mt-3 m-0 flex list-none flex-col gap-1.5 p-0">
-            {feature.items.map((item) => (
-              <li class="flex items-start gap-2">
-                <span class="flex h-6 w-6 shrink-0 items-center justify-center">
-                  <Check class="h-4 w-4 text-emerald-500" aria-hidden="true" />
-                </span>
-                <span class="text-sm text-zinc-400">{item}</span>
-              </li>
-            ))}
-          </ul>
-        </article>
-      ))}
+            <ul class="mt-3 m-0 flex list-none flex-col gap-1.5 p-0">
+              {feature.items.map((item) => (
+                <li class="flex items-start gap-2">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center">
+                    <Check class="h-4 w-4 text-emerald-500" aria-hidden="true" />
+                  </span>
+                  <span class="text-sm text-zinc-400">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
     </div>
   </div>
 </section>

@@ -28,7 +28,7 @@ interface Quote {
 }
 
 interface QuoteLogoDefinition {
-  readonly src: ImageMetadata 
+  readonly src: ImageMetadata
   readonly className: string
 }
 
@@ -78,7 +78,7 @@ const quotes: ReadonlyArray<Quote> = [
     text: "Effect tracing is simply magical. Was able to fully integrate with our existing microservice observability stack fairly easily.",
     author: "Zach Warunek",
     company: "Twitter",
-    logo: "twitter"
+    logo: "twitter",
   },
   {
     text: "I feel like I'm writing some of the best code in my career using Effect.",
@@ -164,49 +164,51 @@ const copies = [0, 1, 2] as const
         aria-label="Developer quotes"
         class="quotes-rail flex gap-4 overflow-x-auto px-4 select-none [scrollbar-width:none] [-ms-overflow-style:none] [touch-action:pan-y] [-webkit-overflow-scrolling:touch]"
       >
-        {copies.map((copyIndex) =>
-          quotes.map((quote) => {
-            const definition = QUOTE_BY_LOGO_ID[quote.logo]
-            return (
-              <article
-                data-role="card"
-                data-copy={copyIndex}
-                class="quotes-card min-h-54 md:min-h-56 w-65 md:w-80 p-4 md:p-6 flex flex-col shrink-0 rounded-md border border-zinc-800 bg-zinc-900"
-              >
-                <p class="text-sm md:text-base text-zinc-300 leading-relaxed">
-                  "{quote.text}"
-                </p>
+        {
+          copies.map((copyIndex) =>
+            quotes.map((quote) => {
+              const definition = QUOTE_BY_LOGO_ID[quote.logo]
+              return (
+                <article
+                  data-role="card"
+                  data-copy={copyIndex}
+                  class="quotes-card min-h-54 md:min-h-56 w-65 md:w-80 p-4 md:p-6 flex flex-col shrink-0 rounded-md border border-zinc-800 bg-zinc-900"
+                >
+                  <p class="text-sm md:text-base text-zinc-300 leading-relaxed">"{quote.text}"</p>
 
-                <div class="mt-auto flex items-center gap-2.5 pt-3 md:gap-3 md:pt-8">
-                  <span class="shrink-0 font-mono text-sm font-medium text-zinc-100">
-                    {quote.author}
-                  </span>
+                  <div class="mt-auto flex items-center gap-2.5 pt-3 md:gap-3 md:pt-8">
+                    <span class="shrink-0 font-mono text-sm font-medium text-zinc-100">
+                      {quote.author}
+                    </span>
 
-                  <div class="h-px flex-1 bg-[linear-gradient(to_right,transparent,rgb(63_63_70))]"></div>
+                    <div class="h-px flex-1 bg-[linear-gradient(to_right,transparent,rgb(63_63_70))]" />
 
-                  <div class="flex shrink-0 items-center text-zinc-300">
-                    <Image
-                      src={definition.src}
-                      alt={quote.company}
-                      class={definition.className}
-                      loading="lazy"
-                    />
+                    <div class="flex shrink-0 items-center text-zinc-300">
+                      <Image
+                        src={definition.src}
+                        alt={quote.company}
+                        class={definition.className}
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
-                </div>
-              </article>
-            )
-          })
-        )}
+                </article>
+              )
+            }),
+          )
+        }
       </div>
 
       <div
         aria-hidden="true"
         class="quotes-fade-left pointer-events-none absolute inset-y-0 left-0 w-10 md:w-16 bg-[linear-gradient(to_right,rgb(9_9_11),transparent)]"
-      />
+      >
+      </div>
       <div
         aria-hidden="true"
         class="quotes-fade-right pointer-events-none absolute inset-y-0 right-0 w-16 md:w-20 bg-[linear-gradient(to_left,rgb(9_9_11),transparent)]"
-      />
+      >
+      </div>
     </div>
   </section>
 </effect-quotes>
@@ -498,9 +500,12 @@ const copies = [0, 1, 2] as const
         behavior: this.#getReducedMotion() ? "auto" : "smooth",
       })
 
-      setTimeout(() => {
-        this.#normalizeLoopPosition()
-      }, this.#getReducedMotion() ? 0 : 400)
+      setTimeout(
+        () => {
+          this.#normalizeLoopPosition()
+        },
+        this.#getReducedMotion() ? 0 : 400,
+      )
     }
 
     #onScroll = () => {

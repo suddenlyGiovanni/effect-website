@@ -1,5 +1,5 @@
 ---
-import "../styles/global.css";
+import "../styles/global.css"
 
 import { Font } from "astro:assets"
 import { SEO } from "astro-seo"
@@ -7,8 +7,8 @@ import SkipLink from "@/components/SkipLink.astro"
 import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/open-graph"
 
 interface Props {
-	readonly title?: string | undefined;
-	readonly description?: string | undefined;
+  readonly title?: string | undefined
+  readonly description?: string | undefined
 }
 
 const { title = "Effect | Production Grade TypeScript", description } = Astro.props
@@ -27,7 +27,7 @@ const pagePathname = Astro.url.pathname.replace(/\/$/, "")
 const canonicalUrl = new URL(pagePathname, Astro.site)
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
@@ -38,7 +38,7 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
     <Font cssVariable="--font-jetbrains-mono" preload />
 
     <!-- SEO -->
-    <SEO 
+    <SEO
       title={title}
       canonical={canonicalUrl}
       openGraph={{
@@ -50,25 +50,23 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
         },
         image: {
           height: OPENGRAPH_IMAGE_HEIGHT,
-          width: OPENGRAPH_IMAGE_WIDTH
+          width: OPENGRAPH_IMAGE_WIDTH,
         },
         optional: {
           siteName: "Effect",
-          ...(description ? { description } : undefined)
-        }
+          ...(description ? { description } : undefined),
+        },
       }}
       twitter={{
         card: "summary_large_image",
         title,
         image: ogImageUrl,
-        ...(description ? { description } : undefined)
+        ...(description ? { description } : undefined),
       }}
       extend={{
-        link: [
-          { rel: "icon", type: "image/png", href: "/favicon.png" }
-        ],
+        link: [{ rel: "icon", type: "image/png", href: "/favicon.png" }],
       }}
-      {...(description ? { description } : undefined)}
+      {...description ? { description } : undefined}
     />
   </head>
   <body class="min-h-screen bg-zinc-950 text-white antialiased">

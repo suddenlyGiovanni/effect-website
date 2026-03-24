@@ -25,6 +25,7 @@ export default defineConfig({
     react(),
     starlight({
       title: "My Docs",
+      disable404Route: true,
       customCss: [
         // Tailwind Base Styles
         "./src/styles/global.css",

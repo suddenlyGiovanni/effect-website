@@ -120,8 +120,8 @@ Recommended API:
 
 ```ts
 export interface SeekToInput {
-  readonly connectionId: string;
-  readonly seconds: number;
+  readonly connectionId: string
+  readonly seconds: number
 }
 ```
 
@@ -162,8 +162,8 @@ Current chapter model only exposes string timestamps:
 
 ```ts
 {
-  start: string;
-  title: string;
+  start: string
+  title: string
 }
 ```
 
@@ -173,10 +173,10 @@ Add normalized chapter view data with stable numeric time:
 
 ```ts
 export interface PodcastChapterView {
-  readonly id: string;
-  readonly title: string;
-  readonly startLabel: string;
-  readonly startSeconds: number;
+  readonly id: string
+  readonly title: string
+  readonly startLabel: string
+  readonly startSeconds: number
 }
 ```
 
@@ -199,8 +199,8 @@ Recommended props:
 
 ```ts
 interface PodcastChaptersProps {
-  readonly playerId: string;
-  readonly chapters: ReadonlyArray<PodcastChapterView>;
+  readonly playerId: string
+  readonly chapters: ReadonlyArray<PodcastChapterView>
 }
 ```
 

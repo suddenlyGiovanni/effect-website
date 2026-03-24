@@ -4,52 +4,69 @@ import EffectLogoBlack from "@/assets/logos/effect/combination-mark/svg/effect-l
 import EffectLogoWhite from "@/assets/logos/effect/combination-mark/svg/effect-logo-white.svg"
 import SocialLink from "@/components/SocialLink.astro"
 import FooterLink from "./FooterLink.astro"
+
+interface Props {
+  readonly class?: string | undefined
+}
+
+const { class: className } = Astro.props
 ---
 
-<footer class="relative w-full">
+<footer class:list={["relative w-full", className]}>
   <!-- Background Gradient  -->
-  <div 
-    class="absolute inset-0 hidden dark:block bg-linear-to-b from-zinc-950/0 via-zinc-950/0 to-zinc-900/50 pointer-events-none" 
-    aria-hidden="true" 
-  />
+  <div
+    class="absolute inset-0 hidden dark:block bg-linear-to-b from-zinc-950/0 via-zinc-950/0 to-zinc-900/50 pointer-events-none"
+    aria-hidden="true"
+  >
+  </div>
 
   <div class="mx-auto w-full max-w-295 px-4">
     <div class="flex flex-col">
       <!-- Links -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-0 gap-y-8 mb-8 md:mb-20">
         <div class="flex flex-1 flex-col gap-4 lg:pl-4">
-			    <h3 class="text-sm text-zinc-900 dark:text-zinc-100 font-mono font-semibold uppercase">
-						Resources
-					</h3>
+          <h3 class="text-sm text-zinc-900 dark:text-zinc-100 font-mono font-semibold uppercase">
+            Resources
+          </h3>
           <ul class="flex flex-col items-start m-0 p-0 gap-2 list-none">
             <li>
               <FooterLink href="/docs/">Documentation</FooterLink>
             </li>
             <li>
-              <FooterLink href="/docs/additional-resources/api-reference/">API Reference</FooterLink>
+              <FooterLink href="/docs/additional-resources/api-reference/">API Reference</FooterLink
+              >
             </li>
           </ul>
         </div>
-        <div class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800">
-			    <h3 class="text-sm text-zinc-900 dark:text-zinc-100 font-mono font-semibold uppercase">
-						DevTools
-					</h3>
+        <div
+          class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800"
+        >
+          <h3 class="text-sm text-zinc-900 dark:text-zinc-100 font-mono font-semibold uppercase">
+            DevTools
+          </h3>
           <ul class="flex flex-col items-start m-0 p-0 gap-2 list-none">
             <li>
               <FooterLink href="/play/">Effect Playground</FooterLink>
             </li>
             <li>
-              <FooterLink href="https://github.com/Effect-TS/language-service">Effect LSP</FooterLink>
+              <FooterLink href="https://github.com/Effect-TS/language-service"
+                >Effect LSP</FooterLink
+              >
             </li>
             <li>
-              <FooterLink href="https://marketplace.visualstudio.com/items?itemName=effectful-tech.effect-vscode">Effect VSCode Extension</FooterLink>
+              <FooterLink
+                href="https://marketplace.visualstudio.com/items?itemName=effectful-tech.effect-vscode"
+                >Effect VSCode Extension</FooterLink
+              >
             </li>
             <li>
               <FooterLink href="https://effect.solutions/">Effect Solutions</FooterLink>
             </li>
-					</ul>
+          </ul>
         </div>
-        <div class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800">
+        <div
+          class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800"
+        >
           <h3 class="font-mono font-semibold text-sm text-zinc-900 uppercase dark:text-zinc-100">
             Community
           </h3>
@@ -71,7 +88,9 @@ import FooterLink from "./FooterLink.astro"
             </li>
           </ul>
         </div>
-        <div class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800">
+        <div
+          class="flex flex-1 flex-col gap-4 lg:pl-4 lg:border-l lg:border-dashed lg:border-zinc-200 dark:lg:border-zinc-800"
+        >
           <h3 class="font-mono font-semibold text-sm text-zinc-900 uppercase dark:text-zinc-100">
             Other
           </h3>
@@ -86,7 +105,10 @@ import FooterLink from "./FooterLink.astro"
               <FooterLink href="/brand-guidelines/">Brand Guidelines</FooterLink>
             </li>
             <li>
-              <FooterLink href="https://www.youtube.com/playlist?list=PLDf3uQLaK2B9vHzUNyvOSvoMv61LW7792">Workshops</FooterLink>
+              <FooterLink
+                href="https://www.youtube.com/playlist?list=PLDf3uQLaK2B9vHzUNyvOSvoMv61LW7792"
+                >Workshops</FooterLink
+              >
             </li>
             <li>
               <FooterLink href="https://effectful.co/">Effectful</FooterLink>
@@ -98,22 +120,14 @@ import FooterLink from "./FooterLink.astro"
       <!-- Social & Branding -->
       <div class="flex flex-col gap-8 md:gap-10">
         <!-- Top Border -->
-				<hr class="mx-4 h-px bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
+        <hr class="mx-4 h-px bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
 
-				<div class="flex flex-col items-center gap-8 md:grid md:grid-cols-3">
+        <div class="flex flex-col items-center gap-8 md:grid md:grid-cols-3">
           <!-- Logo -->
           <div class="md:pl-4">
             <a href="/" aria-label="Go to Effect homepage">
-              <Image 
-                class="block h-7 w-auto dark:hidden"
-                src={EffectLogoBlack}
-                alt="Effect Logo"
-              />
-              <Image 
-                class="block h-7 w-auto dark:block"
-                src={EffectLogoWhite}
-                alt="Effect Logo"
-              />
+              <Image class="block h-7 w-auto dark:hidden" src={EffectLogoBlack} alt="Effect Logo" />
+              <Image class="block h-7 w-auto dark:block" src={EffectLogoWhite} alt="Effect Logo" />
             </a>
           </div>
 
@@ -128,9 +142,7 @@ import FooterLink from "./FooterLink.astro"
           </div>
 
           <div class="md:pr-4 md:text-right">
-            <p class="text-sm text-zinc-600 dark:text-zinc-400">
-              MIT Licensed
-            </p>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">MIT Licensed</p>
           </div>
         </div>
 
@@ -139,8 +151,12 @@ import FooterLink from "./FooterLink.astro"
       </div>
 
       <!-- Copyright -->
-      <div class="flex flex-col items-center justify-between gap-4 md:gap-8 px-4 pt-8 pb-16 md:flex-row">
-        <p class="md:block flex flex-col gap-4 items-center text-sm text-zinc-600 dark:text-zinc-400">
+      <div
+        class="flex flex-col items-center justify-between gap-4 md:gap-8 px-4 pt-8 pb-16 md:flex-row"
+      >
+        <p
+          class="md:block flex flex-col gap-4 items-center text-sm text-zinc-600 dark:text-zinc-400"
+        >
           <span>© {new Date().getFullYear()} Effectful Technologies Inc.</span>
           <span>All rights reserved.</span>
         </p>
@@ -161,7 +177,7 @@ import FooterLink from "./FooterLink.astro"
             <FooterLink
               href="#"
               class="border-b border-transparent text-sm font-medium text-zinc-600 transition-colors hover:border-current hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-              >
+            >
               Privacy
             </FooterLink>
           </div>

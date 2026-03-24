@@ -1,5 +1,5 @@
 ---
-import { ArrowUpRightIcon } from '@lucide/astro'
+import { ArrowUpRightIcon } from "@lucide/astro"
 
 interface Props {
   readonly class?: string | undefined
@@ -12,21 +12,20 @@ const target = isExternal ? "_blank" : ""
 const rel = isExternal ? "noopener noreferrer" : ""
 ---
 
-<a 
+<a
   class:list={[
     isExternal ? "inline-flex items-center gap-2" : "",
     "text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white",
     "font-medium leading-relaxed",
     "no-underline hover:underline hover:underline-offset-2",
     "transition-colors",
-    className
+    className,
   ]}
-  href={href} 
-  target={target} 
+  href={href}
+  target={target}
   rel={rel}
   {...props}
 >
   <slot />
   {isExternal && <ArrowUpRightIcon class="size-4" />}
 </a>
-

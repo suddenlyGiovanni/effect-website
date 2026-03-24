@@ -15,9 +15,6 @@ const { transparent = false } = Astro.props
   <SocialLink variant="twitter" />
 </div>
 
-<div 
-  class={`h-4.5 w-px ${transparent ? "bg-white/50" : "bg-zinc-700"}`} 
-  aria-hidden="true"
-/>
+<div class={`h-4.5 w-px ${transparent ? "bg-white/50" : "bg-zinc-700"}`} aria-hidden="true"></div>
 
 <SearchTriggerIsland client:load mode="desktop" transparent={transparent} />

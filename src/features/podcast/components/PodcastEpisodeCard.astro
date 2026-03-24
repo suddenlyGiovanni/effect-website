@@ -1,28 +1,26 @@
 ---
-import * as DateTime from "effect/DateTime";
-import * as Duration from "effect/Duration";
-import type { PodcastEpisodeEntry } from "../collection";
+import * as DateTime from "effect/DateTime"
+import * as Duration from "effect/Duration"
+import type { PodcastEpisodeEntry } from "../collection"
 import {
   formatPodcastDuration,
   formatPodcastPublicationDate,
   getPodcastThumbnail,
   slugifyPodcast,
-} from "../utils";
+} from "../utils"
 
 interface Props {
-  readonly podcast: PodcastEpisodeEntry;
+  readonly podcast: PodcastEpisodeEntry
 }
 
-const { podcast } = Astro.props;
+const { podcast } = Astro.props
 
-const slug = slugifyPodcast(podcast);
-const href = `/podcast/episodes/${slug}/`;
-const publicationDate = formatPodcastPublicationDate(
-  DateTime.makeUnsafe(podcast.date),
-);
-const duration = formatPodcastDuration(Duration.seconds(podcast.duration));
-const episodeNumber = String(podcast.episodeNumber).padStart(2, "0");
-const thumbnailUrl = getPodcastThumbnail(podcast.youtubeId);
+const slug = slugifyPodcast(podcast)
+const href = `/podcast/episodes/${slug}/`
+const publicationDate = formatPodcastPublicationDate(DateTime.makeUnsafe(podcast.date))
+const duration = formatPodcastDuration(Duration.seconds(podcast.duration))
+const episodeNumber = String(podcast.episodeNumber).padStart(2, "0")
+const thumbnailUrl = getPodcastThumbnail(podcast.youtubeId)
 ---
 
 <div
@@ -54,9 +52,7 @@ const thumbnailUrl = getPodcastThumbnail(podcast.youtubeId);
         </span>
       </a>
     </h4>
-    <p
-      class="mt-2 text-sm md:text-base text-muted-foreground leading-trelaxed line-clamp-3"
-    >
+    <p class="mt-2 text-sm md:text-base text-muted-foreground leading-trelaxed line-clamp-3">
       {podcast.description}
     </p>
     <div class="flex items-center gap-2 mt-4 text-sm text-muted-foreground">

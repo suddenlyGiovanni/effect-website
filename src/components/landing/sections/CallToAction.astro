@@ -7,23 +7,17 @@ import InstallCommand from "../blocks/InstallCommand.astro"
 
 <section id="call-to-action" class="relative w-full">
   <!-- Grid  -->
-  <div
-    class="call-to-action-grid absolute inset-0 pointer-events-none"
-    aria-hidden="true"
-  />
+  <div class="call-to-action-grid absolute inset-0 pointer-events-none" aria-hidden="true"></div>
 
   <!-- Fade Grid Top & Bottom  -->
-  <div
-    class="call-to-action-fade absolute inset-0 pointer-events-none"
-    aria-hidden="true"
-  />
+  <div class="call-to-action-fade absolute inset-0 pointer-events-none" aria-hidden="true"></div>
 
   <!-- Texture Overlay -->
   <div
     class="call-to-action-noise absolute inset-0 pointer-events-none opacity-[0.015]"
     aria-hidden="true"
-  />
-
+  >
+  </div>
 
   <div class="relative mx-auto w-full max-w-295 px-4">
     <div class="flex flex-col items-center text-center">
@@ -40,14 +34,14 @@ import InstallCommand from "../blocks/InstallCommand.astro"
 
       {/* CTA Buttons */}
       <div class="mt-6 flex flex-row items-center justify-center gap-3">
-        <a 
+        <a
           class="inline-flex justify-center items-center gap-2 px-6 py-4 bg-zinc-900 hover:bg-zinc-800 text-white text-base font-medium border border-zinc-700 hover:border-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-50 rounded-md no-underline group"
           href="/docs/"
         >
           <ArrowRight class="size-4 transition-transform group-hover:translate-x-0.5" />
           <span>Get Started</span>
         </a>
-        <a 
+        <a
           class="inline-flex justify-center items-center gap-4 px-4 md:px-6 py-4 bg-zinc-900 hover:bg-zinc-800 text-white text-base font-medium border border-zinc-700 hover:border-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-50 rounded-md no-underline group"
           href="https://discord.gg/effect-ts"
           target="_blank"
@@ -63,11 +57,8 @@ import InstallCommand from "../blocks/InstallCommand.astro"
 
 <style>
   .call-to-action-grid {
-    --call-to-action-grid-image: linear-gradient(
-        to right,
-        rgb(24 24 27 / 0.8) 1px,
-        transparent 1px
-      ),
+    --call-to-action-grid-image:
+      linear-gradient(to right, rgb(24 24 27 / 0.8) 1px, transparent 1px),
       linear-gradient(to bottom, rgb(24 24 27 / 0.8) 1px, transparent 1px);
     --call-to-action-grid-size: 196.6px 180px;
     --call-to-action-grid-position: calc(50% + 97px) 0;
@@ -78,7 +69,13 @@ import InstallCommand from "../blocks/InstallCommand.astro"
   }
 
   .call-to-action-fade {
-    background: linear-gradient(to bottom, #09090b 0%, transparent 15%, transparent 80%, #09090b 100%);
+    background: linear-gradient(
+      to bottom,
+      #09090b 0%,
+      transparent 15%,
+      transparent 80%,
+      #09090b 100%
+    );
   }
 
   .call-to-action-noise {

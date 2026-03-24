@@ -16,11 +16,7 @@ const plainClass = `border-b border-transparent text-sm font-medium no-underline
 ---
 
 <>
-  {
-    plainLinks.map((link) => (
-      <NavigationAnchor link={link} class={plainClass} />
-    ))
-  }
+  {plainLinks.map((link) => <NavigationAnchor link={link} class={plainClass} />)}
   {
     ctaLinks.map((link) => (
       <NavigationAnchor

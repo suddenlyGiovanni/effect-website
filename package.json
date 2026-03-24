@@ -14,8 +14,8 @@
     "check:tsgo": "tspc -b tsconfig.json",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check"
+    "fmt": "oxfmt && prettier --write \"**/*.astro\"",
+    "fmt:check": "oxfmt --check && prettier --check \"**/*.astro\""
   },
   "dependencies": {
     "@astrojs/react": "^5.0.1",

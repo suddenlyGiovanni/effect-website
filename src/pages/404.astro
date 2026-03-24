@@ -1,0 +1,63 @@
+---
+import { ArrowLeftIcon, BookIcon } from "@lucide/astro"
+import Navigation from "@/components/navigation/Navigation.astro"
+import Link from "@/components/Link.astro"
+import SectionDivider from "@/components/layout/SectionDivider.astro"
+import DitheredOverlay from "@/components/DitheredOverlay.astro"
+import Footer from "@/components/Footer.astro"
+import GridRails from "@/components/GridRails.astro"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import { NotFoundCodeSnippet } from "@/components/404/NotFoundCodeSnippet"
+---
+
+<BaseLayout title="404 - Page not found" description="The page you're looking for doesn't exist.">
+  <DitheredOverlay />
+
+  <div class="relative z-10">
+    <Navigation />
+    <GridRails />
+
+    <main id={PAGE_TITLE_ID} class="relative z-10 flex min-h-screen items-center pt-16">
+      <section class="w-full">
+        <div class="mx-auto w-full max-w-295 px-4 md:pt-24">
+          <div class="flex flex-col items-center gap-10">
+            <div class="w-full max-w-4xl text-center">
+              <p
+                class="mb-3 font-mono text-lf font-semibold tracking-wider text-muted-foreground uppercase"
+              >
+                // 404
+              </p>
+              <h1 class="text-2xl font-semibold text-white md:text-3xl">Page Not Found</h1>
+              <p class="mt-4 text-lg text-muted-foreground">
+                This route could not be resolved, but we can recover.
+              </p>
+              <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href="/"
+                  class="inline-flex items-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-medium text-zinc-900 transition-all hover:bg-zinc-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] no-underline"
+                >
+                  <ArrowLeftIcon class="size-4" />
+                  Back to home
+                </Link>
+                <Link
+                  href="/docs/"
+                  class="inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:border-zinc-500 hover:bg-zinc-800 no-underline"
+                >
+                  <BookIcon class="size-4" />
+                  Read the docs
+                </Link>
+              </div>
+            </div>
+
+            <NotFoundCodeSnippet client:load />
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <SectionDivider />
+
+    <Footer />
+  </div>
+</BaseLayout>
