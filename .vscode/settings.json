@@ -1,0 +1,10 @@
+{
+  "[astro]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "js/ts.hover.maximumLength": 0,
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "oxc.enable": true,
+  "oxc.requireConfig": true,
+}
