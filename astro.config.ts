@@ -19,6 +19,11 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss(), svgr()],
+    server: {
+      watch: {
+        ignored: ["**/.direnv/*"],
+      },
+    },
   },
 
   integrations: [
