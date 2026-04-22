@@ -55,7 +55,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@effect/language-service": "^0.81.0",
+    "@effect/language-service": "^0.85.1",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",
     "prettier": "^3.8.1",

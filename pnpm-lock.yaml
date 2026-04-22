@@ -115,8 +115,8 @@ importers:
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     devDependencies:
       '@effect/language-service':
-        specifier: ^0.81.0
-        version: 0.81.0
+        specifier: ^0.85.1
+        version: 0.85.1
       oxfmt:
         specifier: ^0.41.0
         version: 0.41.0
@@ -416,8 +416,8 @@ packages:
       react: ^19.2.4
       scheduler: '*'
 
-  '@effect/language-service@0.81.0':
-    resolution: {integrity: sha512-7MYFsq9w9l2MkUw5/33fiG3YAkgnT6U1mwV0QvhokhnLhPW9cIetwAHNtXwsgr5omPQheLuflTIAFvPaZLQcPw==}
+  '@effect/language-service@0.85.1':
+    resolution: {integrity: sha512-EXnJjIy6zQ3nUO/MZ+ynWUb8B895KZPotd1++oTs9JjDkplwM7cb6zo8Zq2zU6piwq+KflO7amXbEfj1UMpHkw==}
     hasBin: true
 
   '@effect/platform-browser@4.0.0-beta.31':
@@ -5340,7 +5340,7 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
-  '@effect/language-service@0.81.0': {}
+  '@effect/language-service@0.85.1': {}
 
   '@effect/platform-browser@4.0.0-beta.31(effect@4.0.0-beta.31)':
     dependencies:
