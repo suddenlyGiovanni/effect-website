@@ -21,7 +21,10 @@ export default defineConfig({
     plugins: [tailwindcss(), svgr()],
     server: {
       watch: {
-        ignored: ["**/.direnv/*"],
+        ignored: [
+          "**/.direnv/*",
+          "repos/*"
+        ],
       },
     },
   },
