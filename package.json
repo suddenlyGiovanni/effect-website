@@ -55,6 +55,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@astrojs/compiler-rs": "^0.1.10",
     "@effect/language-service": "^0.85.1",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",
