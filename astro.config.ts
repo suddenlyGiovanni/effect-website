@@ -33,8 +33,8 @@ export default defineConfig({
       title: "My Docs",
       disable404Route: true,
       customCss: [
-        // Tailwind Base Styles
         "./src/styles/global.css",
+        "./src/styles/docs.css",
       ],
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/withastro/starlight" }],
       sidebar: [

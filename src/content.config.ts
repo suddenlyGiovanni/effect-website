@@ -1,7 +1,7 @@
 import { docsLoader } from "@astrojs/starlight/loaders"
 import { docsSchema } from "@astrojs/starlight/schema"
-import { glob } from "astro/loaders"
-import { defineCollection } from "astro:content"
+import { file, glob } from "astro/loaders"
+import { defineCollection, z } from "astro:content"
 import { PodcastEpisodeEntry } from "./features/podcast/collection"
 
 const podcasts = defineCollection({
@@ -9,7 +9,19 @@ const podcasts = defineCollection({
   schema: PodcastEpisodeEntry,
 })
 
+const merch = defineCollection({
+  loader: file("./src/content/merch.json"),
+  schema: z.object({
+    name: z.string(),
+    price: z.string(),
+    images: z.array(z.string()),
+    buyUrl: z.string().url(),
+    infoUrl: z.string().url(),
+  }),
+})
+
 export const collections = {
   docs: defineCollection({ loader: docsLoader(), schema: docsSchema() }),
   podcasts,
+  merch,
 }
