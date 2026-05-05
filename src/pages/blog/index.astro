@@ -1,0 +1,389 @@
+---
+import { Struct } from "effect"
+import { Image } from "astro:assets"
+import { getCollection, getEntries, type CollectionEntry } from "astro:content"
+import { RssIcon } from "@lucide/astro"
+
+import DitheredOverlay from "@/components/DitheredOverlay.astro"
+import Footer from "@/components/Footer.astro"
+import GridRails from "@/components/GridRails.astro"
+import SectionDivider from "@/components/layout/SectionDivider.astro"
+import Navigation from "@/components/navigation/Navigation.astro"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+
+const [blogCollection, tagCollection] = await Promise.all([
+  getCollection("blog"),
+  getCollection("blogTags"),
+])
+
+const avatars = import.meta.glob<{ default: ImageMetadata }>("../../assets/authors/*.png", {
+  eager: true,
+})
+
+const allPosts = await Promise.all(
+  blogCollection.map(async (post) => {
+    const [tags, authors] = await Promise.all([
+      getEntries(post.data.tags),
+      getEntries(post.data.authors),
+    ])
+
+    return Struct.assign(post, {
+      tags: tags,
+      authors: authors.map((author) =>
+        Struct.assign(author, {
+          data: Struct.assign(author.data, {
+            avatar: avatars[`../../assets/authors/${author.id}.png`]?.default,
+          }),
+        }),
+      ),
+    })
+  }),
+).then((posts) => posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()))
+
+const isTWIE = (tag: CollectionEntry<"blogTags">) => tag.id === "this-week-in-effect"
+
+const featuredPost = allPosts.find((post) => post.data.featured)
+const twiePosts = allPosts.filter((post) => post.tags.some(isTWIE))
+const nonTwiePosts = allPosts.filter((post) => !post.tags.some(isTWIE))
+
+function getTagCount(slug: string): number {
+  if (slug === "all") {
+    return nonTwiePosts.length
+  }
+
+  if (slug === "this-week-in-effect") {
+    return twiePosts.length
+  }
+
+  return allPosts.filter((post) => post.tags.some((tag) => tag.id === slug)).length
+}
+
+const categories = tagCollection
+  .map(({ id, data }) => ({ id, ...data }))
+  .sort((a, b) => {
+    if (a.id === "all") {
+      return -1
+    }
+
+    if (b.id === "all") {
+      return 1
+    }
+
+    return getTagCount(b.id) - getTagCount(a.id)
+  })
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+}
+---
+
+<BaseLayout
+  title="Blog | Effect"
+  description="Get with the latest updates from the Effect ecosystem"
+>
+  <DitheredOverlay />
+
+  <div class="relative z-10">
+    <Navigation />
+    <GridRails />
+
+    <div class="relative overflow-hidden">
+      <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-0"></div>
+      <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-0"></div>
+
+      <main id={PAGE_TITLE_ID} class="relative w-full pt-16">
+        <div class="mx-auto w-full max-w-295 px-4">
+          <div class="flex items-start justify-between gap-6 pt-16 pb-8 md:pt-24 md:pb-12">
+            <div>
+              <p
+                class="mb-4 font-mono text-sm font-medium tracking-wider text-muted-foreground uppercase"
+              >
+                // Blog
+              </p>
+              <h1 class="max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-white">
+                Get with the latest updates
+                <br class="hidden md:block" />
+                from the Effect ecosystem
+              </h1>
+            </div>
+            <a
+              href="/rss.xml"
+              aria-label="RSS feed"
+              class="inline-flex shrink-0 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-700 hover:text-white"
+            >
+              <RssIcon class="size-4" aria-hidden="true" />
+              <span class="hidden sm:inline">RSS</span>
+            </a>
+          </div>
+
+          {
+            featuredPost && (
+              <div class="border-t border-zinc-800 py-8 md:py-10">
+                <a
+                  href={`/blog/${featuredPost.id}`}
+                  class="group relative block overflow-hidden rounded-lg border border-[#2D3138] bg-[#191C21] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-emerald-500/[0.08]"
+                >
+                  <div class="relative grid grid-cols-1 gap-6 p-5 md:grid-cols-12 md:items-center md:gap-10 md:p-6">
+                    <div class="min-w-0 md:col-span-7">
+                      <div class="mb-3 flex flex-wrap items-center gap-3">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold tracking-wider text-emerald-400 uppercase ring-1 ring-emerald-500/20 ring-inset">
+                          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          Release
+                        </span>
+                        {featuredPost.tags
+                          .filter((t) => t.id !== "effect" && t.id !== "release")
+                          .sort((a, b) => a.id.localeCompare(b.id))
+                          .map((tag) => (
+                            <span class="inline-flex items-center gap-1 rounded-full bg-zinc-800/60 px-3 py-1 text-xs font-medium text-zinc-400">
+                              <span
+                                class="h-1.5 w-1.5 rounded-full"
+                                style={`background-color:${tag.data.color}`}
+                              />
+                              {tag.data.name}
+                            </span>
+                          ))}
+                      </div>
+
+                      <h2 class="text-2xl font-semibold leading-tight tracking-tight text-white md:text-3xl">
+                        {featuredPost.data.title}
+                      </h2>
+
+                      <p class="mt-3 line-clamp-3 max-w-xl text-base text-zinc-300">
+                        {featuredPost.data.excerpt}
+                      </p>
+
+                      <div class="mt-5 flex flex-wrap items-center gap-4">
+                        {featuredPost.authors.map((author) => (
+                          <div class="flex items-center gap-2">
+                            {author.data.avatar ? (
+                              <Image
+                                src={author.data.avatar}
+                                alt={author.data.name}
+                                width={32}
+                                height={32}
+                                class="size-8 rounded-full border-2 border-zinc-800 object-cover"
+                              />
+                            ) : (
+                              <div
+                                class="flex size-8 items-center justify-center rounded-full border-2 border-zinc-800 bg-zinc-800 text-xs font-semibold text-zinc-400"
+                                title={author.data.name}
+                              >
+                                {author.data.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span class="font-mono text-sm font-medium text-zinc-200">
+                              {author.data.name}
+                            </span>
+                          </div>
+                        ))}
+                        <div class="flex items-center gap-3 font-mono text-sm text-zinc-400">
+                          <span class="h-4 w-px bg-zinc-800" />
+                          <time>{formatDate(featuredPost.data.date)}</time>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="hidden md:col-span-5 md:flex md:flex-col md:items-center md:gap-3">
+                      {featuredPost.data.featuredImage ? (
+                        <div class="relative aspect-2/1 w-full overflow-hidden rounded-md border border-zinc-800/50">
+                          <Image
+                            src={featuredPost.data.featuredImage}
+                            alt={featuredPost.data.title}
+                            class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                          />
+                          <div class="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-zinc-900/60 to-transparent" />
+                        </div>
+                      ) : (
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-800 text-zinc-400 transition-all duration-300 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 group-hover:text-emerald-400">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="m12 5 7 7-7 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    {featuredPost.data.featuredImage && (
+                      <div class="relative aspect-video overflow-hidden rounded-md border border-zinc-800/50 md:hidden">
+                        <Image
+                          src={featuredPost.data.featuredImage}
+                          alt={featuredPost.data.title}
+                          class="absolute inset-0 h-full w-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </a>
+              </div>
+            )
+          }
+        </div>
+      </main>
+    </div>
+
+    <div class="h-px w-full bg-zinc-800"></div>
+
+    <div class="relative">
+      <div class="mx-auto w-full max-w-295 px-4">
+        {
+          twiePosts.length > 0 && (
+            <>
+              <section aria-label="This Week in Effect posts" class="py-12">
+                <div class="mb-6 flex items-center justify-between">
+                  <h2 class="text-xl font-semibold text-white">This Week in Effect</h2>
+                </div>
+                <div class="flex gap-3 overflow-x-auto py-1 pb-2" style="scrollbar-width:none">
+                  {twiePosts.map((post) => {
+                    const issueMatch = post.data.title.match(/#(\d+)/)
+                    const issueNumber = issueMatch ? `#${issueMatch[1]}` : null
+                    return (
+                      <a
+                        href={`/blog/${post.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="group relative flex w-[280px] shrink-0 flex-col overflow-hidden rounded-md border border-[#272B31] bg-[#191C21] p-4 pb-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/5"
+                      >
+                        <div class="flex items-center justify-between gap-2">
+                          {issueNumber && (
+                            <span class="font-mono text-base font-semibold text-white">
+                              {issueNumber}
+                            </span>
+                          )}
+                          <time class="font-mono text-xs text-zinc-400 tabular-nums">
+                            {formatDate(post.data.date)}
+                          </time>
+                        </div>
+                        <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-300">
+                          {post.data.excerpt}
+                        </p>
+                      </a>
+                    )
+                  })}
+                </div>
+              </section>
+              <div class="h-px w-full bg-zinc-800" />
+            </>
+          )
+        }
+
+        <div class="grid grid-cols-1 gap-0 lg:grid-cols-[1fr_240px] lg:gap-20">
+          <div class="min-w-0 pb-24">
+            <h2 class="mt-12 mb-6 text-2xl font-semibold tracking-tight text-white">Latest</h2>
+
+            <div class="flex flex-col">
+              {
+                nonTwiePosts
+                  .filter((post) => !post.data.featured)
+                  .map((post) => {
+                    const visibleTags = [...post.tags]
+                      .sort((a, b) => a.id.localeCompare(b.id))
+                      .slice(0, 2)
+
+                    const overflow = post.tags.length - 2
+
+                    return (
+                      <a
+                        href={`/blog/${post.id}`}
+                        class="group block border-t border-zinc-700/80 px-4 py-6 transition-colors first:border-t-0 hover:bg-zinc-800/60"
+                      >
+                        <div class="flex items-baseline justify-between gap-4">
+                          <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-3">
+                              <h3 class="text-lg font-semibold text-white">{post.data.title}</h3>
+                              {visibleTags.map((tag) => (
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-zinc-800/60 px-2.5 py-0.5 text-xs font-medium text-zinc-300">
+                                  <span
+                                    class="h-1.5 w-1.5 rounded-full"
+                                    style={`background-color:${tag.data.color}`}
+                                  />
+                                  {tag.data.name}
+                                </span>
+                              ))}
+                              {overflow > 0 && (
+                                <span class="inline-flex items-center rounded-full bg-zinc-800/60 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
+                                  +{overflow}
+                                </span>
+                              )}
+                            </div>
+                            <p class="mt-2 line-clamp-2 text-base leading-relaxed text-zinc-400">
+                              {post.data.excerpt}
+                            </p>
+                          </div>
+                          <time class="shrink-0 font-mono text-xs text-zinc-400 tabular-nums">
+                            {formatDate(post.data.date)}
+                          </time>
+                        </div>
+                      </a>
+                    )
+                  })
+              }
+            </div>
+          </div>
+
+          <aside class="hidden pt-12 pb-24 lg:block">
+            <div class="sticky" style="top: calc(var(--nav-height, 64px) + 1.5rem)">
+              <p
+                class="mb-3 px-3 font-mono text-xs font-medium tracking-wider text-zinc-400 uppercase"
+              >
+                Categories
+              </p>
+              <ul class="space-y-0.5">
+                {
+                  categories.map((cat) => (
+                    <li>
+                      <div class="relative flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-zinc-400">
+                        {cat.id !== "all" && (
+                          <span
+                            class="h-2 w-2 shrink-0 rounded-full"
+                            style={`background-color:${cat.color}`}
+                          />
+                        )}
+                        <span class="flex-1">{cat.name}</span>
+                        <span class="text-xs text-zinc-400 tabular-nums">
+                          {getTagCount(cat.id)}
+                        </span>
+                      </div>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <SectionDivider class="mt-4 md:mt-0" />
+    <Footer />
+  </div>
+</BaseLayout>
+
+<style>
+  .hero-grid {
+    background-image:
+      linear-gradient(to right, rgb(24 24 27 / 0.8) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(24 24 27 / 0.8) 1px, transparent 1px);
+    background-size: 196.6px 194px;
+    background-position: calc(50% + 97px) 0;
+  }
+  .hero-fade {
+    background: linear-gradient(
+      to bottom,
+      rgb(9 9 11) 0%,
+      transparent 30%,
+      transparent 50%,
+      rgb(9 9 11) 100%
+    );
+  }
+</style>
