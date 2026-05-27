@@ -74,7 +74,7 @@ export function Navigation({ transparent = false, activePath }: NavigationProps)
 	return (
 		<>
 			<div
-				className={`fixed top-0 right-0 left-0 z-100 w-full backdrop-blur-sm ${transparent ? "" : "border-b border-zinc-800 bg-zinc-950/85"}`}
+				className={`fixed top-0 right-0 left-0 z-100 w-full transform-gpu backface-hidden contain-layout ${transparent ? "" : "border-b border-zinc-800 bg-zinc-950/95"}`}
 			>
 				<div className="w-full">
 					<header className="relative mx-auto w-full max-w-[73.75rem] px-4">

@@ -37,7 +37,7 @@ export function AISection() {
 						href="https://x.com/davis7/status/1988847914538672262"
 						target="_blank"
 						rel="noopener noreferrer"
-						className="block rounded-lg border border-zinc-700/70 bg-zinc-900 p-5 backdrop-blur-sm transition-colors hover:border-zinc-700/80 hover:bg-zinc-900/60"
+						className="block rounded-lg border border-zinc-700/70 bg-zinc-900 p-5 transition-colors hover:border-zinc-700/80 hover:bg-zinc-900/60"
 					>
 						{/* Author row */}
 						<div className="mb-4 flex items-center justify-between">

@@ -28,7 +28,7 @@ export function HeroSection() {
 
 			{/* Subtle glow - Stripe-style ambient light with pulse animation */}
 			<div
-				className="pointer-events-none absolute inset-x-0 top-0 h-[600px] animate-[glow-pulse_4s_ease-in-out_infinite]"
+				className="pointer-events-none absolute inset-x-0 top-0 h-[600px] animate-[glow-pulse_4s_ease-in-out_infinite] will-change-[opacity] transform-gpu backface-hidden"
 				style={{
 					background: `
 						radial-gradient(ellipse 50% 80% at 70% -20%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
@@ -38,7 +38,7 @@ export function HeroSection() {
 			/>
 			{/* Noise texture overlay for organic glow effect */}
 			<div
-				className="pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-[0.15] mix-blend-overlay"
+				className="pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-[0.15] will-change-transform transform-gpu backface-hidden mix-blend-overlay"
 				style={{
 					backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
 					backgroundRepeat: "repeat",
@@ -83,7 +83,7 @@ export function HeroSection() {
 
 			{/* Video - sits on top of the grid, overlapping the hero bottom edge */}
 			<div className="relative z-10 mx-auto w-full max-w-[73.75rem] px-4 mt-12 pb-20 md:pb-[96px]">
-				<div className="mx-auto max-w-5xl aspect-video rounded-lg border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center">
+				<div className="mx-auto max-w-5xl aspect-video rounded-lg border border-zinc-800 bg-zinc-900 flex items-center justify-center transform-gpu backface-hidden contain-paint">
 					<div className="flex flex-col items-center gap-3 text-zinc-400">
 						<i className="ri-play-circle-line text-5xl" />
 						<span className="text-sm font-medium">Video coming soon</span>
