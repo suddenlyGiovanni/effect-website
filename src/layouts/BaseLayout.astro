@@ -37,6 +37,29 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
     <Font cssVariable="--font-inter" preload />
     <Font cssVariable="--font-jetbrains-mono" preload />
 
+    <!-- Remix Icon -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
+
+    <!-- Theme: prevent flash of wrong theme -->
+    <script is:inline>
+      ;(function () {
+        var stored = localStorage.getItem("theme")
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+        if (stored === "light") {
+          document.documentElement.classList.remove("dark")
+        } else if (stored === "dark") {
+          document.documentElement.classList.add("dark")
+        } else if (prefersDark) {
+          document.documentElement.classList.add("dark")
+        } else {
+          document.documentElement.classList.remove("dark")
+        }
+      })()
+    </script>
+
     <!-- SEO -->
     <SEO
       title={title}
@@ -64,12 +87,12 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
         ...(description ? { description } : undefined),
       }}
       extend={{
-        link: [{ rel: "icon", type: "image/png", href: "/favicon.png" }],
+        link: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
       }}
       {...description ? { description } : undefined}
     />
   </head>
-  <body class="min-h-screen bg-zinc-950 text-white antialiased">
+  <body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-white">
     <SkipLink />
     <slot />
   </body>

@@ -1,56 +1,96 @@
 ---
-import DitheredOverlay from "@/components/DitheredOverlay.astro"
-import Footer from "@/components/Footer.astro"
-import GridRails from "@/components/GridRails.astro"
-import AgenticSystems from "@/components/landing/sections/AgenticSystems.astro"
-import CallToAction from "@/components/landing/sections/CallToAction.astro"
-import CodingWithAi from "@/components/landing/sections/CodingWithAi.astro"
-import Hero from "@/components/landing/sections/Hero.astro"
-import Examples from "@/components/landing/sections/Examples.astro"
-import FAQ from "@/components/landing/sections/FAQ.astro"
-import MentalModel from "@/components/landing/sections/MentalModel.astro"
-import ProblemStatement from "@/components/landing/sections/ProblemStatement.astro"
-import Quotes from "@/components/landing/sections/Quotes.astro"
-import Testimonials from "@/components/landing/sections/Testimonials.astro"
-import Navigation from "@/components/navigation/Navigation.astro"
-import SectionDivider from "@/components/layout/SectionDivider.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
-import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import { Navigation } from "@/components/landing/Navigation"
+import { HeroSection } from "@/components/landing/HeroSection"
+import { ProblemSection } from "@/components/landing/ProblemSection"
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection"
+import { WhatIsEffectSection } from "@/components/landing/WhatIsEffectSection"
+import { FeaturesSection } from "@/components/landing/FeaturesSection"
+import { AIBuildingSection } from "@/components/landing/AIBuildingSection"
+import { AISection } from "@/components/landing/AISection"
+import { QuotesGridSection } from "@/components/landing/QuotesSection"
+import { FAQSection } from "@/components/landing/FAQSection"
+import { CTASection } from "@/components/landing/CTASection"
+import { Footer } from "@/components/landing/Footer"
+import { GridOverlay } from "@/components/GridOverlay"
 ---
 
 <BaseLayout
+  title="Effect - Production-grade software"
   description="An open-source ecosystem for software that is scalable, reliable, and maintainable from the start. One package, everything you need."
 >
-  <DitheredOverlay />
+  <div class="relative min-h-screen bg-zinc-950 text-white antialiased">
+    {/* Dithered background overlay */}
+    <div
+      class="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
+      style={{
+        backgroundImage:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect x='0' y='0' width='1' height='1' fill='white'/%3E%3Crect x='2' y='2' width='1' height='1' fill='white'/%3E%3C/svg%3E\")",
+        backgroundSize: "4px 4px",
+      }}
+    >
+    </div>
 
-  <div class="relative z-10">
-    <Navigation />
-    <GridRails />
+    {/* Skip Navigation Link */}
+    <a
+      href="#main-content"
+      class="text-white no-underline absolute -left-[9999px] z-[999] rounded-br-lg bg-zinc-800 px-6 py-4 font-semibold focus:left-0 focus:top-0"
+    >
+      Skip to main content
+    </a>
 
-    <main id={PAGE_TITLE_ID} class="pt-16">
-      <Hero />
-      <SectionDivider />
-      <ProblemStatement />
-      <SectionDivider />
-      <Testimonials />
-      <SectionDivider />
-      <MentalModel />
-      <SectionDivider />
-      <Examples />
-      <SectionDivider />
-      <AgenticSystems />
-      <SectionDivider />
-      <CodingWithAi />
-      <SectionDivider />
-      <Quotes />
-      <SectionDivider />
-      <FAQ />
-      <SectionDivider />
-      <CallToAction />
+    <Navigation client:load />
+    <GridOverlay client:load />
+
+    {/* Vertical border lines container */}
+    <div
+      class="pointer-events-none absolute left-0 right-0 top-0 bottom-0 z-[60] hidden lg:block"
+    >
+      <div class="relative mx-auto h-full w-full max-w-[73.75rem]">
+        <div class="absolute left-0 top-0 bottom-0 w-px bg-zinc-800"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-px bg-zinc-800"></div>
+      </div>
+    </div>
+
+    {/* Center vertical line - dashed, behind content */}
+    <div
+      class="pointer-events-none absolute left-0 right-0 top-0 bottom-0 z-0 hidden px-8 lg:block"
+    >
+      <div class="relative mx-auto h-full w-full max-w-[73.75rem]">
+        <div
+          class="absolute left-1/2 top-0 bottom-0 -translate-x-1/2"
+          style={{
+            width: "1px",
+            backgroundImage:
+              "repeating-linear-gradient(to bottom, rgb(39 39 42) 0px, rgb(39 39 42) 2px, transparent 2px, transparent 4px)",
+          }}
+        >
+        </div>
+      </div>
+    </div>
+
+    <main id="main-content" class="relative w-full pt-16">
+      <HeroSection client:load />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <ProblemSection client:visible />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <TestimonialsSection />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <WhatIsEffectSection client:visible />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <FeaturesSection client:visible />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <AIBuildingSection />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <AISection />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <QuotesGridSection client:visible />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <FAQSection client:visible />
+      <div class="h-px w-full bg-zinc-800"></div>
+      <CTASection />
     </main>
 
-    <SectionDivider />
-
-    <Footer />
+    <Footer hideCommunityBorder client:load />
   </div>
 </BaseLayout>

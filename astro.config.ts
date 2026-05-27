@@ -13,11 +13,6 @@ export default defineConfig({
 
   adapter: vercel(),
 
-  experimental: {
-    svgo: true,
-    rustCompiler: true,
-  },
-
   vite: {
     plugins: [tailwindcss(), svgr()],
     server: {
@@ -25,10 +20,15 @@ export default defineConfig({
         ignored: ["**/.direnv/*", "repos/*", ".vercel/*"],
       },
     },
+    ssr: {
+      noExternal: ["effect", "effect-legacy", "motion"],
+    },
   },
 
   integrations: [
-    react(),
+    react({
+      include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
+    }),
     starlight({
       title: "My Docs",
       disable404Route: true,
