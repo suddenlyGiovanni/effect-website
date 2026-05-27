@@ -32,10 +32,7 @@ export default defineConfig({
     starlight({
       title: "My Docs",
       disable404Route: true,
-      customCss: [
-        "./src/styles/global.css",
-        "./src/styles/docs.css",
-      ],
+      customCss: ["./src/styles/global.css", "./src/styles/docs.css"],
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/withastro/starlight" }],
       sidebar: [
         {
