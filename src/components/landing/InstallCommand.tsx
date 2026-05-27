@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { getAssetPath } from "@/utils/assetPath";
-
 const INSTALL_COMMANDS: Record<string, string> = {
 	npm: "npm install effect",
 	pnpm: "pnpm add effect",
@@ -48,7 +46,7 @@ export function InstallCommand() {
 						}`}
 					>
 						<img
-							src={getAssetPath(PM_ICONS[pm])}
+							src={PM_ICONS[pm]}
 							alt={pm}
 							className={`${pm === "npm" ? "h-5" : "h-3.5"} w-auto`}
 						/>

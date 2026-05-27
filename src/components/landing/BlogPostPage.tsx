@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { BLOG_POSTS, getPostUrl } from "../../data/blog";
-import { getAssetPath } from "../../utils/assetPath";
 import { Link } from "@/components/ui";
 import { GridOverlay } from "../GridOverlay";
 import { Footer } from "./Footer";
@@ -188,7 +187,7 @@ function PostNavigation({ currentSlug }: { currentSlug: string }) {
 		<div className="mt-16 grid grid-cols-1 gap-4 border-t border-zinc-200 pt-10 sm:grid-cols-2 dark:border-zinc-800">
 			{prevPost && prevUrl ? (
 				<a
-					href={prevIsExternal ? prevUrl : getAssetPath(prevUrl)}
+					href={prevIsExternal ? prevUrl : prevUrl}
 					{...(prevIsExternal
 						? { target: "_blank", rel: "noopener noreferrer" }
 						: {})}
@@ -207,7 +206,7 @@ function PostNavigation({ currentSlug }: { currentSlug: string }) {
 			)}
 			{nextPost && nextUrl ? (
 				<a
-					href={nextIsExternal ? nextUrl : getAssetPath(nextUrl)}
+					href={nextIsExternal ? nextUrl : nextUrl}
 					{...(nextIsExternal
 						? { target: "_blank", rel: "noopener noreferrer" }
 						: {})}
@@ -244,7 +243,7 @@ export function BlogPostPage({ slug }: { slug: string }) {
 							Post not found.
 						</p>
 						<a
-							href={getAssetPath("/blog")}
+							href={"/blog"}
 							className="mt-5 inline-flex items-center gap-2 rounded-md bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 dark:hover:text-white"
 						>
 							<i className="ri-arrow-left-s-line" />
@@ -321,7 +320,7 @@ export function BlogPostPage({ slug }: { slug: string }) {
 				<div className="relative z-10 mx-auto w-full max-w-[73.75rem] px-4">
 					<nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-16 pb-1 font-mono text-sm tracking-wider uppercase md:pt-20">
 						<a
-							href={getAssetPath("/blog")}
+							href={"/blog"}
 							className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
 						>
 							Blog
@@ -331,7 +330,7 @@ export function BlogPostPage({ slug }: { slug: string }) {
 							{[...post.tags].sort((a, b) => a.localeCompare(b)).map((tag) => (
 								<a
 									key={tag}
-									href={`${getAssetPath("/blog")}?category=${encodeURIComponent(tag)}`}
+									href={`${"/blog"}?category=${encodeURIComponent(tag)}`}
 									className="text-zinc-800 transition-colors hover:text-zinc-950 dark:text-zinc-200 dark:hover:text-white"
 								>
 									{tag}
@@ -360,7 +359,7 @@ export function BlogPostPage({ slug }: { slug: string }) {
 										className="group/byline flex items-center gap-3 no-underline"
 									>
 										<img
-											src={getAssetPath(author.avatar)}
+											src={author.avatar}
 											alt={author.name}
 											className="h-10 w-10 rounded-md object-cover"
 										/>
@@ -389,7 +388,7 @@ export function BlogPostPage({ slug }: { slug: string }) {
 										className="group/byline flex items-center gap-3 no-underline"
 									>
 										<img
-											src={getAssetPath(author.avatar)}
+											src={author.avatar}
 											alt={author.name}
 											className="h-12 w-12 rounded-md object-cover"
 										/>

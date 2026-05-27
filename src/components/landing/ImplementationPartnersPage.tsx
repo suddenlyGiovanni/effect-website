@@ -1,4 +1,3 @@
-import { getAssetPath } from "../../utils/assetPath";
 import { PARTNERS, type Partner } from "../../data/partners";
 import { GridOverlay } from "../GridOverlay";
 import { ContactForm } from "./ContactForm";
@@ -8,14 +7,14 @@ import { Navigation } from "./Navigation";
 function FeaturedPartnerCard({ partner }: { partner: Partner }) {
 	return (
 		<a
-			href={getAssetPath(`/partners/${partner.id}`)}
+			href={`/partners/${partner.id}`}
 			className="group block overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/40 transition-all duration-300 ease-out hover:border-zinc-700"
 		>
 			<div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr]">
 				{/* Logo area */}
 				<div className="flex items-center justify-center border-b border-zinc-800 p-8 md:border-r md:border-b-0 md:p-12">
 					<img
-						src={getAssetPath(partner.logoPath)}
+						src={partner.logoPath}
 						alt={`${partner.name} logo`}
 						className="h-12 w-auto max-w-[240px] md:h-16"
 					/>
@@ -58,13 +57,13 @@ function FeaturedPartnerCard({ partner }: { partner: Partner }) {
 function PartnerCard({ partner }: { partner: Partner }) {
 	return (
 		<a
-			href={getAssetPath(`/partners/${partner.id}`)}
+			href={`/partners/${partner.id}`}
 			className="group relative flex flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/40 p-8 transition-all duration-300 ease-out hover:border-zinc-700"
 		>
 			{/* Logo */}
 			<div className="mb-6 flex items-center">
 				<img
-					src={getAssetPath(partner.logoPath)}
+					src={partner.logoPath}
 					alt={`${partner.name} logo`}
 					className="h-8 w-auto max-w-[160px]"
 				/>

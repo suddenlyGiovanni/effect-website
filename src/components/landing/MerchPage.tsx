@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { getAssetPath } from "../../utils/assetPath";
 import { Button, Link } from "@/components/ui";
 import { GridOverlay } from "../GridOverlay";
 import { Footer } from "./Footer";
@@ -211,7 +210,7 @@ function ProductCard({ product }: { product: Product }) {
 				onTouchEnd={handleTouchEnd}
 			>
 				<img
-					src={getAssetPath(product.images[currentImageIndex])}
+					src={product.images[currentImageIndex]}
 					alt={product.name}
 					className="pointer-events-none max-h-[70%] max-w-[70%] object-contain"
 				/>
@@ -416,7 +415,7 @@ export function MerchPage() {
 								{/* Featured: Hoodie - spans full height on left */}
 								<div className="relative row-span-2 flex items-center justify-center overflow-hidden border border-zinc-800 bg-zinc-900/40 p-6">
 									<img
-										src={getAssetPath("/assets/merch/hoodie-1.avif")}
+										src={"/assets/merch/hoodie-1.avif"}
 										alt="Effect hoodie"
 										className="max-h-full max-w-full object-contain"
 									/>
@@ -429,7 +428,7 @@ export function MerchPage() {
 									<span className="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-zinc-700/80" />
 									<span className="absolute right-0 bottom-0 h-3 w-3 border-r border-b border-zinc-700/80" />
 									<img
-										src={getAssetPath("/assets/merch/cap-1.avif")}
+										src={"/assets/merch/cap-1.avif"}
 										alt="Effect.orDie cap"
 										className="max-h-full max-w-full object-contain"
 									/>
@@ -442,7 +441,7 @@ export function MerchPage() {
 									<span className="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-zinc-700/80" />
 									<span className="absolute right-0 bottom-0 h-3 w-3 border-r border-b border-zinc-700/80" />
 									<img
-										src={getAssetPath("/assets/merch/tote-1.avif")}
+										src={"/assets/merch/tote-1.avif"}
 										alt="Effect tote bag"
 										className="max-h-full max-w-full object-contain"
 									/>
@@ -536,7 +535,7 @@ export function MerchPage() {
 							<div className="relative">
 								<div className="relative h-[300px] overflow-hidden md:h-[480px] lg:h-[640px]">
 									<img
-										src={getAssetPath("/assets/merch/wild-desert.avif")}
+										src={"/assets/merch/wild-desert.avif"}
 										alt="Effect cap in the Sahara desert"
 										className="h-full w-full object-cover object-bottom brightness-110"
 									/>

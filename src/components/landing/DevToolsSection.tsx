@@ -1,24 +1,22 @@
 import { useState } from "react";
-import { getAssetPath } from "../../utils/assetPath";
-
 const tools = [
 	{
 		id: "diagnostics",
 		label: "Diagnostics",
 		description: "Real-time type errors and suggestions",
-		video: getAssetPath("/videos/diagnostics.mp4"),
+		video: "/videos/diagnostics.mp4",
 	},
 	{
 		id: "refactors",
 		label: "Refactors",
 		description: "Automated code transformations",
-		video: getAssetPath("/videos/refactors.mp4"),
+		video: "/videos/refactors.mp4",
 	},
 	{
 		id: "debugger",
 		label: "Debugger",
 		description: "Visual fiber inspection",
-		video: getAssetPath("/videos/visuals.mp4"),
+		video: "/videos/visuals.mp4",
 	},
 ];
 

@@ -1,4 +1,3 @@
-import { getAssetPath } from "../../utils/assetPath";
 import { GridOverlay } from "../GridOverlay";
 import { Footer } from "./Footer";
 import { Navigation } from "./Navigation";
@@ -168,9 +167,7 @@ export function PressKitPage() {
 									{/* Logo Preview */}
 									<div className="mb-2 flex items-center justify-start py-6">
 										<img
-											src={getAssetPath(
-												`/assets/${COMBINATION_MARK.files.svg.black}`,
-											)}
+											src={`/assets/${COMBINATION_MARK.files.svg.black}`}
 											alt="Effect combination mark"
 											className="h-14 w-auto invert"
 										/>
@@ -185,15 +182,11 @@ export function PressKitPage() {
 										<i className="ri-download-2-line text-base text-zinc-400" />
 										<span className="text-sm text-zinc-400">Download:</span>
 										<DownloadLink
-											href={getAssetPath(
-												`/assets/${COMBINATION_MARK.files.png.black}`,
-											)}
+											href={`/assets/${COMBINATION_MARK.files.png.black}`}
 											label="PNG"
 										/>
 										<DownloadLink
-											href={getAssetPath(
-												`/assets/${COMBINATION_MARK.files.svg.black}`,
-											)}
+											href={`/assets/${COMBINATION_MARK.files.svg.black}`}
 											label="SVG"
 										/>
 									</div>
@@ -208,9 +201,7 @@ export function PressKitPage() {
 									{/* Logo Preview */}
 									<div className="mb-2 flex items-center justify-start py-6">
 										<img
-											src={getAssetPath(
-												`/assets/${LOGO_SYMBOL.files.svg.black}`,
-											)}
+											src={`/assets/${LOGO_SYMBOL.files.svg.black}`}
 											alt="Effect logo symbol"
 											className="h-14 w-auto invert"
 										/>
@@ -225,15 +216,11 @@ export function PressKitPage() {
 										<i className="ri-download-2-line text-base text-zinc-400" />
 										<span className="text-sm text-zinc-400">Download:</span>
 										<DownloadLink
-											href={getAssetPath(
-												`/assets/${LOGO_SYMBOL.files.png.black}`,
-											)}
+											href={`/assets/${LOGO_SYMBOL.files.png.black}`}
 											label="PNG"
 										/>
 										<DownloadLink
-											href={getAssetPath(
-												`/assets/${LOGO_SYMBOL.files.svg.black}`,
-											)}
+											href={`/assets/${LOGO_SYMBOL.files.svg.black}`}
 											label="SVG"
 										/>
 									</div>
@@ -257,9 +244,7 @@ export function PressKitPage() {
 								<div className="flex flex-col gap-3">
 									<div className="bg-zinc-9050 flex h-52 items-center justify-center border border-zinc-700/75">
 										<img
-											src={getAssetPath(
-												`/assets/${LOGO_SYMBOL.files.svg.white}`,
-											)}
+											src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 											alt="White logo on dark"
 											className="h-24 w-auto"
 										/>
@@ -273,9 +258,7 @@ export function PressKitPage() {
 								<div className="flex flex-col gap-3">
 									<div className="flex h-52 items-center justify-center border border-zinc-300 bg-white">
 										<img
-											src={getAssetPath(
-												`/assets/${LOGO_SYMBOL.files.svg.black}`,
-											)}
+											src={`/assets/${LOGO_SYMBOL.files.svg.black}`}
 											alt="Black logo on light"
 											className="h-24 w-auto"
 										/>
@@ -317,9 +300,7 @@ export function PressKitPage() {
 											}}
 										/>
 										<img
-											src={getAssetPath(
-												`/assets/${LOGO_SYMBOL.files.svg.white}`,
-											)}
+											src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 											alt="Logo on image"
 											className="relative z-10 h-24 w-auto"
 										/>
@@ -338,9 +319,7 @@ export function PressKitPage() {
 									<div className="flex h-52 items-center justify-center gap-16 border border-zinc-800 bg-zinc-950">
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Black logo correct"
 												className="h-20 w-auto"
 											/>
@@ -348,9 +327,7 @@ export function PressKitPage() {
 										</div>
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Colored logo wrong"
 												className="h-20 w-auto"
 												style={{
@@ -371,9 +348,7 @@ export function PressKitPage() {
 									<div className="flex h-52 items-center justify-center gap-20 border border-zinc-800 bg-zinc-900/30 px-8">
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Normal logo"
 												className="h-20 w-auto"
 											/>
@@ -381,9 +356,7 @@ export function PressKitPage() {
 										</div>
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Stretched logo wrong"
 												className="h-20 w-auto"
 												style={{ transform: "scaleX(1.4)" }}
@@ -392,9 +365,7 @@ export function PressKitPage() {
 										</div>
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Squished logo wrong"
 												className="h-20 w-auto"
 												style={{ transform: "scaleY(1.4)" }}
@@ -413,9 +384,7 @@ export function PressKitPage() {
 									<div className="flex h-52 items-center justify-center gap-16 border border-zinc-800 bg-zinc-900/30">
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Normal logo"
 												className="h-20 w-auto"
 											/>
@@ -423,9 +392,7 @@ export function PressKitPage() {
 										</div>
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Shadow logo wrong"
 												className="h-20 w-auto"
 												style={{
@@ -445,9 +412,7 @@ export function PressKitPage() {
 									<div className="flex h-52 items-center justify-center gap-16 border border-zinc-800 bg-zinc-900/30">
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Normal logo"
 												className="h-20 w-auto"
 											/>
@@ -455,9 +420,7 @@ export function PressKitPage() {
 										</div>
 										<div className="relative">
 											<img
-												src={getAssetPath(
-													`/assets/${LOGO_SYMBOL.files.svg.white}`,
-												)}
+												src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 												alt="Rotated logo wrong"
 												className="h-20 w-auto"
 												style={{ transform: "rotate(15deg)" }}
@@ -502,9 +465,7 @@ export function PressKitPage() {
 											>
 												<div className="bg-zinc-900/30">
 													<img
-														src={getAssetPath(
-															`/assets/${LOGO_SYMBOL.files.svg.white}`,
-														)}
+														src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 														alt="Logo symbol with clear space"
 														className="h-10 w-auto"
 													/>
@@ -526,9 +487,7 @@ export function PressKitPage() {
 											>
 												<div className="bg-zinc-900/30">
 													<img
-														src={getAssetPath(
-															`/assets/${COMBINATION_MARK.files.svg.white}`,
-														)}
+														src={`/assets/${COMBINATION_MARK.files.svg.white}`}
 														alt="Combination mark with clear space"
 														className="h-10 w-auto"
 													/>
@@ -552,9 +511,7 @@ export function PressKitPage() {
 											{/* Logo symbol minimum */}
 											<div className="flex flex-col items-center gap-2 py-4">
 												<img
-													src={getAssetPath(
-														`/assets/${LOGO_SYMBOL.files.svg.white}`,
-													)}
+													src={`/assets/${LOGO_SYMBOL.files.svg.white}`}
 													alt="Logo symbol minimum size"
 													className="h-6 w-auto"
 												/>
@@ -565,9 +522,7 @@ export function PressKitPage() {
 											{/* Combination mark minimum */}
 											<div className="flex flex-col items-center gap-2">
 												<img
-													src={getAssetPath(
-														`/assets/${COMBINATION_MARK.files.svg.white}`,
-													)}
+													src={`/assets/${COMBINATION_MARK.files.svg.white}`}
 													alt="Combination mark minimum size"
 													className="h-6 w-auto"
 												/>

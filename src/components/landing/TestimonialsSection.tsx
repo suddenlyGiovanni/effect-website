@@ -1,41 +1,31 @@
-import { getAssetPath } from "../../utils/assetPath";
-
 const useCases = [
 	{
-		logo: getAssetPath("/assets/test-logos/warp-logo-white.svg"),
+		logo: "/assets/test-logos/warp-logo-white.svg",
 		title: "HR Systems",
 		href: "https://youtu.be/2cN1R9zIxp4",
 		alt: "Warp",
-		thumbnail: getAssetPath(
-			"/assets/images/adam-rankin-banner_compressed.webp",
-		),
+		thumbnail: "/assets/images/adam-rankin-banner_compressed.webp",
 	},
 	{
-		logo: getAssetPath("/assets/test-logos/open-router.svg"),
+		logo: "/assets/test-logos/open-router.svg",
 		title: "Internal Tooling",
 		href: "https://youtu.be/x6-AVCwBIWc",
 		alt: "OpenRouter",
-		thumbnail: getAssetPath(
-			"/assets/images/louis-vichy-banner_compressed.webp",
-		),
+		thumbnail: "/assets/images/louis-vichy-banner_compressed.webp",
 	},
 	{
-		logo: getAssetPath("/assets/test-logos/zendesk-logo.svg"),
+		logo: "/assets/test-logos/zendesk-logo.svg",
 		title: "Enerprise Customer Support",
 		href: "https://www.youtube.com/watch?v=rNAqPHBQFEQ",
 		alt: "Attila Večerek",
-		thumbnail: getAssetPath(
-			"/assets/images/attila-vecerek-banner_compressed.webp",
-		),
+		thumbnail: "/assets/images/attila-vecerek-banner_compressed.webp",
 	},
 	{
-		logo: getAssetPath("/assets/quotes-logos/spiko-logo.svg"),
+		logo: "/assets/quotes-logos/spiko-logo.svg",
 		title: "Fintech Infrastructure",
 		href: "https://www.youtube.com/watch?v=lFOHVZnJLew",
 		alt: "Samuel Briole",
-		thumbnail: getAssetPath(
-			"/assets/images/samuel-briole-banner_compressed.webp",
-		),
+		thumbnail: "/assets/images/samuel-briole-banner_compressed.webp",
 	},
 ];
 

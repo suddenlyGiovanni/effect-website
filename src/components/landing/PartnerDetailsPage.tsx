@@ -1,4 +1,3 @@
-import { getAssetPath } from "../../utils/assetPath";
 import type { Partner } from "../../data/partners";
 import { GridOverlay } from "../GridOverlay";
 import { Button } from "../ui";
@@ -82,7 +81,7 @@ export function PartnerDetailsPage({ partner }: { partner: Partner }) {
 					<div className="relative mx-auto w-full max-w-[73.75rem] px-4">
 						<div className="mb-8">
 							<a
-								href={getAssetPath("/implementation-partners")}
+								href={"/implementation-partners"}
 								className="group inline-flex items-center gap-1 font-mono text-sm text-zinc-400 transition-colors hover:text-white"
 							>
 								<i
@@ -98,7 +97,7 @@ export function PartnerDetailsPage({ partner }: { partner: Partner }) {
 								<div className="mb-8 flex items-center gap-6">
 									<div className="flex h-20 w-20 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 p-4">
 										<img
-											src={getAssetPath(partner.logoPath)}
+											src={partner.logoPath}
 											alt={`${partner.name} logo`}
 											className="h-full w-full object-contain"
 										/>

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getAssetPath } from "../../utils/assetPath";
 import { Button, Link } from "@/components/ui";
 import { GridOverlay } from "../GridOverlay";
 import { Footer } from "./Footer";
@@ -735,7 +734,7 @@ function HeroPhotoStrip() {
 						key={`photo-${i}`}
 						className="h-36 w-52 shrink-0 md:h-48 md:w-64"
 					>
-						<PhotoCard src={getAssetPath(photo.src)} alt={photo.alt} />
+						<PhotoCard src={photo.src} alt={photo.alt} />
 					</div>
 				))}
 			</div>
@@ -847,7 +846,7 @@ function EventsTabSection() {
 										<div className="relative aspect-video w-full overflow-hidden md:aspect-auto md:w-1/2">
 											{event.centerThumbnail ? (
 												<img
-													src={getAssetPath(event.centerThumbnail)}
+													src={event.centerThumbnail}
 													alt={event.title}
 													className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
 												/>
@@ -856,7 +855,7 @@ function EventsTabSection() {
 													src={
 														event.thumbnail.startsWith("http")
 															? event.thumbnail
-															: getAssetPath(event.thumbnail)
+															: event.thumbnail
 													}
 													alt={event.title}
 													className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -1061,7 +1060,7 @@ export function EventsPage() {
 							>
 								<div className="relative aspect-video overflow-hidden">
 									<img
-										src={getAssetPath("/assets/images/ed-24-2.png")}
+										src={"/assets/images/ed-24-2.png"}
 										alt="Effect Days 2024 — Vienna"
 										className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
 									/>
@@ -1108,7 +1107,7 @@ export function EventsPage() {
 							>
 								<div className="relative aspect-video overflow-hidden">
 									<img
-										src={getAssetPath("/assets/images/ed-25-2.png")}
+										src={"/assets/images/ed-25-2.png"}
 										alt="Effect Days 2025 — Livorno"
 										className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
 									/>

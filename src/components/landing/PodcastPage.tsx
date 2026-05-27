@@ -1,4 +1,3 @@
-import { getAssetPath } from "../../utils/assetPath";
 import { GridOverlay } from "../GridOverlay";
 import { Link } from "../ui";
 import { Footer } from "./Footer";
@@ -115,7 +114,7 @@ const EPISODES: Episode[] = [
 function EpisodeCard({ episode }: { episode: Episode }) {
 	return (
 		<a
-			href={getAssetPath(`/podcast/episodes/${episode.slug}`)}
+			href={`/podcast/episodes/${episode.slug}`}
 			className="group my-4 flex flex-col gap-8 p-4 transition-colors hover:bg-zinc-900/60 md:flex-row md:gap-8"
 		>
 			{/* Thumbnail */}
@@ -326,7 +325,7 @@ export function PodcastPage() {
 										</span>
 									</Link>
 									<Link
-										href={getAssetPath("/podcast/rss.xml")}
+										href={"/podcast/rss.xml"}
 										variant="icon"
 										className="group flex items-center gap-3"
 										aria-label="RSS Feed"
@@ -452,7 +451,7 @@ export function PodcastPage() {
 										</Link>
 
 										<Link
-											href={getAssetPath("/podcast/rss.xml")}
+											href={"/podcast/rss.xml"}
 											variant="icon"
 											className="group flex items-center gap-3"
 											aria-label="RSS Feed"

@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { getAssetPath } from "../../utils/assetPath";
 import { Button, Link } from "@/components/ui";
 
 interface NavigationProps {
@@ -81,9 +80,7 @@ export function Navigation({ transparent = false, activePath }: NavigationProps)
 						<nav className="flex h-16 items-center">
 							<a href="/" className="flex items-center">
 								<img
-									src={getAssetPath(
-										"/assets/effect-logo/Combination mark/SVG/effect-logo-white.svg",
-									)}
+									src={"/assets/effect-logo/Combination mark/SVG/effect-logo-white.svg"}
 									alt="Effect"
 									className="h-[1.75rem] w-auto"
 								/>
@@ -99,7 +96,7 @@ export function Navigation({ transparent = false, activePath }: NavigationProps)
 								Docs
 							</Link>
 							<Link
-								href={getAssetPath("/blog")}
+								href={"/blog"}
 								variant="nav"
 								active={activePath?.startsWith("/blog")}
 								className={transparent ? "text-white hover:text-white/80" : ""}
@@ -107,7 +104,7 @@ export function Navigation({ transparent = false, activePath }: NavigationProps)
 								Blog
 							</Link>
 							<Link
-								href={getAssetPath("/podcast")}
+								href={"/podcast"}
 								variant="nav"
 								active={activePath?.startsWith("/podcast")}
 								className={transparent ? "text-white hover:text-white/80" : ""}
@@ -235,13 +232,13 @@ export function Navigation({ transparent = false, activePath }: NavigationProps)
 								Docs
 							</a>
 							<a
-								href={getAssetPath("/blog")}
+								href={"/blog"}
 								className={`block rounded-md px-3 py-2.5 text-[15px] transition-colors hover:bg-zinc-800 hover:text-white ${activePath?.startsWith("/blog") ? "bg-zinc-800 text-white" : "text-zinc-300"}`}
 							>
 								Blog
 							</a>
 							<a
-								href={getAssetPath("/podcast")}
+								href={"/podcast"}
 								className={`block rounded-md px-3 py-2.5 text-[15px] transition-colors hover:bg-zinc-800 hover:text-white ${activePath?.startsWith("/podcast") ? "bg-zinc-800 text-white" : "text-zinc-300"}`}
 							>
 								Podcast

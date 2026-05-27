@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Episode } from "../../data/episodes";
-import { getAssetPath } from "../../utils/assetPath";
 import { formatTimestamp } from "../../utils/srtParser";
 import { GridOverlay } from "../GridOverlay";
 import { Footer } from "./Footer";
@@ -72,7 +71,7 @@ export function EpisodePage({ episode, transcript = [] }: EpisodePageProps) {
 							<ol className="flex items-center gap-2 font-mono font-medium text-sm tracking-wider text-zinc-500 uppercase">
 								<li>
 									<a
-										href={getAssetPath("/podcast")}
+										href={"/podcast"}
 										className="text-white transition-opacity hover:opacity-80"
 									>
 										Cause & Effect 🎙️
@@ -160,7 +159,7 @@ export function EpisodePage({ episode, transcript = [] }: EpisodePageProps) {
 											<div className="mt-3 flex items-center gap-2 text-sm text-zinc-400">
 												{episode.companyLogo && (
 													<a href={episode.companyUrl} target="_blank" rel="noopener noreferrer">
-														<img src={getAssetPath(episode.companyLogo)} alt={episode.company} className="h-5" />
+														<img src={episode.companyLogo} alt={episode.company} className="h-5" />
 													</a>
 												)}
 												<span>·</span>
@@ -348,7 +347,7 @@ export function EpisodePage({ episode, transcript = [] }: EpisodePageProps) {
 										<div className="mt-3 flex items-center gap-2 text-sm text-zinc-400">
 											{episode.companyLogo && (
 												<a href={episode.companyUrl} target="_blank" rel="noopener noreferrer">
-													<img src={getAssetPath(episode.companyLogo)} alt={episode.company} className="h-5" />
+													<img src={episode.companyLogo} alt={episode.company} className="h-5" />
 												</a>
 											)}
 											<span>·</span>
@@ -493,7 +492,7 @@ export function EpisodePage({ episode, transcript = [] }: EpisodePageProps) {
 							How teams like Vercel, MasterClass, and others build in production.
 						</p>
 						<a
-							href={getAssetPath("/podcast")}
+							href={"/podcast"}
 							className="mt-6 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-base font-medium text-zinc-900 transition-all hover:bg-zinc-200"
 						>
 							<span>See all episodes</span>

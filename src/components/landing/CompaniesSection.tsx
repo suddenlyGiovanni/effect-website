@@ -1,5 +1,3 @@
-import { getAssetPath } from "../../utils/assetPath";
-
 interface Company {
 	name: string;
 	logo: string;
@@ -167,7 +165,7 @@ function CompanyItem({ company }: { company: Company }) {
 		<div className="flex items-center gap-2">
 			<div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900">
 				<img
-					src={getAssetPath(company.logo)}
+					src={company.logo}
 					alt=""
 					className={company.logoClass}
 				/>
@@ -227,7 +225,7 @@ export function CompaniesSection() {
 				className="pointer-events-none absolute inset-0"
 				style={{
 					opacity: 1,
-					backgroundImage: `url('${getAssetPath("/assets/BG-Pattern.svg")}')`,
+					backgroundImage: `url('${"/assets/BG-Pattern.svg"}')`,
 					backgroundSize: "cover",
 					backgroundPosition: "center bottom",
 					backgroundRepeat: "no-repeat",

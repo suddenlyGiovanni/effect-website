@@ -1,17 +1,17 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro"
 import { Navigation } from "@/components/landing/Navigation"
-import { HeroSection } from "@/components/landing/HeroSection"
+import HeroSection from "@/components/landing/HeroSection.astro"
 import { ProblemSection } from "@/components/landing/ProblemSection"
-import { TestimonialsSection } from "@/components/landing/TestimonialsSection"
+import TestimonialsSection from "@/components/landing/TestimonialsSection.astro"
 import { WhatIsEffectSection } from "@/components/landing/WhatIsEffectSection"
 import { FeaturesSection } from "@/components/landing/FeaturesSection"
-import { AIBuildingSection } from "@/components/landing/AIBuildingSection"
-import { AISection } from "@/components/landing/AISection"
+import AIBuildingSection from "@/components/landing/AIBuildingSection.astro"
+import AISection from "@/components/landing/AISection.astro"
 import { QuotesGridSection } from "@/components/landing/QuotesSection"
 import { FAQSection } from "@/components/landing/FAQSection"
-import { CTASection } from "@/components/landing/CTASection"
-import { Footer } from "@/components/landing/Footer"
+import CTASection from "@/components/landing/CTASection.astro"
+import Footer from "@/components/landing/Footer.astro"
 import { GridOverlay } from "@/components/GridOverlay"
 ---
 
@@ -65,7 +65,7 @@ import { GridOverlay } from "@/components/GridOverlay"
     </div>
 
     <main id="main-content" class="relative w-full pt-16">
-      <HeroSection client:load />
+      <HeroSection />
       <div class="h-px w-full bg-zinc-800"></div>
       <ProblemSection client:visible />
       <div class="h-px w-full bg-zinc-800"></div>
@@ -86,6 +86,6 @@ import { GridOverlay } from "@/components/GridOverlay"
       <CTASection />
     </main>
 
-    <Footer hideCommunityBorder client:load />
+    <Footer hideCommunityBorder />
   </div>
 </BaseLayout>

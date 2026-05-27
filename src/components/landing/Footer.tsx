@@ -1,4 +1,3 @@
-import { getAssetPath } from "../../utils/assetPath";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { Link } from "@/components/ui";
 
@@ -121,7 +120,7 @@ export function Footer({ hideCommunityBorder = false, activePath }: FooterProps 
 							<ul className="flex flex-col items-start gap-2">
 								<li>
 									<Link
-										href={getAssetPath("/podcast")}
+										href={"/podcast"}
 										variant="footer"
 										active={activePath?.startsWith("/podcast")}
 										className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
@@ -151,7 +150,7 @@ export function Footer({ hideCommunityBorder = false, activePath }: FooterProps 
 								</li>
 								<li>
 									<Link
-										href={getAssetPath("/implementation-partners")}
+										href={"/implementation-partners"}
 										variant="footer"
 										active={activePath?.startsWith("/implementation-partners")}
 										className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
@@ -172,7 +171,7 @@ export function Footer({ hideCommunityBorder = false, activePath }: FooterProps 
 							<ul className="flex flex-col items-start gap-2">
 								<li>
 									<Link
-										href={getAssetPath("/blog")}
+										href={"/blog"}
 										variant="footer"
 										active={activePath?.startsWith("/blog")}
 										className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
@@ -191,7 +190,7 @@ export function Footer({ hideCommunityBorder = false, activePath }: FooterProps 
 								</li>
 								<li>
 									<Link
-										href={getAssetPath("/brand-assets")}
+										href={"/brand-assets"}
 										variant="footer"
 										active={activePath?.startsWith("/brand-assets")}
 										className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
@@ -201,7 +200,7 @@ export function Footer({ hideCommunityBorder = false, activePath }: FooterProps 
 								</li>
 								<li>
 									<Link
-										href={getAssetPath("/merch")}
+										href={"/merch"}
 										variant="footer"
 										active={activePath?.startsWith("/merch")}
 										className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
@@ -221,18 +220,14 @@ export function Footer({ hideCommunityBorder = false, activePath }: FooterProps 
 						{/* Social Icons and Branding Row */}
 						<div className="flex flex-col items-center gap-8 md:grid md:grid-cols-3 md:items-center">
 							<div className="md:pl-4">
-								<a href={getAssetPath("/")} aria-label="Go to Effect homepage">
+								<a href={"/"} aria-label="Go to Effect homepage">
 									<img
-										src={getAssetPath(
-											"/assets/effect-logo/Combination mark/SVG/effect-logo-black.svg",
-										)}
+										src={"/assets/effect-logo/Combination mark/SVG/effect-logo-black.svg"}
 										alt="Effect"
 										className="block h-7 dark:hidden"
 									/>
 									<img
-										src={getAssetPath(
-											"/assets/effect-logo/Combination mark/SVG/effect-logo-white.svg",
-										)}
+										src={"/assets/effect-logo/Combination mark/SVG/effect-logo-white.svg"}
 										alt="Effect"
 										className="hidden h-7 dark:block"
 									/>

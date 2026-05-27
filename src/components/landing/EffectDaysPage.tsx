@@ -1,4 +1,3 @@
-import { getAssetPath } from "../../utils/assetPath";
 import { Button, Link } from "@/components/ui";
 import { GridOverlay } from "../GridOverlay";
 import { Footer } from "./Footer";
@@ -102,7 +101,7 @@ export function EffectDaysPage() {
 				<div
 					className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[39.4rem] overflow-hidden"
 					style={{
-						backgroundImage: `linear-gradient(to bottom, rgba(9, 9, 11, 0.1) 0%, rgba(9, 9, 11, 0.2) 50%, #09090b 100%), url(${getAssetPath("/assets/images/malaga-bg-1.png")})`,
+						backgroundImage: `linear-gradient(to bottom, rgba(9, 9, 11, 0.1) 0%, rgba(9, 9, 11, 0.2) 50%, #09090b 100%), url(${"/assets/images/malaga-bg-1.png"})`,
 						backgroundSize: "100% 40rem",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",
@@ -257,7 +256,7 @@ export function EffectDaysPage() {
 										className="flex flex-col items-center text-center"
 									>
 										<img
-											src={getAssetPath(stat.icon)}
+											src={stat.icon}
 											alt=""
 											className="mb-4 h-10 w-10"
 										/>
@@ -308,7 +307,7 @@ export function EffectDaysPage() {
 									className="group relative aspect-square overflow-hidden"
 								>
 									<img
-										src={getAssetPath("/assets/images/dillon-1.png")}
+										src={"/assets/images/dillon-1.png"}
 										alt="Dillon Mulroy"
 										className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 									/>
@@ -329,7 +328,7 @@ export function EffectDaysPage() {
 									className="group relative aspect-square overflow-hidden"
 								>
 									<img
-										src={getAssetPath("/assets/images/kitlangton.jpg")}
+										src={"/assets/images/kitlangton.jpg"}
 										alt="Kit Langton"
 										className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 									/>
@@ -350,7 +349,7 @@ export function EffectDaysPage() {
 									className="group relative aspect-square overflow-hidden"
 								>
 									<img
-										src={getAssetPath("/assets/images/timsmart.jpg")}
+										src={"/assets/images/timsmart.jpg"}
 										alt="Tim Smart"
 										className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 									/>
@@ -371,7 +370,7 @@ export function EffectDaysPage() {
 									className="group relative aspect-square overflow-hidden"
 								>
 									<img
-										src={getAssetPath("/assets/images/max.png")}
+										src={"/assets/images/max.png"}
 										alt="Maxwell Brown"
 										className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 									/>
@@ -644,16 +643,14 @@ export function EffectDaysPage() {
 							<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 								<div className="aspect-video overflow-hidden rounded-lg">
 									<img
-										src={getAssetPath(
-											"/assets/images/david-ramirez-x-qfJn2F8KE-unsplash.jpg",
-										)}
+										src={"/assets/images/david-ramirez-x-qfJn2F8KE-unsplash.jpg"}
 										alt="Málaga sunset"
 										className="h-full w-full object-cover"
 									/>
 								</div>
 								<div className="aspect-video overflow-hidden rounded-lg">
 									<img
-										src={getAssetPath("/assets/images/malaga-7.webp")}
+										src={"/assets/images/malaga-7.webp"}
 										alt="Málaga panoramic view"
 										className="h-full w-full object-cover"
 										style={{ objectPosition: "center 20%" }}
@@ -665,36 +662,28 @@ export function EffectDaysPage() {
 							<div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
 								<div className="aspect-4/3 overflow-hidden rounded-lg">
 									<img
-										src={getAssetPath(
-											"/assets/images/maria-lopez-jorge-WTu0MyP8Vcw-unsplash.jpg",
-										)}
+										src={"/assets/images/maria-lopez-jorge-WTu0MyP8Vcw-unsplash.jpg"}
 										alt="Málaga harbor"
 										className="h-full w-full object-cover"
 									/>
 								</div>
 								<div className="aspect-4/3 overflow-hidden rounded-lg">
 									<img
-										src={getAssetPath(
-											"/assets/images/yuliya-matuzava-0-cPhoediX8-unsplash.jpg",
-										)}
+										src={"/assets/images/yuliya-matuzava-0-cPhoediX8-unsplash.jpg"}
 										alt="Málaga cityscape"
 										className="h-full w-full object-cover"
 									/>
 								</div>
 								<div className="aspect-4/3 overflow-hidden rounded-lg">
 									<img
-										src={getAssetPath(
-											"/assets/images/marek-zernik-RZ0m2Enxsc8-unsplash.jpg",
-										)}
+										src={"/assets/images/marek-zernik-RZ0m2Enxsc8-unsplash.jpg"}
 										alt="Málaga architecture"
 										className="h-full w-full object-cover"
 									/>
 								</div>
 								<div className="aspect-4/3 overflow-hidden rounded-lg">
 									<img
-										src={getAssetPath(
-											"/assets/images/roberto-arias-E9llbh8kIqM-unsplash.jpg",
-										)}
+										src={"/assets/images/roberto-arias-E9llbh8kIqM-unsplash.jpg"}
 										alt="Málaga beach"
 										className="h-full w-full object-cover"
 									/>
@@ -825,7 +814,7 @@ export function EffectDaysPage() {
 										{/* Image with overlay */}
 										<div className="relative aspect-[16/9] overflow-hidden">
 											<img
-												src={getAssetPath(edition.image)}
+												src={edition.image}
 												alt={`Effect Days ${edition.year}`}
 												className="h-full w-full object-cover"
 											/>

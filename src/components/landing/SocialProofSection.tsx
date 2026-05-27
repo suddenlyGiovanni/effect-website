@@ -1,42 +1,32 @@
 import { useRef } from "react";
-import { getAssetPath } from "../../utils/assetPath";
-
 const useCases = [
 	{
-		logo: getAssetPath("/assets/quotes-logos/masterclass-noM.svg"),
+		logo: "/assets/quotes-logos/masterclass-noM.svg",
 		title: "Voice AI Orchestration",
 		href: "https://youtu.be/Cj2pVPqdOVs",
 		alt: "MasterClass",
-		thumbnail: getAssetPath(
-			"/assets/images/david-golightly – banner_compressed.webp",
-		),
+		thumbnail: "/assets/images/david-golightly – banner_compressed.webp",
 	},
 	{
-		logo: getAssetPath("/assets/test-logos/warp-logo-white.svg"),
+		logo: "/assets/test-logos/warp-logo-white.svg",
 		title: "HR Systems",
 		href: "https://youtu.be/2cN1R9zIxp4",
 		alt: "Warp",
-		thumbnail: getAssetPath(
-			"/assets/images/adam-rankin-banner_compressed.webp",
-		),
+		thumbnail: "/assets/images/adam-rankin-banner_compressed.webp",
 	},
 	{
-		logo: getAssetPath("/assets/test-logos/open-router.svg"),
+		logo: "/assets/test-logos/open-router.svg",
 		title: "Internal Tooling",
 		href: "https://youtu.be/x6-AVCwBIWc",
 		alt: "OpenRouter",
-		thumbnail: getAssetPath(
-			"/assets/images/louis-vichy– banner_compressed.webp",
-		),
+		thumbnail: "/assets/images/louis-vichy– banner_compressed.webp",
 	},
 	{
-		logo: getAssetPath("/assets/test-logos/14-ai.svg"),
+		logo: "/assets/test-logos/14-ai.svg",
 		title: "AI Customer Service",
 		href: "https://youtu.be/gGFPhFrGCng",
 		alt: "14.ai",
-		thumbnail: getAssetPath(
-			"/assets/images/michael-fester – banner_compressed (1).webp",
-		),
+		thumbnail: "/assets/images/michael-fester – banner_compressed (1).webp",
 	},
 ];
 
@@ -45,7 +35,7 @@ const quotes = [
 		text: "Effect makes doing the hard, tedious, and error-prone tasks that require discipline, easy, natural, first-class.",
 		author: "Dillon Mulroy",
 		company: "Cloudflare",
-		logo: getAssetPath("/assets/quotes-logos/Cloudflare_logo_wht 2.svg"),
+		logo: "/assets/quotes-logos/Cloudflare_logo_wht 2.svg",
 	},
 	{
 		text: "Effect tracing is simply magical. Was able to fully integrate with our existing microservice observability stack fairly easily.",
@@ -57,38 +47,38 @@ const quotes = [
 		text: "I feel like I'm writing some of the best code in my career using Effect.",
 		author: "Matt Pocock",
 		company: "Total TypeScript",
-		logo: getAssetPath("/assets/test-logos/total-typescript-logo.png"),
+		logo: "/assets/test-logos/total-typescript-logo.png",
 	},
 	{
 		text: "The real-world impact is tangible: few production bugs, simple testing, and clear code organization.",
 		author: "Samuel Briole",
 		company: "Spiko",
-		logo: getAssetPath("/assets/quotes-logos/spiko-logo.svg"),
+		logo: "/assets/quotes-logos/spiko-logo.svg",
 	},
 	{
 		text: "I think it's one of the most important libraries being developed today.",
 		author: "Matthew Phillips",
 		company: "Astro",
-		logo: getAssetPath("/assets/quotes-logos/Astro.svg"),
+		logo: "/assets/quotes-logos/Astro.svg",
 	},
 	{
 		text: "The spaghetti code really turns into something that's just very linear and clean.",
 		author: "David Golightly",
 		company: "Masterclass",
-		logo: getAssetPath("/assets/quotes-logos/masterclass-noM.svg"),
+		logo: "/assets/quotes-logos/masterclass-noM.svg",
 		logoSize: "h-2.5",
 	},
 	{
 		text: "Perhaps the most ergonomic and safe method of Dependency Injection I've ever seen.",
 		author: "Cor",
 		company: "Union Build",
-		logo: getAssetPath("/assets/quotes-logos/union-build.svg"),
+		logo: "/assets/quotes-logos/union-build.svg",
 	},
 	{
 		text: "Effect puts you on the path to writing more performant async code by default.",
 		author: "Ethan Niser",
 		company: "Vercel",
-		logo: getAssetPath("/assets/quotes-logos/vercel-logotype-dark.svg"),
+		logo: "/assets/quotes-logos/vercel-logotype-dark.svg",
 	},
 ];
 

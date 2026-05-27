@@ -7,7 +7,6 @@ import {
 	getPostUrl,
 	getTagColor,
 } from "../../data/blog";
-import { getAssetPath } from "../../utils/assetPath";
 import { GridOverlay } from "../GridOverlay";
 import { Footer } from "./Footer";
 import { Navigation } from "./Navigation";
@@ -55,7 +54,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
 	const isExternal = url.startsWith("http");
 	return (
 		<a
-			href={isExternal ? url : getAssetPath(url)}
+			href={isExternal ? url : url}
 			{...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
 			className="group relative block overflow-hidden rounded-md border border-zinc-800 bg-zinc-900/40 transition-colors duration-200 hover:border-zinc-600 hover:bg-zinc-900/70"
 		>
@@ -91,7 +90,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
 					{post.coverImage ? (
 						<div className="relative aspect-2/1 w-full overflow-hidden rounded-md border border-zinc-800/50">
 							<img
-								src={getAssetPath(post.coverImage)}
+								src={post.coverImage}
 								alt={post.title}
 								className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
 							/>
@@ -111,7 +110,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
 				{post.coverImage && (
 					<div className="relative aspect-video overflow-hidden rounded-md border border-zinc-800/50 md:hidden">
 						<img
-							src={getAssetPath(post.coverImage)}
+							src={post.coverImage}
 							alt={post.title}
 							className="absolute inset-0 h-full w-full object-cover"
 						/>
@@ -293,7 +292,7 @@ function PostCard({ post }: { post: BlogPost }) {
 	const isExternal = url.startsWith("http");
 	return (
 		<a
-			href={isExternal ? url : getAssetPath(url)}
+			href={isExternal ? url : url}
 			{...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
 			className="group block -mx-4 border-t border-zinc-700/80 px-4 py-6 transition-colors first:border-t-0 hover:bg-zinc-900/60"
 		>
