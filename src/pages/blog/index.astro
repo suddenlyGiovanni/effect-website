@@ -2,7 +2,6 @@
 import { Struct } from "effect"
 import { Image } from "astro:assets"
 import { getCollection, getEntries, type CollectionEntry } from "astro:content"
-import { RssIcon } from "@lucide/astro"
 
 import DitheredOverlay from "@/components/DitheredOverlay.astro"
 import Footer from "@/components/Footer.astro"
@@ -99,6 +98,12 @@ function formatDate(date: Date): string {
 
   <div class="relative z-10">
     <Navigation />
+    <a
+      href={`#${PAGE_TITLE_ID}`}
+      class="absolute -left-[9999px] z-[999] rounded-br-lg bg-zinc-800 px-6 py-4 font-semibold text-white no-underline focus:top-0 focus:left-0"
+    >
+      Skip to main content
+    </a>
     <GridRails />
 
     <div class="relative overflow-hidden">
@@ -107,52 +112,37 @@ function formatDate(date: Date): string {
 
       <main id={PAGE_TITLE_ID} class="relative w-full pt-16">
         <div class="mx-auto w-full max-w-295 px-4">
-          <div class="flex items-start justify-between gap-6 pt-16 pb-8 md:pt-24 md:pb-12">
-            <div>
-              <p
-                class="mb-4 font-mono text-sm font-medium tracking-wider text-muted-foreground uppercase"
-              >
-                // Blog
-              </p>
-              <h1 class="max-w-2xl text-4xl font-semibold leading-tighter tracking-tight text-white md:text-5xl">
-                Get with the latest updates
-                <br class="hidden md:block" />
-                from the Effect ecosystem
-              </h1>
-            </div>
-            <a
-              href="/rss.xml"
-              aria-label="RSS feed"
-              class="inline-flex shrink-0 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-700 hover:text-white"
+          <div class="pt-16 pb-8 md:pt-24 md:pb-12">
+            <p
+              class="mb-4 font-mono text-sm font-medium tracking-wider text-muted-foreground uppercase"
             >
-              <RssIcon class="size-4" aria-hidden="true" />
-              <span class="hidden sm:inline">RSS</span>
-            </a>
+              // Effect Blog
+            </p>
+            <h1 class="max-w-2xl text-3xl font-semibold leading-tighter tracking-tight text-white">
+              Releases, write-ups, and notes
+              <br class="hidden md:block" />
+              from the Effect team
+            </h1>
           </div>
 
           {
             featuredPost && (
-              <div class="border-t border-zinc-800 py-8 md:py-10">
+              <div class="border-t border-zinc-800 py-5 md:py-6">
                 <a
                   href={`/blog/${featuredPost.id}`}
-                  class="group relative block overflow-hidden rounded-lg border border-[#2D3138] bg-[#191C21] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-emerald-500/[0.08]"
+                  class="group relative block overflow-hidden rounded-md border border-zinc-800 bg-zinc-900/40 transition-colors duration-200 hover:border-zinc-600 hover:bg-zinc-900/70"
                 >
-                  <div class="relative grid grid-cols-1 gap-6 p-5 md:grid-cols-12 md:items-center md:gap-10 md:p-6">
+                  <div class="relative grid grid-cols-1 gap-4 p-5 md:grid-cols-12 md:items-center md:gap-10 md:p-6">
                     <div class="min-w-0 md:col-span-7">
-                      <div class="mb-3 flex flex-wrap items-center gap-3">
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold tracking-wider text-emerald-400 uppercase ring-1 ring-emerald-500/20 ring-inset">
-                          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      <div class="mb-3 flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center rounded-md border border-zinc-400 px-2 py-0.5 font-mono text-[10px] font-semibold tracking-[0.18em] text-white uppercase">
                           Release
                         </span>
                         {featuredPost.tags
                           .filter((t) => t.id !== "effect" && t.id !== "release")
                           .sort((a, b) => a.id.localeCompare(b.id))
                           .map((tag) => (
-                            <span class="inline-flex items-center gap-1 rounded-full bg-zinc-800/60 px-3 py-1 text-xs font-medium text-zinc-400">
-                              <span
-                                class="h-1.5 w-1.5 rounded-full"
-                                style={`background-color:${tag.data.color}`}
-                              />
+                            <span class="inline-flex items-center rounded-md border border-zinc-400 px-2 py-0.5 font-mono text-[10px] tracking-[0.12em] text-zinc-200 uppercase">
                               {tag.data.name}
                             </span>
                           ))}
@@ -162,39 +152,9 @@ function formatDate(date: Date): string {
                         {featuredPost.data.title}
                       </h2>
 
-                      <p class="mt-3 line-clamp-3 max-w-xl text-base text-zinc-300">
+                      <p class="mt-2 line-clamp-3 max-w-xl text-base text-zinc-300">
                         {featuredPost.data.excerpt}
                       </p>
-
-                      <div class="mt-5 flex flex-wrap items-center gap-4">
-                        {featuredPost.authors.map((author) => (
-                          <div class="flex items-center gap-2">
-                            {author.data.avatar ? (
-                              <Image
-                                src={author.data.avatar}
-                                alt={author.data.name}
-                                width={32}
-                                height={32}
-                                class="size-8 rounded-full border-2 border-zinc-800 object-cover"
-                              />
-                            ) : (
-                              <div
-                                class="flex size-8 items-center justify-center rounded-full border-2 border-zinc-800 bg-zinc-800 text-xs font-semibold text-zinc-400"
-                                title={author.data.name}
-                              >
-                                {author.data.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span class="font-mono text-sm font-medium text-zinc-200">
-                              {author.data.name}
-                            </span>
-                          </div>
-                        ))}
-                        <div class="flex items-center gap-3 font-mono text-sm text-zinc-400">
-                          <span class="h-4 w-px bg-zinc-800" />
-                          <time>{formatDate(featuredPost.data.date)}</time>
-                        </div>
-                      </div>
                     </div>
 
                     <div class="hidden md:col-span-5 md:flex md:flex-col md:items-center md:gap-3">
@@ -208,7 +168,7 @@ function formatDate(date: Date): string {
                           <div class="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-zinc-900/60 to-transparent" />
                         </div>
                       ) : (
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-800 text-zinc-400 transition-all duration-300 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 group-hover:text-emerald-400">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 text-zinc-300 transition-colors duration-200 group-hover:border-white group-hover:text-white">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="16"
@@ -252,9 +212,15 @@ function formatDate(date: Date): string {
         {
           twiePosts.length > 0 && (
             <>
-              <section aria-label="This Week in Effect posts" class="py-12">
+              <section aria-label="This Week in Effect posts" class="pt-16 pb-8 md:pt-20 md:pb-10">
                 <div class="mb-6 flex items-center justify-between">
-                  <h2 class="text-2xl font-semibold text-white">This Week in Effect</h2>
+                  <h2 class="text-xl font-semibold text-white">This Week in Effect</h2>
+                  <a
+                    href="#blog-grid"
+                    class="font-mono text-xs tracking-wider text-zinc-200 uppercase transition-colors hover:text-white"
+                  >
+                    View all
+                  </a>
                 </div>
                 <div class="flex gap-3 overflow-x-auto py-1 pb-2" style="scrollbar-width:none">
                   {twiePosts.map((post) => {
@@ -265,21 +231,23 @@ function formatDate(date: Date): string {
                         href={`/blog/${post.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="group relative flex w-[280px] shrink-0 flex-col overflow-hidden rounded-md border border-[#272B31] bg-[#191C21] p-4 pb-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/5"
+                        class="group relative flex w-[280px] shrink-0 flex-col justify-between overflow-hidden rounded-md border border-zinc-800 bg-zinc-900/40 p-4 pb-5 transition-colors duration-200 hover:border-zinc-600 hover:bg-zinc-900/70"
                       >
-                        <div class="flex items-center justify-between gap-2">
-                          {issueNumber && (
-                            <span class="font-mono text-base font-semibold text-white">
-                              {issueNumber}
-                            </span>
-                          )}
-                          <time class="font-mono text-xs text-zinc-400 tabular-nums">
-                            {formatDate(post.data.date)}
-                          </time>
+                        <div>
+                          <div class="flex items-center justify-between">
+                            {issueNumber && (
+                              <span class="font-mono text-base font-semibold text-white">
+                                {issueNumber}
+                              </span>
+                            )}
+                            <time class="font-mono text-xs text-zinc-400 tabular-nums">
+                              {formatDate(post.data.date)}
+                            </time>
+                          </div>
+                          <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-300">
+                            {post.data.excerpt}
+                          </p>
                         </div>
-                        <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-300">
-                          {post.data.excerpt}
-                        </p>
                       </a>
                     )
                   })}
@@ -290,7 +258,7 @@ function formatDate(date: Date): string {
           )
         }
 
-        <div class="grid grid-cols-1 gap-0 lg:grid-cols-[1fr_240px] lg:gap-20">
+        <div id="blog-grid" class="grid grid-cols-1 gap-0 lg:grid-cols-[1fr_240px] lg:gap-20">
           <div class="min-w-0 pb-24">
             <h2 class="mt-12 mb-6 text-3xl font-semibold tracking-tight text-white">Latest</h2>
 
