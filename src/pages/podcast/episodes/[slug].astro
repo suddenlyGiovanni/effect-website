@@ -1,15 +1,10 @@
 ---
 import { ArrowRightIcon } from "@lucide/astro"
 import { getCollection, render } from "astro:content"
-import DitheredOverlay from "@/components/DitheredOverlay.astro"
-import GridRails from "@/components/GridRails.astro"
-import Footer from "@/components/Footer.astro"
-import Navigation from "@/components/navigation/Navigation.astro"
 import Link from "@/components/Link.astro"
 import { PodcastEpisodeRoot } from "@/features/podcast/components/PodcastEpisodeRoot"
 import { readPodcastTranscript, slugifyPodcast } from "@/features/podcast/utils"
-import BaseLayout from "@/layouts/BaseLayout.astro"
-import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import PageLayout from "@/layouts/PageLayout.astro"
 
 export async function getStaticPaths() {
   const entries = await getCollection("podcasts")
@@ -30,78 +25,62 @@ const transcript = await readPodcastTranscript(entry)
 const { Content } = await render(entry)
 ---
 
-<BaseLayout>
-  <DitheredOverlay />
-
-  <div class="relative z-10">
-    <Navigation />
-    <GridRails />
-
-    <main id={PAGE_TITLE_ID} class="pt-16">
-      <section class="relative w-full py-8 lg:py-12 overflow-hidden">
-        <div class="relative mx-auto max-w-295 px-4">
-          <div
-            class="mb-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground font-mono font-medium uppercase"
-          >
-            <Link
-              href="/podcast/"
-              class="text-inherit hover:text-white no-underline hover:underline hover:underline-offset-4"
-            >
-              Cause & Effect
-            </Link>
-            <span>🎙️</span>
-            <span aria-hidden="true">/</span>
-            <span>Episode #{episodeNumber}</span>
-          </div>
-          <h1 class="text-4xl text-white font-bold">
-            {episode.title}
-          </h1>
-        </div>
-      </section>
-
-      <section class="w-full py-8 border-t border-zinc-800">
-        <div class="relative mx-auto max-w-295 px-4">
-          <PodcastEpisodeRoot client:load podcast={entry.data} transcript={transcript}>
-            <div class="mt-8 prose prose-zine dark:prose-invert prose-h2:mt-0">
-              <Content />
-            </div>
-          </PodcastEpisodeRoot>
-        </div>
-      </section>
-
-      <section class="relative w-full border-y border-zinc-800 py-12 md:py-20">
-        <div
-          aria-hidden="true"
-          class="cta-background-gradient pointer-events-none absolute inset-0"
+<PageLayout>
+  <section class="relative w-full py-8 lg:py-12 overflow-hidden">
+    <div class="relative mx-auto max-w-295 px-4">
+      <div
+        class="mb-2 flex flex-wrap items-center gap-2 text-sm tracking-wider text-zinc-500 font-mono font-medium uppercase"
+      >
+        <Link
+          href="/podcast/"
+          class="text-inherit hover:text-white no-underline hover:underline hover:underline-offset-4"
         >
-        </div>
-        <div class="relative mx-auto max-w-295 px-4 text-center">
-          <p
-            class="mb-3 font-mono text-sm font-medium tracking-wider text-muted-foreground uppercase"
-          >
-            // Cause &amp; Effect 🎙️
-          </p>
-          <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-white mx-4 md:mx-0">
-            Real&dash;world systems built with Effect
-          </h3>
-          <p class="mt-2 mx-auto text-muted-foreground max-w-2xl">
-            Go behind the scenes with Vercel, Masterclass, and more to learn how they ship
-            production-ready systems with Effect.
-          </p>
-          <Link
-            href="/podcast/"
-            class="mt-6 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-base font-medium text-zinc-900 transition-colors hover:bg-zinc-200 no-underline"
-          >
-            <span>See all episodes</span>
-            <ArrowRightIcon />
-          </Link>
-        </div>
-      </section>
-    </main>
+          Cause & Effect
+        </Link>
+        <span>🎙️</span>
+        <span aria-hidden="true">/</span>
+        <span>Episode #{episodeNumber}</span>
+      </div>
+      <h1 class="max-w-2/3 text-3xl text-white font-semibold tracking-tight">
+        {episode.title}
+      </h1>
+    </div>
+  </section>
 
-    <Footer class="mt-12 md:mt-24" />
-  </div>
-</BaseLayout>
+  <section class="w-full py-8 border-t border-zinc-800">
+    <div class="relative mx-auto max-w-295 px-4">
+      <PodcastEpisodeRoot client:load podcast={entry.data} transcript={transcript}>
+        <div class="mt-8 prose prose-zinc dark:prose-invert prose-h2:mt-0">
+          <Content />
+        </div>
+      </PodcastEpisodeRoot>
+    </div>
+  </section>
+
+  <section class="relative w-full border-y border-zinc-800 py-12 md:py-20">
+    <div aria-hidden="true" class="cta-background-gradient pointer-events-none absolute inset-0">
+    </div>
+    <div class="relative mx-auto max-w-295 px-4 text-center">
+      <p class="mb-3 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">
+        // Cause &amp; Effect 🎙️
+      </p>
+      <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-white mx-4 md:mx-0">
+        Real&dash;world systems built with Effect
+      </h3>
+      <p class="mt-2 mx-auto text-zinc-400 max-w-2xl">
+        Go behind the scenes with Vercel, Masterclass, and more to learn how they ship
+        production-ready systems with Effect.
+      </p>
+      <Link
+        href="/podcast/"
+        class="mt-6 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-base font-medium text-zinc-900 transition-colors hover:bg-zinc-200 no-underline"
+      >
+        <span>See all episodes</span>
+        <ArrowRightIcon />
+      </Link>
+    </div>
+  </section>
+</PageLayout>
 
 <style>
   .cta-background-gradient {
