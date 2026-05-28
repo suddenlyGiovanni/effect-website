@@ -22,12 +22,10 @@ export function PodcastEpisodeLayout({ children }: React.PropsWithChildren) {
         </div>
         {children}
       </div>
-      <aside className="top-20 col-span-1 hidden lg:sticky lg:flex lg:h-[calc(100svh-10rem)] lg:max-h-[calc(100svh-10rem)] lg:min-h-0 lg:flex-col lg:self-start">
-        <div className="space-y-4 lg:flex-1">
-          <PodcastGuestCard />
-          <PodcastChapters />
-          <PodcastTranscript />
-        </div>
+      <aside className="top-20 col-span-1 hidden lg:sticky lg:flex lg:h-[calc(100svh-10rem)] lg:min-h-0 lg:flex-col lg:gap-4 lg:self-start lg:overflow-hidden">
+        <PodcastGuestCard />
+        <PodcastChapters />
+        <PodcastTranscript />
       </aside>
     </div>
   )

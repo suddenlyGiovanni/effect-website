@@ -261,15 +261,18 @@ export function PodcastTranscript() {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="rounded-lg border border-zinc-700 bg-card"
+      className="rounded-lg border border-zinc-700 bg-card lg:flex lg:min-h-0 lg:flex-col lg:data-open:flex-1"
     >
-      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-lg bg-card px-4 py-3 transition-colors hover:bg-accent/50 data-panel-open:rounded-b-none">
+      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-lg bg-card px-4 py-3 transition-colors hover:bg-accent/50 data-panel-open:rounded-b-none lg:shrink-0">
         <h2 className="text-sm font-semibold">Transcript</h2>
         <ChevronDownIcon className="size-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
       </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div ref={rootRef} className="border-t bg-card">
-          <ScrollArea className="h-80 p-2 lg:max-h-[min(20rem,40vh)]">
+      <CollapsibleContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <div
+          ref={rootRef}
+          className="border-t border-zinc-700 bg-card lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
+        >
+          <ScrollArea className="h-80 p-2 lg:h-auto lg:max-h-none lg:min-h-0 lg:flex-1">
             <ul className="space-y-1 pr-2">
               {transcript.map((cue) => {
                 const isActive = cue === activeTranscriptCue

@@ -14,14 +14,14 @@ export function PodcastGuestCard() {
   const episode = usePodcastEpisode()
 
   return (
-    <div className="rounded-lg border border-zinc-700 bg-card p-4">
-      <p className="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 lg:shrink-0">
+      <p className="mb-2 text-xs font-medium tracking-wider text-zinc-400 uppercase">
         Featured Guest
       </p>
 
       <p className="text-lg font-semibold text-white">{episode.guest}</p>
 
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
         <CompanyLogo company={episode.company} />
         <span>·</span>
         <span>{episode.formattedPublicationDate}</span>
@@ -29,10 +29,10 @@ export function PodcastGuestCard() {
         <span>{episode.formattedDuration}</span>
       </div>
 
-      <hr className="my-4 h-px bg-secondary" />
+      <hr className="my-4 h-px border-0 bg-zinc-800" />
 
       <div>
-        <p className="mb-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <p className="mb-3 text-xs font-medium tracking-wider text-zinc-400 uppercase">
           Listen on
         </p>
 
