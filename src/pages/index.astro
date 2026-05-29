@@ -1,6 +1,4 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro"
-import { Navigation } from "@/components/landing/Navigation"
 import HeroSection from "@/components/landing/HeroSection.astro"
 import { ProblemSection } from "@/components/landing/ProblemSection"
 import TestimonialsSection from "@/components/landing/TestimonialsSection.astro"
@@ -11,81 +9,30 @@ import AISection from "@/components/landing/AISection.astro"
 import { QuotesGridSection } from "@/components/landing/QuotesSection"
 import { FAQSection } from "@/components/landing/FAQSection"
 import CTASection from "@/components/landing/CTASection.astro"
-import Footer from "@/components/Footer.astro"
-import { GridOverlay } from "@/components/GridOverlay"
+import PageLayout from "@/layouts/PageLayout.astro"
 ---
 
-<BaseLayout
+<PageLayout
   title="Effect - Production-grade software"
   description="An open-source ecosystem for software that is scalable, reliable, and maintainable from the start. One package, everything you need."
 >
-  <div class="relative min-h-screen bg-zinc-950 text-white antialiased">
-    {/* Dithered background overlay */}
-    <div
-      class="pointer-events-none fixed inset-0 z-0 opacity-[0.03] transform-gpu backface-hidden bg-repeat bg-size-[4px_4px] bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%224%22%20height=%224%22%3E%3Crect%20x=%220%22%20y=%220%22%20width=%221%22%20height=%221%22%20fill=%22white%22/%3E%3Crect%20x=%222%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22white%22/%3E%3C/svg%3E')]"
-    >
-    </div>
-
-    {/* Skip Navigation Link */}
-    <a
-      href="#main-content"
-      class="text-white no-underline absolute -left-[9999px] z-[999] rounded-br-lg bg-zinc-800 px-6 py-4 font-semibold focus:left-0 focus:top-0"
-    >
-      Skip to main content
-    </a>
-
-    <Navigation client:load />
-    <GridOverlay client:load />
-
-    {/* Vertical border lines container */}
-    <div
-      class="pointer-events-none absolute left-0 right-0 top-0 bottom-0 z-[60] hidden lg:block"
-    >
-      <div class="relative mx-auto h-full w-full max-w-[73.75rem]">
-        <div class="absolute left-0 top-0 bottom-0 w-px bg-zinc-800"></div>
-        <div class="absolute right-0 top-0 bottom-0 w-px bg-zinc-800"></div>
-      </div>
-    </div>
-
-    {/* Center vertical line - dashed, behind content */}
-    <div
-      class="pointer-events-none absolute left-0 right-0 top-0 bottom-0 z-0 hidden px-8 lg:block"
-    >
-      <div class="relative mx-auto h-full w-full max-w-[73.75rem]">
-        <div
-          class="absolute left-1/2 top-0 bottom-0 -translate-x-1/2"
-          style={{
-            width: "1px",
-            backgroundImage:
-              "repeating-linear-gradient(to bottom, rgb(39 39 42) 0px, rgb(39 39 42) 2px, transparent 2px, transparent 4px)",
-          }}
-        >
-        </div>
-      </div>
-    </div>
-
-    <main id="main-content" class="relative w-full pt-16">
-      <HeroSection />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <ProblemSection client:visible />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <TestimonialsSection />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <WhatIsEffectSection client:visible />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <FeaturesSection client:load />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <AIBuildingSection />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <AISection />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <QuotesGridSection client:visible />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <FAQSection client:visible />
-      <div class="h-px w-full bg-zinc-800"></div>
-      <CTASection />
-    </main>
-
-    <Footer hideCommunityBorder />
-  </div>
-</BaseLayout>
+  <HeroSection />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <ProblemSection client:visible />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <TestimonialsSection />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <WhatIsEffectSection client:visible />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <FeaturesSection client:load />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <AIBuildingSection />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <AISection />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <QuotesGridSection client:visible />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <FAQSection client:visible />
+  <div class="h-px w-full bg-zinc-800"></div>
+  <CTASection />
+</PageLayout>

@@ -60,15 +60,18 @@ export function PodcastChapters() {
   )
 
   return (
-    <Collapsible defaultOpen={false} className="rounded-lg border border-zinc-700 bg-card">
-      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-lg bg-card px-4 py-3 transition-colors hover:bg-accent/50 data-panel-open:rounded-b-none">
+    <Collapsible
+      defaultOpen={false}
+      className="rounded-lg border border-zinc-700 bg-card lg:flex lg:min-h-0 lg:flex-col lg:data-open:flex-1"
+    >
+      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-lg bg-card px-4 py-3 transition-colors hover:bg-accent/50 data-panel-open:rounded-b-none lg:shrink-0">
         <h2 className="text-sm font-semibold">Chapters</h2>
         <ChevronDownIcon className="size-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
       </CollapsibleTrigger>
 
-      <CollapsibleContent>
-        <div className="border-t bg-card">
-          <ScrollArea className="h-64 p-2 lg:max-h-[min(16rem,35vh)]">
+      <CollapsibleContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <div className="border-t border-zinc-700 bg-card lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+          <ScrollArea className="h-64 p-2 lg:h-auto lg:max-h-none lg:min-h-0 lg:flex-1">
             <ul className="pr-2">
               {chapters.map((chapter, index) => {
                 const isActive = activeChapter ? activeChapter === chapter : index === 0
