@@ -1,0 +1,46 @@
+name: Post a Job
+description: Submit a job opening that includes Effect in the stack.
+title: "Job Opening: [Role Title] at [Company Name]"
+labels: ["job-post"]
+body:
+  - type: input
+    id: company
+    attributes:
+      label: Company name
+      placeholder: "Acme Inc."
+      label: Company website
+      placeholder: "https://companywebsite.com"
+    validations:
+      required: true
+
+  - type: input
+    id: role
+    attributes:
+      label: Job position
+      placeholder: "Senior TypeScript Engineer (Effect Experience)"
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location (or Remote)
+      placeholder: "Remote, US preferred"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Job description
+      placeholder: "Describe the responsibilities, requirements, and how Effect is used..."
+    validations:
+      required: true
+
+  - type: input
+    id: apply
+    attributes:
+      label: How to apply or other contact
+      placeholder: "https://jobs.company.com/effect-role"
+    validations:
+      required: true
