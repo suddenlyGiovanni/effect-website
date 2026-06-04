@@ -47,7 +47,10 @@ export default function BlogControls({
 
   // ── Filter + sort pipeline ───────────────────────────────────────
   const filteredPosts = useMemo(() => {
-    const base = tag === "all" ? posts : posts.filter((p) => p.tags.some((t) => t.id === tag))
+    const base =
+      tag === "all"
+        ? posts.filter((p) => !p.tags.some((t) => t.id === "this-week-in-effect"))
+        : posts.filter((p) => p.tags.some((t) => t.id === tag))
     return [...base].sort((a, b) => {
       const cmp = a.dateMs - b.dateMs
       return sort === "newest" ? -cmp : cmp

@@ -49,11 +49,10 @@ function tagCount(id: string): number {
   if (id === "all") {
     return nonTwiePosts.length
   }
-  return nonTwiePosts.filter((post) => post.tags.some((tag) => tag.id === id)).length
+  return allPosts.filter((post) => post.tags.some((tag) => tag.id === id)).length
 }
 
 const serializedTags: SerializedTag[] = tagCollection
-  .filter((tag) => tag.id !== "this-week-in-effect")
   .map((tag) => ({
     id: tag.id,
     name: tag.data.name,
@@ -62,7 +61,7 @@ const serializedTags: SerializedTag[] = tagCollection
   }))
   .sort((a, b) => (a.id === "all" ? -1 : b.id === "all" ? 1 : b.count - a.count))
 
-const serializedPosts: SerializedPost[] = nonTwiePosts.map((post) => ({
+const serializedPosts: SerializedPost[] = allPosts.map((post) => ({
   id: post.id,
   title: post.data.title,
   excerpt: post.data.excerpt,
@@ -76,6 +75,7 @@ const serializedPosts: SerializedPost[] = nonTwiePosts.map((post) => ({
 <PageLayout
   title="Blog | Effect"
   description="Get with the latest updates from the Effect ecosystem"
+  activeSlug="blog"
 >
   <section class="relative overflow-hidden">
     <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-0"></div>
@@ -84,7 +84,7 @@ const serializedPosts: SerializedPost[] = nonTwiePosts.map((post) => ({
     <div class="relative mx-auto w-full max-w-295 px-4">
       <div class="pt-16 pb-8 md:pt-24 md:pb-12">
         <p
-          class="mb-4 font-mono text-sm font-medium tracking-wider text-muted-foreground uppercase"
+          class="mb-4 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase"
         >
           // Effect Blog
         </p>
@@ -185,7 +185,7 @@ const serializedPosts: SerializedPost[] = nonTwiePosts.map((post) => ({
               <div class="mb-6 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-white">This Week in Effect</h2>
                 <a
-                  href="#blog-grid"
+                  href="/blog?category=this-week-in-effect#blog-grid"
                   class="font-mono text-xs tracking-wider text-zinc-200 uppercase transition-colors hover:text-white"
                 >
                   View all
@@ -193,8 +193,7 @@ const serializedPosts: SerializedPost[] = nonTwiePosts.map((post) => ({
               </div>
               <div class="flex gap-3 overflow-x-auto py-1 pb-2" style="scrollbar-width:none">
                 {twiePosts.map((post) => {
-                  const issueMatch = post.data.title.match(/#(\d+)/)
-                  const issueNumber = issueMatch ? `#${issueMatch[1]}` : null
+                  const issueNumber = `#${post.id.split("/").pop()}`
                   return (
                     <a
                       href={`/blog/${post.id}`}
