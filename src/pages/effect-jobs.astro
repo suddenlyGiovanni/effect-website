@@ -1,0 +1,195 @@
+---
+import { ArrowUpRightIcon } from "@lucide/astro"
+import PageLayout from "@/layouts/PageLayout.astro"
+import { JOBS, LOGO_COMPANIES, SUBMIT_URLS } from "@/data/effect-jobs"
+
+function linkDisplay(url: string): string {
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname.endsWith("discord.gg")) return "Discord #job-board"
+    return parsed.hostname.replace(/^www\./, "")
+  } catch {
+    return url
+  }
+}
+---
+
+<PageLayout
+  title="Effect Jobs"
+  description="A community-powered directory of open roles where Effect is part of the stack."
+>
+  {/* Hero */}
+  <section class="hero-section relative overflow-hidden pb-10 md:pb-12">
+    <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
+    <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
+
+    <div class="relative z-10 mx-auto w-full max-w-295 px-4">
+      <p class="pt-16 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase md:pt-20">
+        // Effect Jobs
+      </p>
+      <h1 class="mt-2 text-3xl leading-tight font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
+        Companies hiring Effect engineers
+      </h1>
+      <p class="mt-4 text-lg leading-relaxed text-zinc-400 md:text-xl">
+        A community-powered directory of open roles where Effect is part of the stack.
+      </p>
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a
+          href={SUBMIT_URLS.postJob}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 rounded-md bg-white px-4 py-2 text-sm font-semibold text-zinc-900 transition-opacity hover:opacity-90"
+        >
+          Post a job
+          <ArrowUpRightIcon class="size-4" aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {/* Open positions */}
+  <section class="relative border-t border-zinc-800">
+    <div class="mx-auto w-full max-w-295 px-4">
+      <div class="grid grid-cols-1 gap-10 py-16 md:grid-cols-12 md:gap-x-0 md:py-20">
+        <ul class="md:col-span-12">
+          {JOBS.map((job) => (
+            <li>
+              <a
+                href={job.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group block -mx-4 border-t border-zinc-700 px-4 py-4 transition-colors first:border-t-0 hover:bg-zinc-800/80"
+              >
+                <div class="grid grid-cols-12 items-baseline gap-4">
+                  <h3 class="col-span-12 text-base font-semibold text-white md:col-span-5">
+                    <span class="sr-only">Role: </span>
+                    {job.role}
+                  </h3>
+                  <p class="col-span-12 text-base text-zinc-400 transition-colors group-hover:text-zinc-200 md:col-span-3">
+                    <span class="sr-only">Company: </span>
+                    {job.company}
+                  </p>
+                  <p class="col-span-12 font-mono text-[10px] tracking-[0.12em] text-zinc-400 uppercase md:col-span-2">
+                    <span class="sr-only">Location: </span>
+                    {job.location ?? ""}
+                  </p>
+                  <p class="col-span-12 inline-flex items-baseline gap-1 truncate font-mono text-xs text-zinc-400 md:col-span-2 md:justify-end">
+                    <span class="sr-only">Apply: </span>
+                    <span class="truncate">{linkDisplay(job.url)}</span>
+                    <span class="sr-only"> (opens in new tab)</span>
+                    <ArrowUpRightIcon
+                      aria-hidden="true"
+                      class="shrink-0 size-3.5 self-center text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    />
+                  </p>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {/* Disclaimer */}
+  <section class="relative border-t border-zinc-800">
+    <div class="mx-auto w-full max-w-295 px-4">
+      <div class="grid grid-cols-1 gap-4 py-10 md:grid-cols-12">
+        <div class="md:col-span-12">
+          <p class="font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">
+            // Disclaimer
+          </p>
+          <p class="mt-3 text-base leading-relaxed text-zinc-200">
+            Please note that these job postings are shared for informational purposes, and we
+            encourage applicants to verify details directly with the hiring companies. Inclusion in
+            the above list does not imply endorsement by the Effect team.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* Teams running Effect in production */}
+  {LOGO_COMPANIES.length > 0 && (
+    <section class="relative border-t border-zinc-800">
+      <div class="mx-auto w-full max-w-295 px-4">
+        <div class="py-16 md:py-20">
+          <p class="mb-8 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">
+            // Teams running Effect in production
+          </p>
+          <ul class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
+            {Array.from({ length: 18 }).map((_, idx) => {
+              const company = LOGO_COMPANIES[idx]
+              const cols = 6
+              const rows = 3
+              const col = idx % cols
+              const row = Math.floor(idx / cols)
+              const isLastCol = col === cols - 1
+              const isLastRow = row === rows - 1
+              return (
+                <li class="relative flex aspect-[5/2] items-center justify-center">
+                  {!isLastCol && (
+                    <span class="pointer-events-none absolute top-2 right-0 bottom-2 w-px bg-zinc-800" />
+                  )}
+                  {!isLastRow && (
+                    <span class="pointer-events-none absolute right-2 bottom-0 left-2 h-px bg-zinc-800" />
+                  )}
+                  {company && company.url && (
+                    <a
+                      href={company.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={company.name}
+                      class="flex h-full w-full items-center justify-center px-4 transition-opacity hover:opacity-100"
+                    >
+                      <img
+                        src={company.logo}
+                        alt={company.name}
+                        style={`height: ${(company.h ?? 6) * 4}px`}
+                        class="w-auto opacity-80 transition-opacity"
+                      />
+                    </a>
+                  )}
+                  {company && !company.url && (
+                    <img
+                      src={company.logo}
+                      alt={company.name}
+                      style={`height: ${(company.h ?? 6) * 4}px`}
+                      class="w-auto opacity-80"
+                    />
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )}
+</PageLayout>
+
+<style>
+  .hero-section {
+    --hero-grid-gradient-x: linear-gradient(to right, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
+    --hero-grid-gradient-y: linear-gradient(to bottom, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
+    --hero-grid-size: 196.6px 194px;
+    --hero-grid-position: calc(50% + 97px) 0;
+    --hero-fade-gradient: linear-gradient(
+      to bottom,
+      rgb(9 9 11) 0%,
+      transparent 20%,
+      transparent 60%,
+      rgb(9 9 11) 100%
+    );
+  }
+  
+  .hero-grid {
+    background-image: var(--hero-grid-gradient-x), var(--hero-grid-gradient-y);
+    background-size: var(--hero-grid-size);
+    background-position: var(--hero-grid-position);
+  }
+
+  .hero-fade {
+    background: var(--hero-fade-gradient);
+  }
+</style>
