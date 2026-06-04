@@ -18,7 +18,9 @@
     "fmt:check": "oxfmt --check && prettier --check \"**/*.astro\""
   },
   "dependencies": {
+    "@astro-community/astro-embed-youtube": "^0.5.10",
     "@astrojs/react": "^5.0.1",
+    "@astrojs/rss": "^4.0.18",
     "@astrojs/starlight": "^0.38.1",
     "@astrojs/starlight-tailwind": "^5.0.0",
     "@astrojs/vercel": "^10.0.1",
@@ -38,6 +40,7 @@
     "@types/react-dom": "^19.2.3",
     "astro": "^6.1.8",
     "astro-seo": "^1.1.0",
+    "astro-tweet": "^0.0.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "effect": "4.0.0-beta.31",
