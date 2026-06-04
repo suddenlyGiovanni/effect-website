@@ -3,7 +3,10 @@ import starlight from "@astrojs/starlight"
 import vercel from "@astrojs/vercel"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig, fontProviders } from "astro/config"
+import { fileURLToPath } from "node:url"
 import svgr from "vite-plugin-svgr"
+
+import { twieRedirectList } from "./src/generated/twie-redirects"
 
 const GoogleFontProvider = fontProviders.google()
 
@@ -15,6 +18,11 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss(), svgr()],
+    resolve: {
+      alias: {
+        "@/": fileURLToPath(new URL("./src/", import.meta.url)),
+      },
+    },
     server: {
       watch: {
         ignored: ["**/.direnv/*", "repos/*", ".vercel/*"],
@@ -67,4 +75,8 @@ export default defineConfig({
       fallbacks: ["ui-monospace", "SFMono-Regular", "monospace"],
     },
   ],
+
+  redirects: {
+    ...twieRedirectList,
+  },
 })

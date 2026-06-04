@@ -18,6 +18,7 @@
     "fmt:check": "oxfmt --check && prettier --check \"**/*.astro\""
   },
   "dependencies": {
+    "@astro-community/astro-embed-youtube": "^0.5.10",
     "@astrojs/react": "^5.0.1",
     "@astrojs/starlight": "^0.38.1",
     "@astrojs/starlight-tailwind": "^5.0.0",
