@@ -116,12 +116,7 @@ const serializedPosts: SerializedPost[] = allPosts.map((post) => ({
               <div class="relative grid grid-cols-1 gap-4 p-5 md:grid-cols-12 md:items-center md:gap-10 md:p-6">
                 <div class="min-w-0 md:col-span-7">
                   <div class="mb-3 flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center rounded-md border border-zinc-400 px-2 py-0.5 font-mono text-[10px] font-semibold tracking-[0.18em] text-white uppercase">
-                      Release
-                    </span>
                     {featuredPost.tags
-                      .filter((t) => t.id !== "effect" && t.id !== "release")
-                      .sort((a, b) => a.id.localeCompare(b.id))
                       .map((tag) => (
                         <span class="inline-flex items-center rounded-md border border-zinc-400 px-2 py-0.5 font-mono text-[10px] tracking-[0.12em] text-zinc-200 uppercase">
                           {tag.data.name}
