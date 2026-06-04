@@ -1,6 +1,6 @@
 ---
 import { Menu, Search, X } from "@lucide/astro"
-import type { NavigationLink } from "@/lib/navigation"
+import type { NavigationActiveSlug, NavigationLink } from "@/lib/navigation"
 import DiscordIcon from "@/assets/logos/discord/Discord.svg"
 import GitHubIcon from "@/assets/logos/github/GitHub.svg"
 import TwitterIcon from "@/assets/logos/twitter/Twitter.svg"
@@ -10,9 +10,10 @@ interface Props {
   readonly primaryLinks: ReadonlyArray<NavigationLink>
   readonly socialLinks: ReadonlyArray<NavigationLink>
   readonly transparent?: boolean | undefined
+  readonly activeSlug?: NavigationActiveSlug | undefined
 }
 
-const { transparent = false, primaryLinks, socialLinks } = Astro.props
+const { transparent = false, primaryLinks, socialLinks, activeSlug } = Astro.props
 
 const actionButtonClass = cn(
   "flex h-10 w-10 appearance-none items-center justify-center",
@@ -59,9 +60,14 @@ const actionButtonClass = cn(
               target={link.kind === "external" ? link.target : undefined}
               rel={link.kind === "external" ? link.rel : undefined}
               data-role="menu-link"
+              aria-current={link.id === activeSlug ? "page" : undefined}
               class:list={[
                 "block rounded-md px-3 py-2.5 text-[15px] no-underline transition-colors hover:bg-zinc-800 hover:text-white",
-                link.cta === "solid" ? "font-medium text-white" : "text-zinc-300",
+                link.id === activeSlug
+                  ? "bg-zinc-800 text-white"
+                  : link.cta === "solid"
+                    ? "font-medium text-white"
+                    : "text-zinc-300",
               ]}
             >
               {link.label}

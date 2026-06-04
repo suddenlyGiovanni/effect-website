@@ -1,12 +1,13 @@
 ---
 import NavigationAnchor from "@/components/navigation/NavigationAnchor.astro"
-import { getNavigationLinks } from "@/lib/navigation"
+import { getNavigationLinks, type NavigationActiveSlug } from "@/lib/navigation"
 
 interface Props {
   readonly transparent?: boolean
+  readonly activeSlug?: NavigationActiveSlug | undefined
 }
 
-const { transparent = false } = Astro.props
+const { transparent = false, activeSlug } = Astro.props
 
 const links = getNavigationLinks("desktop", "primary")
 const plainLinks = links.filter((link) => link.cta === "none")
@@ -16,7 +17,16 @@ const plainClass = `border-b border-transparent text-sm font-medium no-underline
 ---
 
 <>
-  {plainLinks.map((link) => <NavigationAnchor link={link} class={plainClass} />)}
+  {
+    plainLinks.map((link) => (
+      <NavigationAnchor
+        link={link}
+        class={plainClass}
+        active={link.id === activeSlug}
+        activeClass="border-white text-white"
+      />
+    ))
+  }
   {
     ctaLinks.map((link) => (
       <NavigationAnchor
