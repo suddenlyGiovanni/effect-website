@@ -1,15 +1,19 @@
-import { defineCollection, reference } from "astro:content"
 import { docsLoader } from "@astrojs/starlight/loaders"
 import { docsSchema } from "@astrojs/starlight/schema"
 import { file, glob } from "astro/loaders"
 import { z } from "astro/zod"
-
+import { defineCollection, reference } from "astro:content"
 import { PodcastEpisodeEntry } from "./features/podcast/collection"
 
 const blog = defineCollection({
   loader: glob({
     base: "./src/content/blog",
-    pattern: ["*/index.mdx", "this-week-in-effect/*/index.mdx", "releases/effect/*.mdx"],
+    pattern: [
+      "*/index.mdx",
+      "this-week-in-effect/*/index.mdx",
+      "releases/effect/*.mdx",
+      "releases/*.mdx",
+    ],
   }),
   schema: ({ image }) =>
     z.object({

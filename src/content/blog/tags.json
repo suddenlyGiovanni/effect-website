@@ -1,6 +1,7 @@
 {
   "all": { "name": "All", "color": "#71717a" },
   "cause-and-effect": { "name": "Cause & Effect", "color": "#f472b6" },
+  "create-effect-app": { "name": "Create Effect App", "color": "red" },
   "effect": { "name": "Effect", "color": "#818cf8" },
   "effect-playground": { "name": "Effect Playground", "color": "#c4b5fd" },
   "effect-schema": { "name": "Effect Schema", "color": "#06b6d4" },
