@@ -34,6 +34,8 @@ export interface ExternalNavigationLink extends NavigationLinkBase {
 
 export type NavigationLink = InternalNavigationLink | ExternalNavigationLink
 
+export type NavigationActiveSlug = "blog" | "podcast"
+
 export const LANDING_NAVIGATION_LINKS: ReadonlyArray<NavigationLink> = [
   {
     id: "docs",

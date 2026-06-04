@@ -5,13 +5,15 @@ import GridRails from "@/components/GridRails.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
 import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import type { NavigationActiveSlug } from "@/lib/navigation"
 
 interface Props {
   readonly title?: string | undefined
   readonly description?: string | undefined
+  readonly activeSlug?: NavigationActiveSlug | undefined
 }
 
-const { title, description } = Astro.props
+const { title, description, activeSlug } = Astro.props
 ---
 
 <BaseLayout {...title ? { title } : undefined} {...description ? { description } : undefined}>
@@ -19,7 +21,7 @@ const { title, description } = Astro.props
     <DitheredOverlay />
     <GridRails />
 
-    <Navigation />
+    <Navigation {...activeSlug ? { activeSlug } : undefined} />
 
     <main id={PAGE_TITLE_ID} class="relative w-full pt-16">
       <slot />

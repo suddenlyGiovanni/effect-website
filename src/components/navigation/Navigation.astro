@@ -4,13 +4,14 @@ import NavigationLogo from "@/components/navigation/NavigationLogo.astro"
 import NavigationDesktopActions from "@/components/navigation/NavigationDesktopActions.astro"
 import NavigationLinks from "@/components/navigation/NavigationLinks.astro"
 import SearchDialogIsland from "@/components/navigation/SearchDialogIsland"
-import { getNavigationLinks } from "@/lib/navigation"
+import { getNavigationLinks, type NavigationActiveSlug } from "@/lib/navigation"
 
 interface Props {
   readonly transparent?: boolean | undefined
+  readonly activeSlug?: NavigationActiveSlug | undefined
 }
 
-const { transparent = false } = Astro.props
+const { transparent = false, activeSlug } = Astro.props
 
 const mobilePrimaryLinks = getNavigationLinks("mobile", "primary")
 const mobileSocialLinks = getNavigationLinks("mobile", "social")
@@ -28,13 +29,14 @@ const mobileSocialLinks = getNavigationLinks("mobile", "social")
         <NavigationLogo />
 
         <div class="ml-8 hidden items-center gap-6 md:flex">
-          <NavigationLinks transparent={transparent} />
+          <NavigationLinks transparent={transparent} activeSlug={activeSlug} />
         </div>
 
         <NavigationMobileMenu
           transparent={transparent}
           primaryLinks={mobilePrimaryLinks}
           socialLinks={mobileSocialLinks}
+          activeSlug={activeSlug}
         />
 
         <div class="ml-auto hidden items-center gap-4.5 md:flex">

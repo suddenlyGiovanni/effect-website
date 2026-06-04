@@ -9,7 +9,7 @@ import { PodcastEpisodeEntry } from "./features/podcast/collection"
 const blog = defineCollection({
   loader: glob({
     base: "./src/content/blog",
-    pattern: ["*/index.mdx", "releases/effect/*.mdx"],
+    pattern: ["*/index.mdx", "this-week-in-effect/*/index.mdx", "releases/effect/*.mdx"],
   }),
   schema: ({ image }) =>
     z.object({
