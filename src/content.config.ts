@@ -87,6 +87,11 @@ const effectJobsLogos = defineCollection({
   }),
 })
 
+const docsSidebar = defineCollection({
+  loader: file("./src/content/docs/sidebar-config.json"),
+  schema: z.record(z.string(), z.number()),
+})
+
 const docs = defineCollection({
   loader: glob({
     base: "./src/content/docs",
@@ -117,6 +122,7 @@ const docs = defineCollection({
 
 export const collections = {
   docs,
+  docsSidebar,
   blog,
   blogAuthors,
   blogTags,

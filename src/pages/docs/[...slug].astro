@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content"
-import { getCollection, render } from "astro:content"
+import { getCollection, getEntry, render } from "astro:content"
 
 import Footer from "@/components/Footer.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
@@ -9,13 +9,10 @@ import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
 
 export async function getStaticPaths() {
   const entries = await getCollection("docs")
-  return entries.map((entry) => {
-    const slug = entry.id.replace(/\/index$/, "")
-    return {
-      params: { slug },
-      props: { entry, entries },
-    }
-  })
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/\/index$/, "") },
+    props: { entry, entries },
+  }))
 }
 
 const { entry, entries } = Astro.props
@@ -25,29 +22,15 @@ const currentId = entry.id
 const currentVersion = currentId.split("/")[0]
 const versions = ["v4", "v3"] as const
 
-const sidebarConfigs = import.meta.glob<{ default: Record<string, number> }>(
-  "../../content/docs/**/_sidebar.json",
-  { eager: true },
-)
+const sidebarEntry = await getEntry("docsSidebar", currentVersion)
+const groupConfig: Record<string, number> = sidebarEntry?.data ?? {}
 
-const groupConfig: Record<string, number> = (() => {
-  const key = Object.keys(sidebarConfigs).find((k) => k.includes(`/${currentVersion}/_sidebar.json`))
-  return key ? (sidebarConfigs[key]?.default ?? {}) : {}
-})()
-
-function sidebarLabel(e: CollectionEntry<"docs">): string {
+function entryLabel(e: CollectionEntry<"docs">): string {
   return e.data.sidebar?.label ?? e.data.title
 }
 
-function sidebarOrder(e: CollectionEntry<"docs">): number {
+function entryOrder(e: CollectionEntry<"docs">): number {
   return e.data.sidebar?.order ?? Infinity
-}
-
-function sortEntries(list: CollectionEntry<"docs">[]): CollectionEntry<"docs">[] {
-  return [...list].sort((a, b) => {
-    const diff = sidebarOrder(a) - sidebarOrder(b)
-    return diff !== 0 ? diff : sidebarLabel(a).localeCompare(sidebarLabel(b))
-  })
 }
 
 interface SidebarGroup {
@@ -57,12 +40,29 @@ interface SidebarGroup {
   isOpen: boolean
 }
 
+type SidebarItem =
+  | { kind: "entry"; entry: CollectionEntry<"docs"> }
+  | { kind: "group"; group: SidebarGroup }
+
+function groupOrder(g: SidebarGroup): number {
+  if (g.dir in groupConfig) return groupConfig[g.dir]
+  const min = Math.min(...g.entries.map(entryOrder).filter(isFinite))
+  return isFinite(min) ? min : Infinity
+}
+
+function sortByOrderLabel<T>(items: T[], order: (t: T) => number, label: (t: T) => string): T[] {
+  return [...items].sort((a, b) => {
+    const diff = order(a) - order(b)
+    return diff !== 0 ? diff : label(a).localeCompare(label(b))
+  })
+}
+
+// Build sidebar for current version
 const roots: CollectionEntry<"docs">[] = []
 const groupMap = new Map<string, CollectionEntry<"docs">[]>()
 
 for (const e of entries.filter((e) => e.id.startsWith(`${currentVersion}/`))) {
-  const withoutVersion = e.id.slice(currentVersion.length + 1)
-  const parts = withoutVersion.split("/")
+  const parts = e.id.slice(currentVersion.length + 1).split("/")
   if (parts.length === 1) {
     roots.push(e)
   } else {
@@ -72,50 +72,24 @@ for (const e of entries.filter((e) => e.id.startsWith(`${currentVersion}/`))) {
   }
 }
 
-const groups: SidebarGroup[] = []
-for (const [dir, groupEntries] of groupMap) {
-  groups.push({
-    dir,
-    label: dir
-      .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" "),
-    entries: sortEntries(groupEntries),
-    isOpen: groupEntries.some((e) => e.id === currentId),
-  })
-}
-function groupOrder(g: SidebarGroup): number | undefined {
-  if (g.dir in groupConfig) return groupConfig[g.dir]
-  const orders = g.entries.map((e) => e.data.sidebar?.order).filter((o): o is number => o !== undefined)
-  return orders.length > 0 ? Math.min(...orders) : undefined
-}
+const groups: SidebarGroup[] = [...groupMap.entries()].map(([dir, es]) => ({
+  dir,
+  label: dir.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" "),
+  entries: sortByOrderLabel(es, entryOrder, entryLabel),
+  isOpen: es.some((e) => e.id === currentId),
+}))
 
-type SidebarItem =
-  | { kind: "entry"; entry: CollectionEntry<"docs"> }
-  | { kind: "group"; group: SidebarGroup }
-
-const sidebarItems: SidebarItem[] = [
-  ...roots.map((e) => ({ kind: "entry" as const, entry: e })),
-  ...groups.map((g) => ({ kind: "group" as const, group: g })),
-]
-
-sidebarItems.sort((a, b) => {
-  const ao = a.kind === "entry" ? a.entry.data.sidebar?.order : groupOrder(a.group)
-  const bo = b.kind === "entry" ? b.entry.data.sidebar?.order : groupOrder(b.group)
-  if (ao !== undefined && bo !== undefined) return ao - bo
-  if (ao !== undefined) return -1
-  if (bo !== undefined) return 1
-  const al = a.kind === "entry" ? sidebarLabel(a.entry) : a.group.label
-  const bl = b.kind === "entry" ? sidebarLabel(b.entry) : b.group.label
-  return al.localeCompare(bl)
-})
+const sidebarItems = sortByOrderLabel<SidebarItem>(
+  [
+    ...roots.map((e) => ({ kind: "entry" as const, entry: e })),
+    ...groups.map((g) => ({ kind: "group" as const, group: g })),
+  ],
+  (item) => (item.kind === "entry" ? entryOrder(item.entry) : groupOrder(item.group)),
+  (item) => (item.kind === "entry" ? entryLabel(item.entry) : item.group.label),
+)
 
 function entryHref(e: CollectionEntry<"docs">): string {
   return `/docs/${e.id.replace(/\/index$/, "")}`
-}
-
-function versionRootHref(version: string): string {
-  return `/docs/${version}`
 }
 
 const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
@@ -134,7 +108,6 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
             aria-label="Documentation navigation"
             class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto px-6 py-8"
           >
-            <!-- Version switcher -->
             <div
               role="group"
               aria-label="Documentation version"
@@ -143,7 +116,7 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
               {
                 versions.map((v) => (
                   <a
-                    href={versionRootHref(v)}
+                    href={`/docs/${v}`}
                     aria-current={currentVersion === v ? "page" : undefined}
                     class:list={[
                       "rounded-md px-3 py-1 text-xs font-medium transition-all duration-150",
@@ -173,7 +146,7 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
                             : "text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white",
                         ]}
                       >
-                        {sidebarLabel(item.entry)}
+                        {entryLabel(item.entry)}
                       </a>
                     </li>
                   ) : (
@@ -181,31 +154,25 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
                       <details open={item.group.isOpen || undefined}>
                         <summary class="flex cursor-pointer select-none list-none items-center justify-between rounded py-2.5 font-mono text-sm font-medium tracking-wider text-zinc-700 uppercase transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
                           <span>{item.group.label}</span>
-                          <i
-                            class="ri-arrow-down-s-line text-base transition-transform details-chevron"
-                            aria-hidden="true"
-                          />
+                          <i class="ri-arrow-down-s-line text-base transition-transform details-chevron" aria-hidden="true" />
                         </summary>
                         <ul class="flex flex-col gap-0.5 pb-4">
-                          {item.group.entries.map((e) => {
-                            const isCurrent = e.id === currentId
-                            return (
-                              <li>
-                                <a
-                                  href={entryHref(e)}
-                                  aria-current={isCurrent ? "page" : undefined}
-                                  class:list={[
-                                    "block rounded-md py-1.5 pl-3 text-sm transition-colors",
-                                    isCurrent
-                                      ? "bg-zinc-100 font-semibold text-zinc-900 dark:bg-zinc-800 dark:text-white"
-                                      : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-white",
-                                  ]}
-                                >
-                                  {sidebarLabel(e)}
-                                </a>
-                              </li>
-                            )
-                          })}
+                          {item.group.entries.map((e) => (
+                            <li>
+                              <a
+                                href={entryHref(e)}
+                                aria-current={e.id === currentId ? "page" : undefined}
+                                class:list={[
+                                  "block rounded-md py-1.5 pl-3 text-sm transition-colors",
+                                  e.id === currentId
+                                    ? "bg-zinc-100 font-semibold text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                                    : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-white",
+                                ]}
+                              >
+                                {entryLabel(e)}
+                              </a>
+                            </li>
+                          ))}
                         </ul>
                       </details>
                     </li>
@@ -282,18 +249,17 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
       for (const link of links) {
         const isActive = link.dataset.tocLink === id
         link.setAttribute("aria-current", isActive ? "location" : "false")
-        if (isActive) {
-          link.classList.add(...ACTIVE)
-          link.classList.remove(...INACTIVE)
-        } else {
-          link.classList.remove(...ACTIVE)
-          link.classList.add(...INACTIVE)
-        }
+        link.classList.toggle("font-semibold", isActive)
+        link.classList.toggle("text-zinc-900", isActive)
+        link.classList.toggle("dark:text-white", isActive)
+        link.classList.toggle("text-zinc-700", !isActive)
+        link.classList.toggle("dark:text-zinc-400", !isActive)
       }
     }
 
-    const headingIds = Array.from(links).map((l) => l.dataset.tocLink!)
-    const headings = headingIds.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null)
+    const headings = Array.from(links)
+      .map((l) => document.getElementById(l.dataset.tocLink!))
+      .filter((el): el is HTMLElement => el !== null)
 
     const observer = new IntersectionObserver(
       (entries) => {
