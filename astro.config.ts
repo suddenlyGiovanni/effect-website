@@ -5,7 +5,6 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig, fontProviders } from "astro/config"
 import { fileURLToPath } from "node:url"
 import svgr from "vite-plugin-svgr"
-
 import { twieRedirectList } from "./src/generated/twie-redirects"
 
 const GoogleFontProvider = fontProviders.google()
@@ -34,27 +33,31 @@ export default defineConfig({
   },
 
   integrations: [
-    react({
-      include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
-    }),
     starlight({
-      title: "My Docs",
+      title: "Effect",
       disable404Route: true,
-      customCss: ["./src/styles/global.css", "./src/styles/docs.css"],
-      social: [{ icon: "github", label: "GitHub", href: "https://github.com/withastro/starlight" }],
+      pagefind: false,
+      components: {
+        Head: "./src/components/starlight/Head.astro",
+        ThemeProvider: "./src/components/starlight/ThemeProvider.astro",
+        PageFrame: "./src/components/starlight/PageFrame.astro",
+        Footer: "./src/components/starlight/Footer.astro",
+        Sidebar: "./src/components/starlight/Sidebar.astro",
+      },
+      customCss: ["./src/styles/starlight.css", "./src/styles/global.css"],
       sidebar: [
         {
-          label: "Guides",
-          items: [
-            // Each item here is one entry in the navigation menu.
-            { label: "Example Guide", slug: "docs/guides/example" },
-          ],
+          label: "v4 (Latest)",
+          items: [{ autogenerate: { directory: "docs/v4" } }],
         },
         {
-          label: "Reference",
-          autogenerate: { directory: "docs/reference" },
+          label: "v3",
+          items: [{ autogenerate: { directory: "docs/v3" } }],
         },
       ],
+    }),
+    react({
+      include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
     }),
   ],
 

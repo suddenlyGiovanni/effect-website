@@ -89,8 +89,10 @@ const effectJobsLogos = defineCollection({
   }),
 })
 
+const docs = defineCollection({ loader: docsLoader(), schema: docsSchema() })
+
 export const collections = {
-  docs: defineCollection({ loader: docsLoader(), schema: docsSchema() }),
+  docs,
   blog,
   blogAuthors,
   blogTags,

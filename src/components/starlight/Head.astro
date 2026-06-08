@@ -1,0 +1,13 @@
+---
+import { Font } from "astro:assets"
+
+const { head } = Astro.locals.starlightRoute
+---
+
+{head.map(({ tag: Tag, attrs, content }) => <Tag {...attrs} set:html={content} />)}
+<Font cssVariable="--font-inter" preload />
+<Font cssVariable="--font-jetbrains-mono" preload />
+<link
+  href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css"
+  rel="stylesheet"
+/>
