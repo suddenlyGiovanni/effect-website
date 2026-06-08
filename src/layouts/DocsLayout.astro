@@ -1,0 +1,245 @@
+---
+import type { CollectionEntry } from "astro:content"
+
+import PageLayout from "@/layouts/PageLayout.astro"
+
+interface Heading {
+  depth: number
+  slug: string
+  text: string
+}
+
+interface Props {
+  title: string
+  description?: string
+  entries: CollectionEntry<"docs">[]
+  currentId: string
+  headings: Heading[]
+}
+
+const { title, description, entries, currentId, headings } = Astro.props
+
+// --- Sidebar logic ---
+
+const currentVersion = currentId.split("/")[0]
+const versions = ["v4", "v3"] as const
+
+function sidebarLabel(entry: CollectionEntry<"docs">): string {
+  return entry.data.sidebar?.label ?? entry.data.title
+}
+
+function sidebarOrder(entry: CollectionEntry<"docs">): number {
+  return entry.data.sidebar?.order ?? Infinity
+}
+
+function sortEntries(list: CollectionEntry<"docs">[]): CollectionEntry<"docs">[] {
+  return [...list].sort((a, b) => {
+    const diff = sidebarOrder(a) - sidebarOrder(b)
+    return diff !== 0 ? diff : sidebarLabel(a).localeCompare(sidebarLabel(b))
+  })
+}
+
+interface SidebarGroup {
+  dir: string
+  label: string
+  entries: CollectionEntry<"docs">[]
+  isOpen: boolean
+}
+
+const roots: CollectionEntry<"docs">[] = []
+const groupMap = new Map<string, CollectionEntry<"docs">[]>()
+
+for (const entry of entries.filter((e) => e.id.startsWith(`${currentVersion}/`))) {
+  const withoutVersion = entry.id.slice(currentVersion.length + 1)
+  const parts = withoutVersion.split("/")
+  if (parts.length === 1) {
+    roots.push(entry)
+  } else {
+    const dir = parts[0]
+    if (!groupMap.has(dir)) groupMap.set(dir, [])
+    groupMap.get(dir)!.push(entry)
+  }
+}
+
+const groups: SidebarGroup[] = []
+for (const [dir, groupEntries] of groupMap) {
+  groups.push({
+    dir,
+    label: dir
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" "),
+    entries: sortEntries(groupEntries),
+    isOpen: groupEntries.some((e) => e.id === currentId),
+  })
+}
+groups.sort((a, b) => {
+  const diff = Math.min(...a.entries.map(sidebarOrder)) - Math.min(...b.entries.map(sidebarOrder))
+  return diff !== 0 ? diff : a.label.localeCompare(b.label)
+})
+
+const sortedRoots = sortEntries(roots)
+
+function entryHref(entry: CollectionEntry<"docs">): string {
+  return `/docs/${entry.id.replace(/\/index$/, "")}`
+}
+
+function versionRootHref(version: string): string {
+  const root = entries.find((e) => e.id === `${version}/index`)
+  if (root) return `/docs/${version}`
+  const first = entries
+    .filter((e) => e.id.startsWith(`${version}/`))
+    .sort((a, b) => sidebarOrder(a) - sidebarOrder(b))[0]
+  return first ? entryHref(first) : `/docs/${version}`
+}
+
+// --- TOC logic ---
+
+const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
+---
+
+<PageLayout title={title} description={description} activeSlug="docs">
+  <div class="flex min-h-[calc(100vh-4rem)]">
+    <!-- Left sidebar -->
+    <div
+      class="hidden lg:block fixed top-16 left-0 bottom-0 w-64 xl:w-72 overflow-y-auto border-r border-zinc-800 bg-zinc-950 px-4 py-6 z-10"
+    >
+      <aside class="flex flex-col gap-6 text-sm">
+        <!-- Version switcher -->
+        <div class="flex gap-2">
+          {
+            versions.map((v) => (
+              <a
+                href={versionRootHref(v)}
+                class={[
+                  "px-3 py-1 rounded text-xs font-medium transition-colors",
+                  currentVersion === v
+                    ? "bg-zinc-700 text-white"
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-800",
+                ].join(" ")}
+              >
+                {v === "v4" ? "v4 (latest)" : v}
+              </a>
+            ))
+          }
+        </div>
+
+        <nav aria-label="Documentation navigation">
+          <ul class="space-y-1">
+            {
+              sortedRoots.map((entry) => {
+                const isCurrent = entry.id === currentId
+                return (
+                  <li>
+                    <a
+                      href={entryHref(entry)}
+                      aria-current={isCurrent ? "page" : undefined}
+                      class={[
+                        "block px-2 py-1 rounded transition-colors",
+                        isCurrent
+                          ? "bg-zinc-800 text-white font-medium"
+                          : "text-zinc-400 hover:text-white hover:bg-zinc-800/50",
+                      ].join(" ")}
+                    >
+                      {sidebarLabel(entry)}
+                    </a>
+                  </li>
+                )
+              })
+            }
+            {
+              groups.map((group) => (
+                <li>
+                  <details open={group.isOpen || undefined}>
+                    <summary class="flex cursor-pointer items-center justify-between px-2 py-1 text-zinc-300 hover:text-white select-none list-none rounded hover:bg-zinc-800/50 transition-colors">
+                      <span class="font-medium">{group.label}</span>
+                      <svg
+                        class="h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform details-chevron"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </summary>
+                    <ul class="mt-1 ml-2 space-y-0.5 border-l border-zinc-800 pl-3">
+                      {group.entries.map((entry) => {
+                        const isCurrent = entry.id === currentId
+                        return (
+                          <li>
+                            <a
+                              href={entryHref(entry)}
+                              aria-current={isCurrent ? "page" : undefined}
+                              class={[
+                                "block px-2 py-1 rounded transition-colors text-sm",
+                                isCurrent
+                                  ? "bg-zinc-800 text-white font-medium"
+                                  : "text-zinc-400 hover:text-white hover:bg-zinc-800/50",
+                              ].join(" ")}
+                            >
+                              {sidebarLabel(entry)}
+                            </a>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </details>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </aside>
+    </div>
+
+    <!-- Main content -->
+    <div class="w-full lg:pl-64 xl:pl-72 2xl:pr-56">
+      <div class="mx-auto max-w-3xl px-6 py-10">
+        <article
+          class="prose prose-zinc prose-invert prose-sm md:prose-base max-w-none
+                 prose-headings:font-semibold prose-headings:tracking-tight
+                 prose-a:text-sky-400 prose-a:no-underline hover:prose-a:underline
+                 prose-code:text-zinc-200 prose-code:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
+                 prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-700"
+        >
+          <slot />
+        </article>
+      </div>
+    </div>
+
+    <!-- Right TOC -->
+    {
+      tocHeadings.length > 0 && (
+        <div class="hidden 2xl:block fixed top-16 right-0 bottom-0 w-56 overflow-y-auto px-4 py-8">
+          <nav aria-label="Table of contents" class="text-sm">
+            <p class="mb-3 text-xs font-semibold tracking-wider text-zinc-400 uppercase">
+              On this page
+            </p>
+            <ul class="space-y-1.5">
+              {tocHeadings.map((heading) => (
+                <li class={heading.depth === 3 ? "pl-3" : ""}>
+                  <a
+                    href={`#${heading.slug}`}
+                    class="block text-zinc-400 hover:text-white transition-colors leading-snug"
+                  >
+                    {heading.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      )
+    }
+  </div>
+</PageLayout>
+
+<style>
+  details[open] > summary .details-chevron {
+    transform: rotate(90deg);
+  }
+</style>
