@@ -62,6 +62,7 @@ export default defineConfig({
 
   redirects: {
     "/docs": "/docs/v4",
+    "/docs/v3": "/docs/v3/getting-started/introduction",
     ...twieRedirectList,
   },
 })

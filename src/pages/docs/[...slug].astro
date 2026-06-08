@@ -25,6 +25,16 @@ const currentId = entry.id
 const currentVersion = currentId.split("/")[0]
 const versions = ["v4", "v3"] as const
 
+const sidebarConfigs = import.meta.glob<{ default: Record<string, number> }>(
+  "../../content/docs/**/_sidebar.json",
+  { eager: true },
+)
+
+const groupConfig: Record<string, number> = (() => {
+  const key = Object.keys(sidebarConfigs).find((k) => k.includes(`/${currentVersion}/_sidebar.json`))
+  return key ? (sidebarConfigs[key]?.default ?? {}) : {}
+})()
+
 function sidebarLabel(e: CollectionEntry<"docs">): string {
   return e.data.sidebar?.label ?? e.data.title
 }
@@ -74,24 +84,38 @@ for (const [dir, groupEntries] of groupMap) {
     isOpen: groupEntries.some((e) => e.id === currentId),
   })
 }
-groups.sort((a, b) => {
-  const diff = Math.min(...a.entries.map(sidebarOrder)) - Math.min(...b.entries.map(sidebarOrder))
-  return diff !== 0 ? diff : a.label.localeCompare(b.label)
-})
+function groupOrder(g: SidebarGroup): number | undefined {
+  if (g.dir in groupConfig) return groupConfig[g.dir]
+  const orders = g.entries.map((e) => e.data.sidebar?.order).filter((o): o is number => o !== undefined)
+  return orders.length > 0 ? Math.min(...orders) : undefined
+}
 
-const sortedRoots = sortEntries(roots)
+type SidebarItem =
+  | { kind: "entry"; entry: CollectionEntry<"docs"> }
+  | { kind: "group"; group: SidebarGroup }
+
+const sidebarItems: SidebarItem[] = [
+  ...roots.map((e) => ({ kind: "entry" as const, entry: e })),
+  ...groups.map((g) => ({ kind: "group" as const, group: g })),
+]
+
+sidebarItems.sort((a, b) => {
+  const ao = a.kind === "entry" ? a.entry.data.sidebar?.order : groupOrder(a.group)
+  const bo = b.kind === "entry" ? b.entry.data.sidebar?.order : groupOrder(b.group)
+  if (ao !== undefined && bo !== undefined) return ao - bo
+  if (ao !== undefined) return -1
+  if (bo !== undefined) return 1
+  const al = a.kind === "entry" ? sidebarLabel(a.entry) : a.group.label
+  const bl = b.kind === "entry" ? sidebarLabel(b.entry) : b.group.label
+  return al.localeCompare(bl)
+})
 
 function entryHref(e: CollectionEntry<"docs">): string {
   return `/docs/${e.id.replace(/\/index$/, "")}`
 }
 
 function versionRootHref(version: string): string {
-  const root = entries.find((e) => e.id === `${version}/index`)
-  if (root) return `/docs/${version}`
-  const first = entries
-    .filter((e) => e.id.startsWith(`${version}/`))
-    .sort((a, b) => sidebarOrder(a) - sidebarOrder(b))[0]
-  return first ? entryHref(first) : `/docs/${version}`
+  return `/docs/${version}`
 }
 
 const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
@@ -136,61 +160,57 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
 
             <ul class="flex flex-col gap-0.5">
               {
-                sortedRoots.map((e) => {
-                  const isCurrent = e.id === currentId
-                  return (
+                sidebarItems.map((item) =>
+                  item.kind === "entry" ? (
                     <li>
                       <a
-                        href={entryHref(e)}
-                        aria-current={isCurrent ? "page" : undefined}
+                        href={entryHref(item.entry)}
+                        aria-current={item.entry.id === currentId ? "page" : undefined}
                         class:list={[
-                          "block rounded-md py-1.5 pl-3 text-sm transition-colors",
-                          isCurrent
-                            ? "bg-zinc-100 font-semibold text-zinc-900 dark:bg-zinc-800 dark:text-white"
-                            : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-white",
+                          "flex items-center justify-between rounded px-2 py-2.5 -mx-2 font-mono text-sm font-medium tracking-wider uppercase transition-colors",
+                          item.entry.id === currentId
+                            ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                            : "text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white",
                         ]}
                       >
-                        {sidebarLabel(e)}
+                        {sidebarLabel(item.entry)}
                       </a>
                     </li>
+                  ) : (
+                    <li class="mb-1 last:mb-0">
+                      <details open={item.group.isOpen || undefined}>
+                        <summary class="flex cursor-pointer select-none list-none items-center justify-between rounded py-2.5 font-mono text-sm font-medium tracking-wider text-zinc-700 uppercase transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                          <span>{item.group.label}</span>
+                          <i
+                            class="ri-arrow-down-s-line text-base transition-transform details-chevron"
+                            aria-hidden="true"
+                          />
+                        </summary>
+                        <ul class="flex flex-col gap-0.5 pb-4">
+                          {item.group.entries.map((e) => {
+                            const isCurrent = e.id === currentId
+                            return (
+                              <li>
+                                <a
+                                  href={entryHref(e)}
+                                  aria-current={isCurrent ? "page" : undefined}
+                                  class:list={[
+                                    "block rounded-md py-1.5 pl-3 text-sm transition-colors",
+                                    isCurrent
+                                      ? "bg-zinc-100 font-semibold text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                                      : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-white",
+                                  ]}
+                                >
+                                  {sidebarLabel(e)}
+                                </a>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </details>
+                    </li>
                   )
-                })
-              }
-              {
-                groups.map((group) => (
-                  <li class="mb-1 last:mb-0">
-                    <details open={group.isOpen || undefined}>
-                      <summary class="flex cursor-pointer select-none list-none items-center justify-between rounded py-2.5 font-mono text-sm font-medium tracking-wider text-zinc-700 uppercase transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
-                        <span>{group.label}</span>
-                        <i
-                          class="ri-arrow-down-s-line text-base transition-transform details-chevron"
-                          aria-hidden="true"
-                        />
-                      </summary>
-                      <ul class="flex flex-col gap-0.5 pb-4">
-                        {group.entries.map((e) => {
-                          const isCurrent = e.id === currentId
-                          return (
-                            <li>
-                              <a
-                                href={entryHref(e)}
-                                aria-current={isCurrent ? "page" : undefined}
-                                class:list={[
-                                  "block rounded-md py-1.5 pl-3 text-sm transition-colors",
-                                  isCurrent
-                                    ? "bg-zinc-100 font-semibold text-zinc-900 dark:bg-zinc-800 dark:text-white"
-                                    : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-white",
-                                ]}
-                              >
-                                {sidebarLabel(e)}
-                              </a>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    </details>
-                  </li>
-                ))
+                )
               }
             </ul>
           </nav>
@@ -227,6 +247,7 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
                     <li class={heading.depth === 3 ? "pl-3" : ""}>
                       <a
                         href={`#${heading.slug}`}
+                        data-toc-link={heading.slug}
                         class="block text-sm leading-snug text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
                       >
                         {heading.text}
@@ -250,3 +271,40 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
     transform: rotate(180deg);
   }
 </style>
+
+<script>
+  const links = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")
+  if (links.length > 0) {
+    const ACTIVE = ["font-semibold", "text-zinc-900", "dark:text-white"]
+    const INACTIVE = ["text-zinc-700", "dark:text-zinc-400"]
+
+    function setActive(id: string | null) {
+      for (const link of links) {
+        const isActive = link.dataset.tocLink === id
+        link.setAttribute("aria-current", isActive ? "location" : "false")
+        if (isActive) {
+          link.classList.add(...ACTIVE)
+          link.classList.remove(...INACTIVE)
+        } else {
+          link.classList.remove(...ACTIVE)
+          link.classList.add(...INACTIVE)
+        }
+      }
+    }
+
+    const headingIds = Array.from(links).map((l) => l.dataset.tocLink!)
+    const headings = headingIds.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null)
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        if (visible.length > 0) setActive(visible[0].target.id)
+      },
+      { rootMargin: "-80px 0px -70% 0px", threshold: 0 },
+    )
+
+    for (const el of headings) observer.observe(el)
+  }
+</script>
