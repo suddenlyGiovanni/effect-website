@@ -20,6 +20,9 @@ export default defineConfig({
     resolve: {
       alias: {
         "@/": fileURLToPath(new URL("./src/", import.meta.url)),
+        "@astrojs/starlight/components": fileURLToPath(
+          new URL("./src/components/docs/starlight-shim.ts", import.meta.url),
+        ),
       },
     },
     server: {
