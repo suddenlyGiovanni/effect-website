@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@astro-community/astro-embed-youtube": "^0.5.10",
+    "@astrojs/mdx": "^6.0.2",
     "@astrojs/react": "^5.0.1",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/starlight": "^0.39.3",
@@ -37,7 +38,7 @@
     "@tailwindcss/vite": "^4.2.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "astro": "^6.1.8",
+    "astro": "^6.4.0",
     "astro-seo": "^1.1.0",
     "astro-tweet": "^0.0.6",
     "class-variance-authority": "^0.7.1",

@@ -1,3 +1,4 @@
+import mdx from "@astrojs/mdx"
 import react from "@astrojs/react"
 import vercel from "@astrojs/vercel"
 import tailwindcss from "@tailwindcss/vite"
@@ -35,6 +36,7 @@ export default defineConfig({
     react({
       include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
     }),
+    mdx({ extendMarkdownConfig: false }),
   ],
 
   fonts: [
@@ -56,6 +58,7 @@ export default defineConfig({
   ],
 
   redirects: {
+    "/docs": "/docs/v3",
     ...twieRedirectList,
   },
 })
