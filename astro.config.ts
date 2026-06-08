@@ -58,7 +58,7 @@ export default defineConfig({
   ],
 
   redirects: {
-    "/docs": "/docs/v3",
+    "/docs": "/docs/v4",
     ...twieRedirectList,
   },
 })
