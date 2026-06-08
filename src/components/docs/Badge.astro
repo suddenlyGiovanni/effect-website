@@ -1,0 +1,66 @@
+---
+interface Props {
+  text: string
+  variant?: "note" | "tip" | "danger" | "caution" | "success" | "default"
+  size?: "small" | "medium" | "large"
+}
+
+const { text, variant = "default", size = "small" } = Astro.props
+---
+
+<span class={`badge badge--${variant} badge--${size}`}>{text}</span>
+
+<style>
+  .badge {
+    display: inline-block;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .badge--small {
+    font-size: 0.75rem;
+    padding: 0.2em 0.5em;
+  }
+
+  .badge--medium {
+    font-size: 0.875rem;
+    padding: 0.25em 0.625em;
+  }
+
+  .badge--large {
+    font-size: 1rem;
+    padding: 0.3em 0.75em;
+  }
+
+  .badge--default {
+    background-color: var(--sl-color-gray-5, #e5e7eb);
+    color: var(--sl-color-gray-1, #111827);
+  }
+
+  .badge--note {
+    background-color: var(--sl-color-blue-low, #dbeafe);
+    color: var(--sl-color-blue, #1d4ed8);
+  }
+
+  .badge--tip {
+    background-color: var(--sl-color-purple-low, #ede9fe);
+    color: var(--sl-color-purple, #7c3aed);
+  }
+
+  .badge--danger {
+    background-color: var(--sl-color-red-low, #fee2e2);
+    color: var(--sl-color-red, #b91c1c);
+  }
+
+  .badge--caution {
+    background-color: var(--sl-color-orange-low, #ffedd5);
+    color: var(--sl-color-orange, #c2410c);
+  }
+
+  .badge--success {
+    background-color: var(--sl-color-green-low, #dcfce7);
+    color: var(--sl-color-green, #15803d);
+  }
+</style>
