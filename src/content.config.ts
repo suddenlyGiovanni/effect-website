@@ -9,10 +9,11 @@ const blog = defineCollection({
   loader: glob({
     base: "./src/content/blog",
     pattern: [
-      "*/index.mdx",
+      "cause-and-effect/*.mdx",
       "this-week-in-effect/*/index.mdx",
       "releases/effect/*.mdx",
       "releases/*.mdx",
+      "*.mdx",
     ],
   }),
   schema: ({ image }) =>

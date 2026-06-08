@@ -8,6 +8,7 @@
   "effect-website": { "name": "Effect Website", "color": "#fb923c" },
   "miscellaneous": { "name": "Miscellaneous", "color": "#94a3b8" },
   "releases": { "name": "Releases", "color": "#22c55e" },
+  "security": { "name": "Security", "color": "#71717a" },
   "this-week-in-effect": { "name": "This Week In Effect", "color": "#a78bfa" },
   "typescript": { "name": "TypeScript", "color": "#3b82f6" }
 }
