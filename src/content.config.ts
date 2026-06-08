@@ -12,6 +12,7 @@ const blog = defineCollection({
       "cause-and-effect/*.mdx",
       "this-week-in-effect/*/index.mdx",
       "releases/effect/*.mdx",
+      "releases/schema/*.mdx",
       "releases/*.mdx",
       "*.mdx",
     ],
