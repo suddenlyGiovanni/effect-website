@@ -63,6 +63,7 @@
   "devDependencies": {
     "@astrojs/compiler-rs": "^0.1.10",
     "@effect/language-service": "^0.85.1",
+    "@shikijs/twoslash": "4.0.2",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",
     "prettier": "^3.8.1",

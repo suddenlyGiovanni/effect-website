@@ -1,6 +1,7 @@
 import mdx from "@astrojs/mdx"
 import react from "@astrojs/react"
 import vercel from "@astrojs/vercel"
+import { transformerTwoslash } from "@shikijs/twoslash"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig, fontProviders } from "astro/config"
 import { fileURLToPath } from "node:url"
@@ -39,7 +40,17 @@ export default defineConfig({
     react({
       include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
     }),
-    mdx({ extendMarkdownConfig: false }),
+    mdx({
+      extendMarkdownConfig: false,
+      shikiConfig: {
+        transformers: [
+          transformerTwoslash({
+            explicitTrigger: true,
+            throws: false,
+          }),
+        ],
+      },
+    }),
   ],
 
   fonts: [

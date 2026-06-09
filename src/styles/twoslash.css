@@ -1,0 +1,8 @@
+@import "@shikijs/twoslash/style-rich.css";
+
+.dark {
+  --twoslash-popup-bg: #27272a;
+  --twoslash-popup-shadow: rgba(0, 0, 0, 0.4) 0px 2px 8px;
+  --twoslash-docs-color: #a1a1aa;
+  --twoslash-border-color: #52525b88;
+}
