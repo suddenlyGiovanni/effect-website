@@ -1,8 +1,16 @@
-@import "@shikijs/twoslash/style-rich.css";
+.expressive-code .twoslash-popup-container {
+  display: none;
+  --ec-twoSlash-brdCol: var(--ec-gtrFg);
+}
 
-.dark {
-  --twoslash-popup-bg: #27272a;
-  --twoslash-popup-shadow: rgba(0, 0, 0, 0.4) 0px 2px 8px;
-  --twoslash-docs-color: #a1a1aa;
-  --twoslash-border-color: #52525b88;
+.expressive-code .twoslash-popup-container .twoslash-popup-docs .expressive-code pre {
+  border: var(--ec-brdWd) solid var(--ec-brdCol) !important;
+}
+
+.expressive-code .twoslash-popup-container .twoslash-popup-docs .ec-line {
+  line-height: var(--ec-codeLineHt);
+}
+
+.expressive-code .twoslash-popup-container .twoslash-popup-docs code {
+  line-height: normal
 }

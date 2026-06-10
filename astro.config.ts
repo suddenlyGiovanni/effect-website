@@ -1,11 +1,16 @@
 import mdx from "@astrojs/mdx"
 import react from "@astrojs/react"
 import vercel from "@astrojs/vercel"
-import { transformerTwoslash } from "@shikijs/twoslash"
+import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections"
+import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig, fontProviders } from "astro/config"
+import expressiveCode from "astro-expressive-code"
+import ecTwoSlash from "expressive-code-twoslash"
 import { fileURLToPath } from "node:url"
+import { resolve } from "node:path"
 import svgr from "vite-plugin-svgr"
+import { pluginOpenInPlayground } from "./src/plugins/expressive-code/open-in-playground"
 import { twieRedirectList } from "./src/generated/twie-redirects"
 
 const GoogleFontProvider = fontProviders.google()
@@ -28,7 +33,7 @@ export default defineConfig({
     },
     server: {
       watch: {
-        ignored: ["**/.direnv/*", "repos/*", ".vercel/*"],
+        ignored: [".git/*", "**/.direnv/*", "repos/*", ".vercel/*"],
       },
     },
     ssr: {
@@ -37,20 +42,34 @@ export default defineConfig({
   },
 
   integrations: [
+    expressiveCode({
+      plugins: [
+        pluginCollapsibleSections(),
+        pluginLineNumbers(),
+        pluginOpenInPlayground(),
+        ecTwoSlash({
+          twoslashOptions: {
+            compilerOptions: {
+              // v3 docs import from "effect" but need effect-legacy (v3) types.
+              // All current twoslash blocks are in v3 docs only.
+              paths: {
+                effect: [
+                  resolve("node_modules/effect-legacy/dist/dts/index.d.ts"),
+                ],
+                "effect/*": [
+                  resolve("node_modules/effect-legacy/dist/dts/*.d.ts"),
+                ],
+              },
+            },
+          },
+        }),
+      ],
+      themes: ["github-light", "github-dark"],
+    }),
     react({
       include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
     }),
-    mdx({
-      extendMarkdownConfig: false,
-      shikiConfig: {
-        transformers: [
-          transformerTwoslash({
-            explicitTrigger: true,
-            throws: false,
-          }),
-        ],
-      },
-    }),
+    mdx(),
   ],
 
   fonts: [
