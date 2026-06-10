@@ -27,3 +27,6 @@ pnpm-debug.log*
 *.tsbuildinfo
 
 .vercel
+
+# Twoslash build cache
+.cache/expressive-code-twoslash

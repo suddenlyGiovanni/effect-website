@@ -4,16 +4,34 @@ import vercel from "@astrojs/vercel"
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections"
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers"
 import tailwindcss from "@tailwindcss/vite"
-import { defineConfig, fontProviders } from "astro/config"
 import expressiveCode from "astro-expressive-code"
+import { defineConfig, fontProviders } from "astro/config"
 import ecTwoSlash from "expressive-code-twoslash"
-import { fileURLToPath } from "node:url"
 import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import svgr from "vite-plugin-svgr"
-import { pluginOpenInPlayground } from "./src/plugins/expressive-code/open-in-playground"
 import { twieRedirectList } from "./src/generated/twie-redirects"
+import { twoslashPrewarmer } from "./src/integrations/twoslash-prewarmer"
+import { pluginOpenInPlayground } from "./src/plugins/expressive-code/open-in-playground"
 
 const GoogleFontProvider = fontProviders.google()
+
+// Shared twoslash options — used by both the prewarmer and ecTwoSlash.
+// The prewarmer derives cache keys with these exact options so ecTwoSlash
+// finds all blocks pre-cached. Any change here invalidates the cache.
+const twoslashOptions = {
+  // @ec-ts/twoslash@1.0 throws on unhandled TS errors; old twoslash@0.2 didn't.
+  // Code blocks using node:readline/process have no @errors: annotation.
+  handbookOptions: { noErrorValidation: true },
+  compilerOptions: {
+    // v3 docs import from "effect" but need effect-legacy (v3) types.
+    // All current twoslash blocks are in v3 docs only.
+    paths: {
+      effect: [resolve("node_modules/effect-legacy/dist/dts/index.d.ts")],
+      "effect/*": [resolve("node_modules/effect-legacy/dist/dts/*.d.ts")],
+    },
+  },
+}
 
 // https://astro.build/config
 export default defineConfig({
@@ -33,7 +51,7 @@ export default defineConfig({
     },
     server: {
       watch: {
-        ignored: [".git/*", "**/.direnv/*", "repos/*", ".vercel/*"],
+        ignored: [".astro/**", "**/.direnv/**", "repos/**", ".vercel/**"],
       },
     },
     ssr: {
@@ -47,22 +65,7 @@ export default defineConfig({
         pluginCollapsibleSections(),
         pluginLineNumbers(),
         pluginOpenInPlayground(),
-        ecTwoSlash({
-          twoslashOptions: {
-            compilerOptions: {
-              // v3 docs import from "effect" but need effect-legacy (v3) types.
-              // All current twoslash blocks are in v3 docs only.
-              paths: {
-                effect: [
-                  resolve("node_modules/effect-legacy/dist/dts/index.d.ts"),
-                ],
-                "effect/*": [
-                  resolve("node_modules/effect-legacy/dist/dts/*.d.ts"),
-                ],
-              },
-            },
-          },
-        }),
+        ecTwoSlash({ cache: true, twoslashOptions }),
       ],
       themes: ["github-light", "github-dark"],
     }),
