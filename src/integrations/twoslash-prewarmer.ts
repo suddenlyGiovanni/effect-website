@@ -1,16 +1,19 @@
 import type { AstroIntegration } from "astro"
 import * as NodeServices from "@effect/platform-node/NodeServices"
-import * as Data from "effect/Data"
+import * as NodeWorker from "@effect/platform-node/NodeWorker"
 import * as Effect from "effect/Effect"
 import * as FileSystem from "effect/FileSystem"
+import * as Latch from "effect/Latch"
 import * as Option from "effect/Option"
-import * as Schema from "effect/Schema"
+import * as Pool from "effect/Pool"
+import * as Queue from "effect/Queue"
 import * as Stream from "effect/Stream"
+import * as Worker from "effect/unstable/workers/Worker"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
 import os from "node:os"
 import nodePath from "node:path"
-import { Worker } from "node:worker_threads"
+import { Worker as NodeWorkerThread } from "node:worker_threads"
 import ts from "typescript"
 
 export interface TwoslashPrewarmerOptions {
@@ -95,16 +98,11 @@ function cacheFilePath(directory: string, key: string): string {
   return nodePath.join(directory, key.slice(0, 2), `${key}.json`)
 }
 
-class WorkerError extends Data.TaggedError("WorkerError")<{ message: string }> {}
-
-const WorkerResult = Schema.Struct({
-  key: Schema.String,
-  result: Schema.NullOr(Schema.Unknown),
-  error: Schema.NullOr(Schema.String),
-})
-type WorkerResult = Schema.Schema.Type<typeof WorkerResult>
-
-const WorkerResultArray = Schema.Array(WorkerResult)
+interface WorkerResult {
+  readonly key: string
+  readonly result: unknown | null
+  readonly error: string | null
+}
 
 interface TwoslashBlock {
   readonly extension: "ts" | "tsx"
@@ -220,36 +218,49 @@ const resolvePackageVersion = (
     }
   })
 
+// One-snippet-at-a-time protocol: init once, process snippets individually.
+// Each message in/out is a single snippet so the Pool can load-balance across workers
+// without buffering large result arrays in memory.
 const WORKER_CODE = /* js */ `
-const { workerData, parentPort } = require("node:worker_threads")
+const { parentPort } = require("node:worker_threads")
 const path = require("node:path")
 
 async function run() {
   const { createTwoslasher } = await import("@ec-ts/twoslash")
   const ts = (await import("typescript")).default
+  let twoslasher = null
+  let executeOptions = null
 
-  const { snippets, executeOptions: baseExecuteOptions } = workerData
-
-  // Each worker resolves tsLibDirectory from its own TypeScript install
-  const tsLibDirectory = path.dirname(ts.getDefaultLibFilePath(baseExecuteOptions.compilerOptions || {}))
-  const executeOptions = { ...baseExecuteOptions, tsLibDirectory }
-
-  const twoslasher = createTwoslasher({})
-  const results = []
-
-  for (const { key, code, extension } of snippets) {
-    try {
-      const result = await twoslasher(code, extension, executeOptions)
-      results.push({ key, result, error: null })
-    } catch (err) {
-      results.push({ key, result: null, error: err?.message ?? String(err) })
+  parentPort.on("message", (message) => {
+    if (message[0] === 1) {
+      parentPort.close()
+      return
     }
-  }
+    const payload = message[1]
 
-  parentPort?.postMessage(results)
+    if (payload.type === "init") {
+      const tsLibDirectory = path.dirname(
+        ts.getDefaultLibFilePath(payload.executeOptions.compilerOptions || {})
+      )
+      executeOptions = { ...payload.executeOptions, tsLibDirectory }
+      twoslasher = createTwoslasher({})
+      parentPort.postMessage([1, { type: "ready" }])
+      return
+    }
+
+    const { key, code, extension } = payload
+    try {
+      const result = twoslasher(code, extension, executeOptions)
+      parentPort.postMessage([1, { key, result, error: null }])
+    } catch (err) {
+      parentPort.postMessage([1, { key, result: null, error: err?.message ?? String(err) }])
+    }
+  })
+
+  parentPort.postMessage([0])
 }
 
-run().catch(err => parentPort?.postMessage([{ key: "__worker_error__", result: null, error: err?.message }]))
+run().catch(() => process.exit(1))
 `
 
 interface WorkerSnippet {
@@ -258,41 +269,63 @@ interface WorkerSnippet {
   readonly extension: string
 }
 
-// Effect.scoped as a post-processor automatically closes the scope (and terminates
-// the worker) on every call, eliminating the need for Effect.scoped at call sites.
-const runWorkerChunk = Effect.fn("runWorkerChunk")(function* (
-  snippets: ReadonlyArray<WorkerSnippet>,
-  executeOptions: object,
-) {
-  const workerInstance = yield* Effect.acquireRelease(
-    Effect.sync(
-      () => new Worker(WORKER_CODE, { eval: true, workerData: { snippets, executeOptions } }),
-    ),
-    (worker) =>
-      Effect.sync(() => {
-        worker.terminate()
-      }),
-  )
+interface ManagedWorker {
+  readonly process: (snippet: WorkerSnippet) => Effect.Effect<WorkerResult>
+}
 
-  const rawMessage = yield* Effect.tryPromise({
-    try: () =>
-      new Promise<unknown>((resolve, reject) => {
-        workerInstance.on("message", resolve)
-        workerInstance.on("error", reject)
-        workerInstance.on("exit", (exitCode) => {
-          if (exitCode !== 0) reject(new Error(`Worker exited with code ${exitCode}`))
-        })
-      }),
-    catch: (caughtError) =>
-      new WorkerError({
-        message: caughtError instanceof Error ? caughtError.message : String(caughtError),
-      }),
+// Spawns one persistent worker and initialises its TS compiler instance.
+// The run-loop fiber is scoped to the Pool slot — when the Pool is finalised,
+// the fiber is interrupted and the worker thread terminates.
+// Pool ensures at most one in-flight snippet per ManagedWorker, so a single
+// unbounded queue is safe as the response channel (capacity 1 in practice).
+const acquireWorker = (executeOptions: object) =>
+  Effect.gen(function* () {
+    const workerPlatform = yield* Worker.WorkerPlatform
+    const handle = yield* workerPlatform.spawn<{ type: "ready" } | WorkerResult, object>(0)
+
+    const responseQueue = yield* Queue.unbounded<WorkerResult>()
+    const readyLatch = yield* Latch.make()
+
+    yield* Effect.forkScoped(
+      handle
+        .run(
+          (output) => {
+            const msg = output as { type?: "ready" } & WorkerResult
+            return "type" in msg && msg.type === "ready"
+              ? readyLatch.open
+              : Queue.offer(responseQueue, msg as WorkerResult)
+          },
+          { onSpawn: handle.send({ type: "init", executeOptions }).pipe(Effect.orDie) },
+        )
+        .pipe(
+          // On worker exit (clean or crash): unblock any waiting readyLatch.await
+          // and shut down the response queue so pending Queue.take calls complete.
+          Effect.ensuring(Effect.all([readyLatch.open, Queue.shutdown(responseQueue)])),
+        ),
+    )
+
+    yield* readyLatch.await
+
+    return {
+      process: (snippet: WorkerSnippet): Effect.Effect<WorkerResult> =>
+        handle.send({ type: "snippet", ...snippet }).pipe(
+          Effect.orDie,
+          Effect.flatMap(() =>
+            Queue.take(responseQueue).pipe(
+              // Queue is shut down when the worker exits — surface as an error result
+              // so the snippet falls back to inline EC processing instead of hanging.
+              Effect.catchCause((cause) =>
+                Effect.succeed<WorkerResult>({
+                  key: snippet.key,
+                  result: null,
+                  error: `worker exited unexpectedly: ${cause}`,
+                }),
+              ),
+            ),
+          ),
+        ),
+    } satisfies ManagedWorker
   })
-
-  return yield* Schema.decodeUnknownEffect(WorkerResultArray)(rawMessage).pipe(
-    Effect.orElseSucceed(() => [] as ReadonlyArray<WorkerResult>),
-  )
-}, Effect.scoped)
 
 const buildPrewarm = Effect.fn("buildPrewarm")(function* (options: TwoslashPrewarmerOptions) {
   const cwd = process.cwd()
@@ -424,42 +457,48 @@ const buildPrewarm = Effect.fn("buildPrewarm")(function* (options: TwoslashPrewa
     `twoslash-prewarmer: ${pendingSnippets.length} cache misses → processing with ${workerCount} workers…`,
   )
 
-  const chunkSize = Math.ceil(pendingSnippets.length / workerCount)
-  const snippetChunks: Array<ReadonlyArray<WorkerSnippet>> = []
-  for (let chunkIndex = 0; chunkIndex < pendingSnippets.length; chunkIndex += chunkSize) {
-    snippetChunks.push(pendingSnippets.slice(chunkIndex, chunkIndex + chunkSize))
-  }
+  const workerLayer = NodeWorker.layer((_id) => new NodeWorkerThread(WORKER_CODE, { eval: true }))
 
-  const workerResultBatches = yield* Effect.all(
-    snippetChunks.map((snippetChunk) =>
-      runWorkerChunk(snippetChunk, executeOptions).pipe(
-        Effect.catchTag("WorkerError", (workerError) =>
-          Effect.gen(function* () {
-            yield* Effect.log(`twoslash-prewarmer: worker error: ${workerError.message}`)
-            return [] as ReadonlyArray<WorkerResult>
-          }),
+  const { successCount, errorCount } = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const pool = yield* Pool.make({ acquire: acquireWorker(executeOptions), size: workerCount })
+
+      return yield* Stream.fromIterable(pendingSnippets).pipe(
+        Stream.mapEffect(
+          (snippet) =>
+            Effect.scoped(
+              Pool.get(pool).pipe(Effect.flatMap((worker) => worker.process(snippet))),
+            ).pipe(
+              Effect.catchCause((cause) =>
+                Effect.succeed<WorkerResult>({
+                  key: snippet.key,
+                  result: null,
+                  error: `pool error: ${cause}`,
+                }),
+              ),
+            ),
+          { concurrency: workerCount },
         ),
-      ),
-    ),
-    { concurrency: "unbounded" },
-  )
-
-  const allWorkerResults = workerResultBatches.flat()
-  const successfulResults = allWorkerResults.filter(
-    (workerResult): workerResult is WorkerResult & { result: unknown } =>
-      workerResult.error === null && workerResult.result !== null,
-  )
-  const errorCount = allWorkerResults.length - successfulResults.length
-
-  yield* Effect.all(
-    successfulResults.map((workerResult) =>
-      writeCacheEntry(cacheDirectory, workerResult.key, workerResult.result),
-    ),
-    { concurrency: 10 },
+        Stream.tap((result) =>
+          result.error !== null
+            ? Effect.log(
+                `twoslash-prewarmer: snippet error [${result.key.slice(0, 8)}]: ${result.error}`,
+              )
+            : writeCacheEntry(cacheDirectory, result.key, result.result),
+        ),
+        Stream.runFold(
+          () => ({ successCount: 0, errorCount: 0 }),
+          (acc, result) =>
+            result.error === null
+              ? { ...acc, successCount: acc.successCount + 1 }
+              : { ...acc, errorCount: acc.errorCount + 1 },
+        ),
+      )
+    }).pipe(Effect.provide(workerLayer)),
   )
 
   yield* Effect.log(
-    `twoslash-prewarmer: cached ${successfulResults.length} blocks across ${workerCount} workers` +
+    `twoslash-prewarmer: cached ${successCount} blocks with ${workerCount} workers` +
       (errorCount > 0 ? ` (${errorCount} errors — will be processed inline)` : ""),
   )
 })
