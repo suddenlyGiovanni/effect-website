@@ -60,6 +60,7 @@ export default defineConfig({
   },
 
   integrations: [
+    twoslashPrewarmer({ twoslashOptions }),
     expressiveCode({
       plugins: [
         pluginCollapsibleSections(),
