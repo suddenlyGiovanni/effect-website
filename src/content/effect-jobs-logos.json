@@ -1,0 +1,103 @@
+[
+  {
+    "id": "masterclass",
+    "name": "MasterClass",
+    "logo": "/assets/quotes-logos/masterclass-noM.svg",
+    "h": "1rem"
+  },
+  {
+    "id": "vercel",
+    "name": "Vercel",
+    "logo": "/assets/quotes-logos/vercel-logotype-dark.svg"
+  },
+  {
+    "id": "spiko",
+    "name": "Spiko",
+    "logo": "/assets/quotes-logos/spiko-logo.svg"
+  },
+  {
+    "id": "opencode",
+    "name": "opencode",
+    "logo": "/assets/effect-jobs-logos/opencode-wordmark-dark.svg"
+  },
+  {
+    "id": "embedded-insurance",
+    "name": "Embedded Insurance",
+    "logo": "/assets/effect-jobs-logos/embedded-insurance-logo.svg"
+  },
+  {
+    "id": "inato",
+    "name": "Inato",
+    "logo": "/assets/effect-jobs-logos/inato.png"
+  },
+  {
+    "id": "interfere",
+    "name": "Interfere",
+    "logo": "/assets/effect-jobs-logos/intefere-white.svg",
+    "h": "1rem"
+  },
+  {
+    "id": "manage-space",
+    "name": "Manage Space",
+    "logo": "/assets/effect-jobs-logos/manage-space.svg",
+    "h": "0.75rem"
+  },
+  {
+    "id": "platonic-systems",
+    "name": "Platonic Systems",
+    "logo": "/assets/effect-jobs-logos/platonic-systems.svg",
+    "h": "1rem"
+  },
+  {
+    "id": "precurion",
+    "name": "Precurion",
+    "logo": "/assets/effect-jobs-logos/precurion.png",
+    "h": "1rem"
+  },
+  {
+    "id": "globe-commerce",
+    "name": "Globe Commerce",
+    "logo": "/assets/effect-jobs-logos/globe-commerce.png"
+  },
+  {
+    "id": "warp",
+    "name": "Warp",
+    "logo": "/assets/effect-jobs-logos/warp.svg"
+  },
+  {
+    "id": "samsung-food",
+    "name": "Samsung Food",
+    "logo": "/assets/effect-jobs-logos/samsung-food.svg",
+    "h": "1rem"
+  },
+  {
+    "id": "tenzir",
+    "name": "Tenzir",
+    "logo": "/assets/effect-jobs-logos/tenzir.svg",
+    "h": "1rem"
+  },
+  {
+    "id": "acemate",
+    "name": "Acemate",
+    "logo": "/assets/effect-jobs-logos/acemate.png",
+    "h": "1rem",
+    "invert": true
+  },
+  {
+    "id": "wander",
+    "name": "Wander",
+    "logo": "/assets/effect-jobs-logos/wander.svg"
+  },
+  {
+    "id": "introw",
+    "name": "Introw",
+    "logo": "/assets/effect-jobs-logos/introw.svg",
+    "h": "1rem"
+  },
+  {
+    "id": "magentus",
+    "name": "Magentus",
+    "logo": "/assets/effect-jobs-logos/magentus 1.svg",
+    "h": "1rem"
+  }
+]

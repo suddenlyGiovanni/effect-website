@@ -1,0 +1,146 @@
+[
+  {
+    "id": "expand-ai",
+    "company": "Expand.ai",
+    "role": "Founding Engineer",
+    "location": "San Francisco, USA",
+    "url": "https://expand.ai/careers/founding-engineer",
+    "logo": "/assets/effect-jobs-logos/expand-ai-icon.png"
+  },
+  {
+    "id": "freckle-io",
+    "company": "Freckle.io",
+    "role": "Full-stack Engineers",
+    "location": "San Francisco · Remote (exceptional cases)",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1457982486310027408",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/freckle-icon.png",
+    "payRange": "$160K – $210K + equity"
+  },
+  {
+    "id": "gale",
+    "company": "Gale",
+    "role": "SWE Intern",
+    "location": "Remote · CAN/US",
+    "type": "Internship",
+    "url": "https://forms.galevisa.com/r/m6gr7e",
+    "logo": "/assets/effect-jobs-logos/gale-icon.png",
+    "payRange": "CAD 35–38/hr · USD 22–28/hr"
+  },
+  {
+    "id": "goblins",
+    "company": "Goblins",
+    "role": "Product Founding Engineer",
+    "location": "Brooklyn, NYC",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1439740311277404231",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/goblins-icon.png"
+  },
+  {
+    "id": "humanlayer",
+    "company": "HumanLayer",
+    "role": "Founding Product Engineer",
+    "location": "San Francisco",
+    "url": "https://workatastartup.com/jobs/84491",
+    "logo": "/assets/effect-jobs-logos/humanlayer.png",
+    "payRange": "$180K – $250K"
+  },
+  {
+    "id": "joymore",
+    "company": "Joymore",
+    "role": "Backend and Full Stack Engineers",
+    "location": "Remote · prefer SF / Sacramento area",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1506377610073215118",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/joymore-icon.svg"
+  },
+  {
+    "id": "leap-legal-software",
+    "company": "LEAP Legal Software",
+    "role": "Full-stack Engineer",
+    "location": "Sydney · Hybrid",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1512445948662386889",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/leap.svg"
+  },
+  {
+    "id": "managespace",
+    "company": "ManageSpace",
+    "role": "Full Stack Engineer (mid-level)",
+    "location": "UK · US · Europe",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1509855152184627340",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/managespace-icon 1.png"
+  },
+  {
+    "id": "phosphor",
+    "company": "PhosPhor",
+    "role": "Engineers with Effect experience",
+    "location": "Remote · NYC",
+    "url": "https://phosphor.co/",
+    "logo": "/assets/effect-jobs-logos/phosphor-icon.png"
+  },
+  {
+    "id": "reap",
+    "company": "Reap",
+    "role": "Backend / Cloud Engineer",
+    "location": "HK · Remote-friendly",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1494185541233541270",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/reap.png"
+  },
+  {
+    "id": "siworks",
+    "company": "SIWorks",
+    "role": "Senior Full-Stack Engineer",
+    "location": "Remote · Portland / Vancouver WA preferred",
+    "type": "Part-time",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1501997185309347840",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/siworks.png"
+  },
+  {
+    "id": "solid",
+    "company": "Solid",
+    "role": "Early engineering team",
+    "location": "Bay Area",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1455623052636459209",
+    "note": "Posted on Discord #job-board",
+    "logo": "/assets/effect-jobs-logos/solid.png",
+    "payRange": "$150K – $250K + equity"
+  },
+  {
+    "id": "supermemory",
+    "company": "Supermemory",
+    "role": "Founding Backend / Infrastructure Engineer",
+    "location": "San Francisco, CA · Hybrid",
+    "url": "https://x.com/i/jobs/1928194391946186862",
+    "logo": "/assets/effect-jobs-logos/supermemory-icon.png",
+    "payRange": "$90K – $250K"
+  },
+  {
+    "id": "superwall",
+    "company": "Superwall",
+    "role": "Full-stack Mobile Developer",
+    "location": "Remote · Europe preferred",
+    "url": "https://x.com/jakemor/status/1972770955500876070",
+    "logo": "/assets/effect-jobs-logos/sw-icon.png",
+    "payRange": "$130K Yr 1 → $175K Yr 2"
+  },
+  {
+    "id": "tranched",
+    "company": "Tranched",
+    "role": "Full-stack Engineer — Web3",
+    "location": "Paris · London · Amsterdam",
+    "url": "https://tranched.fi/careers/fullstack-developer-web3",
+    "logo": "/assets/effect-jobs-logos/tranched.png"
+  },
+  {
+    "id": "trellis-ai",
+    "company": "Trellis AI",
+    "role": "Product Engineer",
+    "location": "San Francisco",
+    "url": "https://www.ycombinator.com/companies/trellis-ai",
+    "logo": "/assets/effect-jobs-logos/trellis.png"
+  }
+]

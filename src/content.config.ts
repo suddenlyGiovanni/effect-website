@@ -63,6 +63,31 @@ const merch = defineCollection({
   }),
 })
 
+const effectJobs = defineCollection({
+  loader: file("./src/content/effect-jobs.json"),
+  schema: z.object({
+    company: z.string(),
+    role: z.string(),
+    location: z.string().optional(),
+    type: z.string().optional(),
+    url: z.string().url(),
+    note: z.string().optional(),
+    logo: z.string().optional(),
+    payRange: z.string().optional(),
+  }),
+})
+
+const effectJobsLogos = defineCollection({
+  loader: file("./src/content/effect-jobs-logos.json"),
+  schema: z.object({
+    name: z.string(),
+    logo: z.string(),
+    url: z.string().url().optional(),
+    h: z.string().optional(),
+    invert: z.boolean().optional(),
+  }),
+})
+
 export const collections = {
   docs: defineCollection({ loader: docsLoader(), schema: docsSchema() }),
   blog,
@@ -70,4 +95,6 @@ export const collections = {
   blogTags,
   podcasts,
   merch,
+  effectJobs,
+  effectJobsLogos,
 }

@@ -1,12 +1,16 @@
 ---
+import { getCollection } from "astro:content"
 import { ArrowUpRightIcon } from "@lucide/astro"
 import PageLayout from "@/layouts/PageLayout.astro"
-import { JOBS, LOGO_COMPANIES, SUBMIT_URLS } from "@/data/effect-jobs"
+
+const jobs = (await getCollection("effectJobs")).map((e) => e.data)
+const logos = (await getCollection("effectJobsLogos")).map((e) => e.data)
 
 function linkDisplay(url: string): string {
   try {
     const parsed = new URL(url)
-    if (parsed.hostname.endsWith("discord.gg")) return "Discord #job-board"
+    if (parsed.hostname.endsWith("discord.gg") || parsed.hostname.endsWith("discord.com"))
+      return "Discord #job-board"
     return parsed.hostname.replace(/^www\./, "")
   } catch {
     return url
@@ -30,15 +34,15 @@ function linkDisplay(url: string): string {
       <h1 class="mt-2 text-3xl leading-tight font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
         Companies hiring Effect engineers
       </h1>
-      <p class="mt-4 text-lg leading-relaxed text-zinc-400 md:text-xl">
+      <p class="mt-4 text-lg leading-relaxed text-zinc-400">
         A community-powered directory of open roles where Effect is part of the stack.
       </p>
       <div class="mt-8 flex flex-wrap items-center gap-3">
         <a
-          href={SUBMIT_URLS.postJob}
+          href="https://github.com/mirelaprifti/effect-jobs/issues/new?template=post-a-job.yaml"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 rounded-md bg-white px-4 py-2 text-sm font-semibold text-zinc-900 transition-opacity hover:opacity-90"
+          class="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-base font-medium text-zinc-900 transition-all hover:bg-zinc-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
         >
           Post a job
           <ArrowUpRightIcon class="size-4" aria-hidden="true" />
@@ -52,7 +56,7 @@ function linkDisplay(url: string): string {
     <div class="mx-auto w-full max-w-295 px-4">
       <div class="grid grid-cols-1 gap-10 py-16 md:grid-cols-12 md:gap-x-0 md:py-20">
         <ul class="md:col-span-12">
-          {JOBS.map((job) => (
+          {jobs.map((job) => (
             <li>
               <a
                 href={job.url}
@@ -60,26 +64,37 @@ function linkDisplay(url: string): string {
                 rel="noopener noreferrer"
                 class="group block -mx-4 border-t border-zinc-700 px-4 py-4 transition-colors first:border-t-0 hover:bg-zinc-800/80"
               >
-                <div class="grid grid-cols-12 items-baseline gap-4">
-                  <h3 class="col-span-12 text-base font-semibold text-white md:col-span-5">
+                <div class="grid grid-cols-12 items-center gap-4">
+                  <p class="col-span-12 inline-flex items-center gap-2 text-base font-semibold text-white md:col-span-3">
+                    <span class="sr-only">Company: </span>
+                    <span aria-hidden="true" class="flex h-9 w-12 shrink-0 items-center justify-start">
+                      {job.logo ? (
+                        <img src={job.logo} alt="" class="max-h-9 max-w-full object-contain" />
+                      ) : (
+                        <span class="h-9 w-9 rounded-sm border border-dashed border-zinc-700" />
+                      )}
+                    </span>
+                    <span class="truncate">{job.company}</span>
+                  </p>
+                  <p class="col-span-12 text-base text-zinc-400 transition-colors group-hover:text-zinc-200 md:col-span-3">
                     <span class="sr-only">Role: </span>
                     {job.role}
-                  </h3>
-                  <p class="col-span-12 text-base text-zinc-400 transition-colors group-hover:text-zinc-200 md:col-span-3">
-                    <span class="sr-only">Company: </span>
-                    {job.company}
                   </p>
-                  <p class="col-span-12 font-mono text-[10px] tracking-[0.12em] text-zinc-400 uppercase md:col-span-2">
+                  <p class="col-span-12 font-mono text-sm tabular-nums text-zinc-300 md:col-span-3">
+                    <span class="sr-only">Pay range: </span>
+                    {job.payRange ?? ""}
+                  </p>
+                  <p class="col-span-12 font-mono text-sm text-zinc-400 md:col-span-2">
                     <span class="sr-only">Location: </span>
                     {job.location ?? ""}
                   </p>
-                  <p class="col-span-12 inline-flex items-baseline gap-1 truncate font-mono text-xs text-zinc-400 md:col-span-2 md:justify-end">
+                  <p class="col-span-12 inline-flex items-baseline gap-1 truncate font-mono text-xs text-zinc-400 md:col-span-1 md:justify-end">
                     <span class="sr-only">Apply: </span>
-                    <span class="truncate">{linkDisplay(job.url)}</span>
+                    <span class="sr-only">{linkDisplay(job.url)}</span>
                     <span class="sr-only"> (opens in new tab)</span>
                     <ArrowUpRightIcon
                       aria-hidden="true"
-                      class="shrink-0 size-3.5 self-center text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      class="shrink-0 size-4 self-center text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                     />
                   </p>
                 </div>
@@ -110,7 +125,7 @@ function linkDisplay(url: string): string {
   </section>
 
   {/* Teams running Effect in production */}
-  {LOGO_COMPANIES.length > 0 && (
+  {logos.length > 0 && (
     <section class="relative border-t border-zinc-800">
       <div class="mx-auto w-full max-w-295 px-4">
         <div class="py-16 md:py-20">
@@ -119,7 +134,7 @@ function linkDisplay(url: string): string {
           </p>
           <ul class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
             {Array.from({ length: 18 }).map((_, idx) => {
-              const company = LOGO_COMPANIES[idx]
+              const company = logos[idx]
               const cols = 6
               const rows = 3
               const col = idx % cols
@@ -140,13 +155,13 @@ function linkDisplay(url: string): string {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={company.name}
-                      class="flex h-full w-full items-center justify-center px-4 transition-opacity hover:opacity-100"
+                      class="flex h-full w-full items-center justify-center px-4 transition-opacity hover:opacity-90"
                     >
                       <img
                         src={company.logo}
                         alt={company.name}
-                        style={`height: ${(company.h ?? 6) * 4}px`}
-                        class="w-auto opacity-80 transition-opacity"
+                        style={`height: ${company.h ?? "1.25rem"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
+                        class="w-auto opacity-90"
                       />
                     </a>
                   )}
@@ -154,8 +169,8 @@ function linkDisplay(url: string): string {
                     <img
                       src={company.logo}
                       alt={company.name}
-                      style={`height: ${(company.h ?? 6) * 4}px`}
-                      class="w-auto opacity-80"
+                      style={`height: ${company.h ?? "1.25rem"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
+                      class="w-auto opacity-90"
                     />
                   )}
                 </li>
