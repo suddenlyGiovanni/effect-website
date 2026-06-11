@@ -218,51 +218,6 @@ const resolvePackageVersion = (
     }
   })
 
-// One-snippet-at-a-time protocol: init once, process snippets individually.
-// Each message in/out is a single snippet so the Pool can load-balance across workers
-// without buffering large result arrays in memory.
-const WORKER_CODE = /* js */ `
-const { parentPort } = require("node:worker_threads")
-const path = require("node:path")
-
-async function run() {
-  const { createTwoslasher } = await import("@ec-ts/twoslash")
-  const ts = (await import("typescript")).default
-  let twoslasher = null
-  let executeOptions = null
-
-  parentPort.on("message", (message) => {
-    if (message[0] === 1) {
-      parentPort.close()
-      return
-    }
-    const payload = message[1]
-
-    if (payload.type === "init") {
-      const tsLibDirectory = path.dirname(
-        ts.getDefaultLibFilePath(payload.executeOptions.compilerOptions || {})
-      )
-      executeOptions = { ...payload.executeOptions, tsLibDirectory }
-      twoslasher = createTwoslasher({})
-      parentPort.postMessage([1, { type: "ready" }])
-      return
-    }
-
-    const { key, code, extension } = payload
-    try {
-      const result = twoslasher(code, extension, executeOptions)
-      parentPort.postMessage([1, { key, result, error: null }])
-    } catch (err) {
-      parentPort.postMessage([1, { key, result: null, error: err?.message ?? String(err) }])
-    }
-  })
-
-  parentPort.postMessage([0])
-}
-
-run().catch(() => process.exit(1))
-`
-
 interface WorkerSnippet {
   readonly key: string
   readonly code: string
@@ -308,7 +263,7 @@ const acquireWorker = (executeOptions: object) =>
 
     return {
       process: (snippet: WorkerSnippet): Effect.Effect<WorkerResult> =>
-        handle.send({ type: "snippet", ...snippet }).pipe(
+        handle.send(snippet).pipe(
           Effect.orDie,
           Effect.flatMap(() =>
             Queue.take(responseQueue).pipe(
@@ -329,17 +284,14 @@ const acquireWorker = (executeOptions: object) =>
 
 const buildPrewarm = Effect.fn("buildPrewarm")(function* (options: TwoslashPrewarmerOptions) {
   const cwd = process.cwd()
-  const contentDirectory = Option.getOrElse(
-    Option.fromNullishOr(options.contentDir),
-    () => nodePath.join(cwd, "src/content"),
+  const contentDirectory = Option.getOrElse(Option.fromNullishOr(options.contentDir), () =>
+    nodePath.join(cwd, "src/content"),
   )
-  const cacheDirectory = Option.getOrElse(
-    Option.fromNullishOr(options.cacheDir),
-    () => nodePath.join(cwd, ".cache/expressive-code-twoslash"),
+  const cacheDirectory = Option.getOrElse(Option.fromNullishOr(options.cacheDir), () =>
+    nodePath.join(cwd, ".cache/expressive-code-twoslash"),
   )
-  const tsconfigPath = Option.getOrElse(
-    Option.fromNullishOr(options.tsConfigPath),
-    () => nodePath.join(cwd, "tsconfig.json"),
+  const tsconfigPath = Option.getOrElse(Option.fromNullishOr(options.tsConfigPath), () =>
+    nodePath.join(cwd, "tsconfig.json"),
   )
   const workerCount = Math.max(
     1,
@@ -358,15 +310,13 @@ const buildPrewarm = Effect.fn("buildPrewarm")(function* (options: TwoslashPrewa
   }
 
   const fileSystem = yield* FileSystem.FileSystem
-  const tsConfigSourceOpt = yield* fileSystem
-    .readFileString(tsconfigPath)
-    .pipe(
-      Effect.map(
-        (content): Option.Option<string> =>
-          content.length > 0 ? Option.some(content) : Option.none(),
-      ),
-      Effect.orElseSucceed((): Option.Option<string> => Option.none()),
-    )
+  const tsConfigSourceOpt = yield* fileSystem.readFileString(tsconfigPath).pipe(
+    Effect.map(
+      (content): Option.Option<string> =>
+        content.length > 0 ? Option.some(content) : Option.none(),
+    ),
+    Effect.orElseSucceed((): Option.Option<string> => Option.none()),
+  )
 
   let baseCompilerOptions: ts.CompilerOptions = {}
   if (Option.isSome(tsConfigSourceOpt)) {
@@ -457,7 +407,21 @@ const buildPrewarm = Effect.fn("buildPrewarm")(function* (options: TwoslashPrewa
     `twoslash-prewarmer: ${pendingSnippets.length} cache misses → processing with ${workerCount} workers…`,
   )
 
-  const workerLayer = NodeWorker.layer((_id) => new NodeWorkerThread(WORKER_CODE, { eval: true }))
+  const workerSource = yield* fileSystem.readFileString(
+    nodePath.join(import.meta.dirname, "twoslash-prewarmer/worker.ts"),
+  )
+
+  // ESNext preserves dynamic import() so @ec-ts/twoslash (ESM-only package) resolves correctly.
+  // Worker must be a real file so Node.js resolves bare specifiers via node_modules.
+  const workerJs = ts.transpileModule(workerSource, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText
+
+  const workerPath = nodePath.join(cacheDirectory, "worker.mjs")
+  yield* fileSystem.makeDirectory(cacheDirectory, { recursive: true })
+  yield* fileSystem.writeFileString(workerPath, workerJs)
+
+  const workerLayer = NodeWorker.layer((_id) => new NodeWorkerThread(workerPath))
 
   const { successCount, errorCount } = yield* Effect.scoped(
     Effect.gen(function* () {
