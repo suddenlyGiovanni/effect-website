@@ -26,6 +26,7 @@ function linkDisplay(url: string): string {
   <section class="hero-section relative overflow-hidden pb-10 md:pb-12">
     <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
     <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
+    <div aria-hidden="true" class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[400px]"></div>
 
     <div class="relative z-10 mx-auto w-full max-w-295 px-4">
       <p class="pt-16 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase md:pt-20">
@@ -247,5 +248,9 @@ function linkDisplay(url: string): string {
 
   .hero-fade {
     background: var(--hero-fade-gradient);
+  }
+
+  .hero-glow {
+    background: radial-gradient(ellipse 50% 80% at 50% -20%, rgba(255, 255, 255, 0.10) 0%, transparent 50%);
   }
 </style>
