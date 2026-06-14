@@ -179,6 +179,7 @@ const ROTATIONS = [-2, 3, -1, 2, -3, 1, -2]
   <section class="hero-section relative overflow-hidden pb-20 md:pb-28">
     <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
     <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
+    <div aria-hidden="true" class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[400px]"></div>
 
     <div class="relative z-10 mx-auto w-full max-w-295 px-4">
       <p class="pt-16 pb-1 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase md:pt-20">
@@ -202,7 +203,7 @@ const ROTATIONS = [-2, 3, -1, 2, -3, 1, -2]
             return (
               <li
                 class="myth-chip"
-                style={`--chip-rotate-to: ${rotation}deg; --chip-rotate-from: ${rotation - 8}deg; --chip-delay: ${i * 0.08}s`}
+                style={`animation-delay: ${i * 0.08}s; --chip-rotate-to: ${rotation}deg; --chip-rotate-from: ${rotation - 8}deg`}
               >
                 <a
                   href={`#${myth.id}`}
@@ -222,7 +223,7 @@ const ROTATIONS = [-2, 3, -1, 2, -3, 1, -2]
             return (
               <li
                 class="myth-chip"
-                style={`--chip-rotate-to: ${rotation}deg; --chip-rotate-from: ${rotation - 8}deg; --chip-delay: ${globalIdx * 0.08}s`}
+                style={`animation-delay: ${globalIdx * 0.08}s; --chip-rotate-to: ${rotation}deg; --chip-rotate-from: ${rotation - 8}deg`}
               >
                 <a
                   href={`#${myth.id}`}
@@ -488,70 +489,35 @@ const ROTATIONS = [-2, 3, -1, 2, -3, 1, -2]
   .hero-fade {
     background: var(--hero-fade-gradient);
   }
+  .hero-glow {
+    background: radial-gradient(ellipse 50% 80% at 50% -20%, rgba(255, 255, 255, 0.10) 0%, transparent 50%);
+  }
+</style>
 
-  /* Chip entrance animation */
+<style is:global>
+  /* must be global — Astro scopes @keyframes names in scoped blocks */
   @keyframes chipEnter {
     from {
       opacity: 0;
-      translate: 0 -240px;
-      rotate: var(--chip-rotate-from);
+      transform: translateY(-240px) rotate(var(--chip-rotate-from));
     }
     to {
       opacity: 1;
-      translate: 0 0;
-      rotate: var(--chip-rotate-to);
+      transform: translateY(0) rotate(var(--chip-rotate-to));
     }
   }
 
-  /* Hidden until JS runs */
-  .myth-chip:not(.myth-chip--entered):not(.myth-chip--entering) {
-    opacity: 0;
-  }
-
-  .myth-chip--entering {
-    animation: chipEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--chip-delay) backwards;
-  }
-
-  /* Final resting state with hover transitions */
-  .myth-chip--entered {
+  .myth-chip {
     opacity: 1;
-    rotate: var(--chip-rotate-to);
-    transition: rotate 0.2s ease, scale 0.2s ease;
-  }
-
-  .myth-chip--entered:hover {
-    rotate: 0deg;
-    scale: 1.04;
+    transform: rotate(var(--chip-rotate-to));
+    transition: transform 0.2s ease;
+    animation: chipEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .myth-chip--entering {
+    .myth-chip {
       animation: none;
-    }
-    .myth-chip:not(.myth-chip--entered):not(.myth-chip--entering) {
-      opacity: 1;
-    }
-    .myth-chip--entered {
       transition: none;
     }
   }
 </style>
-
-<script>
-  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  const chips = document.querySelectorAll<HTMLElement>(".myth-chip")
-
-  if (prefersReduced) {
-    chips.forEach(el => el.classList.add("myth-chip--entered"))
-  } else {
-    requestAnimationFrame(() => {
-      chips.forEach(el => {
-        el.classList.add("myth-chip--entering")
-        el.addEventListener("animationend", () => {
-          el.classList.remove("myth-chip--entering")
-          el.classList.add("myth-chip--entered")
-        }, { once: true })
-      })
-    })
-  }
-</script>
