@@ -1,10 +1,35 @@
 ---
 import { ArrowRightIcon } from "@lucide/astro"
-import { getCollection, render } from "astro:content"
+import { AstroError } from "astro/errors"
+import { type CollectionEntry, getCollection, render } from "astro:content"
+import fs from "node:fs/promises"
+import * as NodePath from "node:path"
+import SrtParser from "srt-parser-2"
 import Link from "@/components/Link.astro"
 import { PodcastEpisodeRoot } from "@/features/podcast/components/PodcastEpisodeRoot"
-import { readPodcastTranscript, slugifyPodcast } from "@/features/podcast/utils"
+import { slugifyPodcast } from "@/features/podcast/utils"
 import PageLayout from "@/layouts/PageLayout.astro"
+
+async function readPodcastTranscript(entry: CollectionEntry<"podcasts">) {
+  const episodeDir = NodePath.dirname(entry.filePath ?? "")
+  const path = NodePath.join(NodePath.resolve(), episodeDir, "transcript.srt")
+
+  let content: Buffer
+
+  try {
+    content = await fs.readFile(path)
+  } catch {
+    throw new AstroError(
+      `Failed to read transcript file from \`${path}\`.`,
+      `Make sure the transcript file path provided in the video entry frontmatter is correct.
+
+- Entry: \`${entry.filePath}\`
+- Transcript: \`${path}\``,
+    )
+  }
+
+  return new SrtParser().fromSrt(content.toString())
+}
 
 export async function getStaticPaths() {
   const entries = await getCollection("podcasts")
