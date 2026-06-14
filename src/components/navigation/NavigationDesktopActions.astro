@@ -9,12 +9,11 @@ interface Props {
 const { transparent = false } = Astro.props
 ---
 
-<div class="flex items-center gap-4">
-  <SocialLink variant="github" />
-  <SocialLink variant="discord" />
-  <SocialLink variant="twitter" />
-</div>
+<SearchTriggerIsland client:load mode="desktop" transparent={transparent} />
 
 <div class={`h-4.5 w-px ${transparent ? "bg-white/50" : "bg-zinc-700"}`} aria-hidden="true"></div>
 
-<SearchTriggerIsland client:load mode="desktop" transparent={transparent} />
+<div class="flex items-center gap-4">
+  <SocialLink variant="github" />
+  <SocialLink variant="discord" />
+</div>

@@ -71,12 +71,11 @@ const communityBorder = hideCommunityBorder
             </li>
             <li>
               <Link
-                href="https://www.effect.solutions/"
+                href="/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive/"
                 variant="footer"
-                className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+                className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 LLM Guide
-                <i class="ri-arrow-right-up-line text-sm"></i>
               </Link>
             </li>
           </ul>
@@ -193,19 +192,10 @@ const communityBorder = hideCommunityBorder
               <Link
                 href="/myths/"
                 variant="footer"
+                active={activePath?.startsWith("/myths")}
                 className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 Myths about Effect 💀
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/brand-assets/"
-                variant="footer"
-                active={activePath?.startsWith("/brand-assets")}
-                className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-              >
-                Logo guidelines
               </Link>
             </li>
             <li>
@@ -216,6 +206,16 @@ const communityBorder = hideCommunityBorder
                 className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 Effect merch 🧢
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/brand-assets/"
+                variant="footer"
+                active={activePath?.startsWith("/brand-assets")}
+                className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              >
+                Logo guidelines
               </Link>
             </li>
           </ul>
@@ -322,7 +322,7 @@ const communityBorder = hideCommunityBorder
           All rights reserved.
         </p>
         <div class="flex items-center gap-5">
-          <ThemeToggle client:load />
+          {/* <ThemeToggle client:load /> */}
           <div class="flex items-center gap-4">
             <Link
               href="mailto:contact@effectful.co"
