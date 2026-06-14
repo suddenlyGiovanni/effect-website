@@ -85,17 +85,6 @@ export const LANDING_NAVIGATION_LINKS: ReadonlyArray<NavigationLink> = [
     cta: "none",
   },
   {
-    id: "learn",
-    kind: "external",
-    label: "Learn",
-    href: "https://www.effect.institute/",
-    target: "_blank",
-    rel: "noopener noreferrer",
-    group: "primary",
-    surfaces: ["desktop", "mobile"],
-    cta: "solid",
-  },
-  {
     id: "github",
     kind: "external",
     label: "GitHub",

@@ -3,7 +3,7 @@
     "id": "masterclass",
     "name": "MasterClass",
     "logo": "/assets/quotes-logos/masterclass-noM.svg",
-    "h": "1rem"
+    "h": "16px"
   },
   {
     "id": "vercel",
@@ -34,25 +34,25 @@
     "id": "interfere",
     "name": "Interfere",
     "logo": "/assets/effect-jobs-logos/intefere-white.svg",
-    "h": "1rem"
+    "h": "16px"
   },
   {
     "id": "manage-space",
     "name": "Manage Space",
     "logo": "/assets/effect-jobs-logos/manage-space.svg",
-    "h": "0.75rem"
+    "h": "10px"
   },
   {
     "id": "platonic-systems",
     "name": "Platonic Systems",
     "logo": "/assets/effect-jobs-logos/platonic-systems.svg",
-    "h": "1rem"
+    "h": "16px"
   },
   {
     "id": "precurion",
     "name": "Precurion",
     "logo": "/assets/effect-jobs-logos/precurion.png",
-    "h": "1rem"
+    "h": "16px"
   },
   {
     "id": "globe-commerce",
@@ -68,19 +68,19 @@
     "id": "samsung-food",
     "name": "Samsung Food",
     "logo": "/assets/effect-jobs-logos/samsung-food.svg",
-    "h": "1rem"
+    "h": "16px"
   },
   {
     "id": "tenzir",
     "name": "Tenzir",
     "logo": "/assets/effect-jobs-logos/tenzir.svg",
-    "h": "1rem"
+    "h": "16px"
   },
   {
     "id": "acemate",
     "name": "Acemate",
     "logo": "/assets/effect-jobs-logos/acemate.png",
-    "h": "1rem",
+    "h": "16px",
     "invert": true
   },
   {
@@ -92,12 +92,12 @@
     "id": "introw",
     "name": "Introw",
     "logo": "/assets/effect-jobs-logos/introw.svg",
-    "h": "1rem"
+    "h": "16px"
   },
   {
     "id": "magentus",
     "name": "Magentus",
     "logo": "/assets/effect-jobs-logos/magentus 1.svg",
-    "h": "1rem"
+    "h": "16px"
   }
 ]

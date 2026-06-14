@@ -2,6 +2,7 @@ name: Post a Job
 description: Submit a job opening that includes Effect in the stack.
 title: "Job Opening: [Role Title] at [Company Name]"
 labels: ["job-post"]
+
 body:
   - type: input
     id: company
@@ -12,6 +13,13 @@ body:
       placeholder: "https://companywebsite.com"
     validations:
       required: true
+
+  - type: upload
+    id: company-logo
+    attributes:
+      label: Company logo
+    validations:
+      required: false
 
   - type: input
     id: role

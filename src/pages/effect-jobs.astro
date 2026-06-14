@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content"
-import { ArrowUpRightIcon } from "@lucide/astro"
+import { ArrowUpRightIcon, PlusIcon } from "@lucide/astro"
 import PageLayout from "@/layouts/PageLayout.astro"
 
 const jobs = (await getCollection("effectJobs")).map((e) => e.data)
@@ -39,7 +39,7 @@ function linkDisplay(url: string): string {
       </p>
       <div class="mt-8 flex flex-wrap items-center gap-3">
         <a
-          href="https://github.com/mirelaprifti/effect-jobs/issues/new?template=post-a-job.yaml"
+          href="https://github.com/effect-ts/website-v2/issues/new?template=post-a-job.yml"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-base font-medium text-zinc-900 transition-all hover:bg-zinc-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
@@ -54,53 +54,110 @@ function linkDisplay(url: string): string {
   {/* Open positions */}
   <section class="relative border-t border-zinc-800">
     <div class="mx-auto w-full max-w-295 px-4">
-      <div class="grid grid-cols-1 gap-10 py-16 md:grid-cols-12 md:gap-x-0 md:py-20">
-        <ul class="md:col-span-12">
+      <div class="pt-4">
+        <ul class="grid grid-cols-1 gap-px bg-zinc-800 sm:grid-cols-2 lg:grid-cols-3">
           {jobs.map((job) => (
-            <li>
+            <li class="bg-zinc-950">
               <a
                 href={job.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="group block -mx-4 border-t border-zinc-700 px-4 py-4 transition-colors first:border-t-0 hover:bg-zinc-800/80"
+                class="group flex h-full flex-col p-6 transition-colors hover:bg-zinc-900/80 focus-visible:bg-zinc-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
               >
-                <div class="grid grid-cols-12 items-center gap-4">
-                  <p class="col-span-12 inline-flex items-center gap-2 text-base font-semibold text-white md:col-span-3">
-                    <span class="sr-only">Company: </span>
-                    <span aria-hidden="true" class="flex h-9 w-12 shrink-0 items-center justify-start">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex min-w-0 items-center gap-4">
+                    <span aria-hidden="true" class="flex h-12 w-12 shrink-0 items-center justify-center">
                       {job.logo ? (
-                        <img src={job.logo} alt="" class="max-h-9 max-w-full object-contain" />
+                        <img src={job.logo} alt="" class="max-h-12 max-w-full object-contain" />
                       ) : (
                         <span class="h-9 w-9 rounded-sm border border-dashed border-zinc-700" />
                       )}
                     </span>
-                    <span class="truncate">{job.company}</span>
-                  </p>
-                  <p class="col-span-12 text-base text-zinc-400 transition-colors group-hover:text-zinc-200 md:col-span-3">
-                    <span class="sr-only">Role: </span>
-                    {job.role}
-                  </p>
-                  <p class="col-span-12 font-mono text-sm tabular-nums text-zinc-300 md:col-span-3">
-                    <span class="sr-only">Pay range: </span>
-                    {job.payRange ?? ""}
-                  </p>
-                  <p class="col-span-12 font-mono text-sm text-zinc-400 md:col-span-2">
-                    <span class="sr-only">Location: </span>
-                    {job.location ?? ""}
-                  </p>
-                  <p class="col-span-12 inline-flex items-baseline gap-1 truncate font-mono text-xs text-zinc-400 md:col-span-1 md:justify-end">
-                    <span class="sr-only">Apply: </span>
-                    <span class="sr-only">{linkDisplay(job.url)}</span>
-                    <span class="sr-only"> (opens in new tab)</span>
-                    <ArrowUpRightIcon
-                      aria-hidden="true"
-                      class="shrink-0 size-4 self-center text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    />
-                  </p>
+                    <p class="truncate text-base font-semibold text-white">
+                      <span class="sr-only">Company: </span>
+                      {job.company}
+                    </p>
+                  </div>
+                  <ArrowUpRightIcon
+                    aria-hidden="true"
+                    class="shrink-0 size-5 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  />
                 </div>
+
+                <h3 class="mt-5 text-lg leading-tight font-semibold text-white">
+                  <span class="sr-only">Role: </span>
+                  {job.role}
+                </h3>
+
+                {job.description && (
+                  <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-400">
+                    {job.description}
+                  </p>
+                )}
+
+                <dl class="mt-auto flex flex-col gap-1.5 pt-6 font-mono text-sm text-zinc-400">
+                  {job.payRange && (
+                    <div class="flex gap-2">
+                      <dt class="sr-only">Pay range</dt>
+                      <dd class="tabular-nums">{job.payRange}</dd>
+                    </div>
+                  )}
+                  {job.type && (
+                    <div class="flex gap-2">
+                      <dt class="sr-only">Type</dt>
+                      <dd>{job.type}</dd>
+                    </div>
+                  )}
+                  {job.location && (
+                    <div class="mt-2 flex gap-2 border-t border-zinc-800 pt-2">
+                      <dt class="sr-only">Location</dt>
+                      <dd>{job.location}</dd>
+                    </div>
+                  )}
+                </dl>
+
+                <span class="sr-only">Apply at {linkDisplay(job.url)} (opens in new tab)</span>
               </a>
             </li>
           ))}
+
+          {/* CTA card */}
+          <li class="bg-zinc-950 sm:col-span-2 lg:col-span-2">
+            <a
+              href="https://github.com/mirelaprifti/effect-jobs/issues/new?template=post-a-job.yaml"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex h-full flex-col p-6 transition-colors hover:bg-zinc-900/80 focus-visible:bg-zinc-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <div class="flex min-w-0 items-center gap-4">
+                  <span
+                    aria-hidden="true"
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-dashed border-zinc-600 text-zinc-400"
+                  >
+                    <PlusIcon class="size-5" />
+                  </span>
+                  <p class="truncate font-mono text-xs font-medium tracking-wider text-zinc-400 uppercase">
+                    // Post a job
+                  </p>
+                </div>
+                <ArrowUpRightIcon
+                  aria-hidden="true"
+                  class="shrink-0 size-5 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
+              </div>
+
+              <h3 class="mt-5 text-lg leading-tight font-semibold text-white">
+                Hiring Effect engineers?
+              </h3>
+
+              <p class="mt-3 text-sm leading-relaxed text-zinc-400">
+                Open a GitHub issue with your role and we'll add it to this board.
+              </p>
+
+              <span class="sr-only">Opens GitHub issue template in a new tab</span>
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -128,54 +185,38 @@ function linkDisplay(url: string): string {
   {logos.length > 0 && (
     <section class="relative border-t border-zinc-800">
       <div class="mx-auto w-full max-w-295 px-4">
-        <div class="py-16 md:py-20">
+        <div class="pt-16 pb-8 md:pt-20 md:pb-10">
           <p class="mb-8 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">
             // Teams running Effect in production
           </p>
-          <ul class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-            {Array.from({ length: 18 }).map((_, idx) => {
-              const company = logos[idx]
-              const cols = 6
-              const rows = 3
-              const col = idx % cols
-              const row = Math.floor(idx / cols)
-              const isLastCol = col === cols - 1
-              const isLastRow = row === rows - 1
-              return (
-                <li class="relative flex aspect-[5/2] items-center justify-center">
-                  {!isLastCol && (
-                    <span class="pointer-events-none absolute top-2 right-0 bottom-2 w-px bg-zinc-800" />
-                  )}
-                  {!isLastRow && (
-                    <span class="pointer-events-none absolute right-2 bottom-0 left-2 h-px bg-zinc-800" />
-                  )}
-                  {company && company.url && (
-                    <a
-                      href={company.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={company.name}
-                      class="flex h-full w-full items-center justify-center px-4 transition-opacity hover:opacity-90"
-                    >
-                      <img
-                        src={company.logo}
-                        alt={company.name}
-                        style={`height: ${company.h ?? "1.25rem"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
-                        class="w-auto opacity-90"
-                      />
-                    </a>
-                  )}
-                  {company && !company.url && (
+          <ul class="grid grid-cols-2 gap-px bg-zinc-800 sm:grid-cols-3 md:grid-cols-6">
+            {logos.map((company) => (
+              <li class="flex aspect-[5/2] items-center justify-center bg-zinc-950">
+                {company.url ? (
+                  <a
+                    href={company.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={company.name}
+                    class="flex h-full w-full items-center justify-center px-4 transition-opacity hover:opacity-90"
+                  >
                     <img
                       src={company.logo}
                       alt={company.name}
-                      style={`height: ${company.h ?? "1.25rem"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
+                      style={`height: ${company.h ?? "20px"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
                       class="w-auto opacity-90"
                     />
-                  )}
-                </li>
-              )
-            })}
+                  </a>
+                ) : (
+                  <img
+                    src={company.logo}
+                    alt={company.name}
+                    style={`height: ${company.h ?? "20px"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
+                    class="w-auto opacity-90"
+                  />
+                )}
+              </li>
+            ))}
           </ul>
         </div>
       </div>
