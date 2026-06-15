@@ -1,3 +1,6 @@
+import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+
 import mdx from "@astrojs/mdx"
 import react from "@astrojs/react"
 import vercel from "@astrojs/vercel"
@@ -7,22 +10,18 @@ import tailwindcss from "@tailwindcss/vite"
 import expressiveCode from "astro-expressive-code"
 import { defineConfig, fontProviders } from "astro/config"
 import ecTwoSlash from "expressive-code-twoslash"
-import { resolve } from "node:path"
-import { fileURLToPath } from "node:url"
 import svgr from "vite-plugin-svgr"
+
 import { twieRedirectList } from "./src/generated/twie-redirects"
-import { twoslashPrewarmer } from "./src/integrations/twoslash-prewarmer"
-import { pluginOpenInPlayground } from "./src/plugins/expressive-code/open-in-playground"
 
 const GoogleFontProvider = fontProviders.google()
 
-// Shared twoslash options — used by both the prewarmer and ecTwoSlash.
-// The prewarmer derives cache keys with these exact options so ecTwoSlash
-// finds all blocks pre-cached. Any change here invalidates the cache.
 const twoslashOptions = {
   // @ec-ts/twoslash@1.0 throws on unhandled TS errors; old twoslash@0.2 didn't.
   // Code blocks using node:readline/process have no @errors: annotation.
   handbookOptions: { noErrorValidation: true },
+  // Temporary disable hover types as it make build fail because of an OOM problem
+  shouldGetHoverInfo: () => false,
   compilerOptions: {
     // v3 docs import from "effect" but need effect-legacy (v3) types.
     // All current twoslash blocks are in v3 docs only.
@@ -55,18 +54,16 @@ export default defineConfig({
       },
     },
     ssr: {
-      noExternal: ["effect", "effect-legacy", "motion"],
+      // noExternal: ["effect", "effect-legacy", "motion"],
     },
   },
 
   integrations: [
-    twoslashPrewarmer({ twoslashOptions }),
     expressiveCode({
       plugins: [
         pluginCollapsibleSections(),
         pluginLineNumbers(),
-        pluginOpenInPlayground(),
-        ecTwoSlash({ cache: true, twoslashOptions }),
+        ecTwoSlash({ twoslashOptions }),
       ],
       themes: ["github-light", "github-dark"],
     }),
