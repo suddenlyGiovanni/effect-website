@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import mdx from "@astrojs/mdx"
 import react from "@astrojs/react"
 import vercel from "@astrojs/vercel"
+import { twoslashPrewarmer } from "./src/integrations/twoslash-prewarmer"
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections"
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers"
 import tailwindcss from "@tailwindcss/vite"
@@ -20,8 +21,6 @@ const twoslashOptions = {
   // @ec-ts/twoslash@1.0 throws on unhandled TS errors; old twoslash@0.2 didn't.
   // Code blocks using node:readline/process have no @errors: annotation.
   handbookOptions: { noErrorValidation: true },
-  // Temporary disable hover types as it make build fail because of an OOM problem
-  shouldGetHoverInfo: () => false,
   compilerOptions: {
     // v3 docs import from "effect" but need effect-legacy (v3) types.
     // All current twoslash blocks are in v3 docs only.
@@ -59,11 +58,12 @@ export default defineConfig({
   },
 
   integrations: [
+    twoslashPrewarmer({ twoslashOptions }),
     expressiveCode({
       plugins: [
         pluginCollapsibleSections(),
         pluginLineNumbers(),
-        ecTwoSlash({ twoslashOptions }),
+        ecTwoSlash({ twoslashOptions, cache: true, includeJsDoc: false }),
       ],
       themes: ["github-light", "github-dark"],
     }),

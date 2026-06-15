@@ -63,7 +63,7 @@ index 4d27921526eb8bc2eb4bad0187f33f83bb3c0d22..50ba6b859b8f85decab5ea96033dc5df
 +{"version":3,"file":"index.d.ts","names":[],"sources":["../src/cache/types.ts","../src/types.ts","../src/index.ts"],"mappings":";;;;;;KAAY,qBAAA;AAAA,UAEK,oBAAA;;;;;;AAFjB;;EAUC,GAAA;EAVgC;;AAEjC;EAaC,WAAA;;;;;;EAOA,QAAA,GAAW,qBAAA;AAAA;;;;;;;KCRA,0BAAA,GAA6B,IAAA,CAAK,wBAAA,QAAgC,eAAA;;;;UAK7D,qBAAA;EDJhB;;;EAAA,SCQS,eAAA;IDDuB;;;ICK/B,QAAA;MAbU;;;;;;;;;;;;;AAKZ;MAuBG,eAAA,aAA4B,MAAA;MAvBO;;;;;MA8BnC,SAAA,GAAY,aAAA;IAAA;IAsFmB;;;;;IA9EhC,MAAA;MAfC;;;;;;;;;;;;MA4BA,eAAA,aAA4B,MAAA;MA+CrB;;;;;MAxCP,SAAA,GAAY,aAAA;IAAA;EAAA;EAiEiC;;AAC/C;;;EAzDA,GAAA;EAkEA;;;;;EA3DA,YAAA;EA+EQ;;AAAA;;;EAAA,SAxEC,YAAA;EAkFT;;;;;;AAYe;;EAZf,SAxES,yBAAA;EA0FuB;;;;;EAAA,SAnFvB,eAAA,GAAkB,eAAA;EAuH3B;;;;;AAQoB;;EARpB,SA9GS,kBAAA,GAAqB,0BAAA;EA4HW;;;;;;;EAAA,SAnHhC,qBAAA,GAAwB,2BAAA;EAsIA;;;;;EAAA,SA/HxB,KAAA,aAAkB,oBAAA;AAAA;;;;UAMlB,kBAAA;EA6JT;;;EAzJA,WAAA;EAyKA;;;EArKA,UAAA;EA+KgB;;;EA3KhB,mBAAA;EA6KC;;;EAzKD,SAAA;EA4KyB;;;EAxKzB,kBAAA;EAsKC;;;EAlKD,QAAA;AAAA;;;;UAMS,kBAAA;EC7HyE;;;EDiIlF,SAAA;EC7HC;;;EDiID,cAAA;ECjIgC;AAAA;;EDqIhC,gBAAA;EC9F4F;;;EDkG5F,eAAA;AAAA;;;;UAMS,uBAAA;;;;;;EAMT,YAAA;;;;;;EAMA,yBAAA;;;;;;EAMA,sBAAA;;;;;;EAMA,0BAAA;;;;;;EAMA,wBAAA;;;;;;EAMA,sBAAA;;;;EAIA,mBAAA;;;;EAIA,oBAAA;AAAA;;;;UAMS,gCAAA;;;;EAIT,UAAA;;;;EAIA,SAAA;;;;EAIA,eAAA;;;;EAIA,YAAA;AAAA;AAAA,UAGS,wBAAA;;;;EAIT,WAAA;;;;EAIA,uBAAA;;;;EAIA,mBAAA;;;;EAIA,kBAAA;;;;EAIA,yBAAA;;;;EAIA,4BAAA;;;;EAIA,oBAAA;;;;EAIA,sBAAA;;;;EAIA,mBAAA;;;;EAIA,sBAAA;;;;EAIA,oBAAA;;;;EAIA,oBAAA;;;;EAIA,yBAAA;;;;EAIA,uBAAA;AAAA;;;;UAMgB,qBAAA,SACR,kBAAA,EACP,kBAAA,EACA,uBAAA,EACA,gCAAA,EACA,wBAAA;;;;YCxRgB,aAAA;IAChB,QAAA,EAAU,qBAAA;EAAA;AAAA;;;;;AFvDZ;;;iBE8FwB,UAAA,CAAW,OAAA,GAAS,qBAAA,GAA6B,oBAAA"}
 \ No newline at end of file
 diff --git a/dist/index.js b/dist/index.js
-index 493cdc0b8eae78fb25c5c9164b1b1f0ef50bd08d..f13e9898b7a2dbbee4c11e30dec9fba1ce337a1d 100644
+index 493cdc0b8eae78fb25c5c9164b1b1f0ef50bd08d..c681351867532e1f7087370bb406c87d6587e14f 100644
 --- a/dist/index.js
 +++ b/dist/index.js
 @@ -1,3 +1,4 @@
@@ -81,7 +81,37 @@ index 493cdc0b8eae78fb25c5c9164b1b1f0ef50bd08d..f13e9898b7a2dbbee4c11e30dec9fba1
  import tsParser from "@typescript-eslint/parser";
  import { css, stylesheet } from "css-js-gen";
  //#region src/helpers/comparisons.ts
-@@ -1089,6 +1093,193 @@ var TwoslashStaticAnnotation = class extends ExpressiveCodeAnnotation {
+@@ -688,7 +692,8 @@ const getBaseTwoslasher = (opts, TwoslasherMap) => {
+ 	const key = "twoslash";
+ 	const twoslasher = TwoslasherMap.get(key);
+ 	if (!twoslasher) {
+-		const instance = async () => (await import("@ec-ts/twoslash")).createTwoslasher(opts);
++		const instancePromise = import("@ec-ts/twoslash").then(m => m.createTwoslasher(opts));
++		const instance = () => instancePromise;
+ 		TwoslasherMap.set(key, instance);
+ 		return instance;
+ 	}
+@@ -701,7 +706,8 @@ const getVueTwoslasher = (opts, TwoslasherMap) => {
+ 	const key = "twoslash-vue";
+ 	const twoslasher = TwoslasherMap.get(key);
+ 	if (!twoslasher) try {
+-		const instance = async () => (await import("@ec-ts/twoslash-vue")).createTwoslasher(opts);
++		const instancePromise = import("@ec-ts/twoslash-vue").then(m => m.createTwoslasher(opts));
++		const instance = () => instancePromise;
+ 		TwoslasherMap.set(key, instance);
+ 		return instance;
+ 	} catch (error) {
+@@ -717,7 +723,8 @@ const getEslintTwoslasher = (opts, TwoslasherMap) => {
+ 	const key = "eslint";
+ 	const twoslasher = TwoslasherMap.get(key);
+ 	if (!twoslasher) try {
+-		const instance = async () => (await import("twoslash-eslint")).createTwoslasher(opts);
++		const instancePromise = import("twoslash-eslint").then(m => m.createTwoslasher(opts));
++		const instance = () => instancePromise;
+ 		TwoslasherMap.set(key, instance);
+ 		return instance;
+ 	} catch (error) {
+@@ -1089,6 +1096,193 @@ var TwoslashStaticAnnotation = class extends ExpressiveCodeAnnotation {
  	}
  };
  //#endregion
@@ -275,7 +305,7 @@ index 493cdc0b8eae78fb25c5c9164b1b1f0ef50bd08d..f13e9898b7a2dbbee4c11e30dec9fba1
  //#region src/consts.ts
  const instanceConfigsDefaults = {
  	twoslash: {
-@@ -1706,16 +1897,16 @@ function ecTwoSlash(options = {}) {
+@@ -1706,16 +1900,16 @@ function ecTwoSlash(options = {}) {
  	}, cwd = process.cwd(), tsConfigPath, includeJsDoc = true, allowNonStandardJsDocTags = true, twoslashOptions = checkForCustomTagsAndMerge(options.twoslashOptions), twoslashVueOptions = options.twoslashVueOptions, twoslashEslintOptions = {
  		...twoslashEslintDefaults,
  		...options.twoslashEslintOptions
@@ -297,7 +327,7 @@ index 493cdc0b8eae78fb25c5c9164b1b1f0ef50bd08d..f13e9898b7a2dbbee4c11e30dec9fba1
  	if (!includesMap) includesMap = /* @__PURE__ */ new Map();
  	return definePlugin({
  		name: "expressive-code-twoslash",
-@@ -1733,14 +1924,31 @@ function ecTwoSlash(options = {}) {
+@@ -1733,14 +1927,31 @@ function ecTwoSlash(options = {}) {
  				const codeWithIncludes = includes.applyInclude(codeBlock.code);
  				const include = parseIncludeMeta(codeBlock.meta);
  				if (include) includes.add(include, codeWithIncludes);
@@ -331,8 +361,26 @@ index 493cdc0b8eae78fb25c5c9164b1b1f0ef50bd08d..f13e9898b7a2dbbee4c11e30dec9fba1
  				if (twoslash.extension) codeBlock.language = twoslash.extension;
  				processTwoslashCodeBlock(codeBlock, codeWithIncludes, twoslash.code);
  				const nodeErrors = [];
+@@ -1797,7 +2008,7 @@ function ecTwoSlash(options = {}) {
+ 					}));
+ 					if (query || error) continue;
+ 					const line = codeBlock.getLine(node.line);
+-					if (line) line.addAnnotation(new TwoslashHoverAnnotation(node, await renderType(node.text, ecEngine), await renderJSDocs(node, includeJsDoc, ecEngine, allowNonStandardJsDocTags)));
++					if (line) line.addAnnotation(new TwoslashHoverAnnotation(node, node.text, await renderJSDocs(node, includeJsDoc, ecEngine, allowNonStandardJsDocTags)));
+ 				}
+ 				for (const node of nodeCompletions) {
+ 					const processed = processCompletion(node);
+@@ -1823,6 +2034,6 @@ function ecTwoSlash(options = {}) {
+ 	});
+ }
+ //#endregion
+-export { ecTwoSlash as default };
++export { ecTwoSlash as default, createTwoslashCacheKey, getTwoslashCacheEnvironment, instanceConfigsDefaults, twoslashEslintDefaults };
+ 
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
 diff --git a/dist/index.js.map b/dist/index.js.map
-index 63b30490b9e283f2bcf1a3a53ae510d959cd2ea7..9c5a9fabc40c0f1df14e250c73e73407e22c107c 100644
+index 63b30490b9e283f2bcf1a3a53ae510d959cd2ea7..250adf2c0b14c02eeaab3b1acbb12d94af38972d 100644
 --- a/dist/index.js.map
 +++ b/dist/index.js.map
 @@ -1 +1 @@

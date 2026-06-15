@@ -35,16 +35,18 @@ async function run() {
   let twoslasher: TwoslashInstance | null = null
   let executeOptions: CreateTwoslashOptions | null = null
 
-  parentPort!.on("message", (message: unknown) => {
-    // [1] is the graceful-shutdown signal from the Effect v4 NodeWorker layer finalizer
-    if (Array.isArray(message)) {
+  parentPort!.on("message", (rawMessage: unknown) => {
+    // Platform sends [0, data] for real messages, [1] for graceful shutdown
+    if (!Array.isArray(rawMessage)) return
+    if (rawMessage[0] !== 0) {
       parentPort!.close()
       return
     }
 
+    const message = rawMessage[1]
     if (typeof message !== "object" || message === null) return
 
-    if ("type" in message && (message as { type: unknown }).type === "init") {
+    if ((message as { type?: unknown }).type === "init") {
       const { executeOptions: opts } = message as InitMessage
       const tsLibDirectory = nodePath.dirname(
         ts.getDefaultLibFilePath((opts.compilerOptions ?? {}) as CompilerOptions),
