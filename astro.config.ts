@@ -4,32 +4,16 @@ import { fileURLToPath } from "node:url"
 import mdx from "@astrojs/mdx"
 import react from "@astrojs/react"
 import vercel from "@astrojs/vercel"
-import { twoslashPrewarmer } from "./src/integrations/twoslash-prewarmer"
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections"
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers"
 import tailwindcss from "@tailwindcss/vite"
 import expressiveCode from "astro-expressive-code"
 import { defineConfig, fontProviders } from "astro/config"
-import ecTwoSlash from "expressive-code-twoslash"
 import svgr from "vite-plugin-svgr"
 
 import { twieRedirectList } from "./src/generated/twie-redirects"
 
 const GoogleFontProvider = fontProviders.google()
-
-const twoslashOptions = {
-  // @ec-ts/twoslash@1.0 throws on unhandled TS errors; old twoslash@0.2 didn't.
-  // Code blocks using node:readline/process have no @errors: annotation.
-  handbookOptions: { noErrorValidation: true },
-  compilerOptions: {
-    // v3 docs import from "effect" but need effect-legacy (v3) types.
-    // All current twoslash blocks are in v3 docs only.
-    paths: {
-      effect: [resolve("node_modules/effect-legacy/dist/dts/index.d.ts")],
-      "effect/*": [resolve("node_modules/effect-legacy/dist/dts/*.d.ts")],
-    },
-  },
-}
 
 // https://astro.build/config
 export default defineConfig({
@@ -52,18 +36,13 @@ export default defineConfig({
         ignored: [".astro/**", "**/.direnv/**", "repos/**", ".vercel/**"],
       },
     },
-    ssr: {
-      // noExternal: ["effect", "effect-legacy", "motion"],
-    },
   },
 
   integrations: [
-    twoslashPrewarmer({ twoslashOptions }),
     expressiveCode({
       plugins: [
         pluginCollapsibleSections(),
         pluginLineNumbers(),
-        ecTwoSlash({ twoslashOptions, cache: true, includeJsDoc: false }),
       ],
       themes: ["github-light", "github-dark"],
     }),
