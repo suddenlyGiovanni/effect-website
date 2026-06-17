@@ -43,20 +43,22 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
       rel="stylesheet"
     />
 
-    <!-- Theme: prevent flash of wrong theme -->
+    <!-- Theme: prevent flash of wrong theme, sync data-theme for Starlight CSS -->
     <script is:inline>
       ;(function () {
         var stored = localStorage.getItem("theme")
         var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-        if (stored === "light") {
-          document.documentElement.classList.remove("dark")
-        } else if (stored === "dark") {
-          document.documentElement.classList.add("dark")
-        } else if (prefersDark) {
-          document.documentElement.classList.add("dark")
-        } else {
-          document.documentElement.classList.remove("dark")
-        }
+        var isDark =
+          stored === "dark" || (stored !== "light" && prefersDark)
+        document.documentElement.classList.toggle("dark", isDark)
+        document.documentElement.dataset.theme = isDark ? "dark" : "light"
+        new MutationObserver(function () {
+          var dark = document.documentElement.classList.contains("dark")
+          document.documentElement.dataset.theme = dark ? "dark" : "light"
+        }).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["class"],
+        })
       })()
     </script>
 

@@ -1,5 +1,3 @@
-import { docsLoader } from "@astrojs/starlight/loaders"
-import { docsSchema } from "@astrojs/starlight/schema"
 import { file, glob } from "astro/loaders"
 import { z } from "astro/zod"
 import { defineCollection, reference } from "astro:content"
@@ -89,8 +87,42 @@ const effectJobsLogos = defineCollection({
   }),
 })
 
+const docsSidebar = defineCollection({
+  loader: file("./src/content/docs/sidebar-config.json"),
+  schema: z.record(z.string(), z.number()),
+})
+
+const docs = defineCollection({
+  loader: glob({
+    base: "./src/content/docs",
+    pattern: "**/[^_]*.{md,mdx}",
+  }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    sidebar: z
+      .object({
+        label: z.string().optional(),
+        order: z.number().optional(),
+        hidden: z.boolean().optional(),
+      })
+      .optional(),
+    tableOfContents: z
+      .union([
+        z.boolean(),
+        z.object({
+          minHeadingLevel: z.number().optional(),
+          maxHeadingLevel: z.number().optional(),
+        }),
+      ])
+      .optional(),
+    draft: z.boolean().optional(),
+  }),
+})
+
 export const collections = {
-  docs: defineCollection({ loader: docsLoader(), schema: docsSchema() }),
+  docs,
+  docsSidebar,
   blog,
   blogAuthors,
   blogTags,

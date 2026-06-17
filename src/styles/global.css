@@ -1,6 +1,105 @@
 @import "tailwindcss";
+
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
+
+@layer utilities {
+	/* docs-tabs: context-aware tab component used in docs and blog MDX */
+	docs-tabs {
+		display: block;
+		margin-block: 1.5rem;
+	}
+
+	.docs-tabs-list {
+		display: flex;
+		border-bottom: 1px solid currentColor;
+		border-bottom-color: oklch(from currentColor l c h / 0.15);
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.docs-tabs-list::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* No-JS default: show first panel, hide the rest */
+	.docs-tab-panel {
+		display: none;
+	}
+
+	.docs-tab-panel:first-of-type {
+		display: block;
+	}
+
+	/* JS-initialized: web component takes over via data attributes */
+	docs-tabs[data-initialized] .docs-tab-panel {
+		display: none;
+	}
+
+	docs-tabs[data-initialized] .docs-tab-panel[data-active] {
+		display: block;
+	}
+
+	.docs-tabs-panels {
+		padding-top: 1rem;
+	}
+
+	/* Tab buttons (built by the web component) */
+	.docs-tabs-list [role="tab"] {
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -1px;
+		padding: 0.5rem 1rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: inherit;
+		opacity: 0.5;
+		cursor: pointer;
+		transition:
+			opacity 150ms,
+			border-color 150ms;
+		white-space: nowrap;
+	}
+
+	.docs-tabs-list [role="tab"]:hover {
+		opacity: 0.8;
+	}
+
+	.docs-tabs-list [role="tab"][aria-selected="true"] {
+		opacity: 1;
+		font-weight: 600;
+		border-bottom-color: currentColor;
+	}
+
+	/* Align prose heading sizes with the project's @theme font-size scale */
+	.prose :where(h1):not(:where([class~="not-prose"] *)) {
+		font-size: var(--text-3xl);
+		line-height: var(--text-3xl--line-height);
+	}
+
+	@media (min-width: 768px) {
+		.prose :where(h1):not(:where([class~="not-prose"] *)) {
+			font-size: var(--text-4xl);
+			line-height: var(--text-4xl--line-height);
+		}
+	}
+
+	.prose :where(h2):not(:where([class~="not-prose"] *)) {
+		font-size: var(--text-2xl);
+		line-height: var(--text-2xl--line-height);
+	}
+
+	.prose :where(h3):not(:where([class~="not-prose"] *)) {
+		font-size: var(--text-xl);
+		line-height: var(--text-xl--line-height);
+	}
+
+	.prose :where(h4):not(:where([class~="not-prose"] *)) {
+		font-size: var(--text-lg);
+		line-height: var(--text-lg--line-height);
+	}
+}
 
 @theme {
 	/* Font Sizes */

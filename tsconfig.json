@@ -13,7 +13,8 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "namespaceImportPackages": ["effect", "@effect/*"]
+        "namespaceImportPackages": ["effect", "@effect/*"],
+        "allowedDuplicatedPackages": ["effect"]
       }
     ]
   }

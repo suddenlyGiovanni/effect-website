@@ -1,9 +1,14 @@
-import react from "@astrojs/react"
-import starlight from "@astrojs/starlight"
-import vercel from "@astrojs/vercel"
-import tailwindcss from "@tailwindcss/vite"
-import { defineConfig, fontProviders } from "astro/config"
+import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+
+import mdx from "@astrojs/mdx"
+import react from "@astrojs/react"
+import vercel from "@astrojs/vercel"
+import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections"
+import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers"
+import tailwindcss from "@tailwindcss/vite"
+import expressiveCode from "astro-expressive-code"
+import { defineConfig, fontProviders } from "astro/config"
 import svgr from "vite-plugin-svgr"
 
 import { twieRedirectList } from "./src/generated/twie-redirects"
@@ -21,41 +26,30 @@ export default defineConfig({
     resolve: {
       alias: {
         "@/": fileURLToPath(new URL("./src/", import.meta.url)),
+        "@astrojs/starlight/components": fileURLToPath(
+          new URL("./src/components/docs/starlight-shim.ts", import.meta.url),
+        ),
       },
     },
     server: {
       watch: {
-        ignored: ["**/.direnv/*", "repos/*", ".vercel/*"],
+        ignored: [".astro/**", "**/.direnv/**", "repos/**", ".vercel/**"],
       },
-    },
-    ssr: {
-      noExternal: ["effect", "effect-legacy", "motion"],
     },
   },
 
   integrations: [
+    expressiveCode({
+      plugins: [
+        pluginCollapsibleSections(),
+        pluginLineNumbers(),
+      ],
+      themes: ["github-light", "github-dark"],
+    }),
     react({
       include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
     }),
-    starlight({
-      title: "My Docs",
-      disable404Route: true,
-      customCss: ["./src/styles/global.css", "./src/styles/docs.css"],
-      social: [{ icon: "github", label: "GitHub", href: "https://github.com/withastro/starlight" }],
-      sidebar: [
-        {
-          label: "Guides",
-          items: [
-            // Each item here is one entry in the navigation menu.
-            { label: "Example Guide", slug: "docs/guides/example" },
-          ],
-        },
-        {
-          label: "Reference",
-          autogenerate: { directory: "docs/reference" },
-        },
-      ],
-    }),
+    mdx(),
   ],
 
   fonts: [
@@ -77,6 +71,8 @@ export default defineConfig({
   ],
 
   redirects: {
+    "/docs": "/docs/v4",
+    "/docs/v3": "/docs/v3/getting-started/introduction",
     ...twieRedirectList,
   },
 })
