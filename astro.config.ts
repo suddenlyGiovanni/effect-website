@@ -21,6 +21,10 @@ export default defineConfig({
 
   adapter: vercel(),
 
+  experimental: {
+    rustCompiler: true,
+  },
+
   vite: {
     plugins: [tailwindcss(), svgr()],
     resolve: {
