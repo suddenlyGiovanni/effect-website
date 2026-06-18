@@ -1,0 +1,614 @@
+---
+import { Image } from "astro:assets"
+import { ChevronLeft, ChevronRight } from "@lucide/astro"
+import AstroLogo from "@/assets/logos/astro/Astro.svg"
+import CloudflareLogo from "@/assets/logos/cloudflare/Cloudflare.svg"
+import MasterclassLogo from "@/assets/logos/masterclass/Masterclass.svg"
+import SpikoLogo from "@/assets/logos/spiko/Spiko.svg"
+import TotalTypeScriptLogo from "@/assets/logos/total-typescript/TotalTypescript.png"
+import TwitterLogo from "@/assets/logos/twitter/TwitterWhite.svg"
+import UnionBuildLogo from "@/assets/logos/union-build/UnionBuild.svg"
+import VercelLogo from "@/assets/logos/vercel/Vercel.svg"
+
+type QuoteLogo =
+  | "astro"
+  | "cloudflare"
+  | "masterclass"
+  | "spiko"
+  | "total-typescript"
+  | "twitter"
+  | "union-build"
+  | "vercel"
+
+interface Quote {
+  readonly text: string
+  readonly author: string
+  readonly company: string
+  readonly logo: QuoteLogo
+}
+
+interface QuoteLogoDefinition {
+  readonly src: ImageMetadata
+  readonly className: string
+}
+
+const QUOTE_BY_LOGO_ID: Record<QuoteLogo, QuoteLogoDefinition> = {
+  astro: {
+    src: AstroLogo,
+    className: "h-4 w-auto",
+  },
+  cloudflare: {
+    src: CloudflareLogo,
+    className: "h-4 w-auto max-w-24",
+  },
+  masterclass: {
+    src: MasterclassLogo,
+    className: "h-2.5 w-auto",
+  },
+  spiko: {
+    src: SpikoLogo,
+    className: "h-4 w-auto",
+  },
+  "total-typescript": {
+    src: TotalTypeScriptLogo,
+    className: "h-4 w-auto",
+  },
+  twitter: {
+    src: TwitterLogo,
+    className: "h-4 w-auto invert",
+  },
+  "union-build": {
+    src: UnionBuildLogo,
+    className: "h-4 w-auto",
+  },
+  vercel: {
+    src: VercelLogo,
+    className: "h-4 w-auto",
+  },
+}
+
+const quotes: ReadonlyArray<Quote> = [
+  {
+    text: "Effect makes doing the hard, tedious, and error-prone tasks that require discipline, easy, natural, first-class.",
+    author: "Dillon Mulroy",
+    company: "Cloudflare",
+    logo: "cloudflare",
+  },
+  {
+    text: "Effect tracing is simply magical. Was able to fully integrate with our existing microservice observability stack fairly easily.",
+    author: "Zach Warunek",
+    company: "Twitter",
+    logo: "twitter",
+  },
+  {
+    text: "I feel like I'm writing some of the best code in my career using Effect.",
+    author: "Matt Pocock",
+    company: "Total TypeScript",
+    logo: "total-typescript",
+  },
+  {
+    text: "Perhaps the most ergonomic and safe method of Dependency Injection I've ever seen.",
+    author: "Cor",
+    company: "Union Build",
+    logo: "union-build",
+  },
+  {
+    text: "Effect puts you on the path to writing more performant async code by default.",
+    author: "Ethan Niser",
+    company: "Vercel",
+    logo: "vercel",
+  },
+  {
+    text: "The real-world impact is tangible: few production bugs, simple testing, and clear code organization.",
+    author: "Samuel Briole",
+    company: "Spiko",
+    logo: "spiko",
+  },
+  {
+    text: "The spaghetti code really turns into something that's just very linear and clean.",
+    author: "David Golightly",
+    company: "Masterclass",
+    logo: "masterclass",
+  },
+  {
+    text: "I think it's one of the most important libraries being developed today.",
+    author: "Matthew Phillips",
+    company: "Astro",
+    logo: "astro",
+  },
+]
+
+const copies = [0, 1, 2] as const
+---
+
+<effect-quotes class="block w-full" data-enhanced="false">
+  <section id="quotes" class="relative z-70 w-full">
+    <div class="relative mx-auto w-full max-w-295 px-4">
+      <div class="mb-8 md:mb-12 flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
+            // Community
+          </p>
+          <h2 class="max-w-2xl text-3xl font-semibold text-white md:text-4xl">
+            What developers are saying...
+          </h2>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            type="button"
+            data-role="previous"
+            aria-label="Scroll quotes left"
+            disabled
+            class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-muted-foreground transition-colors cursor-pointer hover:border-zinc-600 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ChevronLeft class="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            data-role="next"
+            aria-label="Scroll quotes right"
+            disabled
+            class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-muted-foreground transition-colors cursor-pointer hover:border-zinc-600 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ChevronRight class="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="quotes-shell relative isolate">
+      <div
+        data-role="rail"
+        tabindex="0"
+        aria-label="Developer quotes"
+        class="quotes-rail flex gap-4 overflow-x-auto px-4 select-none [scrollbar-width:none] [-ms-overflow-style:none] [touch-action:pan-y] [-webkit-overflow-scrolling:touch]"
+      >
+        {
+          copies.map((copyIndex) =>
+            quotes.map((quote) => {
+              const definition = QUOTE_BY_LOGO_ID[quote.logo]
+              return (
+                <article
+                  data-role="card"
+                  data-copy={copyIndex}
+                  class="quotes-card min-h-54 md:min-h-56 w-65 md:w-80 p-4 md:p-6 flex flex-col shrink-0 rounded-md border border-zinc-800 bg-zinc-900"
+                >
+                  <p class="text-sm md:text-base text-zinc-300 leading-relaxed">"{quote.text}"</p>
+
+                  <div class="mt-auto flex items-center gap-2.5 pt-3 md:gap-3 md:pt-8">
+                    <span class="shrink-0 font-mono text-sm font-medium text-zinc-100">
+                      {quote.author}
+                    </span>
+
+                    <div class="h-px flex-1 bg-[linear-gradient(to_right,transparent,rgb(63_63_70))]" />
+
+                    <div class="flex shrink-0 items-center text-zinc-300">
+                      <Image
+                        src={definition.src}
+                        alt={quote.company}
+                        class={definition.className}
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </article>
+              )
+            }),
+          )
+        }
+      </div>
+
+      <div
+        aria-hidden="true"
+        class="quotes-fade-left pointer-events-none absolute inset-y-0 left-0 w-10 md:w-16 bg-[linear-gradient(to_right,rgb(9_9_11),transparent)]"
+      >
+      </div>
+      <div
+        aria-hidden="true"
+        class="quotes-fade-right pointer-events-none absolute inset-y-0 right-0 w-16 md:w-20 bg-[linear-gradient(to_left,rgb(9_9_11),transparent)]"
+      >
+      </div>
+    </div>
+  </section>
+</effect-quotes>
+
+<script>
+  const AUTO_SCROLL_INTERVAL_MS = 24
+  const AUTO_SCROLL_STEP_PX = 0.6
+  const RESUME_DELAY_MS = 1800
+  const OBSERVER_THRESHOLD = 0.3
+  const PROGRAMMATIC_SCROLL_SUPPRESSION_MS = 80
+
+  class QuotesElement extends HTMLElement {
+    #observer: IntersectionObserver | undefined = undefined
+    #resizeObserver: ResizeObserver | undefined = undefined
+    #motionQuery: MediaQueryList | undefined = undefined
+    #resumeTimeout: ReturnType<typeof setTimeout> | undefined = undefined
+    #autoScrollInterval: ReturnType<typeof setInterval> | undefined = undefined
+    #rail: HTMLDivElement | null = null
+    #previousButton: HTMLButtonElement | null = null
+    #nextButton: HTMLButtonElement | null = null
+    #singleSetWidth = 0
+    #isInView = false
+    #isPointerDragging = false
+    #isPaused = false
+    #ignoreScrollEventsUntil = 0
+    #pointerId: number | null = null
+    #dragStartX = 0
+    #dragStartScrollLeft = 0
+
+    connectedCallback() {
+      const rail = this.querySelector("[data-role='rail']")
+      const previousButton = this.querySelector("[data-role='previous']")
+      const nextButton = this.querySelector("[data-role='next']")
+
+      if (!(rail instanceof HTMLDivElement)) {
+        return
+      }
+
+      if (!(previousButton instanceof HTMLButtonElement)) {
+        return
+      }
+
+      if (!(nextButton instanceof HTMLButtonElement)) {
+        return
+      }
+
+      this.#rail = rail
+      this.#previousButton = previousButton
+      this.#nextButton = nextButton
+      this.dataset.enhanced = "true"
+
+      this.#previousButton.disabled = false
+      this.#nextButton.disabled = false
+
+      this.#motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
+
+      this.#measure()
+      this.#setInitialPosition()
+      this.#bindEvents()
+      this.#createObservers()
+      this.#updateAutoScrollState()
+    }
+
+    disconnectedCallback() {
+      this.#observer?.disconnect()
+      this.#resizeObserver?.disconnect()
+      this.#stopAutoScroll()
+
+      if (this.#resumeTimeout !== undefined) {
+        clearTimeout(this.#resumeTimeout)
+      }
+
+      this.#unbindEvents()
+
+      this.#observer = undefined
+      this.#resizeObserver = undefined
+      this.#motionQuery = undefined
+      this.#resumeTimeout = undefined
+      this.#rail = null
+      this.#previousButton = null
+      this.#nextButton = null
+      this.#pointerId = null
+    }
+
+    #bindEvents() {
+      this.#rail?.addEventListener("scroll", this.#onScroll, { passive: true })
+      this.#rail?.addEventListener("pointerdown", this.#onPointerDown)
+      this.#rail?.addEventListener("pointermove", this.#onPointerMove)
+      this.#rail?.addEventListener("pointerup", this.#onPointerUp)
+      this.#rail?.addEventListener("pointercancel", this.#onPointerUp)
+      this.#rail?.addEventListener("pointerleave", this.#onPointerLeave)
+      this.#rail?.addEventListener("mouseenter", this.#onMouseEnter)
+      this.#rail?.addEventListener("mouseleave", this.#onMouseLeave)
+      this.#rail?.addEventListener("focusin", this.#onFocusIn)
+      this.#rail?.addEventListener("focusout", this.#onFocusOut)
+      this.#previousButton?.addEventListener("click", this.#onPreviousClick)
+      this.#nextButton?.addEventListener("click", this.#onNextClick)
+      this.#motionQuery?.addEventListener("change", this.#onMotionPreferenceChange)
+    }
+
+    #unbindEvents() {
+      this.#rail?.removeEventListener("scroll", this.#onScroll)
+      this.#rail?.removeEventListener("pointerdown", this.#onPointerDown)
+      this.#rail?.removeEventListener("pointermove", this.#onPointerMove)
+      this.#rail?.removeEventListener("pointerup", this.#onPointerUp)
+      this.#rail?.removeEventListener("pointercancel", this.#onPointerUp)
+      this.#rail?.removeEventListener("pointerleave", this.#onPointerLeave)
+      this.#rail?.removeEventListener("mouseenter", this.#onMouseEnter)
+      this.#rail?.removeEventListener("mouseleave", this.#onMouseLeave)
+      this.#rail?.removeEventListener("focusin", this.#onFocusIn)
+      this.#rail?.removeEventListener("focusout", this.#onFocusOut)
+      this.#previousButton?.removeEventListener("click", this.#onPreviousClick)
+      this.#nextButton?.removeEventListener("click", this.#onNextClick)
+      this.#motionQuery?.removeEventListener("change", this.#onMotionPreferenceChange)
+    }
+
+    #createObservers() {
+      this.#observer = new IntersectionObserver(
+        (entries) => {
+          const [entry] = entries
+
+          this.#isInView = entry?.isIntersecting === true
+          this.#updateAutoScrollState()
+        },
+        { threshold: OBSERVER_THRESHOLD },
+      )
+
+      this.#observer.observe(this)
+
+      this.#resizeObserver = new ResizeObserver(() => {
+        const previousWidth = this.#singleSetWidth
+        const previousProgress =
+          this.#rail !== null && previousWidth > 0 ? this.#rail.scrollLeft / previousWidth : 1
+
+        this.#measure()
+
+        if (this.#rail !== null && this.#singleSetWidth > 0) {
+          this.#setScrollLeft(this.#singleSetWidth * previousProgress)
+          this.#normalizeLoopPosition()
+        }
+      })
+
+      this.#resizeObserver.observe(this)
+    }
+
+    #measure() {
+      if (this.#rail === null) {
+        return
+      }
+
+      const firstSetFirstCard = this.#rail.querySelector("[data-role='card'][data-copy='0']")
+      const secondSetFirstCard = this.#rail.querySelector("[data-role='card'][data-copy='1']")
+
+      if (!(firstSetFirstCard instanceof HTMLElement)) {
+        return
+      }
+
+      if (!(secondSetFirstCard instanceof HTMLElement)) {
+        return
+      }
+
+      this.#singleSetWidth = secondSetFirstCard.offsetLeft - firstSetFirstCard.offsetLeft
+    }
+
+    #setInitialPosition() {
+      if (this.#singleSetWidth <= 0) {
+        return
+      }
+
+      requestAnimationFrame(() => {
+        this.#setScrollLeft(this.#singleSetWidth)
+      })
+    }
+
+    #getReducedMotion() {
+      return this.#motionQuery?.matches === true
+    }
+
+    #startAutoScroll() {
+      if (this.#autoScrollInterval !== undefined) {
+        return
+      }
+
+      if (this.#getReducedMotion()) {
+        return
+      }
+
+      this.#autoScrollInterval = setInterval(() => {
+        if (this.#rail === null || this.#isPointerDragging) {
+          return
+        }
+
+        this.#setScrollLeft(this.#rail.scrollLeft + AUTO_SCROLL_STEP_PX)
+        this.#normalizeLoopPosition()
+      }, AUTO_SCROLL_INTERVAL_MS)
+    }
+
+    #stopAutoScroll() {
+      if (this.#autoScrollInterval === undefined) {
+        return
+      }
+
+      clearInterval(this.#autoScrollInterval)
+      this.#autoScrollInterval = undefined
+    }
+
+    #pauseAndScheduleResume() {
+      this.#isPaused = true
+      this.#stopAutoScroll()
+
+      if (this.#resumeTimeout !== undefined) {
+        clearTimeout(this.#resumeTimeout)
+      }
+
+      this.#resumeTimeout = setTimeout(() => {
+        this.#isPaused = false
+        this.#resumeTimeout = undefined
+        this.#updateAutoScrollState()
+      }, RESUME_DELAY_MS)
+    }
+
+    #resumeImmediately() {
+      this.#isPaused = false
+
+      if (this.#resumeTimeout !== undefined) {
+        clearTimeout(this.#resumeTimeout)
+        this.#resumeTimeout = undefined
+      }
+
+      this.#updateAutoScrollState()
+    }
+
+    #updateAutoScrollState() {
+      if (!this.#isInView || this.#isPaused || this.#getReducedMotion()) {
+        this.#stopAutoScroll()
+        return
+      }
+
+      this.#startAutoScroll()
+    }
+
+    #normalizeLoopPosition() {
+      if (this.#rail === null || this.#singleSetWidth <= 0) {
+        return
+      }
+
+      const minimum = this.#singleSetWidth * 0.35
+      const maximum = this.#singleSetWidth * 1.65
+
+      if (this.#rail.scrollLeft < minimum) {
+        this.#setScrollLeft(this.#rail.scrollLeft + this.#singleSetWidth)
+        return
+      }
+
+      if (this.#rail.scrollLeft > maximum) {
+        this.#setScrollLeft(this.#rail.scrollLeft - this.#singleSetWidth)
+      }
+    }
+
+    #setScrollLeft(nextScrollLeft: number) {
+      if (this.#rail === null) {
+        return
+      }
+
+      this.#ignoreScrollEventsUntil = performance.now() + PROGRAMMATIC_SCROLL_SUPPRESSION_MS
+      this.#rail.scrollLeft = nextScrollLeft
+    }
+
+    #scrollByCard(direction: -1 | 1) {
+      if (this.#rail === null) {
+        return
+      }
+
+      const firstCard = this.#rail.querySelector("[data-role='card']")
+
+      if (!(firstCard instanceof HTMLElement)) {
+        return
+      }
+
+      const railStyle = window.getComputedStyle(this.#rail)
+      const gapValue = railStyle.columnGap || railStyle.gap || "0"
+      const gap = Number.parseFloat(gapValue)
+      const scrollAmount = firstCard.offsetWidth + (Number.isNaN(gap) ? 0 : gap)
+
+      this.#pauseAndScheduleResume()
+
+      this.#rail.scrollBy({
+        left: scrollAmount * direction,
+        behavior: this.#getReducedMotion() ? "auto" : "smooth",
+      })
+
+      setTimeout(
+        () => {
+          this.#normalizeLoopPosition()
+        },
+        this.#getReducedMotion() ? 0 : 400,
+      )
+    }
+
+    #onScroll = () => {
+      if (performance.now() < this.#ignoreScrollEventsUntil || this.#isPointerDragging) {
+        return
+      }
+
+      this.#pauseAndScheduleResume()
+      this.#normalizeLoopPosition()
+    }
+
+    #onPointerDown = (event: PointerEvent) => {
+      if (this.#rail === null || event.button !== 0) {
+        return
+      }
+
+      this.#isPointerDragging = true
+      this.#pointerId = event.pointerId
+      this.#dragStartX = event.clientX
+      this.#dragStartScrollLeft = this.#rail.scrollLeft
+      this.dataset.dragging = "true"
+      this.#pauseAndScheduleResume()
+      this.#rail.setPointerCapture(event.pointerId)
+    }
+
+    #onPointerMove = (event: PointerEvent) => {
+      if (this.#rail === null || !this.#isPointerDragging || this.#pointerId !== event.pointerId) {
+        return
+      }
+
+      const delta = event.clientX - this.#dragStartX
+      this.#setScrollLeft(this.#dragStartScrollLeft - delta * 1.4)
+      this.#normalizeLoopPosition()
+    }
+
+    #onPointerUp = (event: PointerEvent) => {
+      if (this.#rail === null || this.#pointerId !== event.pointerId) {
+        return
+      }
+
+      if (this.#rail.hasPointerCapture(event.pointerId)) {
+        this.#rail.releasePointerCapture(event.pointerId)
+      }
+
+      this.#isPointerDragging = false
+      this.#pointerId = null
+      this.dataset.dragging = "false"
+    }
+
+    #onPointerLeave = () => {
+      if (!this.#isPointerDragging) {
+        this.dataset.dragging = "false"
+      }
+    }
+
+    #onMouseEnter = () => {
+      this.#pauseAndScheduleResume()
+    }
+
+    #onMouseLeave = () => {
+      if (!this.#isPointerDragging) {
+        this.#resumeImmediately()
+      }
+    }
+
+    #onFocusIn = () => {
+      this.#pauseAndScheduleResume()
+    }
+
+    #onFocusOut = () => {
+      this.#resumeImmediately()
+    }
+
+    #onPreviousClick = () => {
+      this.#scrollByCard(-1)
+    }
+
+    #onNextClick = () => {
+      this.#scrollByCard(1)
+    }
+
+    #onMotionPreferenceChange = () => {
+      this.#updateAutoScrollState()
+    }
+  }
+
+  if (!customElements.get("effect-quotes")) {
+    customElements.define("effect-quotes", QuotesElement)
+  }
+</script>
+
+<style>
+  .quotes-rail {
+    padding-left: max(1rem, calc((100vw - 73.75rem) / 2 + 1rem));
+    padding-right: max(1rem, calc((100vw - 73.75rem) / 2 + 1rem));
+    cursor: grab;
+  }
+
+  .quotes-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  effect-quotes[data-dragging="true"] .quotes-rail {
+    cursor: grabbing;
+  }
+</style>

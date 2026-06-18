@@ -1,38 +1,56 @@
 ---
-import HeroSection from "@/components/landing/HeroSection.astro"
-import { ProblemSection } from "@/components/landing/ProblemSection"
-import TestimonialsSection from "@/components/landing/TestimonialsSection.astro"
-import { WhatIsEffectSection } from "@/components/landing/WhatIsEffectSection"
-import { FeaturesSection } from "@/components/landing/FeaturesSection"
-import AIBuildingSection from "@/components/landing/AIBuildingSection.astro"
-import AISection from "@/components/landing/AISection.astro"
-import { QuotesGridSection } from "@/components/landing/QuotesSection"
-import { FAQSection } from "@/components/landing/FAQSection"
-import CTASection from "@/components/landing/CTASection.astro"
-import PageLayout from "@/layouts/PageLayout.astro"
+import DitheredOverlay from "@/components/DitheredOverlay.astro"
+import Footer from "@/components/Footer.astro"
+import GridRails from "@/components/GridRails.astro"
+import AgenticSystems from "@/components/landing/sections/AgenticSystems.astro"
+import CallToAction from "@/components/landing/sections/CallToAction.astro"
+import CodingWithAi from "@/components/landing/sections/CodingWithAi.astro"
+import Hero from "@/components/landing/sections/Hero.astro"
+import Examples from "@/components/landing/sections/Examples.astro"
+import FAQ from "@/components/landing/sections/FAQ.astro"
+import MentalModel from "@/components/landing/sections/MentalModel.astro"
+import ProblemStatement from "@/components/landing/sections/ProblemStatement.astro"
+import Quotes from "@/components/landing/sections/Quotes.astro"
+import Testimonials from "@/components/landing/sections/Testimonials.astro"
+import Navigation from "@/components/navigation/Navigation.astro"
+import SectionDivider from "@/components/layout/SectionDivider.astro"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
 ---
 
-<PageLayout
-  title="Effect - Production-grade software"
+<BaseLayout
   description="An open-source ecosystem for software that is scalable, reliable, and maintainable from the start. One package, everything you need."
 >
-  <HeroSection />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <ProblemSection client:visible />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <TestimonialsSection />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <WhatIsEffectSection client:visible />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <FeaturesSection client:load />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <AIBuildingSection />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <AISection />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <QuotesGridSection client:visible />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <FAQSection client:visible />
-  <div class="h-px w-full bg-zinc-800"></div>
-  <CTASection />
-</PageLayout>
+  <DitheredOverlay />
+
+  <div class="relative z-10">
+    <Navigation />
+    <GridRails />
+
+    <main id={PAGE_TITLE_ID} class="pt-16">
+      <Hero />
+      <SectionDivider />
+      <ProblemStatement />
+      <SectionDivider />
+      <Testimonials />
+      <SectionDivider />
+      <MentalModel />
+      <SectionDivider />
+      <Examples />
+      <SectionDivider />
+      <AgenticSystems />
+      <SectionDivider />
+      <CodingWithAi />
+      <SectionDivider />
+      <Quotes />
+      <SectionDivider />
+      <FAQ />
+      <SectionDivider />
+      <CallToAction />
+    </main>
+
+    <SectionDivider />
+
+    <Footer />
+  </div>
+</BaseLayout>

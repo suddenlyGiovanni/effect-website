@@ -1,0 +1,347 @@
+---
+import type { ImageMetadata } from "astro"
+import type { SvgComponent } from "astro/types"
+import { Check, Copy } from "@lucide/astro"
+import {
+  DEFAULT_PACKAGE_MANAGER,
+  getInstallCommand,
+  PACKAGE_MANAGERS,
+  type PackageManager,
+} from "@/lib/install-command"
+import BunLogo from "@/assets/logos/bun/Bun.svg"
+import DenoLogo from "@/assets/logos/deno/Deno.svg"
+import NpmFullLogo from "@/assets/logos/npm/NpmFull.svg"
+import PnpmLogo from "@/assets/logos/pnpm/Pnpm.svg"
+import YarnLogo from "@/assets/logos/yarn/Yarn.svg"
+
+const PACKAGE_MANAGER_ICONS: Record<
+  PackageManager,
+  {
+    readonly icon: ImageMetadata & SvgComponent
+    readonly className: string
+  }
+> = {
+  bun: {
+    icon: BunLogo,
+    className: "h-5 w-auto",
+  },
+  deno: {
+    icon: DenoLogo,
+    className: "h-5 w-auto",
+  },
+  npm: {
+    icon: NpmFullLogo,
+    className: "h-7 w-auto fill-white",
+  },
+  pnpm: {
+    icon: PnpmLogo,
+    className: "h-5 w-auto",
+  },
+  yarn: {
+    icon: YarnLogo,
+    className: "h-5 w-auto",
+  },
+}
+---
+
+<effect-install-command class="block rounded-md border border-zinc-800 overflow-hidden">
+  <div
+    role="tablist"
+    aria-label="Install command package managers"
+    class="flex bg-zinc-900 border-b border-zinc-800"
+  >
+    {
+      PACKAGE_MANAGERS.map((packageManager) => {
+        const selected = packageManager === DEFAULT_PACKAGE_MANAGER
+        const { className, icon: Icon } = PACKAGE_MANAGER_ICONS[packageManager]
+
+        return (
+          <button
+            type="button"
+            role="tab"
+            data-role="tab"
+            data-package-manager={packageManager}
+            aria-selected={selected ? "true" : "false"}
+            aria-controls="install-command-panel"
+            tabindex={selected ? "0" : "-1"}
+            class:list={[
+              "relative flex-1 appearance-none border-0 bg-transparent px-3 py-2 text-center cursor-pointer transition-colors",
+              selected ? "text-white" : "text-zinc-500 hover:text-zinc-300",
+            ]}
+          >
+            <Icon class={className} />
+            <span
+              data-role="tab-indicator"
+              aria-hidden="true"
+              class:list={[
+                "absolute inset-x-0 bottom-0 h-px transition-opacity",
+                selected ? "bg-white opacity-100" : "bg-transparent opacity-0",
+              ]}
+            />
+          </button>
+        )
+      })
+    }
+  </div>
+
+  <div
+    id="install-command-panel"
+    role="tabpanel"
+    class="flex justify-between items-center px-5 py-2 bg-zinc-950"
+  >
+    <code data-role="command" class="truncate font-mono text-sm text-zinc-200">
+      {getInstallCommand(DEFAULT_PACKAGE_MANAGER)}
+    </code>
+
+    <button
+      type="button"
+      data-role="copy"
+      class="inline-flex h-8 w-8 shrink-0 appearance-none items-center justify-center rounded-md border border-zinc-700 bg-transparent text-zinc-400 transition-colors cursor-pointer hover:border-zinc-600 hover:text-zinc-200"
+      aria-label="Copy install command"
+    >
+      <Copy data-role="copy-icon-idle" class="h-4 w-4" aria-hidden="true" />
+      <Check
+        data-role="copy-icon-copied"
+        class="hidden h-4 w-4 text-emerald-400"
+        aria-hidden="true"
+      />
+    </button>
+  </div>
+
+  <p role="status" aria-live="polite" data-role="status" class="sr-only"></p>
+</effect-install-command>
+
+<script>
+  import {
+    DEFAULT_PACKAGE_MANAGER,
+    getInstallCommand,
+    PACKAGE_MANAGERS,
+    type PackageManager,
+  } from "@/lib/install-command"
+
+  const COPY_RESET_TIMEOUT_MS = 1500
+  const PACKAGE_MANAGER_SET: ReadonlySet<string> = new Set(PACKAGE_MANAGERS)
+
+  const isPackageManager = (value: string): value is PackageManager => {
+    return PACKAGE_MANAGER_SET.has(value)
+  }
+
+  class EffectInstallCommandElement extends HTMLElement {
+    #activePackageManager: PackageManager = DEFAULT_PACKAGE_MANAGER
+    #tabElements = new Map<PackageManager, HTMLButtonElement>()
+    #copyButton: HTMLButtonElement | null = null
+    #commandElement: HTMLElement | null = null
+    #statusElement: HTMLElement | null = null
+    #copyIdleIcon: SVGElement | null = null
+    #copySuccessIcon: SVGElement | null = null
+    #copyResetTimeout: ReturnType<typeof setTimeout> | undefined = undefined
+
+    connectedCallback() {
+      const tabElements = this.querySelectorAll("[data-role='tab']")
+      const copyButton = this.querySelector("[data-role='copy']")
+      const commandElement = this.querySelector("[data-role='command']")
+      const statusElement = this.querySelector("[data-role='status']")
+      const copyIdleIcon = this.querySelector("[data-role='copy-icon-idle']")
+      const copySuccessIcon = this.querySelector("[data-role='copy-icon-copied']")
+
+      if (!(copyButton instanceof HTMLButtonElement)) {
+        return
+      }
+
+      if (!(commandElement instanceof HTMLElement)) {
+        return
+      }
+
+      if (!(statusElement instanceof HTMLElement)) {
+        return
+      }
+
+      if (!(copyIdleIcon instanceof SVGElement)) {
+        return
+      }
+
+      if (!(copySuccessIcon instanceof SVGElement)) {
+        return
+      }
+
+      tabElements.forEach((tabElement) => {
+        if (!(tabElement instanceof HTMLButtonElement)) {
+          return
+        }
+
+        const packageManagerValue = tabElement.dataset.packageManager
+
+        if (packageManagerValue === undefined || !isPackageManager(packageManagerValue)) {
+          return
+        }
+
+        this.#tabElements.set(packageManagerValue, tabElement)
+        tabElement.addEventListener("click", this.#onTabClick)
+        tabElement.addEventListener("keydown", this.#onTabKeyDown)
+      })
+
+      this.#copyButton = copyButton
+      this.#commandElement = commandElement
+      this.#statusElement = statusElement
+      this.#copyIdleIcon = copyIdleIcon
+      this.#copySuccessIcon = copySuccessIcon
+
+      this.#copyButton.addEventListener("click", this.#onCopyClick)
+      this.#setActivePackageManager(DEFAULT_PACKAGE_MANAGER)
+      this.#setCopyFeedback("idle")
+    }
+
+    disconnectedCallback() {
+      this.#tabElements.forEach((tabElement) => {
+        tabElement.removeEventListener("click", this.#onTabClick)
+        tabElement.removeEventListener("keydown", this.#onTabKeyDown)
+      })
+
+      this.#tabElements.clear()
+
+      if (this.#copyButton) {
+        this.#copyButton.removeEventListener("click", this.#onCopyClick)
+      }
+
+      if (this.#copyResetTimeout !== undefined) {
+        clearTimeout(this.#copyResetTimeout)
+      }
+
+      this.#copyButton = null
+      this.#commandElement = null
+      this.#statusElement = null
+      this.#copyIdleIcon = null
+      this.#copySuccessIcon = null
+      this.#copyResetTimeout = undefined
+    }
+
+    #setActivePackageManager = (packageManager: PackageManager) => {
+      this.#activePackageManager = packageManager
+
+      if (this.#commandElement) {
+        this.#commandElement.textContent = getInstallCommand(packageManager)
+      }
+
+      this.#tabElements.forEach((tabElement, currentPackageManager) => {
+        const selected = currentPackageManager === packageManager
+        tabElement.setAttribute("aria-selected", selected ? "true" : "false")
+        tabElement.tabIndex = selected ? 0 : -1
+
+        const indicator = tabElement.querySelector("[data-role='tab-indicator']")
+
+        if (indicator instanceof HTMLElement) {
+          indicator.classList.toggle("bg-white", selected)
+          indicator.classList.toggle("opacity-100", selected)
+          indicator.classList.toggle("bg-transparent", !selected)
+          indicator.classList.toggle("opacity-0", !selected)
+        }
+
+        tabElement.classList.toggle("text-white", selected)
+        tabElement.classList.toggle("text-zinc-500", !selected)
+      })
+    }
+
+    #setCopyFeedback = (state: "idle" | "copied" | "error") => {
+      if (!this.#statusElement || !this.#copyIdleIcon || !this.#copySuccessIcon) {
+        return
+      }
+
+      const copied = state === "copied"
+      this.#copyIdleIcon.classList.toggle("hidden", copied)
+      this.#copySuccessIcon.classList.toggle("hidden", !copied)
+
+      this.#statusElement.textContent =
+        state === "copied"
+          ? "Install command copied"
+          : state === "error"
+            ? "Could not copy install command"
+            : ""
+    }
+
+    #setTemporaryCopyFeedback = (state: "copied" | "error") => {
+      this.#setCopyFeedback(state)
+
+      if (this.#copyResetTimeout !== undefined) {
+        clearTimeout(this.#copyResetTimeout)
+      }
+
+      this.#copyResetTimeout = setTimeout(() => {
+        this.#setCopyFeedback("idle")
+        this.#copyResetTimeout = undefined
+      }, COPY_RESET_TIMEOUT_MS)
+    }
+
+    #onTabClick = (event: MouseEvent) => {
+      const currentTarget = event.currentTarget
+
+      if (!(currentTarget instanceof HTMLButtonElement)) {
+        return
+      }
+
+      const packageManagerValue = currentTarget.dataset.packageManager
+
+      if (packageManagerValue === undefined || !isPackageManager(packageManagerValue)) {
+        return
+      }
+
+      this.#setActivePackageManager(packageManagerValue)
+    }
+
+    #onTabKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key !== "ArrowLeft" &&
+        event.key !== "ArrowRight" &&
+        event.key !== "Home" &&
+        event.key !== "End"
+      ) {
+        return
+      }
+
+      event.preventDefault()
+
+      const currentIndex = PACKAGE_MANAGERS.indexOf(this.#activePackageManager)
+
+      if (currentIndex === -1) {
+        return
+      }
+
+      const nextPackageManager =
+        event.key === "Home"
+          ? PACKAGE_MANAGERS[0]
+          : event.key === "End"
+            ? PACKAGE_MANAGERS[PACKAGE_MANAGERS.length - 1]
+            : event.key === "ArrowRight"
+              ? PACKAGE_MANAGERS[(currentIndex + 1) % PACKAGE_MANAGERS.length]
+              : PACKAGE_MANAGERS[
+                  (currentIndex - 1 + PACKAGE_MANAGERS.length) % PACKAGE_MANAGERS.length
+                ]
+
+      if (nextPackageManager === undefined) {
+        return
+      }
+
+      this.#setActivePackageManager(nextPackageManager)
+      this.#tabElements.get(nextPackageManager)?.focus()
+    }
+
+    #onCopyClick = async () => {
+      const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard
+
+      if (clipboard === undefined) {
+        this.#setTemporaryCopyFeedback("error")
+        return
+      }
+
+      try {
+        await clipboard.writeText(getInstallCommand(this.#activePackageManager))
+        this.#setTemporaryCopyFeedback("copied")
+      } catch {
+        this.#setTemporaryCopyFeedback("error")
+      }
+    }
+  }
+
+  if (!customElements.get("effect-install-command")) {
+    customElements.define("effect-install-command", EffectInstallCommandElement)
+  }
+</script>

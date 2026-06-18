@@ -46,9 +46,7 @@ export default defineConfig({
       ],
       themes: ["github-light", "github-dark"],
     }),
-    react({
-      include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
-    }),
+    react(),
     mdx(),
   ],
 
