@@ -173,7 +173,7 @@ export default function VisualEffects() {
           variant="line"
           className={cn(
             "relative isolate no-scrollbar w-full overflow-x-auto overflow-y-hidden p-0",
-            "group-data-horizontal/tabs:h-auto",
+            "group-data-[orientation=horizontal]/tabs:h-auto",
             "border-b border-zinc-800 bg-zinc-950/90",
             "snap-x snap-mandatory",
             "justify-start md:justify-center",
@@ -270,7 +270,7 @@ function SubTabsContent({
         variant="line"
         className={cn(
           "no-scrollbar w-full overflow-x-auto overflow-y-hidden",
-          "group-data-horizontal/tabs:h-auto",
+          "group-data-[orientation=horizontal]/tabs:h-auto",
           "justify-start gap-1 border-b border-zinc-800 px-4 py-3",
           "rounded-none bg-zinc-950",
         )}
