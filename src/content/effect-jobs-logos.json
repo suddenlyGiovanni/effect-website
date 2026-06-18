@@ -2,102 +2,102 @@
   {
     "id": "masterclass",
     "name": "MasterClass",
-    "logo": "/assets/quotes-logos/masterclass-noM.svg",
+    "logo": "masterclass-noM.svg",
     "h": "16px"
   },
   {
     "id": "vercel",
     "name": "Vercel",
-    "logo": "/assets/quotes-logos/vercel-logotype-dark.svg"
+    "logo": "vercel-logotype-dark.svg"
   },
   {
     "id": "spiko",
     "name": "Spiko",
-    "logo": "/assets/quotes-logos/spiko-logo.svg"
+    "logo": "spiko-logo.svg"
   },
   {
     "id": "opencode",
     "name": "opencode",
-    "logo": "/assets/effect-jobs-logos/opencode-wordmark-dark.svg"
+    "logo": "opencode-wordmark-dark.svg"
   },
   {
     "id": "embedded-insurance",
     "name": "Embedded Insurance",
-    "logo": "/assets/effect-jobs-logos/embedded-insurance-logo.svg"
+    "logo": "embedded-insurance-logo.svg"
   },
   {
     "id": "inato",
     "name": "Inato",
-    "logo": "/assets/effect-jobs-logos/inato.png"
+    "logo": "inato.png"
   },
   {
     "id": "interfere",
     "name": "Interfere",
-    "logo": "/assets/effect-jobs-logos/intefere-white.svg",
+    "logo": "intefere-white.svg",
     "h": "16px"
   },
   {
     "id": "manage-space",
     "name": "Manage Space",
-    "logo": "/assets/effect-jobs-logos/manage-space.svg",
+    "logo": "manage-space.svg",
     "h": "10px"
   },
   {
     "id": "platonic-systems",
     "name": "Platonic Systems",
-    "logo": "/assets/effect-jobs-logos/platonic-systems.svg",
+    "logo": "platonic-systems.svg",
     "h": "16px"
   },
   {
     "id": "precurion",
     "name": "Precurion",
-    "logo": "/assets/effect-jobs-logos/precurion.png",
+    "logo": "precurion.png",
     "h": "16px"
   },
   {
     "id": "globe-commerce",
     "name": "Globe Commerce",
-    "logo": "/assets/effect-jobs-logos/globe-commerce.png"
+    "logo": "globe-commerce.png"
   },
   {
     "id": "warp",
     "name": "Warp",
-    "logo": "/assets/effect-jobs-logos/warp.svg"
+    "logo": "warp.svg"
   },
   {
     "id": "samsung-food",
     "name": "Samsung Food",
-    "logo": "/assets/effect-jobs-logos/samsung-food.svg",
+    "logo": "samsung-food.svg",
     "h": "16px"
   },
   {
     "id": "tenzir",
     "name": "Tenzir",
-    "logo": "/assets/effect-jobs-logos/tenzir.svg",
+    "logo": "tenzir.svg",
     "h": "16px"
   },
   {
     "id": "acemate",
     "name": "Acemate",
-    "logo": "/assets/effect-jobs-logos/acemate.png",
+    "logo": "acemate.png",
     "h": "16px",
     "invert": true
   },
   {
     "id": "wander",
     "name": "Wander",
-    "logo": "/assets/effect-jobs-logos/wander.svg"
+    "logo": "wander.svg"
   },
   {
     "id": "introw",
     "name": "Introw",
-    "logo": "/assets/effect-jobs-logos/introw.svg",
+    "logo": "introw.svg",
     "h": "16px"
   },
   {
     "id": "magentus",
     "name": "Magentus",
-    "logo": "/assets/effect-jobs-logos/magentus 1.svg",
+    "logo": "magentus 1.svg",
     "h": "16px"
   }
 ]

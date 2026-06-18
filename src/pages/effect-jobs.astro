@@ -6,6 +6,14 @@ import PageLayout from "@/layouts/PageLayout.astro"
 const jobs = (await getCollection("effectJobs")).map((e) => e.data)
 const logos = (await getCollection("effectJobsLogos")).map((e) => e.data)
 
+const companyLogoUrls = import.meta.glob<string>(
+  "/src/assets/company-logos/**/*",
+  { query: "?url", import: "default", eager: true },
+)
+function getLogoUrl(filename: string): string | undefined {
+  return Object.entries(companyLogoUrls).find(([p]) => p.endsWith(`/${filename}`))?.[1]
+}
+
 function linkDisplay(url: string): string {
   try {
     const parsed = new URL(url)
@@ -69,7 +77,7 @@ function linkDisplay(url: string): string {
                   <div class="flex min-w-0 items-center gap-4">
                     <span aria-hidden="true" class="flex h-12 w-12 shrink-0 items-center justify-center">
                       {job.logo ? (
-                        <img src={job.logo} alt="" class="max-h-12 max-w-full object-contain" />
+                        <img src={getLogoUrl(job.logo) ?? job.logo} alt="" class="max-h-12 max-w-full object-contain" />
                       ) : (
                         <span class="h-9 w-9 rounded-sm border border-dashed border-zinc-700" />
                       )}
@@ -202,7 +210,7 @@ function linkDisplay(url: string): string {
                     class="flex h-full w-full items-center justify-center px-4 transition-opacity hover:opacity-90"
                   >
                     <img
-                      src={company.logo}
+                      src={getLogoUrl(company.logo) ?? company.logo}
                       alt={company.name}
                       style={`height: ${company.h ?? "20px"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
                       class="w-auto opacity-90"
@@ -210,7 +218,7 @@ function linkDisplay(url: string): string {
                   </a>
                 ) : (
                   <img
-                    src={company.logo}
+                    src={getLogoUrl(company.logo) ?? company.logo}
                     alt={company.name}
                     style={`height: ${company.h ?? "20px"}; filter: ${company.invert ? "brightness(0) invert(1)" : "none"}`}
                     class="w-auto opacity-90"
