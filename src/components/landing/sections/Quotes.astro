@@ -214,8 +214,7 @@ const copies = [0, 1, 2] as const
 </effect-quotes>
 
 <script>
-  const AUTO_SCROLL_INTERVAL_MS = 24
-  const AUTO_SCROLL_STEP_PX = 0.6
+  const AUTO_SCROLL_SPEED_PX_PER_MS = 0.6 / 24
   const RESUME_DELAY_MS = 1800
   const OBSERVER_THRESHOLD = 0.3
   const PROGRAMMATIC_SCROLL_SUPPRESSION_MS = 80
@@ -225,7 +224,8 @@ const copies = [0, 1, 2] as const
     #resizeObserver: ResizeObserver | undefined = undefined
     #motionQuery: MediaQueryList | undefined = undefined
     #resumeTimeout: ReturnType<typeof setTimeout> | undefined = undefined
-    #autoScrollInterval: ReturnType<typeof setInterval> | undefined = undefined
+    #rafHandle: ReturnType<typeof requestAnimationFrame> | undefined = undefined
+    #lastFrameTime: number = 0
     #rail: HTMLDivElement | null = null
     #previousButton: HTMLButtonElement | null = null
     #nextButton: HTMLButtonElement | null = null
@@ -388,7 +388,7 @@ const copies = [0, 1, 2] as const
     }
 
     #startAutoScroll() {
-      if (this.#autoScrollInterval !== undefined) {
+      if (this.#rafHandle !== undefined) {
         return
       }
 
@@ -396,23 +396,34 @@ const copies = [0, 1, 2] as const
         return
       }
 
-      this.#autoScrollInterval = setInterval(() => {
-        if (this.#rail === null || this.#isPointerDragging) {
-          return
-        }
-
-        this.#setScrollLeft(this.#rail.scrollLeft + AUTO_SCROLL_STEP_PX)
-        this.#normalizeLoopPosition()
-      }, AUTO_SCROLL_INTERVAL_MS)
+      this.#lastFrameTime = performance.now()
+      this.#rafHandle = requestAnimationFrame(this.#onFrame)
     }
 
     #stopAutoScroll() {
-      if (this.#autoScrollInterval === undefined) {
+      if (this.#rafHandle === undefined) {
         return
       }
 
-      clearInterval(this.#autoScrollInterval)
-      this.#autoScrollInterval = undefined
+      cancelAnimationFrame(this.#rafHandle)
+      this.#rafHandle = undefined
+    }
+
+    #onFrame = (timestamp: number) => {
+      this.#rafHandle = undefined
+
+      if (!this.#isInView || this.#isPaused || this.#getReducedMotion()) {
+        return
+      }
+
+      if (this.#rail !== null && !this.#isPointerDragging) {
+        const delta = Math.min(timestamp - this.#lastFrameTime, 100)
+        this.#setScrollLeft(this.#rail.scrollLeft + delta * AUTO_SCROLL_SPEED_PX_PER_MS)
+        this.#normalizeLoopPosition()
+      }
+
+      this.#lastFrameTime = timestamp
+      this.#rafHandle = requestAnimationFrame(this.#onFrame)
     }
 
     #pauseAndScheduleResume() {
