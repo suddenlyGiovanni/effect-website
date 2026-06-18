@@ -1,54 +1,51 @@
 ---
-import EffectImport from "../blocks/EffectImport.astro"
+import AgentCommand from "../blocks/AgentCommand.astro"
 import InstallCommand from "../blocks/InstallCommand.astro"
 ---
 
-<section class="hero-section relative w-full overflow-hidden">
-  <!-- Stripe-like grid background - full width, centered -->
+<section class="hero-section relative w-full -mt-16">
+  <!-- Grid background -->
   <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-0"></div>
-  <!-- Fade out grid at top and bottom -->
+  <!-- Fade -->
   <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-0"></div>
-
-  <!-- Subtle glow - Stripe-style ambient light with pulse animation -->
-  <div aria-hidden="true" class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-144">
-  </div>
+  <!-- Glow -->
+  <div aria-hidden="true" class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[600px]"></div>
+  <!-- Noise texture -->
+  <div aria-hidden="true" class="hero-noise pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-[0.15] mix-blend-overlay"></div>
 
   <div class="relative mx-auto w-full max-w-295 px-4 pt-20 md:pt-24">
-    <div class="mx-auto max-w-4xl text-center">
-      <EffectImport />
+    <div class="max-w-4xl text-left md:mx-auto md:text-center">
+      <!-- Eyebrow -->
+      <a
+        href="/blog/effect-v4-beta"
+        class="group mb-4 inline-flex items-center gap-2 font-mono text-xs tracking-wider text-zinc-300 uppercase transition-colors hover:text-white md:text-sm"
+      >
+        <span class="text-zinc-500 group-hover:text-zinc-400">//</span>
+        <span>Effect 4.0 — Now in Beta</span>
+        <i class="ri-arrow-right-line text-base text-zinc-500 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-300" aria-hidden="true"></i>
+      </a>
 
-      <h1 class="text-4xl font-bold leading-tighter text-white md:text-6xl">
-        The missing standard library for TypeScript applications
+      <h1 class="text-4xl font-bold text-white leading-tighter md:text-[3.4rem]">
+        Reliable TypeScript for the AI era
       </h1>
 
-      <p class="mx-auto mt-6 max-w-3xl text-xl text-muted-foreground leading-snug">
-        Effect is an open-source ecosystem for building software that is scalable, reliable, and
-        maintainable from the start.
+      <p class="mt-6 text-lg text-zinc-400 max-w-3xl leading-snug md:mx-auto">
+        Build production-ready systems with the structure, safety, and observability developers need — and AI agents can work with.
       </p>
 
-      <div class="mx-auto mt-8 max-w-139">
+      <div class="mt-8 grid gap-4 md:mx-auto md:max-w-4xl md:grid-cols-2">
         <InstallCommand />
+        <AgentCommand />
       </div>
     </div>
   </div>
 
-  <div class="relative z-10 mx-auto mt-12 w-full max-w-295 px-4">
-    <div
-      class="mx-auto flex aspect-video max-w-5xl items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm"
-    >
-      <div class="flex flex-col items-center gap-3 text-zinc-500">
-        <svg
-          viewBox="0 0 24 24"
-          class="h-16 w-16"
-          fill="currentColor"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM10.6219 8.41459L15.5008 11.6672C15.6846 11.7897 15.7343 12.0381 15.6117 12.2219C15.5824 12.2658 15.5447 12.3035 15.5008 12.3328L10.6219 15.5854C10.4381 15.708 10.1897 15.6583 10.0672 15.4745C10.0234 15.4088 10 15.3316 10 15.2526V8.74741C10 8.52649 10.1791 8.34741 10.4 8.34741C10.479 8.34741 10.5562 8.37078 10.6219 8.41459Z"
-          ></path>
-        </svg>
-        <p class="text-sm font-medium">Video coming soon</p>
+  <!-- Video -->
+  <div class="relative z-10 mx-auto mt-12 w-full max-w-295 px-4 pb-20 md:pb-24">
+    <div class="mx-auto max-w-5xl aspect-video rounded-lg border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center">
+      <div class="flex flex-col items-center gap-3 text-zinc-400">
+        <i class="ri-play-circle-line text-5xl" aria-hidden="true"></i>
+        <span class="text-sm font-medium">Video coming soon</span>
       </div>
     </div>
   </div>
@@ -56,20 +53,13 @@ import InstallCommand from "../blocks/InstallCommand.astro"
 
 <style>
   .hero-section {
-    --hero-grid-gradient-x: linear-gradient(to right, rgb(39 39 42 / 0.45) 1px, transparent 1px);
-    --hero-grid-gradient-y: linear-gradient(to bottom, rgb(39 39 42 / 0.45) 1px, transparent 1px);
-    --hero-grid-size: 196px 194px;
-    --hero-grid-position: calc(50% + 98px) 0;
-    --hero-fade-gradient: linear-gradient(
-      to bottom,
-      rgb(9 9 11) 0%,
-      transparent 20%,
-      transparent 65%,
-      rgb(9 9 11) 100%
-    );
+    --hero-grid-gradient-x: linear-gradient(to right, rgba(24, 24, 27, 0.8) 1px, transparent 1px);
+    --hero-grid-gradient-y: linear-gradient(to bottom, rgba(24, 24, 27, 0.8) 1px, transparent 1px);
+    --hero-grid-size: 196.6px 194px;
+    --hero-grid-position: calc(50% + 97px) 0;
     --hero-glow-gradient:
-      radial-gradient(ellipse 50% 80% at 70% -20%, rgb(255 255 255 / 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse 32% 56% at 80% 0%, rgb(255 255 255 / 0.05) 0%, transparent 40%);
+      radial-gradient(ellipse 50% 80% at 70% -20%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 30% 50% at 80% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 40%);
   }
 
   .hero-grid {
@@ -79,23 +69,22 @@ import InstallCommand from "../blocks/InstallCommand.astro"
   }
 
   .hero-fade {
-    background: var(--hero-fade-gradient);
+    background: linear-gradient(to bottom, #09090b 0%, transparent 20%, transparent 60%, #09090b 100%);
   }
 
   @keyframes hero-glow-pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.6;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 
   .hero-glow {
     background: var(--hero-glow-gradient);
     animation: hero-glow-pulse 4s ease-in-out infinite;
+  }
+
+  .hero-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
   }
 
   @media (prefers-reduced-motion: reduce) {

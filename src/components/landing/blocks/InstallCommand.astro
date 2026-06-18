@@ -1,7 +1,6 @@
 ---
 import type { ImageMetadata } from "astro"
 import type { SvgComponent } from "astro/types"
-import { Check, Copy } from "@lucide/astro"
 import {
   DEFAULT_PACKAGE_MANAGER,
   getInstallCommand,
@@ -23,32 +22,32 @@ const PACKAGE_MANAGER_ICONS: Record<
 > = {
   bun: {
     icon: BunLogo,
-    className: "h-5 w-auto",
+    className: "h-3.5 w-auto",
   },
   deno: {
     icon: DenoLogo,
-    className: "h-5 w-auto",
+    className: "h-3.5 w-auto",
   },
   npm: {
     icon: NpmFullLogo,
-    className: "h-7 w-auto fill-white",
+    className: "h-5 w-auto fill-white",
   },
   pnpm: {
     icon: PnpmLogo,
-    className: "h-5 w-auto",
+    className: "h-3.5 w-auto",
   },
   yarn: {
     icon: YarnLogo,
-    className: "h-5 w-auto",
+    className: "h-3.5 w-auto",
   },
 }
 ---
 
-<effect-install-command class="block rounded-md border border-zinc-800 overflow-hidden">
+<effect-install-command class="flex flex-col rounded-md ring-1 ring-inset ring-zinc-700 bg-zinc-900/50 overflow-hidden p-1">
   <div
     role="tablist"
     aria-label="Install command package managers"
-    class="flex bg-zinc-900 border-b border-zinc-800"
+    class="flex border-b border-zinc-800"
   >
     {
       PACKAGE_MANAGERS.map((packageManager) => {
@@ -65,8 +64,8 @@ const PACKAGE_MANAGER_ICONS: Record<
             aria-controls="install-command-panel"
             tabindex={selected ? "0" : "-1"}
             class:list={[
-              "relative flex-1 appearance-none border-0 bg-transparent px-3 py-2 text-center cursor-pointer transition-colors",
-              selected ? "text-white" : "text-zinc-500 hover:text-zinc-300",
+              "group relative flex flex-1 items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+              selected ? "text-white" : "text-zinc-400 hover:text-zinc-300",
             ]}
           >
             <Icon class={className} />
@@ -84,29 +83,17 @@ const PACKAGE_MANAGER_ICONS: Record<
     }
   </div>
 
-  <div
+  <button
+    type="button"
     id="install-command-panel"
-    role="tabpanel"
-    class="flex justify-between items-center px-5 py-2 bg-zinc-950"
+    data-role="copy"
+    class="flex flex-1 w-full cursor-pointer items-center justify-between gap-4 px-5 py-2 font-mono text-sm text-zinc-300 transition-colors hover:bg-zinc-800/30"
+    aria-label="Copy install command"
   >
-    <code data-role="command" class="truncate font-mono text-sm text-zinc-200">
-      {getInstallCommand(DEFAULT_PACKAGE_MANAGER)}
-    </code>
-
-    <button
-      type="button"
-      data-role="copy"
-      class="inline-flex h-8 w-8 shrink-0 appearance-none items-center justify-center rounded-md border border-zinc-700 bg-transparent text-zinc-400 transition-colors cursor-pointer hover:border-zinc-600 hover:text-zinc-200"
-      aria-label="Copy install command"
-    >
-      <Copy data-role="copy-icon-idle" class="h-4 w-4" aria-hidden="true" />
-      <Check
-        data-role="copy-icon-copied"
-        class="hidden h-4 w-4 text-emerald-400"
-        aria-hidden="true"
-      />
-    </button>
-  </div>
+    <span data-role="command" class="truncate">{getInstallCommand(DEFAULT_PACKAGE_MANAGER)}</span>
+    <i data-role="copy-icon-idle" class="ri-file-copy-line shrink-0 text-base text-zinc-400" aria-hidden="true"></i>
+    <i data-role="copy-icon-copied" class="ri-check-line hidden shrink-0 text-base text-zinc-200" aria-hidden="true"></i>
+  </button>
 
   <p role="status" aria-live="polite" data-role="status" class="sr-only"></p>
 </effect-install-command>
@@ -132,8 +119,8 @@ const PACKAGE_MANAGER_ICONS: Record<
     #copyButton: HTMLButtonElement | null = null
     #commandElement: HTMLElement | null = null
     #statusElement: HTMLElement | null = null
-    #copyIdleIcon: SVGElement | null = null
-    #copySuccessIcon: SVGElement | null = null
+    #copyIdleIcon: HTMLElement | null = null
+    #copySuccessIcon: HTMLElement | null = null
     #copyResetTimeout: ReturnType<typeof setTimeout> | undefined = undefined
 
     connectedCallback() {
@@ -144,23 +131,13 @@ const PACKAGE_MANAGER_ICONS: Record<
       const copyIdleIcon = this.querySelector("[data-role='copy-icon-idle']")
       const copySuccessIcon = this.querySelector("[data-role='copy-icon-copied']")
 
-      if (!(copyButton instanceof HTMLButtonElement)) {
-        return
-      }
-
-      if (!(commandElement instanceof HTMLElement)) {
-        return
-      }
-
-      if (!(statusElement instanceof HTMLElement)) {
-        return
-      }
-
-      if (!(copyIdleIcon instanceof SVGElement)) {
-        return
-      }
-
-      if (!(copySuccessIcon instanceof SVGElement)) {
+      if (
+        !(copyButton instanceof HTMLButtonElement) ||
+        !(commandElement instanceof HTMLElement) ||
+        !(statusElement instanceof HTMLElement) ||
+        !(copyIdleIcon instanceof HTMLElement) ||
+        !(copySuccessIcon instanceof HTMLElement)
+      ) {
         return
       }
 
@@ -237,7 +214,7 @@ const PACKAGE_MANAGER_ICONS: Record<
         }
 
         tabElement.classList.toggle("text-white", selected)
-        tabElement.classList.toggle("text-zinc-500", !selected)
+        tabElement.classList.toggle("text-zinc-400", !selected)
       })
     }
 

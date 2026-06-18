@@ -1,7 +1,4 @@
 ---
-import DitheredOverlay from "@/components/DitheredOverlay.astro"
-import Footer from "@/components/Footer.astro"
-import GridRails from "@/components/GridRails.astro"
 import AgenticSystems from "@/components/landing/sections/AgenticSystems.astro"
 import CallToAction from "@/components/landing/sections/CallToAction.astro"
 import CodingWithAi from "@/components/landing/sections/CodingWithAi.astro"
@@ -12,45 +9,28 @@ import MentalModel from "@/components/landing/sections/MentalModel.astro"
 import ProblemStatement from "@/components/landing/sections/ProblemStatement.astro"
 import Quotes from "@/components/landing/sections/Quotes.astro"
 import Testimonials from "@/components/landing/sections/Testimonials.astro"
-import Navigation from "@/components/navigation/Navigation.astro"
 import SectionDivider from "@/components/layout/SectionDivider.astro"
-import BaseLayout from "@/layouts/BaseLayout.astro"
-import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import PageLayout from "../layouts/PageLayout.astro"
 ---
 
-<BaseLayout
-  description="An open-source ecosystem for software that is scalable, reliable, and maintainable from the start. One package, everything you need."
->
-  <DitheredOverlay />
-
-  <div class="relative z-10">
-    <Navigation />
-    <GridRails />
-
-    <main id={PAGE_TITLE_ID} class="pt-16">
-      <Hero />
-      <SectionDivider />
-      <ProblemStatement />
-      <SectionDivider />
-      <Testimonials />
-      <SectionDivider />
-      <MentalModel />
-      <SectionDivider />
-      <Examples />
-      <SectionDivider />
-      <AgenticSystems />
-      <SectionDivider />
-      <CodingWithAi />
-      <SectionDivider />
-      <Quotes />
-      <SectionDivider />
-      <FAQ />
-      <SectionDivider />
-      <CallToAction />
-    </main>
-
-    <SectionDivider />
-
-    <Footer />
-  </div>
-</BaseLayout>
+<PageLayout>
+  <Hero />
+  <SectionDivider />
+  <ProblemStatement />
+  <SectionDivider />
+  <Testimonials />
+  <SectionDivider />
+  <MentalModel />
+  <SectionDivider />
+  <Examples />
+  <SectionDivider />
+  <AgenticSystems />
+  <SectionDivider />
+  <CodingWithAi />
+  <SectionDivider />
+  <Quotes />
+  <SectionDivider />
+  <FAQ />
+  <SectionDivider />
+  <CallToAction />
+</PageLayout>
