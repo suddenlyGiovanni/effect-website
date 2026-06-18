@@ -1,6 +1,9 @@
 ---
 import type { ImageMetadata } from "astro"
 import type { SvgComponent } from "astro/types"
+
+import { Copy, Check } from "@lucide/astro"
+
 import {
   DEFAULT_PACKAGE_MANAGER,
   getInstallCommand,
@@ -91,8 +94,8 @@ const PACKAGE_MANAGER_ICONS: Record<
     aria-label="Copy install command"
   >
     <span data-role="command" class="truncate">{getInstallCommand(DEFAULT_PACKAGE_MANAGER)}</span>
-    <i data-role="copy-icon-idle" class="ri-file-copy-line shrink-0 text-base text-zinc-400" aria-hidden="true"></i>
-    <i data-role="copy-icon-copied" class="ri-check-line hidden shrink-0 text-base text-zinc-200" aria-hidden="true"></i>
+    <Copy data-role="copy-icon-idle" class="shrink-0 text-zinc-400" size={16} aria-hidden="true" />
+    <Check data-role="copy-icon-copied" class="hidden shrink-0 text-zinc-200" size={16} aria-hidden="true" />
   </button>
 
   <p role="status" aria-live="polite" data-role="status" class="sr-only"></p>

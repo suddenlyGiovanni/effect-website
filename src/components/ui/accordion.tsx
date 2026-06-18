@@ -1,4 +1,5 @@
 import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion"
+import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
@@ -37,7 +38,7 @@ function AccordionTrigger({ className, children, ...props }: AccordionPrimitive.
           data-slot="accordion-trigger-icon"
           className="flex h-6 w-6 shrink-0 items-center justify-center transition-all duration-200 bg-zinc-800/80 text-zinc-400 group-hover/accordion-trigger:bg-zinc-700 group-aria-expanded/accordion-trigger:bg-white group-aria-expanded/accordion-trigger:text-zinc-900"
         >
-          <i className="ri-arrow-down-s-line text-base transition-transform duration-200 group-aria-expanded/accordion-trigger:rotate-180" />
+          <ChevronDown className="h-4 w-4 transition-transform duration-200 group-aria-expanded/accordion-trigger:rotate-180" />
         </div>
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>

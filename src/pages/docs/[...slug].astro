@@ -2,6 +2,8 @@
 import type { CollectionEntry } from "astro:content"
 import { getCollection, getEntry, render } from "astro:content"
 
+import { ChevronDown } from "@lucide/astro"
+
 import Footer from "@/components/Footer.astro"
 import Navigation from "@/components/navigation/Navigation.astro"
 import BaseLayout from "@/layouts/BaseLayout.astro"
@@ -154,7 +156,7 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
                       <details open={item.group.isOpen || undefined}>
                         <summary class="flex cursor-pointer select-none list-none items-center justify-between rounded py-2.5 font-mono text-sm font-medium tracking-wider text-zinc-700 uppercase transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
                           <span>{item.group.label}</span>
-                          <i class="ri-arrow-down-s-line text-base transition-transform details-chevron" aria-hidden="true" />
+                          <ChevronDown class="h-4 w-4 transition-transform details-chevron" aria-hidden="true" />
                         </summary>
                         <ul class="flex flex-col gap-0.5 pb-4">
                           {item.group.entries.map((e) => (

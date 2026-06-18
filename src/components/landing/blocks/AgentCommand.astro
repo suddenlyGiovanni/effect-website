@@ -1,4 +1,6 @@
 ---
+import { Copy, Check } from "@lucide/astro"
+
 const PREVIEW = "Help me build an Effect app in TypeScript…"
 ---
 
@@ -17,8 +19,8 @@ const PREVIEW = "Help me build an Effect app in TypeScript…"
     aria-label="Copy prompt for AI agents"
   >
     <span class="truncate">{PREVIEW}</span>
-    <i data-role="copy-icon-idle" class="ri-file-copy-line shrink-0 text-base text-zinc-400" aria-hidden="true"></i>
-    <i data-role="copy-icon-copied" class="ri-check-line hidden shrink-0 text-base text-zinc-200" aria-hidden="true"></i>
+    <Copy data-role="copy-icon-idle" class="shrink-0 text-zinc-400" size={16} aria-hidden="true" />
+    <Check data-role="copy-icon-copied" class="hidden shrink-0 text-zinc-200" size={16} aria-hidden="true" />
   </button>
 
   <p role="status" aria-live="polite" data-role="status" class="sr-only"></p>

@@ -1,4 +1,6 @@
 ---
+import { Info, Lightbulb, TriangleAlert, OctagonAlert } from "@lucide/astro"
+
 type AsideType = "note" | "tip" | "caution" | "danger"
 
 interface Props {
@@ -8,11 +10,11 @@ interface Props {
 
 const { type = "note", title } = Astro.props
 
-const icons: Record<AsideType, string> = {
-  note: "ri-information-line",
-  tip: "ri-lightbulb-line",
-  caution: "ri-alert-line",
-  danger: "ri-error-warning-line",
+const iconMap = {
+  note: Info,
+  tip: Lightbulb,
+  caution: TriangleAlert,
+  danger: OctagonAlert,
 }
 
 const defaultTitles: Record<AsideType, string> = {
@@ -23,11 +25,12 @@ const defaultTitles: Record<AsideType, string> = {
 }
 
 const label = title ?? defaultTitles[type]
+const Icon = iconMap[type]
 ---
 
 <aside class:list={["aside", `aside--${type}`]} aria-label={label}>
   <p class="aside-title" aria-hidden="true">
-    <i class={icons[type]} aria-hidden="true" />
+    <Icon aria-hidden="true" size={14} />
     {label}
   </p>
   <div class="aside-content">
