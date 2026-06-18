@@ -165,22 +165,22 @@ export default function FrequentlyAskedQuestions() {
           key={question}
           value={question}
           className={cn(
-            "border border-muted-foreground/50 hover:border-muted-foreground data-open:border-muted-foreground",
-            "rounded-md",
+            "rounded-md border border-zinc-700",
+            "hover:border-zinc-600 hover:bg-zinc-900/50",
+            "data-open:border-zinc-700 data-open:bg-zinc-900/40",
           )}
         >
           <AccordionTrigger
             className={cn(
-              "px-4",
-              "bg-zinc-950 hover:bg-zinc-900 data-panel-open:bg-zinc-950",
-              "text-base text-zinc-300 hover:text-white data-panel-open:text-white",
-              "data-panel-open:rounded-b-none data-panel-open:border-b-muted-foreground",
+              "px-5 py-4",
+              "bg-transparent hover:bg-transparent",
+              "text-base leading-snug font-medium text-zinc-300 hover:text-white aria-expanded:text-white",
               "cursor-pointer hover:no-underline",
             )}
           >
             {question}
           </AccordionTrigger>
-          <AccordionContent className="rounded-b-md bg-zinc-950 px-4! py-4! md:px-5!">
+          <AccordionContent className="px-5! pb-5! pt-0! text-[15px]! leading-relaxed! text-zinc-400!">
             {answer}
           </AccordionContent>
         </AccordionItem>
