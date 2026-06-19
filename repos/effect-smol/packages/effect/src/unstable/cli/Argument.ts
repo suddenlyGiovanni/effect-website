@@ -1,4 +1,12 @@
 /**
+ * Defines typed positional arguments for Effect CLI applications.
+ *
+ * Arguments consume ordered values after a command name and its flags, then
+ * parse them into the types a command handler expects. This module includes
+ * constructors for common argument shapes, plus helpers for optional or
+ * variadic arguments, schema validation, transformations, defaults, config
+ * fallbacks, and prompts for missing values.
+ *
  * @since 4.0.0
  */
 import type * as Config from "../../Config.ts"
@@ -11,7 +19,6 @@ import type * as Schema from "../../Schema.ts"
 import type * as CliError from "./CliError.ts"
 import * as Param from "./Param.ts"
 import type * as Primitive from "./Primitive.ts"
-import type * as Prompt from "./Prompt.ts"
 
 // -------------------------------------------------------------------------------------
 // models
@@ -20,13 +27,15 @@ import type * as Prompt from "./Prompt.ts"
 /**
  * Represents a positional command-line argument.
  *
- * Note: `boolean` is intentionally omitted from Argument constructors.
- * Positional boolean arguments are ambiguous in CLI design since there's
- * no flag name to negate (e.g., `--no-verbose`). Use Flag.boolean instead,
- * or use Argument.choice with explicit "true"/"false" strings if needed.
+ * **Gotchas**
  *
- * @since 4.0.0
+ * `boolean` is intentionally omitted from Argument constructors. Positional
+ * boolean arguments are ambiguous in CLI design since there is no flag name to
+ * negate (for example, `--no-verbose`). Use Flag.boolean instead, or use
+ * Argument.choice with explicit "true" / "false" strings if needed.
+ *
  * @category models
+ * @since 4.0.0
  */
 export interface Argument<A> extends Param.Param<typeof Param.argumentKind, A> {}
 
@@ -37,37 +46,40 @@ export interface Argument<A> extends Param.Param<typeof Param.argumentKind, A> {
 /**
  * Creates a positional string argument.
  *
- * @example
+ * **Example** (Creating a string argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const filename = Argument.string("filename")
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const string = (name: string): Argument<string> => Param.string(Param.argumentKind, name)
 
 /**
  * Creates a positional integer argument.
  *
- * @example
+ * **Example** (Creating an integer argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const count = Argument.integer("count")
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const integer = (name: string): Argument<number> => Param.integer(Param.argumentKind, name)
 
 /**
  * Creates a positional file path argument.
  *
- * @example
+ * **Example** (Creating file path arguments)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -75,8 +87,8 @@ export const integer = (name: string): Argument<number> => Param.integer(Param.a
  * const outputFile = Argument.file("output", { mustExist: false }) // Must not exist
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const file = (name: string, options?: {
   readonly mustExist?: boolean | undefined
@@ -85,15 +97,16 @@ export const file = (name: string, options?: {
 /**
  * Creates a positional directory path argument.
  *
- * @example
+ * **Example** (Creating a directory path argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const workspace = Argument.directory("workspace", { mustExist: true }) // Must exist
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const directory = (name: string, options?: {
   readonly mustExist?: boolean | undefined
@@ -102,45 +115,48 @@ export const directory = (name: string, options?: {
 /**
  * Creates a positional float argument.
  *
- * @example
+ * **Example** (Creating a float argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const ratio = Argument.float("ratio")
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const float = (name: string): Argument<number> => Param.float(Param.argumentKind, name)
 
 /**
  * Creates a positional date argument.
  *
- * @example
+ * **Example** (Creating a date argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const startDate = Argument.date("start-date")
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const date = (name: string): Argument<Date> => Param.date(Param.argumentKind, name)
 
 /**
  * Creates a positional choice argument.
  *
- * @example
+ * **Example** (Creating a choice argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const environment = Argument.choice("environment", ["dev", "staging", "prod"])
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const choice = <const Choices extends ReadonlyArray<string>>(
   name: string,
@@ -150,15 +166,16 @@ export const choice = <const Choices extends ReadonlyArray<string>>(
 /**
  * Creates a positional path argument.
  *
- * @example
+ * **Example** (Creating a path argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const configPath = Argument.path("config")
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const path = (name: string, options?: {
   pathType?: "file" | "directory" | "either"
@@ -168,45 +185,54 @@ export const path = (name: string, options?: {
 /**
  * Creates a positional redacted argument that obscures its value.
  *
- * @example
+ * **Example** (Creating a redacted argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const secret = Argument.redacted("secret")
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const redacted = (name: string): Argument<Redacted.Redacted<string>> => Param.redacted(Param.argumentKind, name)
 
 /**
  * Creates a positional argument that reads file content as a string.
  *
- * @example
+ * **Example** (Reading file text)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const config = Argument.fileText("config-file")
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const fileText = (name: string): Argument<string> => Param.fileText(Param.argumentKind, name)
 
 /**
- * Creates a positional argument that reads and validates file content using a schema.
+ * Creates a positional argument that reads a file and parses its content.
  *
- * @example
+ * **Details**
+ *
+ * The parser is chosen from the explicit `format` option or, when omitted, the
+ * file extension. The parsed value is `unknown`; use `fileSchema` when the
+ * parsed content should also be decoded with a Schema.
+ *
+ * **Example** (Parsing file content)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const config = Argument.fileParse("config", { format: "json" })
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const fileParse = (
   name: string,
@@ -216,7 +242,8 @@ export const fileParse = (
 /**
  * Creates a positional argument that reads and validates file content using a schema.
  *
- * @example
+ * **Example** (Validating file content with a schema)
+ *
  * ```ts
  * import { Schema } from "effect"
  * import { Argument } from "effect/unstable/cli"
@@ -229,8 +256,8 @@ export const fileParse = (
  * const config = Argument.fileSchema("config", ConfigSchema)
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const fileSchema = <A>(
   name: string,
@@ -241,7 +268,8 @@ export const fileSchema = <A>(
 /**
  * Creates an empty sentinel argument that always fails to parse.
  *
- * @example
+ * **Example** (Creating a sentinel argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -249,8 +277,8 @@ export const fileSchema = <A>(
  * const noArg = Argument.none
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const none: Argument<never> = Param.none(Param.argumentKind)
 
@@ -261,22 +289,24 @@ export const none: Argument<never> = Param.none(Param.argumentKind)
 /**
  * Makes a positional argument optional.
  *
- * @example
+ * **Example** (Making an argument optional)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const optionalVersion = Argument.string("version").pipe(Argument.optional)
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const optional = <A>(arg: Argument<A>): Argument<Option.Option<A>> => Param.optional(arg)
 
 /**
  * Adds a description to a positional argument.
  *
- * @example
+ * **Example** (Adding an argument description)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -285,8 +315,8 @@ export const optional = <A>(arg: Argument<A>): Argument<Option.Option<A>> => Par
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const withDescription: {
   <A>(description: string): (self: Argument<A>) => Argument<A>
@@ -296,15 +326,16 @@ export const withDescription: {
 /**
  * Provides a default value for a positional argument.
  *
- * @example
+ * **Example** (Providing a default value)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const port = Argument.integer("port").pipe(Argument.withDefault(8080))
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const withDefault: {
   <const B>(
@@ -319,7 +350,8 @@ export const withDefault: {
 /**
  * Adds a fallback config that is loaded when a required argument is missing.
  *
- * @example
+ * **Example** (Loading a fallback config)
+ *
  * ```ts
  * import { Config } from "effect"
  * import { Argument } from "effect/unstable/cli"
@@ -329,8 +361,8 @@ export const withDefault: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const withFallbackConfig: {
   <B>(config: Config.Config<B>): <A>(self: Argument<A>) => Argument<A | B>
@@ -340,7 +372,8 @@ export const withFallbackConfig: {
 /**
  * Adds a fallback prompt that is shown when a required argument is missing.
  *
- * @example
+ * **Example** (Showing a fallback prompt)
+ *
  * ```ts
  * import { Argument, Prompt } from "effect/unstable/cli"
  *
@@ -349,18 +382,19 @@ export const withFallbackConfig: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const withFallbackPrompt: {
-  <B>(prompt: Prompt.Prompt<B>): <A>(self: Argument<A>) => Argument<A | B>
-  <A, B>(self: Argument<A>, prompt: Prompt.Prompt<B>): Argument<A | B>
-} = dual(2, <A, B>(self: Argument<A>, prompt: Prompt.Prompt<B>) => Param.withFallbackPrompt(self, prompt))
+  <B>(prompt: Param.FallbackPrompt<B>): <A>(self: Argument<A>) => Argument<A | B>
+  <A, B>(self: Argument<A>, prompt: Param.FallbackPrompt<B>): Argument<A | B>
+} = dual(2, <A, B>(self: Argument<A>, prompt: Param.FallbackPrompt<B>) => Param.withFallbackPrompt(self, prompt))
 
 /**
  * Creates a variadic positional argument that accepts multiple values.
  *
- * @example
+ * **Example** (Accepting multiple values)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -378,13 +412,13 @@ export const withFallbackPrompt: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const variadic: {
   (options?: Param.VariadicParamOptions | undefined): <A>(self: Argument<A>) => Argument<ReadonlyArray<A>>
   <A>(self: Argument<A>, options?: Param.VariadicParamOptions | undefined): Argument<ReadonlyArray<A>>
-} = dual(2, <A>(
+} = dual((args) => Param.isParam(args[0]), <A>(
   self: Argument<A>,
   options?: Param.VariadicParamOptions | undefined
 ): Argument<ReadonlyArray<A>> => Param.variadic(self, options))
@@ -392,7 +426,8 @@ export const variadic: {
 /**
  * Transforms the parsed value of a positional argument.
  *
- * @example
+ * **Example** (Mapping parsed values)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -401,8 +436,8 @@ export const variadic: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const map: {
   <A, B>(f: (a: A) => B): (self: Argument<A>) => Argument<B>
@@ -412,7 +447,8 @@ export const map: {
 /**
  * Transforms the parsed value of a positional argument using an effectful function.
  *
- * @example
+ * **Example** (Validating values effectfully)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Argument, CliError } from "effect/unstable/cli"
@@ -430,8 +466,8 @@ export const map: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const mapEffect: {
   <A, B>(
@@ -449,7 +485,8 @@ export const mapEffect: {
 /**
  * Transforms the parsed value of a positional argument using a function that may throw.
  *
- * @example
+ * **Example** (Mapping values that may throw)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -462,8 +499,8 @@ export const mapEffect: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const mapTryCatch: {
   <A, B>(
@@ -480,15 +517,16 @@ export const mapTryCatch: {
 /**
  * Creates a variadic argument that requires at least n values.
  *
- * @example
+ * **Example** (Requiring a minimum number of values)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const files = Argument.string("files").pipe(Argument.atLeast(1))
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const atLeast: {
   <A>(min: number): (self: Argument<A>) => Argument<ReadonlyArray<A>>
@@ -498,15 +536,16 @@ export const atLeast: {
 /**
  * Creates a variadic argument that accepts at most n values.
  *
- * @example
+ * **Example** (Limiting the maximum number of values)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const files = Argument.string("files").pipe(Argument.atMost(5))
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const atMost: {
   <A>(max: number): (self: Argument<A>) => Argument<ReadonlyArray<A>>
@@ -516,15 +555,16 @@ export const atMost: {
 /**
  * Creates a variadic argument that accepts between min and max values.
  *
- * @example
+ * **Example** (Requiring a range of values)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
  * const files = Argument.string("files").pipe(Argument.between(1, 5))
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const between: {
   <A>(min: number, max: number): (self: Argument<A>) => Argument<ReadonlyArray<A>>
@@ -534,7 +574,8 @@ export const between: {
 /**
  * Validates parsed values against a Schema.
  *
- * @example
+ * **Example** (Validating parsed values with a schema)
+ *
  * ```ts
  * import { Schema } from "effect"
  * import { Argument } from "effect/unstable/cli"
@@ -544,8 +585,8 @@ export const between: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const withSchema: {
   <A, B>(schema: Schema.Codec<B, A>): (self: Argument<A>) => Argument<B>
@@ -555,7 +596,8 @@ export const withSchema: {
 /**
  * Creates a positional choice argument with custom value mapping.
  *
- * @example
+ * **Example** (Mapping choices to values)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -567,8 +609,8 @@ export const withSchema: {
  * ])
  * ```
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const choiceWithValue = <const Choices extends ReadonlyArray<readonly [string, any]>>(
   name: string,
@@ -582,10 +624,13 @@ export const choiceWithValue = <const Choices extends ReadonlyArray<readonly [st
 /**
  * Sets a custom metavar (placeholder name) for the argument in help documentation.
  *
+ * **Details**
+ *
  * The metavar is displayed in usage text to indicate what value the user should provide.
  * For example, `<FILE>` shows `FILE` as the metavar.
  *
- * @example
+ * **Example** (Setting a metavar)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -594,8 +639,8 @@ export const choiceWithValue = <const Choices extends ReadonlyArray<readonly [st
  * )
  * ```
  *
- * @since 4.0.0
  * @category metadata
+ * @since 4.0.0
  */
 export const withMetavar: {
   <A>(metavar: string): (self: Argument<A>) => Argument<A>
@@ -605,7 +650,8 @@ export const withMetavar: {
 /**
  * Filters parsed values, failing with a custom error message if the predicate returns false.
  *
- * @example
+ * **Example** (Filtering parsed values)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -617,8 +663,8 @@ export const withMetavar: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const filter: {
   <A>(predicate: (a: A) => boolean, onFalse: (a: A) => string): (self: Argument<A>) => Argument<A>
@@ -633,7 +679,8 @@ export const filter: {
  * Filters and transforms parsed values, failing with a custom error message
  * if the filter function returns None.
  *
- * @example
+ * **Example** (Filtering and mapping parsed values)
+ *
  * ```ts
  * import { Option } from "effect"
  * import { Argument } from "effect/unstable/cli"
@@ -646,8 +693,8 @@ export const filter: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const filterMap: {
   <A, B>(f: (a: A) => Option.Option<B>, onNone: (a: A) => string): (self: Argument<A>) => Argument<B>
@@ -661,7 +708,8 @@ export const filterMap: {
 /**
  * Provides a fallback argument to use if this argument fails to parse.
  *
- * @example
+ * **Example** (Providing a fallback argument)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -670,8 +718,8 @@ export const filterMap: {
  * )
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const orElse: {
   <B>(that: LazyArg<Argument<B>>): <A>(self: Argument<A>) => Argument<A | B>
@@ -681,7 +729,8 @@ export const orElse: {
 /**
  * Provides a fallback argument, wrapping results in Result to distinguish which succeeded.
  *
- * @example
+ * **Example** (Returning which fallback succeeded)
+ *
  * ```ts
  * import { Argument } from "effect/unstable/cli"
  *
@@ -691,8 +740,8 @@ export const orElse: {
  * // Returns Result<string, string>
  * ```
  *
- * @since 4.0.0
  * @category combinators
+ * @since 4.0.0
  */
 export const orElseResult: {
   <B>(that: LazyArg<Argument<B>>): <A>(self: Argument<A>) => Argument<Result.Result<A, B>>

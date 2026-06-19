@@ -1,6 +1,7 @@
 import * as Arr from "../../../Array.ts"
 import * as Cause from "../../../Cause.ts"
 import { Clock } from "../../../Clock.ts"
+import * as Context from "../../../Context.ts"
 import * as Duration from "../../../Duration.ts"
 import type { Input } from "../../../Duration.ts"
 import * as Effect from "../../../Effect.ts"
@@ -14,15 +15,15 @@ import * as Option from "../../../Option.ts"
 import { CurrentLogAnnotations } from "../../../References.ts"
 import * as Schedule from "../../../Schedule.ts"
 import * as Schema from "../../../Schema.ts"
-import * as Issue from "../../../SchemaIssue.ts"
+import * as SchemaIssue from "../../../SchemaIssue.ts"
 import * as Scope from "../../../Scope.ts"
-import * as ServiceMap from "../../../ServiceMap.ts"
 import type * as Rpc from "../../rpc/Rpc.ts"
 import { RequestId } from "../../rpc/RpcMessage.ts"
 import * as RpcServer from "../../rpc/RpcServer.ts"
 import { AlreadyProcessingMessage, EntityNotAssignedToRunner, MailboxFull, MalformedMessage } from "../ClusterError.ts"
 import * as ClusterMetrics from "../ClusterMetrics.ts"
-import { isUninterruptibleForServer, Persisted } from "../ClusterSchema.ts"
+import { isUninterruptibleForServer, Persisted, WithTransaction } from "../ClusterSchema.ts"
+import * as ClusterSchema from "../ClusterSchema.ts"
 import type { Entity, HandlersFrom } from "../Entity.ts"
 import { CurrentAddress, CurrentRunnerAddress, KeepAliveLatch, KeepAliveRpc, Request } from "../Entity.ts"
 import type { EntityAddress } from "../EntityAddress.ts"
@@ -106,10 +107,11 @@ export const make = Effect.fnUntraced(function*<
   const storageEnabled = options.storage !== MessageStorage.noop
   const mailboxCapacity = options.mailboxCapacity ?? config.entityMailboxCapacity
   const clock = yield* Clock
-  const services = yield* Effect.services<Rpc.Services<Rpcs> | Rpc.Middleware<Rpcs> | RX>()
-  const retryDriver = yield* Schedule.toStepWithSleep(
-    options.defectRetryPolicy ? Schedule.andThen(options.defectRetryPolicy, defaultRetryPolicy) : defaultRetryPolicy
-  )
+  const context = yield* Effect.context<Rpc.Services<Rpcs> | Rpc.Middleware<Rpcs> | RX>()
+  const defectRetryPolicy = options.defectRetryPolicy
+    ? Schedule.andThen(options.defectRetryPolicy, defaultRetryPolicy)
+    : defaultRetryPolicy
+  const retryDriver = yield* Schedule.toStepWithSleep(defectRetryPolicy)
   const entityRpcs = new Map(entity.protocol.requests)
 
   // add internal rpcs
@@ -143,7 +145,8 @@ export const make = Effect.fnUntraced(function*<
     )
 
     const activeRequests: EntityState["activeRequests"] = new Map()
-    let defectRequestIds: Array<bigint> = []
+    let defectRequestIds = new Set<bigint>()
+    let isRestartingDueToDefect = false
 
     // the server is stored in a ref, so if there is a defect, we can
     // swap the server without losing the active requests
@@ -155,14 +158,17 @@ export const make = Effect.fnUntraced(function*<
         // Initiate the behavior for the entity
         const handlers = yield* (entity.protocol.toHandlers(buildHandlers as any).pipe(
           Effect.provideService(CurrentLogAnnotations, {}),
-          Effect.provideServices(ServiceMap.mutate(services, (services) =>
-            services.pipe(
-              ServiceMap.add(CurrentAddress, address),
-              ServiceMap.add(CurrentRunnerAddress, options.runnerAddress),
-              ServiceMap.add(KeepAliveLatch, keepAliveLatch),
-              ServiceMap.add(Scope.Scope, scope)
-            )))
-        ) as Effect.Effect<ServiceMap.ServiceMap<Rpc.ToHandler<Rpcs>>>)
+          Effect.provideContext(Context.mutate(context, (context) =>
+            context.pipe(
+              Context.add(CurrentAddress, address),
+              Context.add(CurrentRunnerAddress, options.runnerAddress),
+              Context.add(KeepAliveLatch, keepAliveLatch),
+              Context.add(Scope.Scope, scope)
+            ))),
+          Effect.sandbox,
+          Effect.tapError((cause) => Effect.logError("Defect building entity handlers", cause)),
+          Effect.retry(defectRetryPolicy)
+        ) as Effect.Effect<Context.Context<Rpc.ToHandler<Rpcs>>>)
 
         const server = yield* RpcServer.makeNoSerialization(entity.protocol, {
           spanPrefix: `${entity.type}(${address.entityId})`,
@@ -181,15 +187,23 @@ export const make = Effect.fnUntraced(function*<
 
                 request.sentReply = true
 
+                if (
+                  isShuttingDown &&
+                  Exit.hasInterrupts(response.exit) &&
+                  defectRequestIds.has(response.requestId)
+                ) {
+                  return Effect.void
+                }
+
                 // For durable messages, ignore interrupts during shutdown.
                 // They will be retried when the entity is restarted.
                 // Also, if the request is uninterruptible, we ignore the
                 // interrupt.
                 if (
                   storageEnabled &&
-                  ServiceMap.get(request.rpc.annotations, Persisted) &&
+                  Context.get(request.message.annotations, Persisted) &&
                   Exit.hasInterrupts(response.exit) &&
-                  (isShuttingDown || isUninterruptibleForServer(request.rpc.annotations))
+                  (isShuttingDown || isUninterruptibleForServer(request.message.annotations))
                 ) {
                   if (!isShuttingDown) {
                     return server.write(0, {
@@ -266,7 +280,7 @@ export const make = Effect.fnUntraced(function*<
           }
         }).pipe(
           Scope.provide(scope),
-          Effect.provideServices(handlers)
+          Effect.provideContext(handlers)
         )
 
         yield* Scope.addFinalizer(
@@ -276,9 +290,11 @@ export const make = Effect.fnUntraced(function*<
           })
         )
 
-        if (defectRequestIds.length > 0) {
+        if (defectRequestIds.size > 0) {
           for (const id of defectRequestIds) {
-            const { lastSentChunk, message } = activeRequests.get(id)!
+            const request = activeRequests.get(id)
+            if (!request) continue
+            const { lastSentChunk, message } = request
             yield* server.write(0, {
               ...message.envelope,
               id: RequestId(message.envelope.requestId),
@@ -289,7 +305,7 @@ export const make = Effect.fnUntraced(function*<
               } as any) as any
             })
           }
-          defectRequestIds = []
+          defectRequestIds.clear()
         }
 
         return server.write
@@ -300,11 +316,18 @@ export const make = Effect.fnUntraced(function*<
       if (!activeServers.has(address.entityId)) {
         return endLatch.open
       }
+      if (isRestartingDueToDefect) {
+        return Effect.void
+      }
+      defectRequestIds = new Set(activeRequests.keys())
+      isRestartingDueToDefect = true
       const effect = writeRef.rebuildUnsafe()
-      defectRequestIds = Array.from(activeRequests.keys())
       return Effect.logError("Defect in entity, restarting", cause).pipe(
         Effect.andThen(Effect.ignore(retryDriver(void 0))),
         Effect.flatMap(() => activeServers.has(address.entityId) ? effect : endLatch.open),
+        Effect.ensuring(Effect.sync(() => {
+          isRestartingDueToDefect = false
+        })),
         Effect.annotateLogs({
           module: "EntityManager",
           address,
@@ -363,7 +386,7 @@ export const make = Effect.fnUntraced(function*<
   }
 
   // update metrics for active servers
-  const typeAttributes = Metric.CurrentMetricAttributes.serviceMap({ type: entity.type })
+  const typeAttributes = Metric.CurrentMetricAttributes.context({ type: entity.type })
   yield* Effect.sync(() => {
     ClusterMetrics.entities.updateUnsafe(BigInt(activeServers.size), typeAttributes)
   }).pipe(
@@ -395,7 +418,7 @@ export const make = Effect.fnUntraced(function*<
               }
 
               const rpc = entityRpcs.get(message.envelope.tag)! as any as Rpc.AnyWithProps
-              if (!storageEnabled && ServiceMap.get(rpc.annotations, Persisted)) {
+              if (!storageEnabled && Context.get(message.annotations, Persisted)) {
                 return Effect.die(
                   "EntityManager.sendLocal: Cannot process a persisted message without MessageStorage"
                 )
@@ -448,7 +471,7 @@ export const make = Effect.fnUntraced(function*<
                 })
               }
               server.activeRequests.set(message.envelope.requestId, entry)
-              return server.write(0, {
+              let write = server.write(0, {
                 ...message.envelope,
                 id: RequestId(message.envelope.requestId),
                 payload: new Request({
@@ -459,6 +482,10 @@ export const make = Effect.fnUntraced(function*<
                   )
                 })
               })
+              if (Context.get(message.annotations, WithTransaction)) {
+                write = options.storage.withTransaction(write)
+              }
+              return write
             }
             case "IncomingEnvelope": {
               const entry = server.activeRequests.get(message.envelope.requestId)
@@ -492,7 +519,7 @@ export const make = Effect.fnUntraced(function*<
 
   const decodeMessage = makeMessageDecode(entity, entityRpcs)
 
-  const runFork = Effect.runForkWith(services)
+  const runFork = Effect.runForkWith(context)
 
   return identity<EntityManager>({
     interruptShard: (shardId: ShardId) =>
@@ -544,7 +571,7 @@ export const make = Effect.fnUntraced(function*<
                   exit: Exit.die(new MalformedMessage({ cause }))
                 }),
                 rpc: entityRpcs.get(message.envelope.tag)!,
-                services: services as any
+                context: context as any
               })
             ))
           },
@@ -558,6 +585,10 @@ export const make = Effect.fnUntraced(function*<
             const rpc = entityRpcs.get(decoded.envelope.tag)!
             return sendLocal(
               new Message.IncomingRequestLocal({
+                annotations: Context.get(rpc.annotations, ClusterSchema.Dynamic)(
+                  rpc.annotations,
+                  decoded.envelope as any
+                ),
                 envelope: decoded.envelope,
                 lastSentReply: decoded.lastSentReply,
                 respond: (reply) =>
@@ -565,14 +596,14 @@ export const make = Effect.fnUntraced(function*<
                     new Reply.ReplyWithContext({
                       reply,
                       rpc,
-                      services: services as any
+                      context: context as any
                     })
                   )
               })
             )
           }
         }),
-        Effect.provideServices(services as ServiceMap.ServiceMap<unknown>)
+        Effect.provideContext(context as Context.Context<unknown>)
       ),
     activeEntityCount: Effect.sync(() => activeServers.size)
   })
@@ -623,7 +654,7 @@ const makeMessageDecode = <Type extends string, Rpcs extends Rpc.Any>(
     if (!rpc) {
       return Effect.fail(
         new Schema.SchemaError(
-          new Issue.InvalidValue(Option.some(message), {
+          new SchemaIssue.InvalidValue(Option.some(message), {
             message: `Unknown tag ${message.envelope.tag} for entity type ${entity.type}`
           })
         )

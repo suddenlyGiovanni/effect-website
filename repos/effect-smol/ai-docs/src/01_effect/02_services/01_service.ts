@@ -1,16 +1,16 @@
 /**
- * @title ServiceMap.Service
+ * @title Context.Service
  *
- * The default way to define a service is to extend `ServiceMap.Service`,
+ * The default way to define a service is to extend `Context.Service`,
  * passing in the service interface as a type parameter.
  */
 
 // file: src/db/Database.ts
-import { Effect, Layer, Schema, ServiceMap } from "effect"
+import { Context, Effect, Layer, Schema } from "effect"
 
 // Pass in the service class name as the first type parameter, and the service
 // interface as the second type parameter.
-export class Database extends ServiceMap.Service<Database, {
+export class Database extends Context.Service<Database, {
   query(sql: string): Effect.Effect<Array<unknown>, DatabaseError>
 }>()(
   // The string identifier for the service, which should include the package
@@ -38,7 +38,7 @@ export class Database extends ServiceMap.Service<Database, {
 }
 
 export class DatabaseError extends Schema.TaggedErrorClass<DatabaseError>()("DatabaseError", {
-  cause: Schema.Defect
+  cause: Schema.Defect()
 }) {}
 
 // If you ever need to access the service type, use `Database["Service"]`
