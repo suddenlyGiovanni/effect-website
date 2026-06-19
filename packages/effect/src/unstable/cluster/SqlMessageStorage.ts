@@ -1,6 +1,16 @@
 /**
+ * Persists cluster mailbox messages and replies in SQL.
+ *
+ * The SQL-backed `MessageStorage` stores encoded cluster envelopes and reply
+ * chunks so runners can recover mailbox state after restarts. It supports
+ * redelivering unprocessed messages, deduplicating requests by primary key, and
+ * replaying reply chunks until they are acknowledged. This module includes the
+ * storage constructor, layers, migrations, optional table prefixes, and the row
+ * mapping needed by encoded message storage.
+ *
  * @since 4.0.0
  */
+// eslint-disable effect/no-bigint-literals
 import * as Arr from "../../Array.ts"
 import * as Effect from "../../Effect.ts"
 import * as Layer from "../../Layer.ts"
@@ -9,21 +19,42 @@ import * as Schedule from "../../Schedule.ts"
 import * as Migrator from "../sql/Migrator.ts"
 import * as SqlClient from "../sql/SqlClient.ts"
 import type { Row } from "../sql/SqlConnection.ts"
-import type { SqlError } from "../sql/SqlError.ts"
+import { isSqlError, type SqlError } from "../sql/SqlError.ts"
 import { PersistenceError } from "./ClusterError.ts"
 import type * as Envelope from "./Envelope.ts"
 import * as MessageStorage from "./MessageStorage.ts"
 import { SaveResultEncoded } from "./MessageStorage.ts"
 import type * as Reply from "./Reply.ts"
-import { ShardId } from "./ShardId.ts"
+import * as ShardId from "./ShardId.ts"
 import type { ShardingConfig } from "./ShardingConfig.ts"
 import * as Snowflake from "./Snowflake.ts"
 
 const withTracerDisabled = Effect.withTracerEnabled(false)
 
 /**
+ * Creates a SQL-backed `MessageStorage` implementation, running its migrations
+ * and using the optional table prefix.
+ *
+ * **When to use**
+ *
+ * Use when you need the SQL-backed `MessageStorage` service directly, such as
+ * when composing a custom layer or providing your own `Snowflake.Generator`.
+ *
+ * **Details**
+ *
+ * The optional `prefix` controls the table names for messages, replies, and
+ * migrations; when omitted, `cluster` is used.
+ *
+ * **Gotchas**
+ *
+ * Changing `prefix` after deployment points the runtime at a different set of
+ * tables, including the migration history table.
+ *
+ * @see {@link layer} for a ready-made layer using the default prefix and generator
+ * @see {@link layerWith} for a ready-made layer with a custom table prefix
+ *
+ * @category constructors
  * @since 4.0.0
- * @category Constructors
  */
 export const make: (options?: {
   readonly prefix?: string | undefined
@@ -592,13 +623,41 @@ export const make: (options?: {
         Effect.asVoid,
         PersistenceError.refail,
         withTracerDisabled
+      ),
+
+    withTransaction: (effect) =>
+      sql.withTransaction(effect).pipe(
+        Effect.catchIf(isSqlError, Effect.die)
       )
   })
 }, withTracerDisabled)
 
 /**
+ * Layer that provides SQL-backed `MessageStorage` using the default table prefix
+ * and the default snowflake generator.
+ *
+ * **When to use**
+ *
+ * Use when a cluster should persist mailbox messages and replies in SQL using
+ * the default `cluster` table prefix and the standard snowflake generator.
+ *
+ * **Details**
+ *
+ * The layer runs the SQL migrations through `make`, provides `MessageStorage`,
+ * and supplies `Snowflake.layerGenerator` internally. Callers still provide
+ * `SqlClient` and `ShardingConfig`.
+ *
+ * **Gotchas**
+ *
+ * This layer always uses the `cluster` table prefix. Use `layerWith` before
+ * deployment if you need a different stable prefix, because changing prefixes
+ * later points the runtime at a different set of tables.
+ *
+ * @see {@link layerWith} for the same SQL storage layer with a custom table prefix
+ * @see {@link make} for the lower-level service constructor that uses an existing `Snowflake.Generator`
+ *
+ * @category layers
  * @since 4.0.0
- * @category Layers
  */
 export const layer: Layer.Layer<
   MessageStorage.MessageStorage,
@@ -609,8 +668,10 @@ export const layer: Layer.Layer<
 )
 
 /**
+ * Layer that provides SQL-backed `MessageStorage` using a custom table prefix.
+ *
+ * @category layers
  * @since 4.0.0
- * @category Layers
  */
 export const layerWith = (options: {
   readonly prefix?: string | undefined

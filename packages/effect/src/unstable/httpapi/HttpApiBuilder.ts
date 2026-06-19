@@ -1,6 +1,16 @@
 /**
+ * Builds server routes from declarative `HttpApi` contracts.
+ *
+ * This module turns an `HttpApi` description plus group handlers into
+ * `HttpRouter` routes. At runtime it decodes request parts with schemas, runs
+ * middleware and security handlers, invokes the registered endpoint handler, and
+ * encodes successes or declared errors into `HttpServerResponse` values.
+ *
  * @since 4.0.0
  */
+import type { NonEmptyReadonlyArray } from "../../Array.ts"
+import type * as Cause from "../../Cause.ts"
+import * as Context from "../../Context.ts"
 import * as Effect from "../../Effect.ts"
 import * as Encoding from "../../Encoding.ts"
 import * as Fiber from "../../Fiber.ts"
@@ -14,14 +24,14 @@ import { type Pipeable, pipeArguments } from "../../Pipeable.ts"
 import * as Redacted from "../../Redacted.ts"
 import * as Result from "../../Result.ts"
 import * as Schema from "../../Schema.ts"
-import type * as AST from "../../SchemaAST.ts"
-import * as Issue from "../../SchemaIssue.ts"
-import * as Transformation from "../../SchemaTransformation.ts"
-import type * as Scope from "../../Scope.ts"
-import * as ServiceMap from "../../ServiceMap.ts"
+import * as SchemaAST from "../../SchemaAST.ts"
+import * as SchemaIssue from "../../SchemaIssue.ts"
+import * as SchemaTransformation from "../../SchemaTransformation.ts"
+import * as Scope from "../../Scope.ts"
 import * as Stream from "../../Stream.ts"
 import type { Covariant, NoInfer } from "../../Types.ts"
 import * as UndefinedOr from "../../UndefinedOr.ts"
+import * as Sse from "../encoding/Sse.ts"
 import type { Cookie } from "../http/Cookies.ts"
 import type * as Etag from "../http/Etag.ts"
 import * as HttpEffect from "../http/HttpEffect.ts"
@@ -36,6 +46,7 @@ import * as Multipart from "../http/Multipart.ts"
 import * as UrlParams from "../http/UrlParams.ts"
 import type * as HttpApi from "./HttpApi.ts"
 import * as HttpApiEndpoint from "./HttpApiEndpoint.ts"
+import { HttpApiSchemaError } from "./HttpApiError.ts"
 import type * as HttpApiGroup from "./HttpApiGroup.ts"
 import * as HttpApiMiddleware from "./HttpApiMiddleware.ts"
 import * as HttpApiSchema from "./HttpApiSchema.ts"
@@ -43,10 +54,10 @@ import type * as HttpApiSecurity from "./HttpApiSecurity.ts"
 import * as OpenApi from "./OpenApi.ts"
 
 /**
- * Register an `HttpApi` with a `HttpRouter`.
+ * Registers an `HttpApi` with a `HttpRouter`.
  *
- * @since 4.0.0
  * @category constructors
+ * @since 4.0.0
  */
 export const layer = <Id extends string, Groups extends HttpApiGroup.Any>(
   api: HttpApi.HttpApi<Id, Groups>,
@@ -64,7 +75,7 @@ export const layer = <Id extends string, Groups extends HttpApiGroup.Any>(
   | HttpApiGroup.ToService<Id, Groups>
 > =>
   HttpRouter.use(Effect.fnUntraced(function*(router) {
-    const services = yield* Effect.services<
+    const services = yield* Effect.context<
       | Etag.Generator
       | HttpRouter.HttpRouter
       | FileSystem
@@ -76,7 +87,7 @@ export const layer = <Id extends string, Groups extends HttpApiGroup.Any>(
       key.startsWith("effect/httpapi/HttpApiGroup/")
     )
     for (const group of Object.values(api.groups)) {
-      const groupRoutes = services.mapUnsafe.get(group.key) as Array<HttpRouter.Route<any, any>>
+      const groupRoutes = services.mapUnsafe.get(group.key)?.routes as Array<HttpRouter.Route<any, any>>
       if (groupRoutes === undefined) {
         const available = availableGroups.length === 0 ? "none" : availableGroups.join(", ")
         return yield* Effect.die(
@@ -93,15 +104,16 @@ export const layer = <Id extends string, Groups extends HttpApiGroup.Any>(
   }))
 
 /**
- * Create a `Layer` that will implement all the endpoints in an `HttpApi`.
+ * Create a `Layer` that implements all endpoints in an `HttpApi` group.
  *
- * An unimplemented `Handlers` instance is passed to the `build` function, which
- * you can use to add handlers to the group.
+ * **Details**
  *
- * You can implement endpoints using the `handlers.handle` api.
+ * The `build` function receives an unimplemented `Handlers` instance that can
+ * be used to add handlers to the group. Implement endpoints with
+ * `handlers.handle`.
  *
- * @since 4.0.0
  * @category handlers
+ * @since 4.0.0
  */
 export const group = <
   ApiId extends string,
@@ -119,37 +131,54 @@ export const group = <
   Handlers.Error<Return>,
   Exclude<Handlers.Context<Return>, Scope.Scope>
 > =>
-  Layer.effectServices(Effect.gen(function*() {
-    const services = yield* Effect.services<any>()
+  Layer.effectContext(Effect.gen(function*() {
+    const services = (yield* Effect.context<any>()).pipe(
+      Context.omit(Scope.Scope)
+    )
     const group = api.groups[groupName]!
     const result = build(makeHandlers(group))
     const handlers: Handlers<any, any> = Effect.isEffect(result)
       ? (yield* result as Effect.Effect<any, any, any>)
       : result
     const routes: Array<HttpRouter.Route<any, any>> = []
-    for (const item of handlers.handlers) {
+    for (const item of handlers.handlers.values()) {
       routes.push(handlerToRoute(group as any, item, services))
     }
-    return ServiceMap.makeUnsafe(new Map([[group.key, routes]]))
+    return Context.makeUnsafe(
+      new Map([[group.key, {
+        routes,
+        handlers: handlers.handlers
+      }]])
+    )
   })) as any
 
 /**
+ * Type identifier symbol used to brand `Handlers` values.
+ *
+ * @category type IDs
  * @since 4.0.0
- * @category handlers
  */
 export const HandlersTypeId: unique symbol = Symbol.for("@effect/platform/HttpApiBuilder/Handlers")
 
 /**
+ * Type of the `Handlers` type identifier symbol.
+ *
+ * @category type IDs
  * @since 4.0.0
- * @category handlers
  */
 export type HandlersTypeId = typeof HandlersTypeId
 
 /**
- * Represents a handled `HttpApi`.
+ * Mutable handler collection for one `HttpApi` group.
  *
- * @since 4.0.0
+ * **Details**
+ *
+ * Each call to `handle` or `handleRaw` registers an endpoint implementation and
+ * removes that endpoint from the type-level set of endpoints still requiring
+ * handlers.
+ *
  * @category handlers
+ * @since 4.0.0
  */
 export interface Handlers<
   R,
@@ -159,7 +188,7 @@ export interface Handlers<
     _Endpoints: Covariant<Endpoints>
   }
   readonly group: HttpApiGroup.AnyWithProps
-  readonly handlers: Set<Handlers.Item<R>>
+  readonly handlers: Map<string, Handlers.Item<R>>
 
   /**
    * Add the implementation for an `HttpApiEndpoint` to a `Handlers` group.
@@ -202,21 +231,31 @@ export interface Handlers<
 }
 
 /**
+ * Namespace containing helper types for `HttpApiBuilder` handler collections.
+ *
  * @since 4.0.0
- * @category handlers
  */
 export declare namespace Handlers {
   /**
-   * @since 4.0.0
+   * A `Handlers` value with its context and endpoint types erased.
+   *
    * @category handlers
+   * @since 4.0.0
    */
   export interface Any {
     readonly [HandlersTypeId]: any
   }
 
   /**
-   * @since 4.0.0
+   * Record stored for a registered endpoint handler.
+   *
+   * **Details**
+   *
+   * It keeps the endpoint metadata, handler function, whether raw request handling
+   * is used, and whether the handler should run uninterruptibly.
+   *
    * @category handlers
+   * @since 4.0.0
    */
   export type Item<R> = {
     readonly endpoint: HttpApiEndpoint.AnyWithProps
@@ -226,8 +265,11 @@ export declare namespace Handlers {
   }
 
   /**
-   * @since 4.0.0
+   * Creates a handler collection for a group where every endpoint in the group is
+   * still awaiting an implementation.
+   *
    * @category handlers
+   * @since 4.0.0
    */
   export type FromGroup<Group extends HttpApiGroup.Any> = Handlers<
     never,
@@ -235,8 +277,12 @@ export declare namespace Handlers {
   >
 
   /**
-   * @since 4.0.0
+   * Validates the return value of a group handler builder, preserving successful
+   * handler collections and producing a descriptive type error when endpoints remain
+   * unhandled.
+   *
    * @category handlers
+   * @since 4.0.0
    */
   export type ValidateReturn<A> = A extends (
     | Handlers<
@@ -256,8 +302,11 @@ export declare namespace Handlers {
     `Must return the implemented handlers`
 
   /**
-   * @since 4.0.0
+   * Extracts the error channel from an effect that produces a `Handlers`
+   * collection, returning `never` for non-effectful handler collections.
+   *
    * @category handlers
+   * @since 4.0.0
    */
   export type Error<A> = A extends Effect.Effect<
     Handlers<
@@ -270,8 +319,11 @@ export declare namespace Handlers {
     never
 
   /**
-   * @since 4.0.0
+   * Extracts the services required by a handler collection, including both handler
+   * requirements and the environment required to construct the handlers.
+   *
    * @category handlers
+   * @since 4.0.0
    */
   export type Context<A> = A extends Handlers<
     infer _R,
@@ -289,8 +341,11 @@ export declare namespace Handlers {
 }
 
 /**
- * @since 4.0.0
+ * Builds the server-side HTTP effect for a single endpoint in an API group using
+ * the endpoint metadata, middleware, codecs, and supplied handler.
+ *
  * @category handlers
+ * @since 4.0.0
  */
 export const endpoint = <
   ApiId extends string,
@@ -330,15 +385,24 @@ export const endpoint = <
   | HttpPlatform
   | Path
 > =>
-  Effect.servicesWith((services: ServiceMap.ServiceMap<any>) => {
+  Effect.contextWith((context: Context.Context<any>) => {
     const group = api.groups[groupName] as unknown as HttpApiGroup.AnyWithProps
     const endpoint = group.endpoints[endpointName] as unknown as HttpApiEndpoint.AnyWithProps
-    return Effect.succeed(handlerToHttpEffect(group, endpoint, services, handler as any, false))
+    return Effect.succeed(handlerToHttpEffect(
+      group,
+      endpoint,
+      Context.omit(Scope.Scope)(context),
+      handler as any,
+      false
+    ))
   })
 
 /**
- * @since 4.0.0
+ * Decodes credentials for an HTTP API security scheme from the current request,
+ * supporting bearer, API key, and basic authentication inputs.
+ *
  * @category security
+ * @since 4.0.0
  */
 export const securityDecode = <Security extends HttpApiSecurity.HttpApiSecurity>(
   self: Security
@@ -348,10 +412,11 @@ export const securityDecode = <Security extends HttpApiSecurity.HttpApiSecurity>
   HttpServerRequest | Request.ParsedSearchParams
 > => {
   switch (self._tag) {
-    case "Bearer": {
+    case "Http": {
       return Effect.map(
-        HttpServerRequest.asEffect(),
-        (request) => Redacted.make((request.headers.authorization ?? "").slice(bearerLen)) as any
+        HttpServerRequest,
+        // schemeLength + space
+        (request) => Redacted.make((request.headers.authorization ?? "").slice(self.schemeLength + 1)) as any
       )
     }
     case "ApiKey": {
@@ -378,9 +443,9 @@ export const securityDecode = <Security extends HttpApiSecurity.HttpApiSecurity>
         username: "",
         password: Redacted.make("")
       } as any
-      return HttpServerRequest.asEffect().pipe(
+      return HttpServerRequest.pipe(
         Effect.flatMap((request) =>
-          Encoding.decodeBase64String((request.headers.authorization ?? "").slice(basicLen)).asEffect()
+          Effect.fromResult(Encoding.decodeBase64String((request.headers.authorization ?? "").slice(basicLen)))
         ),
         Effect.match({
           onFailure: () => empty,
@@ -401,8 +466,11 @@ export const securityDecode = <Security extends HttpApiSecurity.HttpApiSecurity>
 }
 
 /**
- * @since 4.0.0
+ * Registers a pre-response handler that sets an API-key cookie on the outgoing
+ * response, defaulting the cookie to `secure` and `httpOnly` unless overridden.
+ *
  * @category security
+ * @since 4.0.0
  */
 export const securitySetCookie = (
   self: HttpApiSecurity.ApiKey,
@@ -423,7 +491,6 @@ export const securitySetCookie = (
 // Internal
 // -----------------------------------------------------------------------------
 
-const bearerLen = `Bearer `.length
 const basicLen = `Basic `.length
 
 const HandlersProto = {
@@ -440,7 +507,7 @@ const HandlersProto = {
     options?: { readonly uninterruptible?: boolean | undefined } | undefined
   ) {
     const endpoint = this.group.endpoints[name]
-    this.handlers.add({
+    this.handlers.set(name, {
       endpoint,
       handler,
       isRaw: false,
@@ -455,7 +522,7 @@ const HandlersProto = {
     options?: { readonly uninterruptible?: boolean | undefined } | undefined
   ) {
     const endpoint = this.group.endpoints[name]
-    this.handlers.add({
+    this.handlers.set(name, {
       endpoint,
       handler,
       isRaw: true,
@@ -470,7 +537,7 @@ const makeHandlers = <R, Endpoints extends HttpApiEndpoint.Any>(
 ): Handlers<R, Endpoints> => {
   const self = Object.create(HandlersProto)
   self.group = group
-  self.handlers = new Set<Handlers.Item<R>>()
+  self.handlers = new Map<string, Handlers.Item<R>>()
   return self
 }
 
@@ -483,6 +550,7 @@ type PayloadDecoder =
   }
   | {
     readonly _tag: "Json" | "FormUrlEncoded" | "Uint8Array" | "Text"
+    readonly nullOnEmpty: boolean
     readonly decode: (input: unknown) => Effect.Effect<unknown, Schema.SchemaError, unknown>
   }
 
@@ -495,7 +563,11 @@ function buildPayloadDecoders(
     if (encoding._tag === "Multipart") {
       result.set(contentType, { _tag: "Multipart", mode: encoding.mode, limits: encoding.limits, decode })
     } else {
-      result.set(contentType, { _tag: encoding._tag, decode })
+      result.set(contentType, {
+        _tag: encoding._tag,
+        decode,
+        nullOnEmpty: schemas.some((s) => SchemaAST.isNull(SchemaAST.toEncoded(s.ast)))
+      })
     }
   })
   return result
@@ -518,21 +590,26 @@ function decodePayload(
   switch (_tag) {
     case "Multipart": {
       if (existing.mode === "buffered") {
-        return Effect.flatMap(
-          Effect.orDie(UndefinedOr.match(existing.limits, {
-            onUndefined: () => httpRequest.multipart,
-            onDefined: (limits) => Effect.provideServices(httpRequest.multipart, Multipart.limitsServices(limits))
-          })),
-          decode
-        )
+        let eff = Effect.orDie(httpRequest.multipart)
+        if (existing.limits) {
+          eff = Effect.provideContext(eff, Multipart.limitsServices(existing.limits))
+        }
+        return Effect.flatMap(eff, decode)
       }
-      return Effect.succeed(UndefinedOr.match(existing.limits, {
-        onUndefined: () => httpRequest.multipartStream,
-        onDefined: (limits) => Stream.provideServices(httpRequest.multipartStream, Multipart.limitsServices(limits))
-      }))
+      return Effect.succeed(
+        existing.limits
+          ? Stream.provideContext(httpRequest.multipartStream, Multipart.limitsServices(existing.limits))
+          : httpRequest.multipartStream
+      )
     }
     case "Json":
-      return Effect.flatMap(Effect.orDie(httpRequest.json), decode)
+      const json = Effect.orDie(Effect.flatMap(httpRequest.text, (text) => {
+        if (text === "") {
+          return existing.nullOnEmpty ? Effect.succeed(null) : Effect.undefined
+        }
+        return Effect.succeed(JSON.parse(text))
+      }))
+      return Effect.flatMap(json, decode)
     case "Text":
       return Effect.flatMap(Effect.orDie(httpRequest.text), decode)
     case "FormUrlEncoded": {
@@ -552,7 +629,7 @@ function decodePayload(
 function handlerToHttpEffect(
   group: HttpApiGroup.AnyWithProps,
   endpoint: HttpApiEndpoint.AnyWithProps,
-  services: ServiceMap.ServiceMap<any>,
+  context: Context.Context<any>,
   handler: HttpApiEndpoint.Handler<any, any, any>,
   isRaw: boolean
 ) {
@@ -561,6 +638,7 @@ function handlerToHttpEffect(
   const decodeParams = UndefinedOr.map(endpoint.params, Schema.decodeUnknownEffect)
   const decodeHeaders = UndefinedOr.map(endpoint.headers, Schema.decodeUnknownEffect)
   const decodeQuery = UndefinedOr.map(endpoint.query, Schema.decodeUnknownEffect)
+  const encodeStream = makeStreamEncoder(endpoint)
 
   const shouldParsePayload = endpoint.payload.size > 0 && !isRaw
   const payloadBy = shouldParsePayload ? buildPayloadDecoders(endpoint.payload) : undefined
@@ -568,26 +646,26 @@ function handlerToHttpEffect(
   return applyMiddleware(
     group,
     endpoint,
-    services,
+    context,
     Effect.gen(function*() {
       const fiber = Fiber.getCurrent()!
-      const services = fiber.services
-      const httpRequest = ServiceMap.getUnsafe(services, HttpServerRequest)
-      const routeContext = ServiceMap.getUnsafe(services, HttpRouter.RouteContext)
-      const query = ServiceMap.getUnsafe(services, Request.ParsedSearchParams)
+      const context = fiber.context
+      const httpRequest = Context.getUnsafe(context, HttpServerRequest)
+      const routeContext = Context.getUnsafe(context, HttpRouter.RouteContext)
+      const query = Context.getUnsafe(context, Request.ParsedSearchParams)
       const request: any = {
         request: httpRequest,
         endpoint,
         group
       }
       if (decodeParams) {
-        request.params = yield* decodeParams(routeContext.params)
+        request.params = yield* HttpApiSchemaError.wrap("Params", decodeParams(routeContext.params))
       }
       if (decodeHeaders) {
-        request.headers = yield* decodeHeaders(httpRequest.headers)
+        request.headers = yield* HttpApiSchemaError.wrap("Headers", decodeHeaders(httpRequest.headers))
       }
       if (decodeQuery) {
-        request.query = yield* decodeQuery(query)
+        request.query = yield* HttpApiSchemaError.wrap("Query", decodeQuery(query))
       }
       if (payloadBy) {
         const result = decodePayload(payloadBy, httpRequest, query)
@@ -595,29 +673,40 @@ function handlerToHttpEffect(
           return result
         }
         if (result !== undefined) {
-          request.payload = yield* result
+          request.payload = yield* HttpApiSchemaError.wrap("Payload", result)
         }
       }
       const response = yield* handler(request)
-      return Response.isHttpServerResponse(response) ? response : yield* encodeSuccess(response)
+      if (Response.isHttpServerResponse(response)) {
+        return response
+      }
+      const streamResponse = encodeStream?.(response, context)
+      if (streamResponse !== undefined) {
+        return yield* HttpApiSchemaError.wrap("Body", streamResponse)
+      }
+      return yield* HttpApiSchemaError.wrap("Body", encodeSuccess(response))
     })
   ).pipe(
     Effect.withErrorReporting,
-    Effect.catch((error) => Effect.orDie(encodeError(error))),
-    Effect.provideServices(services)
+    Effect.catch((error) => {
+      if (HttpApiSchemaError.is(error)) return Effect.die(error)
+      return Effect.orDie(encodeError(error))
+    }),
+    Effect.provideContext(context)
   )
 }
 
-function handlerToRoute(
+/** @internal */
+export function handlerToRoute(
   group: HttpApiGroup.AnyWithProps,
   handler: Handlers.Item<any>,
-  services: ServiceMap.ServiceMap<any>
+  context: Context.Context<any>
 ): HttpRouter.Route<any, any> {
   const endpoint = handler.endpoint
   return HttpRouter.route(
     endpoint.method,
     endpoint.path as HttpRouter.PathInput,
-    handlerToHttpEffect(group, endpoint, services, handler.handler, handler.isRaw),
+    handlerToHttpEffect(group, endpoint, context, handler.handler, handler.isRaw),
     { uninterruptible: handler.uninterruptible }
   )
 }
@@ -636,13 +725,13 @@ const getRequestMediaType = (request: HttpServerRequest): string => {
 const applyMiddleware = <A extends Effect.Effect<any, any, any>>(
   group: HttpApiGroup.AnyWithProps,
   endpoint: HttpApiEndpoint.AnyWithProps,
-  services: ServiceMap.ServiceMap<any>,
+  context: Context.Context<any>,
   handler: A
 ) => {
   const options = { group, endpoint }
   for (const key_ of endpoint.middlewares) {
     const key = key_ as any as HttpApiMiddleware.AnyService
-    const service = ServiceMap.getUnsafe(services, key as any) as HttpApiMiddleware.HttpApiMiddleware<any, any, any>
+    const service = Context.getUnsafe(context, key as any) as HttpApiMiddleware.HttpApiMiddleware<any, any, any>
     const apply = HttpApiMiddleware.isSecurity(key)
       ? makeSecurityMiddleware(key, service as any)
       : service
@@ -692,7 +781,7 @@ const makeSecurityMiddleware = (
       }
       return result.success
     }
-    return yield* lastResult!.asEffect()
+    return yield* Effect.fromResult(lastResult!)
   })
 
   securityMiddlewareCache.set(service, middleware)
@@ -700,6 +789,142 @@ const makeSecurityMiddleware = (
 }
 
 const $HttpServerResponse = Schema.declare(Response.isHttpServerResponse)
+
+type StreamEncoder = (response: unknown, context: Context.Context<never>) =>
+  | Effect.Effect<HttpServerResponse, Schema.SchemaError, unknown>
+  | undefined
+
+function makeStreamEncoder(endpoint: HttpApiEndpoint.AnyWithProps): StreamEncoder | undefined {
+  const streamSchema = getStreamSuccessSchema(endpoint)
+  if (streamSchema === undefined) {
+    return undefined
+  }
+
+  const hasBuffered = hasBufferedSuccess(endpoint)
+  const status = HttpApiSchema.getStatusStream(streamSchema)
+  const contentType = streamSchema.contentType
+
+  if (HttpApiSchema.isStreamUint8Array(streamSchema)) {
+    return (response, context) => {
+      if (!Stream.isStream(response)) {
+        return hasBuffered ? undefined : expectedStreamResponse(response)
+      }
+
+      return Effect.succeed(Response.stream(
+        Stream.provideContext(
+          response as Stream.Stream<Uint8Array, unknown, unknown>,
+          context as Context.Context<unknown>
+        ),
+        { status, contentType }
+      ))
+    }
+  }
+
+  const sseEncoder = makeSseEncoder(streamSchema)
+
+  return (response, context) => {
+    if (!Stream.isStream(response)) {
+      return hasBuffered ? undefined : expectedStreamResponse(response)
+    }
+
+    return Effect.succeed(Response.stream(
+      Stream.provideContext(
+        encodeSseStream(response, sseEncoder),
+        context as Context.Context<unknown>
+      ),
+      { status, contentType }
+    ))
+  }
+}
+
+function getStreamSuccessSchema(endpoint: HttpApiEndpoint.AnyWithProps) {
+  for (const schema of endpoint.success) {
+    if (HttpApiSchema.isStreamSchema(schema)) {
+      return schema
+    }
+  }
+}
+
+function hasBufferedSuccess(endpoint: HttpApiEndpoint.AnyWithProps): boolean {
+  for (const schema of endpoint.success) {
+    if (Schema.isSchema(schema) && !HttpApiSchema.isStreamSchema(schema)) return true
+  }
+  return endpoint.success.size === 0
+}
+
+function expectedStreamResponse(response: unknown) {
+  return Effect.fail(
+    makeSchemaError(
+      new SchemaIssue.InvalidValue(Option.some(response), {
+        message: "Expected a streaming response"
+      })
+    )
+  )
+}
+
+interface SseStreamEncoder {
+  readonly sseMode: HttpApiSchema.StreamSseMode
+  readonly encodeEvents: (
+    input: NonEmptyReadonlyArray<unknown>
+  ) => Effect.Effect<NonEmptyReadonlyArray<Sse.EventEncoded>, Schema.SchemaError, unknown>
+  readonly encodeCause: (input: unknown) => Effect.Effect<string, Schema.SchemaError, unknown>
+}
+
+function makeSseEncoder<Events extends Sse.EventCodec, Error extends Schema.Top>(
+  streamSchema: HttpApiSchema.StreamSse<Events, Error, unknown>
+): SseStreamEncoder {
+  const CauseSchema = Schema.toCodecJson(Schema.Cause(streamSchema.error, Schema.Defect()))
+  return {
+    sseMode: streamSchema.sseMode,
+    encodeEvents: Schema.encodeUnknownEffect(Schema.Array(streamSchema.events)) as any,
+    encodeCause: Schema.encodeUnknownEffect(Schema.fromJsonString(CauseSchema))
+  }
+}
+
+function encodeSseStream(
+  stream: Stream.Stream<unknown, unknown, unknown>,
+  encoder: SseStreamEncoder
+): Stream.Stream<Uint8Array, unknown, unknown> {
+  return stream.pipe(
+    encoder.sseMode === "data" ?
+      Stream.map((value) => ({
+        id: undefined,
+        event: "message",
+        data: value
+      })) :
+      identity,
+    Stream.mapArrayEffect((chunk) => Effect.orDie(encoder.encodeEvents(chunk))),
+    Stream.catchCause((cause) => Stream.fromEffect(encodeFailureEvent(cause, encoder))),
+    Stream.map(renderSseEvent),
+    Stream.encodeText
+  )
+}
+
+function encodeFailureEvent(cause: Cause.Cause<unknown>, encoder: SseStreamEncoder) {
+  return encoder.encodeCause(cause).pipe(
+    Effect.orDie,
+    Effect.map((encodedCause) => ({
+      id: undefined,
+      event: reservedStreamFailureEvent,
+      data: encodedCause
+    }))
+  )
+}
+
+const reservedStreamFailureEvent = "effect/httpapi/stream/failure"
+
+function renderSseEvent(event: Sse.EventEncoded) {
+  return Sse.encoder.write({
+    _tag: "Event",
+    event: event.event,
+    id: event.id,
+    data: event.data
+  })
+}
+
+function makeSchemaError(issue: SchemaIssue.Issue): Schema.SchemaError {
+  return new Schema.SchemaError(issue)
+}
 
 const toResponseSuccessSchema = toResponseSchema(HttpApiSchema.getStatusSuccess)
 const toResponseErrorSchema = toResponseSchema(HttpApiSchema.getStatusError)
@@ -711,11 +936,12 @@ function makeSuccessSchema(endpoint: HttpApiEndpoint.AnyWithProps): Schema.Encod
 
 function makeErrorSchema(endpoint: HttpApiEndpoint.AnyWithProps): Schema.Encoder<HttpServerResponse, unknown> {
   const schemas = HttpApiEndpoint.getErrorSchemas(endpoint).map(toResponseErrorSchema)
+  if (schemas.length === 0) return Schema.Never
   return schemas.length === 1 ? schemas[0] : Schema.Union(schemas)
 }
 
-function toResponseSchema(getStatus: (ast: AST.AST) => number) {
-  const cache = new WeakMap<AST.AST, Schema.Top>()
+function toResponseSchema(getStatus: (ast: SchemaAST.AST) => number) {
+  const cache = new WeakMap<SchemaAST.AST, Schema.Top>()
 
   return (schema: Schema.Top): Schema.Encoder<HttpServerResponse, unknown> => {
     const cached = cache.get(schema.ast)
@@ -731,9 +957,9 @@ function toResponseSchema(getStatus: (ast: AST.AST) => number) {
 }
 
 function getResponseTransformation(
-  getStatus: (ast: AST.AST) => number,
+  getStatus: (ast: SchemaAST.AST) => number,
   schema: Schema.Top
-): Transformation.Transformation<unknown, Response.HttpServerResponse> {
+): SchemaTransformation.Transformation<unknown, Response.HttpServerResponse> {
   const ast = schema.ast
   const encode = getResponseEncode(
     getStatus(ast),
@@ -741,8 +967,8 @@ function getResponseTransformation(
     HttpApiSchema.isNoContent(ast)
   )
 
-  return Transformation.transformOrFail({
-    decode: (res) => Effect.fail(new Issue.Forbidden(Option.some(res), { message: "Encode only schema" })),
+  return SchemaTransformation.transformOrFail({
+    decode: (res) => Effect.fail(new SchemaIssue.Forbidden(Option.some(res), { message: "Encode only schema" })),
     encode
   })
 }
@@ -751,7 +977,7 @@ function getResponseEncode<E>(
   status: number,
   encoding: HttpApiSchema.ResponseEncoding,
   isNoContent: boolean
-): (e: E) => Effect.Effect<Response.HttpServerResponse, Issue.InvalidValue, never> {
+): (e: E) => Effect.Effect<Response.HttpServerResponse, SchemaIssue.InvalidValue, never> {
   switch (encoding._tag) {
     case "Json": {
       return ((e) => {
@@ -762,7 +988,7 @@ function getResponseEncode<E>(
           const s = JSON.stringify(e)
           return Effect.succeed(Response.text(s, { status, contentType: encoding.contentType }))
         } catch (error) {
-          return Effect.fail(new Issue.InvalidValue(Option.some(e), { message: globalThis.String(error) }))
+          return Effect.fail(new SchemaIssue.InvalidValue(Option.some(e), { message: globalThis.String(error) }))
         }
       })
     }

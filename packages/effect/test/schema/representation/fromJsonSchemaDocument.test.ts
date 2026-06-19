@@ -1,6 +1,19 @@
-import { JsonSchema, SchemaRepresentation } from "effect"
+import { JsonSchema, Schema, SchemaRepresentation } from "effect"
 import { describe, it } from "vitest"
 import { deepStrictEqual, strictEqual } from "../../utils/assert.ts"
+
+const json = (annotations?: Schema.Annotations.Annotations) => {
+  const representation = SchemaRepresentation.fromAST(Schema.Json.ast).representation
+  return annotations === undefined
+    ? representation
+    : {
+      ...representation,
+      annotations: {
+        ...("annotations" in representation ? representation.annotations : undefined),
+        ...annotations
+      }
+    }
+}
 
 describe("fromJsonSchemaDocument", () => {
   function assertFromJsonSchema(
@@ -33,9 +46,9 @@ describe("fromJsonSchemaDocument", () => {
     assertFromJsonSchema(
       { schema: {} },
       {
-        representation: { _tag: "Unknown" }
+        representation: json()
       },
-      "Schema.Unknown"
+      "Schema.Json"
     )
     assertFromJsonSchema(
       {
@@ -49,19 +62,16 @@ describe("fromJsonSchemaDocument", () => {
         }
       },
       {
-        representation: {
-          _tag: "Unknown",
-          annotations: {
-            title: "a",
-            description: "b",
-            default: "c",
-            examples: ["d"],
-            readOnly: true,
-            writeOnly: true
-          }
-        }
+        representation: json({
+          title: "a",
+          description: "b",
+          default: "c",
+          examples: ["d"],
+          readOnly: true,
+          writeOnly: true
+        })
       },
-      `Schema.Unknown.annotate({ "title": "a", "description": "b", "default": "c", "examples": ["d"], "readOnly": true, "writeOnly": true })`
+      `Schema.Json.annotate({ "title": "a", "description": "b", "default": "c", "examples": ["d"], "readOnly": true, "writeOnly": true })`
     )
   })
 
@@ -124,9 +134,9 @@ describe("fromJsonSchemaDocument", () => {
       assertFromJsonSchema(
         { schema: { const: {} } },
         {
-          representation: { _tag: "Unknown" }
+          representation: json()
         },
-        `Schema.Unknown`
+        `Schema.Json`
       )
     })
   })
@@ -243,6 +253,53 @@ describe("fromJsonSchemaDocument", () => {
     )
   })
 
+  it("anyOf with siblings", () => {
+    assertFromJsonSchema(
+      {
+        schema: {
+          type: "object",
+          properties: { id: { type: "string" } },
+          required: ["id"],
+          anyOf: [
+            { properties: { a: { type: "string" } }, required: ["a"] },
+            { properties: { b: { type: "number" } }, required: ["b"] }
+          ]
+        }
+      },
+      {
+        representation: {
+          _tag: "Union",
+          types: [
+            {
+              _tag: "Objects",
+              propertySignatures: [
+                { name: "a", isOptional: false, isMutable: false, type: { _tag: "String", checks: [] } },
+                { name: "id", isOptional: false, isMutable: false, type: { _tag: "String", checks: [] } }
+              ],
+              indexSignatures: [{ parameter: { _tag: "String", checks: [] }, type: json() }],
+              checks: []
+            },
+            {
+              _tag: "Objects",
+              propertySignatures: [
+                {
+                  name: "b",
+                  isOptional: false,
+                  isMutable: false,
+                  type: { _tag: "Number", checks: [{ _tag: "Filter", meta: { _tag: "isFinite" } }] }
+                },
+                { name: "id", isOptional: false, isMutable: false, type: { _tag: "String", checks: [] } }
+              ],
+              indexSignatures: [{ parameter: { _tag: "String", checks: [] }, type: json() }],
+              checks: []
+            }
+          ],
+          mode: "anyOf"
+        }
+      }
+    )
+  })
+
   it("oneOf", () => {
     assertFromJsonSchema(
       { schema: { oneOf: [{ const: "a" }, { enum: [1, 2] }] } },
@@ -264,6 +321,53 @@ describe("fromJsonSchemaDocument", () => {
         }
       },
       `Schema.Union([Schema.Literal("a"), Schema.Literals([1, 2])], { mode: "oneOf" })`
+    )
+  })
+
+  it("oneOf with siblings", () => {
+    assertFromJsonSchema(
+      {
+        schema: {
+          type: "object",
+          properties: { id: { type: "string" } },
+          required: ["id"],
+          oneOf: [
+            { properties: { a: { type: "string" } }, required: ["a"] },
+            { properties: { b: { type: "number" } }, required: ["b"] }
+          ]
+        }
+      },
+      {
+        representation: {
+          _tag: "Union",
+          types: [
+            {
+              _tag: "Objects",
+              propertySignatures: [
+                { name: "a", isOptional: false, isMutable: false, type: { _tag: "String", checks: [] } },
+                { name: "id", isOptional: false, isMutable: false, type: { _tag: "String", checks: [] } }
+              ],
+              indexSignatures: [{ parameter: { _tag: "String", checks: [] }, type: json() }],
+              checks: []
+            },
+            {
+              _tag: "Objects",
+              propertySignatures: [
+                {
+                  name: "b",
+                  isOptional: false,
+                  isMutable: false,
+                  type: { _tag: "Number", checks: [{ _tag: "Filter", meta: { _tag: "isFinite" } }] }
+                },
+                { name: "id", isOptional: false, isMutable: false, type: { _tag: "String", checks: [] } }
+              ],
+              indexSignatures: [{ parameter: { _tag: "String", checks: [] }, type: json() }],
+              checks: []
+            }
+          ],
+          mode: "oneOf"
+        }
+      }
     )
   })
 
@@ -564,11 +668,11 @@ describe("fromJsonSchemaDocument", () => {
           representation: {
             _tag: "Arrays",
             elements: [],
-            rest: [{ _tag: "Unknown" }],
+            rest: [json()],
             checks: []
           }
         },
-        `Schema.Array(Schema.Unknown)`
+        `Schema.Array(Schema.Json)`
       )
     })
 
@@ -666,11 +770,11 @@ describe("fromJsonSchemaDocument", () => {
             representation: {
               _tag: "Arrays",
               elements: [],
-              rest: [{ _tag: "Unknown" }],
+              rest: [json()],
               checks: [{ _tag: "Filter", meta: { _tag: "isMinLength", minLength: 1 } }]
             }
           },
-          `Schema.Array(Schema.Unknown).check(Schema.isMinLength(1))`
+          `Schema.Array(Schema.Json).check(Schema.isMinLength(1))`
         )
       })
 
@@ -681,11 +785,11 @@ describe("fromJsonSchemaDocument", () => {
             representation: {
               _tag: "Arrays",
               elements: [],
-              rest: [{ _tag: "Unknown" }],
+              rest: [json()],
               checks: [{ _tag: "Filter", meta: { _tag: "isMaxLength", maxLength: 1 } }]
             }
           },
-          `Schema.Array(Schema.Unknown).check(Schema.isMaxLength(1))`
+          `Schema.Array(Schema.Json).check(Schema.isMaxLength(1))`
         )
       })
 
@@ -696,11 +800,11 @@ describe("fromJsonSchemaDocument", () => {
             representation: {
               _tag: "Arrays",
               elements: [],
-              rest: [{ _tag: "Unknown" }],
+              rest: [json()],
               checks: [{ _tag: "Filter", meta: { _tag: "isUnique" } }]
             }
           },
-          `Schema.Array(Schema.Unknown).check(Schema.isUnique())`
+          `Schema.Array(Schema.Json).check(Schema.isUnique())`
         )
       })
     })
@@ -715,12 +819,12 @@ describe("fromJsonSchemaDocument", () => {
             _tag: "Objects",
             propertySignatures: [],
             indexSignatures: [
-              { parameter: { _tag: "String", checks: [] }, type: { _tag: "Unknown" } }
+              { parameter: { _tag: "String", checks: [] }, type: json() }
             ],
             checks: []
           }
         },
-        `Schema.Record(Schema.String, Schema.Unknown)`
+        `Schema.Record(Schema.String, Schema.Json)`
       )
       assertFromJsonSchema(
         {
@@ -903,12 +1007,12 @@ describe("fromJsonSchemaDocument", () => {
               _tag: "Objects",
               propertySignatures: [],
               indexSignatures: [
-                { parameter: { _tag: "String", checks: [] }, type: { _tag: "Unknown" } }
+                { parameter: { _tag: "String", checks: [] }, type: json() }
               ],
               checks: [{ _tag: "Filter", meta: { _tag: "isMinProperties", minProperties: 1 } }]
             }
           },
-          `Schema.Record(Schema.String, Schema.Unknown).check(Schema.isMinProperties(1))`
+          `Schema.Record(Schema.String, Schema.Json).check(Schema.isMinProperties(1))`
         )
       })
 
@@ -920,12 +1024,12 @@ describe("fromJsonSchemaDocument", () => {
               _tag: "Objects",
               propertySignatures: [],
               indexSignatures: [
-                { parameter: { _tag: "String", checks: [] }, type: { _tag: "Unknown" } }
+                { parameter: { _tag: "String", checks: [] }, type: json() }
               ],
               checks: [{ _tag: "Filter", meta: { _tag: "isMaxProperties", maxProperties: 1 } }]
             }
           },
-          `Schema.Record(Schema.String, Schema.Unknown).check(Schema.isMaxProperties(1))`
+          `Schema.Record(Schema.String, Schema.Json).check(Schema.isMaxProperties(1))`
         )
       })
     })
@@ -946,7 +1050,7 @@ describe("fromJsonSchemaDocument", () => {
               indexSignatures: [
                 {
                   parameter: { _tag: "String", checks: [] },
-                  type: { _tag: "Unknown" }
+                  type: json()
                 }
               ],
               checks: [{
@@ -961,7 +1065,7 @@ describe("fromJsonSchemaDocument", () => {
               }]
             }
           },
-          `Schema.Record(Schema.String, Schema.Unknown).check(Schema.isPropertyNames(Schema.String.check(Schema.isPattern(new RegExp("^[A-Z]")))))`
+          `Schema.Record(Schema.String, Schema.Json).check(Schema.isPropertyNames(Schema.String.check(Schema.isPattern(new RegExp("^[A-Z]")))))`
         )
       })
 
@@ -978,14 +1082,14 @@ describe("fromJsonSchemaDocument", () => {
               _tag: "Objects",
               propertySignatures: [],
               indexSignatures: [
-                { parameter: { _tag: "String", checks: [] }, type: { _tag: "Unknown" } }
+                { parameter: { _tag: "String", checks: [] }, type: json() }
               ],
               checks: [
                 { _tag: "Filter", meta: { _tag: "isPropertyNames", propertyNames: { _tag: "Never" } } }
               ]
             }
           },
-          `Schema.Record(Schema.String, Schema.Unknown).check(Schema.isPropertyNames(Schema.Never))`
+          `Schema.Record(Schema.String, Schema.Json).check(Schema.isPropertyNames(Schema.Never))`
         )
       })
 
@@ -1004,7 +1108,7 @@ describe("fromJsonSchemaDocument", () => {
               _tag: "Objects",
               propertySignatures: [],
               indexSignatures: [
-                { parameter: { _tag: "String", checks: [] }, type: { _tag: "Unknown" } }
+                { parameter: { _tag: "String", checks: [] }, type: json() }
               ],
               checks: [
                 {
@@ -1030,7 +1134,7 @@ describe("fromJsonSchemaDocument", () => {
               ]
             }
           },
-          `Schema.Record(Schema.String, Schema.Unknown).check(Schema.isPropertyNames(Schema.String.check(Schema.isPattern(new RegExp("^[A-Z]"))))).check(Schema.isPropertyNames(Schema.String.check(Schema.isMinLength(2))))`
+          `Schema.Record(Schema.String, Schema.Json).check(Schema.isPropertyNames(Schema.String.check(Schema.isPattern(new RegExp("^[A-Z]"))))).check(Schema.isPropertyNames(Schema.String.check(Schema.isMinLength(2))))`
         )
       })
     })
@@ -1308,6 +1412,28 @@ describe("fromJsonSchemaDocument", () => {
             }
           },
           `Schema.String.annotate({ "description": "a" }).check(Schema.isMinLength(1))`
+        )
+      })
+
+      it("description & description", () => {
+        assertFromJsonSchema(
+          {
+            schema: {
+              type: "string",
+              description: "a",
+              allOf: [
+                { description: "b" }
+              ]
+            }
+          },
+          {
+            representation: {
+              _tag: "String",
+              checks: [],
+              annotations: { description: "b" }
+            }
+          },
+          `Schema.String.annotate({ "description": "b" })`
         )
       })
 
@@ -1824,11 +1950,11 @@ describe("fromJsonSchemaDocument", () => {
             representation: {
               _tag: "Arrays",
               elements: [],
-              rest: [{ _tag: "Unknown" }],
+              rest: [json()],
               checks: [{ _tag: "Filter", meta: { _tag: "isUnique" } }]
             }
           },
-          `Schema.Array(Schema.Unknown).check(Schema.isUnique())`
+          `Schema.Array(Schema.Json).check(Schema.isUnique())`
         )
       })
     })
@@ -1947,15 +2073,12 @@ describe("fromJsonSchemaDocument", () => {
             }
           },
           {
-            representation: {
-              _tag: "Unknown",
-              annotations: {
-                title: "a",
-                description: "b"
-              }
-            }
+            representation: json({
+              title: "a",
+              description: "b"
+            })
           },
-          `Schema.Unknown.annotate({ "title": "a", "description": "b" })`
+          `Schema.Json.annotate({ "title": "a", "description": "b" })`
         )
       })
 
@@ -1979,15 +2102,12 @@ describe("fromJsonSchemaDocument", () => {
             }
           },
           {
-            representation: {
-              _tag: "Unknown",
-              annotations: {
-                title: "a",
-                default: "c"
-              }
-            }
+            representation: json({
+              title: "a",
+              default: "c"
+            })
           },
-          `Schema.Unknown.annotate({ "title": "a", "default": "c" })`
+          `Schema.Json.annotate({ "title": "a", "default": "c" })`
         )
       })
 
@@ -2002,17 +2122,14 @@ describe("fromJsonSchemaDocument", () => {
             }
           },
           {
-            representation: {
-              _tag: "Unknown",
-              annotations: {
-                title: "a",
-                description: "b",
-                default: "c",
-                examples: ["d"]
-              }
-            }
+            representation: json({
+              title: "a",
+              description: "b",
+              default: "c",
+              examples: ["d"]
+            })
           },
-          `Schema.Unknown.annotate({ "title": "a", "description": "b", "default": "c", "examples": ["d"] })`
+          `Schema.Json.annotate({ "title": "a", "description": "b", "default": "c", "examples": ["d"] })`
         )
       })
     })

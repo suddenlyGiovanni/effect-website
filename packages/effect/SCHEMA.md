@@ -244,24 +244,15 @@ Schema.BigInt.check(isNonPositive)
 
 ## Dates
 
-The `Schema.Date` schema matches `Date` objects. You can combine it with a string encoding to decode date strings into `Date` instances.
+The `Schema.Date` schema matches `Date` objects (even invalid dates).
 
-```ts
-import { Schema, SchemaGetter } from "effect"
-
-Schema.Date
-
-const DateFromString = Schema.Date.pipe(
-  Schema.encodeTo(Schema.String, {
-    decode: SchemaGetter.Date(),
-    encode: SchemaGetter.String()
-  })
-)
-```
+If you want to validate only valid dates, use `Schema.DateValid` instead.
 
 ## Template literals
 
 You can use `Schema.TemplateLiteral` to define structured string patterns made of multiple parts. Each part can be a literal or a schema, and **additional constraints** (such as `isMinLength` or `isMaxLength`) can be applied to individual parts.
+
+Template literal matching is based on the semantics of each part rather than only a generated regular expression. Checks on string, number, and bigint schema parts are applied while matching each segment.
 
 **Example** (Constraining parts of an email-like string)
 
@@ -291,8 +282,7 @@ Success("a@b.com")
 
 console.log(String(Schema.decodeUnknownExit(email)("@b.com")))
 /*
-Failure(Cause([Fail(SchemaError(Expected a value with a length of at least 1, got ""
-  at [0]))]))
+Failure(Cause([Fail(SchemaError(Expected a string matching template literal parts, got "@b.com"))]))
 */
 ```
 
@@ -305,19 +295,25 @@ If you want to extract the parts of a string that match a template, you can use 
 ```ts
 import { Schema } from "effect"
 
-const email = Schema.TemplateLiteralParser([
-  Schema.String.check(Schema.isMinLength(1)),
-  "@",
-  Schema.String.check(Schema.isMaxLength(64))
+const schema = Schema.TemplateLiteralParser([
+  Schema.String.check(Schema.isMinLength(2)),
+  ":",
+  Schema.Int
 ])
 
-// The inferred type is `readonly [string, "@", string]`
-export type Type = typeof email.Type
+// The inferred type is `readonly [string, ":", number]`
+export type Type = typeof schema.Type
 
-console.log(String(Schema.decodeUnknownExit(email)("a@b.com")))
-/*
-Success(["a","@","b.com"])
-*/
+console.log(String(Schema.decodeUnknownExit(schema)("aa:1")))
+// Success(["aa",":",1])
+
+console.log(String(Schema.decodeUnknownExit(schema)("a:1")))
+// Failure(Cause([Fail(SchemaError(Expected a value with a length of at least 2, got "a"
+//   at [0]))]))
+
+console.log(String(Schema.decodeUnknownExit(schema)("aa:1.2")))
+// Failure(Cause([Fail(SchemaError(Expected an integer, got 1.2
+//   at [2]))]))
 ```
 
 # Defining Composite Schemas
@@ -459,21 +455,75 @@ type Type = typeof schema.Type
 
 You can assign default values to fields during decoding using:
 
-- `Schema.withDecodingDefaultKey`: for optional fields
-- `Schema.withDecodingDefault`: for optional or undefined fields
+| API                                 | Encoded side              | Default value type |
+| ----------------------------------- | ------------------------- | ------------------ |
+| `Schema.withDecodingDefaultKey`     | key absent                | `Encoded`          |
+| `Schema.withDecodingDefault`        | key absent or `undefined` | `Encoded`          |
+| `Schema.withDecodingDefaultTypeKey` | key absent                | `Type`             |
+| `Schema.withDecodingDefaultType`    | key absent or `undefined` | `Type`             |
 
-In both cases, the provided value must be of the **encoded** type, and it is used when:
+The "Key" variants use `optionalKey` (the key may be absent but not `undefined`), while the non-"Key" variants use `optional` (the key may be absent **or** `undefined`).
 
-1. the field is missing, or
-2. the field is explicitly `undefined`
+The "Type" variants accept a default specified as a `Type` (decoded) value, which is useful when the schema has a transformation and you want to provide the default in the decoded representation.
 
-**Example** (Providing a default for a missing or undefined value)
+#### Encoded-Side Defaults
+
+`withDecodingDefaultKey` and `withDecodingDefault` accept a default specified as an
+**`Encoded` value** (before any decoding transformation). This is the most common
+case and works well when the Encoded and Type representations are the same, or
+when you already have the value in encoded form.
+
+**Example** (Default as an Encoded value)
+
+In `FiniteFromString`, the `Encoded` type is `string` and the `Type` is `number`.
+The default `"1"` is a **string** (the Encoded type), which is then decoded to `1`.
 
 ```ts
-import { Schema } from "effect"
+import { Effect, Schema } from "effect"
 
 const schema = Schema.Struct({
-  a: Schema.FiniteFromString.pipe(Schema.withDecodingDefault(() => "1"))
+  //                                          ┌─── "1" is a string (Encoded type)
+  //                                          ▼
+  a: Schema.FiniteFromString.pipe(Schema.withDecodingDefault(Effect.succeed("1")))
+})
+
+//     ┌─── { readonly a?: string | undefined; }
+//     ▼
+type Encoded = typeof schema.Encoded
+
+//     ┌─── { readonly a: number; }
+//     ▼
+type Type = typeof schema.Type
+
+console.log(Schema.decodeUnknownSync(schema)({}))
+// Output: { a: 1 }
+
+console.log(Schema.decodeUnknownSync(schema)({ a: undefined }))
+// Output: { a: 1 }
+
+console.log(Schema.decodeUnknownSync(schema)({ a: "2" }))
+// Output: { a: 2 }
+```
+
+#### Type-Side Defaults
+
+`withDecodingDefaultTypeKey` and `withDecodingDefaultType` accept a default
+specified as a **`Type` value** (the decoded representation). This is useful when
+the schema has a transformation and you want to provide the default directly as a
+decoded value, bypassing the decoding step.
+
+**Example** (Default as a Type value)
+
+Here the default `1` is a **number** (the Type), not a string. It does not go
+through the `FiniteFromString` decoding transformation.
+
+```ts
+import { Effect, Schema } from "effect"
+
+const schema = Schema.Struct({
+  //                                              ┌─── 1 is a number (Type)
+  //                                              ▼
+  a: Schema.FiniteFromString.pipe(Schema.withDecodingDefaultType(Effect.succeed(1)))
 })
 
 //     ┌─── { readonly a?: string | undefined; }
@@ -501,12 +551,12 @@ You can also apply decoding defaults within nested structures.
 **Example** (Nested struct with defaults for missing or undefined fields)
 
 ```ts
-import { Schema } from "effect"
+import { Effect, Schema } from "effect"
 
 const schema = Schema.Struct({
   a: Schema.Struct({
-    b: Schema.FiniteFromString.pipe(Schema.withDecodingDefault(() => "1"))
-  }).pipe(Schema.withDecodingDefault(() => ({})))
+    b: Schema.FiniteFromString.pipe(Schema.withDecodingDefault(Effect.succeed("1")))
+  }).pipe(Schema.withDecodingDefault(Effect.succeed({})))
 })
 
 /*
@@ -899,6 +949,38 @@ type Encoded = {
 type Encoded = typeof schema.Encoded
 ```
 
+### Renaming Encoded Keys
+
+Use `Schema.encodeKeys` to rename one or more keys only in the encoded representation of a struct.
+
+Pass a mapping of `{ decodedKey: encodedKey }`. During decoding, the schema expects the mapped encoded keys. During encoding, it produces those keys. Keys not in the mapping are left unchanged.
+
+Unlike `Struct.renameKeys`, this does not rename the struct's own field names. It only remaps keys at the encoding / decoding boundary.
+
+**Example** (Using snake_case keys in the encoded form)
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.Struct({
+  userId: Schema.FiniteFromString,
+  accountName: Schema.String
+}).pipe(
+  Schema.encodeKeys({
+    userId: "user_id",
+    accountName: "account_name"
+  })
+)
+
+console.log(Schema.decodeUnknownSync(schema)({ user_id: "1", account_name: "alice" }))
+// { userId: 1, accountName: "alice" }
+
+console.log(Schema.encodeUnknownSync(schema)({ userId: 1, accountName: "alice" }))
+// { user_id: "1", account_name: "alice" }
+```
+
+If you are building a struct from reused fields or `Schema.fieldsAssign`, apply `Schema.encodeKeys` after defining the full struct.
+
 ### Reusing Fields
 
 Every `Schema.Struct` exposes a `.fields` property containing its field definitions. You can spread these fields into a new struct to reuse them, similar to how TypeScript interfaces use `extends`.
@@ -1250,7 +1332,7 @@ const schema = A.mapFields(
 
 A tagged struct is a struct that includes a `_tag` field. This field is used to identify the specific variant of the object, which is especially useful when working with union types.
 
-When using the `makeUnsafe` method, the `_tag` field is optional and will be added automatically. However, when decoding or encoding, the `_tag` field must be present in the input.
+When using the `make` method, the `_tag` field is optional and will be added automatically. However, when decoding or encoding, the `_tag` field must be present in the input.
 
 **Example** (Tagged struct as a shorthand for a struct with a `_tag` field)
 
@@ -1533,11 +1615,15 @@ console.log(String(Schema.decodeUnknownExit(schema)(["a", "b", "a"])))
 
 ## Records
 
-A record schema describes an object whose keys are dynamic (not known ahead of time). Every key must satisfy a key schema, and every value must satisfy a value schema.
+A record schema describes an object whose keys are dynamic (not known ahead of time). The key schema selects which own properties belong to the record, and the value schema validates the selected property values.
+
+Properties that are not selected by the key schema are ignored by that record. For example, `Schema.Record(Schema.String.check(Schema.isPattern(/^a/)), Schema.Number)` decodes only string keys that start with `"a"`.
 
 ### Key Transformations
 
 `Schema.Record` supports transforming keys during decoding and encoding. This can be useful when working with different naming conventions.
+
+When a key schema has a transformation, dynamic property selection is based on the encoded property names. The selected keys are then decoded using the key schema.
 
 **Example** (Transforming snake_case keys to camelCase)
 
@@ -1577,7 +1663,7 @@ import { Schema, SchemaTransformation } from "effect"
 const SnakeToCamel = Schema.String.pipe(Schema.decode(SchemaTransformation.snakeToCamel()))
 
 const schema = Schema.Record(SnakeToCamel, Schema.Number, {
-  key: {
+  keyValueCombiner: {
     decode: {
       // When decoding, combine values of conflicting keys by summing them
       combine: ([_, v1], [k2, v2]) => [k2, v1 + v2] // you can pass a Semigroup to combine keys
@@ -1610,9 +1696,12 @@ const schema = Schema.Record(Schema.Int, Schema.String)
 console.log(String(Schema.decodeUnknownExit(schema)({ 1: "a", 2: "b" })))
 // Success({"1":"a","2":"b"})
 
-console.log(String(Schema.decodeUnknownExit(schema)({ 1.1: "a" })))
-// Failure(Cause([Fail(SchemaError(Expected an integer, got 1.1
-//  at ["1.1"]))]))
+console.log(String(Schema.decodeUnknownExit(schema)({ 1.1: "ignored" })))
+// Success({})
+
+console.log(String(Schema.decodeUnknownExit(schema)({ 1: null })))
+// Failure(Cause([Fail(SchemaError(Expected string, got null
+//  at ["1"]))]))
 ```
 
 ### Mutability
@@ -2201,6 +2290,8 @@ While `Schema.declare` works for fixed types like `URL` or `File`, some types ar
 
 `Schema.declareConstructor` handles this by letting you define a **schema factory**: a function that takes schemas for the type parameters and returns a schema for the full type.
 
+> **Important:** `declareConstructor` is for types where the **container shape is the same** on both sides: only the inner type parameter changes (e.g. `Box<Encoded>` to `Box<Type>`). If you need to convert a structurally different type into your declared type (e.g. `T` to `Box<T>`), first declare `Box` with `declareConstructor`, then define a separate transformation schema to express the conversion.
+
 ### How the two-step call works
 
 `declareConstructor` uses a curried (two-step) call pattern:
@@ -2315,9 +2406,90 @@ console.log(String(Schema.decodeUnknownExit(schema)("")))
 // Failure(Cause([Fail(SchemaError: length must be >= 3, got 0)]))
 ```
 
+### Filter error messages and schema identifiers
+
+The default formatter chooses the error label from the level that failed:
+
+- If the input does not match the base schema type, the formatter reports a
+  type-level failure. In that case, a schema `identifier` is used as the
+  expected label.
+- If the base type matches but a filter fails, the formatter reports a filter
+  failure. In that case, the filter's `message` annotation is used first, then
+  its `expected` annotation, and finally `<filter>` if neither is provided.
+
+An `identifier` does not name a failed filter. Use `expected` to name the
+filter in the default formatter, or `message` to replace the filter failure
+message completely.
+
+**Example** (Schema identifier versus filter expected message)
+
+```ts
+import { Schema } from "effect"
+
+const Username = Schema.NonEmptyString.annotate({ identifier: "Username" })
+
+console.log(String(Schema.decodeUnknownExit(Username)(null)))
+// Failure(Cause([Fail(SchemaError: Expected Username, got null)]))
+
+console.log(String(Schema.decodeUnknownExit(Username)("")))
+// Failure(Cause([Fail(SchemaError: Expected a value with a length of at least 1, got "")]))
+```
+
+### Filter return shapes
+
+A filter predicate can return any of the shapes described by `Schema.FilterOutput`:
+
+- `undefined` or `true` — success.
+- `false` — generic failure (no custom message).
+- `string` — failure with the string used as the error message.
+- `SchemaIssue.Issue` — a fully-formed issue, returned as-is (escape hatch for `Composite`, `AnyOf`, etc.).
+- `{ path, issue }` — failure attached to a nested path. `issue` can be a `string` (wrapped in an `InvalidValue`) or a full `SchemaIssue.Issue`.
+- `ReadonlyArray<FilterIssue>` — several failures reported together. Empty arrays are success; a single element is unwrapped; multiple entries are grouped into an `Issue.Composite`.
+
+**Example** (Failure at a nested path)
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.Struct({ password: Schema.String, confirmPassword: Schema.String }).check(
+  Schema.makeFilter((o) =>
+    o.password === o.confirmPassword
+      ? undefined
+      : { path: ["password"], issue: "password and confirmPassword must match" }
+  )
+)
+
+console.log(String(Schema.decodeUnknownExit(schema)({ password: "123456", confirmPassword: "1234567" })))
+// Failure(Cause([Fail(SchemaError: password and confirmPassword must match
+//   at ["password"])]))
+```
+
+**Example** (Reporting multiple failures at once)
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.Struct({ a: Schema.Finite, b: Schema.Finite, c: Schema.Finite }).check(
+  Schema.makeFilter((o) => {
+    const issues: Array<Schema.FilterIssue> = []
+    if (o.a > 0) {
+      if (o.b <= 0) issues.push({ path: ["b"], issue: "b must be greater than 0" })
+      if (o.c <= 0) issues.push({ path: ["c"], issue: "c must be greater than 0" })
+    }
+    return issues
+  })
+)
+
+console.log(String(Schema.decodeUnknownExit(schema)({ a: 1, b: 0, c: 0 })))
+// Failure(Cause([Fail(SchemaError: b must be greater than 0
+//   at ["b"]
+// c must be greater than 0
+//   at ["c"])]))
+```
+
 ## Preserving Schema Type After Filtering
 
-Adding a filter does not change the schema's type. You can still use all schema-specific methods (like `.fields` on a struct or `.makeUnsafe`) after calling `.check(...)`.
+Adding a filter does not change the schema's type. You can still use all schema-specific methods (like `.fields` on a struct or `.make`) after calling `.check(...)`.
 
 **Example** (Chaining filters and annotations without losing type information)
 
@@ -2595,9 +2767,9 @@ export const makeGreaterThan = <T>(options: {
 
 # Constructors
 
-A constructor creates a value of the schema's type, running all validations at the time of creation. If the value does not satisfy the schema, the constructor throws an error. Every schema exposes a `makeUnsafe` method for this purpose.
+A constructor creates a value of the schema's type, running all validations at the time of creation. If the value does not satisfy the schema, the constructor throws an error. Every schema exposes a `make` method for this purpose.
 
-For a non-throwing alternative, use `Schema.makeOption` (or `SchemaParser.makeOption`), which returns `Option.Some` on success and `Option.None` on failure.
+For an alternative that does not throw on schema validation failures, use `Schema.makeOption` (or `SchemaParser.makeOption`), which returns `Option.Some` on success and `Option.None` for schema issues. Non-schema failures, such as defects, still throw.
 
 ```ts
 import { Schema, SchemaParser } from "effect"
@@ -2621,15 +2793,15 @@ console.log(parse({ a: 1 }))
 
 ## Constructors in Composed Schemas
 
-To support constructing values from composed schemas, `makeUnsafe` is now available on all schemas, including unions.
+To support constructing values from composed schemas, `make` is now available on all schemas, including unions.
 
 ```ts
 import { Schema } from "effect"
 
 const schema = Schema.Union([Schema.Struct({ a: Schema.String }), Schema.Struct({ b: Schema.Number })])
 
-schema.makeUnsafe({ a: "hello" })
-schema.makeUnsafe({ b: 1 })
+schema.make({ a: "hello" })
+schema.make({ b: 1 })
 ```
 
 ## Branded Constructors
@@ -2641,8 +2813,8 @@ import { Schema } from "effect"
 
 const schema = Schema.String.pipe(Schema.brand<"a">())
 
-// makeUnsafe(input: string, options?: Schema.MakeOptions): string & Brand<"a">
-schema.makeUnsafe
+// make(input: string, options?: Schema.MakeOptions): string & Brand<"a">
+schema.make
 ```
 
 However, when a branded schema is part of a composite (such as a struct), you must pass a branded value.
@@ -2656,7 +2828,7 @@ const schema = Schema.Struct({
 })
 
 /*
-makeUnsafe(input: {
+make(input: {
     readonly a: string & Brand<"a">;
     readonly b: number;
 }, options?: Schema.MakeOptions): {
@@ -2664,7 +2836,7 @@ makeUnsafe(input: {
     readonly b: number;
 }
 */
-schema.makeUnsafe
+schema.make
 ```
 
 ## Refined Constructors
@@ -2676,8 +2848,8 @@ import { Option, Schema } from "effect"
 
 const schema = Schema.Option(Schema.String).pipe(Schema.refine(Option.isSome))
 
-// makeUnsafe(input: Option.Option<string>, options?: Schema.MakeOptions): Option.Some<string>
-schema.makeUnsafe
+// make(input: Option.Option<string>, options?: Schema.MakeOptions): Option.Some<string>
+schema.make
 ```
 
 As with branding, when used in a composite schema, the refined value must be provided.
@@ -2691,7 +2863,7 @@ const schema = Schema.Struct({
 })
 
 /*
-makeUnsafe(input: {
+make(input: {
     readonly a: Option.Some<string>;
     readonly b: number;
 }, options?: Schema.MakeOptions): {
@@ -2699,88 +2871,47 @@ makeUnsafe(input: {
     readonly b: number;
 }
 */
-schema.makeUnsafe
+schema.make
 ```
 
 ## Default Values in Constructors
 
-You can define a default value for a field using `Schema.withConstructorDefault`. If no value is provided at runtime, the constructor uses this default.
+You can define a default value for a field using `Schema.withConstructorDefault`. If no value is provided at runtime (either the key is missing or the value is `undefined`), the constructor uses this default.
 
 **Example** (Providing a default number)
 
 ```ts
-import { Option, Schema } from "effect"
+import { Effect, Schema } from "effect"
 
 const schema = Schema.Struct({
-  a: Schema.Number.pipe(Schema.withConstructorDefault(() => Option.some(-1)))
+  a: Schema.Number.pipe(Schema.withConstructorDefault(Effect.succeed(-1)))
 })
 
-console.log(schema.makeUnsafe({ a: 5 }))
+console.log(schema.make({ a: 5 }))
 // { a: 5 }
 
-console.log(schema.makeUnsafe({}))
+console.log(schema.make({}))
 // { a: -1 }
 ```
 
-The function passed to `withConstructorDefault` will be executed each time a default value is needed.
+The Effect passed to `withConstructorDefault` will be executed each time a default value is needed.
 
 **Example** (Re-executing the default function)
 
 ```ts
-import { Option, Schema } from "effect"
-
-const schema = Schema.Struct({
-  a: Schema.Date.pipe(Schema.withConstructorDefault(() => Option.some(new Date())))
-})
-
-console.log(schema.makeUnsafe({}))
-// { a: 2025-05-19T16:46:10.912Z }
-
-console.log(schema.makeUnsafe({}))
-// { a: 2025-05-19T16:46:10.913Z }
-```
-
-If the default function returns `Option.none()`, it means no default value was provided, and the field is considered missing.
-
-**Example** (Returning `None` to skip a default)
-
-```ts
-import { Option, Schema } from "effect"
+import { Effect, Schema } from "effect"
 
 let counter = 0
 
 const schema = Schema.Struct({
-  a: Schema.Date.pipe(
-    Schema.withConstructorDefault(() => {
-      counter++
-      const d = new Date()
-      if (counter % 2 === 0) {
-        // Provide a default value
-        return Option.some(d)
-      }
-      // Skip the default
-      return Option.none()
-    })
-  )
+  a: Schema.Date.pipe(Schema.withConstructorDefault(Effect.sync(() => new Date(counter++))))
 })
 
-try {
-  console.log(schema.makeUnsafe({}))
-} catch (error: any) {
-  console.error(error.message)
-}
-/*
-Error: Missing key
-  at ["a"]
-*/
+console.log(schema.make({}))
+// { a: 1970-01-01T00:00:00.000Z }
 
-try {
-  console.log(schema.makeUnsafe({}))
-  // { a: 2025-05-19T16:46:10.913Z }
-} catch (error: any) {
-  console.error(error.message)
-}
-// { a: 2025-05-19T16:48:41.948Z }
+console.log(schema.make({}))
+// { a: 1970-01-01T00:00:00.001Z }
 ```
 
 ### Nested Constructor Default Values
@@ -2790,35 +2921,35 @@ Default values can be nested inside composed schemas. In this case, inner defaul
 **Example** (Nested default values)
 
 ```ts
-import { Option, Schema } from "effect"
+import { Effect, Schema } from "effect"
 
 const schema = Schema.Struct({
   a: Schema.Struct({
-    b: Schema.Number.pipe(Schema.withConstructorDefault(() => Option.some(-1)))
-  }).pipe(Schema.withConstructorDefault(() => Option.some({})))
+    b: Schema.Number.pipe(Schema.withConstructorDefault(Effect.succeed(-1)))
+  }).pipe(Schema.withConstructorDefault(Effect.succeed({})))
 })
 
-console.log(schema.makeUnsafe({}))
+console.log(schema.make({}))
 // { a: { b: -1 } }
-console.log(schema.makeUnsafe({ a: {} }))
+console.log(schema.make({ a: {} }))
 // { a: { b: -1 } }
 ```
 
 ## Effectful Defaults
 
-Default values can also come from an `Effect` — for example, reading from a configuration service or performing an asynchronous operation. The environment must be `never` (no required services).
+Default values can also come from an `Effect`, for example, reading from a configuration service or performing an asynchronous operation. The environment must be `never` (no required services).
 
 **Example** (Using an effect to provide a default)
 
 ```ts
-import { Effect, Option, Schema, SchemaParser } from "effect"
+import { Effect, Schema, SchemaParser } from "effect"
 
 const schema = Schema.Struct({
   a: Schema.Number.pipe(
-    Schema.withConstructorDefault(() =>
+    Schema.withConstructorDefault(
       Effect.gen(function*() {
         yield* Effect.sleep(100)
-        return Option.some(-1)
+        return -1
       })
     )
   )
@@ -2830,24 +2961,24 @@ SchemaParser.makeEffect(schema)({}).pipe(Effect.runPromise).then(console.log)
 
 **Example** (Providing a default from an optional service)
 
-````ts
-import { Effect, Option, Schema, SchemaParser, ServiceMap } from "effect"
+```ts
+import { Context, Effect, Option, Schema, SchemaParser } from "effect"
 
 // Define a service that may provide a default value
-class ConstructorService extends ServiceMap.Service<ConstructorService, { defaultValue: Effect.Effect<number> }>()(
+class ConstructorService extends Context.Service<ConstructorService, { defaultValue: Effect.Effect<number> }>()(
   "ConstructorService"
 ) {}
 
 const schema = Schema.Struct({
   a: Schema.Number.pipe(
-    Schema.withConstructorDefault(() =>
+    Schema.withConstructorDefault(
       Effect.gen(function*() {
         yield* Effect.sleep(100)
         const oservice = yield* Effect.serviceOption(ConstructorService)
         if (Option.isNone(oservice)) {
-          return Option.none()
+          return -1
         }
-        return Option.some(yield* oservice.value.defaultValue)
+        return yield* oservice.value.defaultValue
       })
     )
   )
@@ -2855,11 +2986,12 @@ const schema = Schema.Struct({
 
 SchemaParser.makeEffect(schema)({})
   .pipe(
-    Effect.provideService(ConstructorService, ConstructorService.of({ defaultValue: Effect.succeed(-1) })),
+    Effect.provideService(ConstructorService, ConstructorService.of({ defaultValue: Effect.succeed(0) })),
     Effect.runPromise
   )
   .then(console.log, console.error)
-// { a: -1 }
+// { a: 0 }
+```
 
 # Transformations
 
@@ -2881,7 +3013,7 @@ const Trim = transform(
     encode: identity
   }
 ) {}
-````
+```
 
 This style made it difficult to reuse logic across different schemas.
 
@@ -3069,9 +3201,9 @@ const URLFromString = Schema.String.pipe(
       decode: (s) =>
         Effect.try({
           try: () => new URL(s),
-          catch: (error) => new SchemaIssue.InvalidValue(Option.some(s), { cause: error })
+          catch: () => new Issue.InvalidValue(Option.some(s), { message: `Invalid URL string: ${s}` })
         }),
-      encode: (url) => Effect.succeed(url.toString())
+      encode: (url) => Effect.succeed(url.href)
     })
   )
 )
@@ -3255,13 +3387,13 @@ For this to work, the encoded side must be marked as optional with `Schema.optio
 **Example** (Field present when decoded, omitted when encoded)
 
 ```ts
-import { Schema, SchemaGetter } from "effect"
+import { Effect, Schema, SchemaGetter } from "effect"
 
 const schema = Schema.Struct({
   a: Schema.FiniteFromString,
   b: Schema.String.pipe(
     Schema.encodeTo(Schema.optionalKey(Schema.String), {
-      decode: SchemaGetter.withDefault(() => "default_value"),
+      decode: SchemaGetter.withDefault(Effect.succeed("default_value")),
       encode: SchemaGetter.omit()
     })
   )
@@ -3376,13 +3508,13 @@ type Encoded = {
 */
 type Encoded = (typeof schema)["Encoded"]
 
-// makeUnsafe: { readonly a: string }  ──▶  { readonly a: string }
-Schema.flip(schema).makeUnsafe
+// make: { readonly a: string }  ──▶  { readonly a: string }
+Schema.flip(schema).make
 ```
 
 # Classes and Opaque Types
 
-Schema supports two kinds of nominal types: _opaque structs_ for lightweight distinct types, and _classes_ for full-featured types with methods and equality.
+Schema supports two kinds of nominal types: _opaque structs_ for lightweight distinct types, and _classes_ for full-featured types with methods and prototype-backed instances.
 
 ## Opaque Structs
 
@@ -3400,7 +3532,7 @@ This is not enforced at the type level, but it may be enforced through a linter 
 `Schema.Class` also wraps a `Struct`, **but** it turns the wrapper into a proper class:
 
 - You can add instance methods, getters, setters, custom constructors.
-- The generated class automatically implements `Equal` so structural equality works out of the box.
+- Instances compare structurally with `Equal.equals`, but they do not implement `Equal`.
 - Instances carry the class prototype at runtime, so `instanceof` checks succeed and methods are callable.
 
 **Example** (Creating an Opaque Struct)
@@ -3419,7 +3551,7 @@ class Person extends Schema.Opaque<Person>()(
 const codec = Schema.revealCodec(Person)
 
 // const person: Person
-const person = Person.makeUnsafe({ name: "John" })
+const person = Person.make({ name: "John" })
 
 console.log(person.name)
 // "John"
@@ -3651,11 +3783,11 @@ class B extends Schema.Opaque<B, { readonly brand: unique symbol }>()(
 const f = (a: A) => a
 const g = (b: B) => b
 
-f(A.makeUnsafe({ a: "a" })) // ok
-g(B.makeUnsafe({ a: "a" })) // ok
+f(A.make({ a: "a" })) // ok
+g(B.make({ a: "a" })) // ok
 
-f(B.makeUnsafe({ a: "a" })) // error: Argument of type 'B' is not assignable to parameter of type 'A'.
-g(A.makeUnsafe({ a: "a" })) // error: Argument of type 'A' is not assignable to parameter of type 'B'.
+f(B.make({ a: "a" })) // error: Argument of type 'B' is not assignable to parameter of type 'A'.
+g(A.make({ a: "a" })) // error: Argument of type 'A' is not assignable to parameter of type 'B'.
 ```
 
 Like with branded classes, you can use the `Brand` module to create branded opaque structs.
@@ -3678,11 +3810,66 @@ class B extends Schema.Opaque<B, Brand.Brand<"B">>()(
 const f = (a: A) => a
 const g = (b: B) => b
 
-f(A.makeUnsafe({ a: "a" })) // ok
-g(B.makeUnsafe({ a: "a" })) // ok
+f(A.make({ a: "a" })) // ok
+g(B.make({ a: "a" })) // ok
 
-f(B.makeUnsafe({ a: "a" })) // error: Argument of type 'B' is not assignable to parameter of type 'A'.
-g(A.makeUnsafe({ a: "a" })) // error: Argument of type 'A' is not assignable to parameter of type 'B'.
+f(B.make({ a: "a" })) // error: Argument of type 'B' is not assignable to parameter of type 'A'.
+g(A.make({ a: "a" })) // error: Argument of type 'A' is not assignable to parameter of type 'B'.
+```
+
+## Schema as a Class
+
+`Schema.asClass` turns any schema into a class that can be extended with `extends`. The resulting class inherits the full schema API (e.g. `annotate`) and supports static methods that reference `this`.
+
+Unlike `Schema.Opaque`, it does **not** make the decoded type nominally distinct, and unlike `Schema.Class`, it does **not** create prototype-backed instances with methods or constructors. It is a lightweight way to attach custom static helpers to a schema.
+
+### Wrapping a Primitive Schema
+
+```ts
+import { Schema } from "effect"
+
+class MyString extends Schema.asClass(Schema.String) {
+  static readonly decodeUnknownSync = Schema.decodeUnknownSync(this)
+}
+
+console.log(MyString.decodeUnknownSync("a"))
+// "a"
+```
+
+### Wrapping a Struct Schema
+
+```ts
+import { Schema } from "effect"
+
+class MyStruct extends Schema.asClass(
+  Schema.Struct({ name: Schema.String })
+) {
+  static readonly decodeUnknownSync = Schema.decodeUnknownSync(this)
+}
+
+console.log(MyStruct.decodeUnknownSync({ name: "a" }))
+// { name: "a" }
+```
+
+### Subclassing
+
+You can extend an `asClass` class to layer on more static helpers:
+
+```ts
+import { Schema } from "effect"
+
+class MyString extends Schema.asClass(Schema.FiniteFromString) {
+  static readonly decodeUnknownSync = Schema.decodeUnknownSync(this)
+}
+
+class MyString2 extends MyString {
+  static readonly encodeSync = Schema.encodeSync(this)
+}
+
+console.log(MyString2.decodeUnknownSync("1"))
+// 1
+console.log(MyString2.encodeSync(1))
+// "1"
 ```
 
 ## Classes
@@ -3703,7 +3890,7 @@ const PersonConstructorArguments = Schema.Tuple([Schema.String, Schema.Finite])
 // Existing class
 class Person {
   constructor(readonly name: string, readonly age: number) {
-    PersonConstructorArguments.makeUnsafe([name, age])
+    PersonConstructorArguments.make([name, age])
   }
 }
 
@@ -3729,7 +3916,7 @@ const PersonConstructorArguments = Schema.Tuple([Schema.String, Schema.Finite])
 
 class Person {
   constructor(readonly name: string, readonly age: number) {
-    PersonConstructorArguments.makeUnsafe([name, age])
+    PersonConstructorArguments.make([name, age])
   }
 }
 
@@ -3738,7 +3925,7 @@ const PersonWithEmailConstructorArguments = Schema.Tuple([Schema.String])
 class PersonWithEmail extends Person {
   constructor(name: string, age: number, readonly email: string) {
     // Only validate the additional argument
-    PersonWithEmailConstructorArguments.makeUnsafe([email])
+    PersonWithEmailConstructorArguments.make([email])
     super(name, age)
   }
 }
@@ -3837,7 +4024,7 @@ const Props = Schema.Struct({
 
 class Err extends Data.Error<typeof Props.Type> {
   constructor(props: typeof Props.Type) {
-    super(Props.makeUnsafe(props))
+    super(Props.make(props))
   }
 }
 
@@ -3897,7 +4084,7 @@ class A extends Schema.Class<A>("A")({
 
 console.log(new A({ a: "a" }))
 // A { a: 'a', _a: 1 }
-console.log(A.makeUnsafe({ a: "a" }))
+console.log(A.make({ a: "a" }))
 // A { a: 'a', _a: 1 }
 console.log(Schema.decodeUnknownSync(A)({ a: "a" }))
 // A { a: 'a', _a: 1 }
@@ -3956,9 +4143,9 @@ class B extends Schema.Class<B, { readonly brand: unique symbol }>("B")({
 // so they are not assignable to each other.
 
 // @ts-expect-error
-export const a: A = B.makeUnsafe({ a: "a" })
+export const a: A = B.make({ a: "a" })
 // @ts-expect-error
-export const b: B = A.makeUnsafe({ a: "a" })
+export const b: B = A.make({ a: "a" })
 ```
 
 **Example** (Using the Brand module)
@@ -3978,9 +4165,9 @@ class B extends Schema.Class<B, Brand.Brand<"B">>("B")({
 // Different named brands are still not assignable
 
 // @ts-expect-error
-export const a: A = B.makeUnsafe({ a: "a" })
+export const a: A = B.make({ a: "a" })
 // @ts-expect-error
-export const b: B = A.makeUnsafe({ a: "a" })
+export const b: B = A.make({ a: "a" })
 ```
 
 #### Annotations
@@ -4031,7 +4218,7 @@ class B extends A.extend<B>("B")({
 
 console.log(new B({ a: "a", b: 2 }))
 // B { a: 'a', _a: 1, _b: 2 }
-console.log(B.makeUnsafe({ a: "a", b: 2 }))
+console.log(B.make({ a: "a", b: 2 }))
 // B { a: 'a', _a: 1, _b: 2 }
 console.log(Schema.decodeUnknownSync(B)({ a: "a", b: 2 }))
 // B { a: 'a', _a: 1, _b: 2 }
@@ -4320,6 +4507,88 @@ const schemaFromJsonString = Schema.fromJsonString(schema)
 Schema.decodeUnknownSync(schemaFromJsonString)(`{"a":1,"b":2}`)
 // => { a: 1 }
 ```
+
+## String Encoding Support
+
+Schema provides built-in schemas for common string encodings. Each one decodes an encoded string into a UTF-8 string (and encodes back). They can be composed with `fromJsonString` to decode structured data in a single pipeline.
+
+#### StringFromBase64
+
+Decodes a Base64-encoded (RFC 4648) string into a UTF-8 string.
+
+```ts
+import { Schema } from "effect"
+
+Schema.decodeUnknownSync(Schema.StringFromBase64)("aGVsbG8=")
+// => "hello"
+```
+
+Compose with `fromJsonString` to decode Base64-encoded JSON into a validated struct:
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.Struct({ a: Schema.Number })
+
+// base64 string -> UTF-8 string -> parsed & validated struct
+const schemaFromBase64 = Schema.StringFromBase64.pipe(
+  Schema.decodeTo(Schema.fromJsonString(schema))
+)
+```
+
+#### StringFromBase64Url
+
+Like `StringFromBase64`, but uses the URL-safe Base64 alphabet (RFC 4648 section 5).
+
+```ts
+import { Schema } from "effect"
+
+Schema.decodeUnknownSync(Schema.StringFromBase64Url)("aGVsbG8")
+// => "hello"
+```
+
+#### StringFromHex
+
+Decodes a hex-encoded string into a UTF-8 string.
+
+```ts
+import { Schema } from "effect"
+
+Schema.decodeUnknownSync(Schema.StringFromHex)("68656c6c6f")
+// => "hello"
+```
+
+#### StringFromUriComponent
+
+Decodes a URI-component-encoded string into a UTF-8 string. Useful for storing structured data in URL query parameters.
+
+```ts
+import { Schema } from "effect"
+
+const PaginationSchema = Schema.Struct({
+  maxItemPerPage: Schema.Number,
+  page: Schema.Number
+})
+
+const UrlSchema = Schema.StringFromUriComponent.pipe(
+  Schema.decodeTo(Schema.fromJsonString(PaginationSchema))
+)
+
+console.log(Schema.encodeSync(UrlSchema)({ maxItemPerPage: 10, page: 1 }))
+// %7B%22maxItemPerPage%22%3A10%2C%22page%22%3A1%7D
+```
+
+#### Uint8Array variants
+
+For binary data, use the `Uint8Array` variants instead:
+
+- `Schema.Uint8ArrayFromBase64` - decodes Base64 into a `Uint8Array`.
+- `Schema.Uint8ArrayFromBase64Url` - decodes URL-safe Base64 into a `Uint8Array`.
+- `Schema.Uint8ArrayFromHex` - decodes hex into a `Uint8Array`.
+
+#### Low-level transformations
+
+The `SchemaTransformation` module exposes the underlying transformations (`stringFromBase64String`, `stringFromBase64UrlString`, `stringFromHexString`, `stringFromUriComponent`). Prefer the built-in `Schema.*` schemas above unless you need to build a custom pipeline.
 
 ## FormData Support
 
@@ -4976,6 +5245,62 @@ console.log(JSON.stringify(document, null, 2))
 */
 ```
 
+#### Annotating the Encoded Side of a Transformation
+
+When a schema includes a transformation (e.g. `Schema.Trim`), the generated JSON Schema corresponds to the encoded side. Calling `.annotate(...)` on a transformation annotates the decoded side, so the annotations won't appear in the JSON Schema output.
+
+To annotate the encoded side, use `Schema.annotateEncoded`.
+
+**Example** (Annotating the encoded side of `Trim`)
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.Trim.pipe(
+  Schema.annotateEncoded({
+    description: "my description",
+    title: "my title"
+  })
+)
+
+console.log(JSON.stringify(Schema.toJsonSchemaDocument(schema), null, 2))
+/*
+{
+  "dialect": "draft-2020-12",
+  "schema": {
+    "type": "string",
+    "title": "my title",
+    "description": "my description"
+  },
+  "definitions": {}
+}
+*/
+```
+
+Alternatively, build a custom transformation using `Schema.decodeTo`:
+
+```ts
+import { Schema, SchemaTransformation } from "effect"
+
+const schema = Schema.String.annotate({
+  description: "my description",
+  title: "my title"
+}).pipe(Schema.decodeTo(Schema.Trimmed, SchemaTransformation.trim()))
+
+console.log(JSON.stringify(Schema.toJsonSchemaDocument(schema), null, 2))
+/*
+{
+  "dialect": "draft-2020-12",
+  "schema": {
+    "type": "string",
+    "title": "my title",
+    "description": "my description"
+  },
+  "definitions": {}
+}
+*/
+```
+
 #### Optional fields / elements
 
 Optional fields are converted to optional fields or elements in the JSON Schema.
@@ -5238,186 +5563,352 @@ console.log(JSON.stringify(document, null, 2))
 
 ### Generating an Arbitrary from a Schema
 
-Property-based testing checks your code against many randomly generated inputs. An Arbitrary is a generator that produces random values matching your schema. Schema can derive an Arbitrary automatically, so you do not need to write generators by hand.
+Property-based tests need generators. `Schema.toArbitrary` derives a
+`fast-check` `Arbitrary` that generates decoded `Type` values accepted by the
+schema.
 
-#### Basic Conversion
-
-You can convert any non-declaration, non-`never` schema to a Fast-Check `Arbitrary<T>`.
-
-**Example** (Tuple schema to Fast-Check Arbitrary)
+Most schemas do not need any extra work:
 
 ```ts
 import { Schema } from "effect"
 import { FastCheck } from "effect/testing"
 
-// Build a tuple schema: [string, number]
-const schema = Schema.Tuple([Schema.String, Schema.Number])
-
-// Create Arbitrary<readonly [string, number]>
-const arb = Schema.toArbitrary(schema)
-
-// Sample 10 values from the arbitrary
-console.log(FastCheck.sample(arb, 10))
-/*
-Example Output:
-[
-  [ '', 0 ],
-  [ ' /pABDyx+4', -5.147705743113717e+24 ],
-  [ 'Sw\\', -163415396714545150 ],
-  [ 'h', 484085596160000 ],
-  [ 'bind-+$__p', -2.802596928649634e-44 ],
-  [ 'ref', 3.402820424023848e+38 ],
-  [ ' <', 4.2045513795681537e-22 ],
-  [ '!n', 5.894371773718808e+34 ],
-  [ '&x~', 8580584439808 ],
-  [ '(# x@', 1.97658453148482e-36 ]
-]
-*/
-```
-
-If you want to avoid bundling Fast-Check automatically, use `makeLazy`.
-
-**Example** (Lazy creation to control bundling)
-
-```ts
-import { Schema } from "effect"
-import { FastCheck } from "effect/testing"
-
-// Create a factory that needs FastCheck passed in at call time
-const lazyArb = Schema.toArbitraryLazy(Schema.String)
-
-// Later, provide FastCheck (and an optional context) to get the Arbitrary<string>
-const arb = lazyArb(FastCheck, {}) // same result as make(...)
-```
-
-Under the hood, the library traverses the schema AST and, for each node:
-
-- Emits constants (`null`, `undefined`)
-- Maps primitives: `fc.boolean()`, `fc.integer()`, `fc.string()`, `fc.bigInt()`
-- Builds tuples via `fc.tuple(...)` with support for optional/rest elements
-- Builds structs/records via `fc.record(...)`, including index signatures
-- Builds unions via `fc.oneof(...)`
-- Handles template literals via `fc.stringMatching(...)`
-- Handles recursion (`Schema.suspend`) with depth-limited `fc.oneof(...)`
-
-It also collects any `.check(...)` filters and applies them to the result via `.filter(...)`.
-
-#### Adding support for Custom Types
-
-For a custom type, provide an `arbitrary` annotation to teach the generator how to build values.
-
-**Example** (Custom Arbitrary for `URL`)
-
-```ts
-import { Schema } from "effect"
-import { FastCheck } from "effect/testing"
-
-const URL = Schema.instanceOf(globalThis.URL, {
-  title: "URL",
-  arbitrary:
-    // Build a URL by first generating a valid web URL string with Fast-Check
-    () => (fc) => fc.webUrl().map((s) => new globalThis.URL(s))
+const Person = Schema.Struct({
+  name: Schema.String,
+  age: Schema.Int.check(Schema.isBetween({ minimum: 18, maximum: 80 }))
 })
 
-console.log(FastCheck.sample(Schema.toArbitrary(URL), 3))
-/*
-Example Output:
-[
-  new URL('http://g2v.7wk9w96penc.sek/'),
-  new URL('http://jfeilqoq-ee5.zeenw6cvv.ox'),
-  new URL('https://g0iubr-ks.rz00c8.fn')
-]
-*/
+const PersonArbitrary = Schema.toArbitrary(Person)
+
+console.log(FastCheck.sample(PersonArbitrary, 3))
 ```
 
-#### Overriding the default generated Arbitrary
-
-You can adjust the generated Arbitrary by adding an `arbitrary` annotation.
-
-```ts
-interface Context {
-  /**
-   * This flag is set to `true` when the current schema is a suspend. The goal
-   * is to avoid infinite recursion when generating arbitrary values for
-   * suspends, so implementations should try to avoid excessive recursion.
-   */
-  readonly isSuspend?: boolean | undefined
-  readonly constraints?: Annotation.Constraints["constraints"] | undefined
-}
-
-export interface ToArbitrary<T, TypeParameters extends ReadonlyArray<Schema.Top>> {
-  (
-    /* Arbitraries for any type parameters of the schema (if present) */
-    typeParameters: { readonly [K in keyof TypeParameters]: FastCheck.Arbitrary<TypeParameters[K]["Type"]> }
-  ): (fc: typeof FastCheck, context: Context) => FastCheck.Arbitrary<T>
-}
-```
-
-**Example** (Override number generator range)
+Use `Schema.toArbitraryLazy` only when you want the caller to provide
+`fast-check`:
 
 ```ts
 import { Schema } from "effect"
 import { FastCheck } from "effect/testing"
 
-// Default number schema (no override)
-console.log(FastCheck.sample(Schema.toArbitrary(Schema.Number), 3))
-/*
-Example Output:
-[
-  1.401298464324817e-44,
-  1.1210387714598537e-44,
-  -3.4028234663852886e+38
-]
-*/
+const makeStringArbitrary = Schema.toArbitraryLazy(Schema.String)
 
-// Add an override to restrict numbers to integers 10..20
-const schema = Schema.Number.annotate({
-  toArbitrary: () => (fc) => fc.integer({ min: 10, max: 20 }) // custom generator
-})
-
-console.log(FastCheck.sample(Schema.toArbitrary(schema), 3))
-/*
-Example Output:
-[ 12, 12, 18 ]
-*/
+const StringArbitrary = makeStringArbitrary(FastCheck)
 ```
 
-#### Adding support for custom filters
+`Schema.Never` and declaration schemas without a `toArbitrary` annotation cannot
+be derived automatically.
 
-Filters created with `.check(...)` can include Arbitrary hints so generators respect the same constraints.
+#### Filters
 
-**Example** (Declare Arbitrary constraints for a custom `nonEmpty` filter)
+Generated values are always checked by the schema filters before they are
+returned. The important question is whether a filter can also help choose a good
+generator.
+
+Built-in filters already do this:
 
 ```ts
 import { Schema } from "effect"
-import { FastCheck } from "effect/testing"
 
-// A reusable 'isNonEmpty' filter for strings and arrays
-const isNonEmpty = Schema.makeFilter((s: string) => s.length > 0, {
-  arbitraryConstraint: {
-    string: {
-      minLength: 1
-    },
-    array: {
-      minLength: 1
+const Username = Schema.String.check(
+  Schema.isMinLength(3),
+  Schema.isMaxLength(20),
+  Schema.isPattern(/^[a-z0-9_]+$/)
+)
+
+const PositiveInteger = Schema.Int.check(
+  Schema.isGreaterThanOrEqualTo(1)
+)
+
+const Tags = Schema.Array(Schema.String).check(
+  Schema.isMinLength(1),
+  Schema.isUnique()
+)
+```
+
+For these schemas, `toArbitrary` does not generate random unconstrained strings,
+numbers, or arrays and then hope the filters pass. It uses the length, range,
+pattern, and uniqueness metadata to build a better generator first.
+
+A custom filter without metadata is still correct, but may be inefficient:
+
+```ts
+import { Schema } from "effect"
+
+const isPalindrome = (s: string) => s === Array.from(s).reverse().join("")
+
+const Palindrome = Schema.String.check(
+  Schema.makeFilter(isPalindrome, {
+    expected: "a palindrome"
+  })
+)
+```
+
+This works because the final predicate check rejects strings that are not
+palindromes. It may need many attempts, because the base string generator has no
+reason to produce mirrored strings.
+
+#### Reports
+
+Use `{ report: true }` when you want to know which filters did not guide
+generation:
+
+```ts
+import { Schema } from "effect"
+
+const isPalindrome = (s: string) => s === Array.from(s).reverse().join("")
+
+const Palindrome = Schema.String.check(
+  Schema.makeFilter(isPalindrome, {
+    expected: "a palindrome"
+  })
+)
+
+const result = Schema.toArbitrary(Palindrome, { report: true })
+
+result.value
+result.report.warnings
+```
+
+An `OpaqueFilter` warning means: "this filter is still checked, but it did not
+help build the generator."
+
+Reports contain warnings only. Unsupported schemas, impossible constraints,
+invalid candidates, and recursive schemas without a finite terminal path still
+fail immediately.
+
+#### Custom Filters With Constraints
+
+If part of a custom filter can be described as a normal generation constraint,
+attach `arbitrary.constraint` to the filter. The constraint does not have to
+prove the whole predicate; it just makes the base generator closer to the values
+the predicate accepts.
+
+```ts
+import { Order, Schema } from "effect"
+
+const isPrimeNumber = (n: number) => {
+  if (!Number.isInteger(n) || n < 2) {
+    return false
+  }
+  for (let divisor = 2; divisor * divisor <= n; divisor++) {
+    if (n % divisor === 0) {
+      return false
+    }
+  }
+  return true
+}
+
+const prime = Schema.makeFilter(isPrimeNumber, {
+  expected: "a prime number",
+  arbitrary: {
+    constraint: {
+      integer: true,
+      ordered: {
+        order: Order.Number,
+        minimum: 2
+      }
     }
   }
 })
 
-const schema = Schema.String.check(isNonEmpty)
-
-console.log(FastCheck.sample(Schema.toArbitrary(schema), 3))
-/*
-Example Output:
-[ 'R|I6', 'q#" Z', 'qc= f' ]
-*/
+const Prime = Schema.Number.check(prime)
 ```
 
-#### Integration with synthetic data generation tools
+The filter still checks primality. The constraint only tells `toArbitrary` not
+to waste time on non-integers or numbers below `2`.
 
-You can integrate `@faker-js/faker` by adding an `arbitrary` override to your schemas. The helper below ties Faker's randomness to Fast-Check's RNG so samples are reproducible and shrink well.
+Think of `constraint` as a small vocabulary that the current schema node can
+understand:
 
-**Example** (Faker-powered override tied to Fast-Check's RNG)
+- On strings, `minLength` and `maxLength` mean string length.
+- On arrays, `minLength` and `maxLength` mean array length.
+- On objects, `minLength` and `maxLength` mean final own-property count.
+- On sets, maps, hash collections, and chunks, `minLength` and `maxLength` mean final collection size.
+- `patterns` apply to string generation.
+- `integer`, `noNaN`, `noInfinity`, `valid`, and `unique` are enabled when any contributing filter sets them.
+- `ordered` stores bounds for ordered values such as numbers, bigints, dates, `DateTime`, and `BigDecimal`.
+
+Fields that do not make sense for the current node are ignored. The final filter
+check still validates every generated value.
+
+#### Custom Filters With Candidates
+
+Use a candidate when the filter cannot be expressed with the constraint
+vocabulary.
+
+```ts
+import { Schema } from "effect"
+
+const reverse = (s: string) => Array.from(s).reverse().join("")
+
+const isPalindrome = (s: string) => s === reverse(s)
+
+const palindrome = Schema.makeFilter(
+  isPalindrome,
+  {
+    expected: "a palindrome",
+    arbitrary: {
+      candidate: {
+        weight: 5,
+        make: (fc) => fc.string().map((half) => `${half}${reverse(half)}`)
+      }
+    }
+  }
+)
+
+const Palindrome = Schema.String.check(palindrome)
+```
+
+A candidate is an extra source used together with the schema node's base
+generator. The base generator has weight `1`. A candidate has weight `1` unless
+you set another positive integer weight.
+
+With one candidate at weight `5`, fast-check tries the candidate roughly five
+times as often as the base generator. Candidate values are still checked by all
+filters, so a bad candidate can waste attempts but cannot produce invalid
+values.
+
+`make` receives the arbitrary context and may return `undefined` when the
+candidate should not be used for that context.
+
+#### Schema-Level Overrides
+
+Use a `toArbitrary` annotation when you want to replace the generator for a
+schema node.
+
+The annotation is not limited to declaration schemas. You can attach it to a
+normal schema with `.annotate(...)`:
+
+```ts
+import { Schema } from "effect"
+
+const Name = Schema.String.annotate({
+  toArbitrary: () => (fc) => fc.constantFrom("Alice", "Bob", "Carol")
+})
+```
+
+Put override annotations on base schemas when possible, before adding filters:
+
+```ts
+const Name = Schema.String.annotate({
+  toArbitrary: () => (fc) => fc.constantFrom("Alice", "Bob", "Carol")
+}).check(Schema.isMinLength(1))
+```
+
+This shape is easier to reason about. The override provides the base generator;
+the filter remains a normal filter. Schema still checks generated values at the
+end.
+
+Avoid putting an override on a schema that already has filters unless the
+override intentionally handles those filters too:
+
+```ts
+const Name = Schema.String.check(Schema.isMinLength(1)).annotate({
+  toArbitrary: () => (fc) => fc.constant("")
+})
+```
+
+This is valid TypeScript, but it is a bad generator: it always generates a value
+that the filter rejects.
+
+The second argument of a `toArbitrary` hook is the arbitrary context. Its
+`constraint` field contains constraints collected from filters on the same
+schema node as the override. If the override is placed before `.check(...)`, the
+context does not include the later filters. If the override is placed after
+`.check(...)`, the context includes those filters and the override must respect
+them.
+
+`context.recursion` is present while deriving inside a recursive schema.
+
+#### Declaration Schemas
+
+Declaration schemas are opaque to Schema. If you define one, provide a
+`toArbitrary` hook.
+
+For an atomic declaration, return a normal `fast-check` arbitrary:
+
+```ts
+import { Schema } from "effect"
+
+const Url = Schema.instanceOf(globalThis.URL, {
+  title: "URL",
+  toArbitrary: () => (fc) => fc.webUrl().map((s) => new globalThis.URL(s))
+})
+```
+
+Generic declarations receive one derivation per type parameter:
+
+- `arbitrary`: the normal generator for the type parameter.
+- `terminal`: a finite generator for the type parameter, used to close recursive generation.
+
+For an opaque wrapper type, you usually map both sources in the same way:
+
+```ts
+import { Effect, Option, Schema, SchemaIssue, SchemaParser } from "effect"
+
+class Box<A> {
+  private constructor(private readonly value: A) {}
+
+  static make<A>(value: A): Box<A> {
+    return new Box(value)
+  }
+
+  static unbox<A>(box: Box<A>): A {
+    return box.value
+  }
+}
+
+const isBox = (u: unknown): u is Box<unknown> => u instanceof Box
+
+const BoxSchema = <A extends Schema.Top>(value: A) =>
+  Schema.declareConstructor<Box<A["Type"]>, Box<A["Encoded"]>>()(
+    [value],
+    ([valueCodec]) => (input, ast, options) => {
+      if (!isBox(input)) {
+        return Effect.fail(new SchemaIssue.InvalidType(ast, Option.some(input)))
+      }
+      return Effect.map(
+        SchemaParser.decodeUnknownEffect(valueCodec)(Box.unbox(input), options),
+        Box.make
+      )
+    },
+    {
+      toArbitrary: ([value]) => () => ({
+        arbitrary: value.arbitrary.map(Box.make),
+        terminal: value.terminal?.map(Box.make)
+      })
+    }
+  )
+```
+
+This looks like duplicated code, but it is not the same generator twice. It is
+the same opaque constructor applied to two different sources.
+
+Suppose someone later builds a recursive schema like this:
+
+```ts
+interface Tree<A> {
+  readonly value: A
+  readonly children: ReadonlyArray<Tree<A>>
+}
+
+type BoxedTree<A> = Box<Tree<A>>
+```
+
+`Box` does not know whether `A` is recursive. If `A` is `Tree<A>`, then
+`value.arbitrary` may generate a recursive tree, while `value.terminal` is the
+finite tree generator used when the recursion budget is exhausted. Mapping both
+sources through `Box.make` preserves that information. If `Box` returned only
+`arbitrary`, it would hide the finite path from outer recursive schemas.
+
+If the type parameter has no finite terminal generator, `value.terminal` is
+`undefined`, and the wrapper cannot provide a terminal branch either.
+
+#### Integration with Synthetic Data Generation Tools
+
+Synthetic data libraries such as `@faker-js/faker` are useful when the generated
+values should look realistic. Put them behind a Fast-Check arbitrary instead of
+calling them directly, so Fast-Check still controls randomness and shrinking.
 
 ```ts
 import { faker } from "@faker-js/faker"
@@ -5425,67 +5916,56 @@ import { Schema } from "effect"
 import { FastCheck } from "effect/testing"
 
 /**
- * Make it easy to plug a Faker generator into a Schema's `arbitrary` override.
+ * Make it easy to plug a Faker generator into a Schema's `toArbitrary` override.
  * The seed comes from Fast-Check so data is reproducible and shrinks correctly.
  */
 function fake<A>(
-  gen: (f: typeof faker, ctx: Schema.Annotations.ToArbitrary.Context) => A
+  gen: (f: typeof faker) => A
 ): Schema.Annotations.ToArbitrary.Declaration<A, readonly []> {
-  return () => (fc, ctx) =>
+  return () => (fc) =>
     fc.nat().map((seed) => {
       faker.seed(seed)
-      return gen(faker, ctx)
+      return gen(faker)
     })
 }
 
-/** Leaf fields use Faker through the `arbitrary` override */
 const FirstName = Schema.String.annotate({
-  toArbitrary: fake((f) => f.person.firstName())
+  toArbitrary: fake((faker) => faker.person.firstName())
 })
 
 const LastName = Schema.String.annotate({
-  toArbitrary: fake((f) => f.person.lastName())
+  toArbitrary: fake((faker) => faker.person.lastName())
 })
 
-const Age = Schema.Int.check(Schema.isBetween({ minimum: 18, maximum: 80 })).annotate({
-  toArbitrary: fake((f, ctx) => {
-    // Use the constraints from the schema to generate a random age
-    const min = ctx.constraints?.number?.min ?? 0
-    const max = ctx.constraints?.number?.max ?? Number.MAX_SAFE_INTEGER
-    return f.number.int({ min, max })
-  })
+const JobTitle = Schema.String.annotate({
+  toArbitrary: fake((faker) => faker.person.jobTitle())
 })
 
-/** Compose leaves with regular Schema combinators */
-const FullName = Schema.Struct({
+const Company = Schema.String.annotate({
+  toArbitrary: fake((faker) => faker.company.name())
+})
+
+const Person = Schema.Struct({
   firstName: FirstName,
   lastName: LastName,
-  age: Age
+  jobTitle: JobTitle,
+  company: Company
 })
 
-/** Build and sample an Arbitrary for the composed schema */
-console.log(JSON.stringify(FastCheck.sample(Schema.toArbitrary(FullName), 3), null, 2))
-/*
-Example Output:
-[
-  {
-    "firstName": "Kiana",
-    "lastName": "Balistreri",
-    "age": 18
-  },
-  {
-    "firstName": "Wendy",
-    "lastName": "Baumbach",
-    "age": 51
-  },
-  {
-    "firstName": "Kelton",
-    "lastName": "Kshlerin",
-    "age": 72
-  }
-]
-*/
+console.log(FastCheck.sample(Schema.toArbitrary(Person), 3))
 ```
+
+These overrides are useful because the values have domain shape: names look like
+names, job titles look like job titles, and companies look like companies. For
+plain numeric ranges, prefer Schema constraints and the default arbitrary
+derivation.
+
+If you combine a Faker source with filters, put the override on the base schema
+first and add filters afterwards. This keeps the responsibilities simple: the
+override chooses a realistic source, and the filter remains the final validation
+rule. If you put the override after `.check(...)`, the override must respect
+those filters itself, or generation will spend time producing values that are
+rejected.
 
 ### Generating an Equivalence from a Schema
 
@@ -5885,6 +6365,10 @@ You can customize the messages of the `Issue` object in two main ways:
 - By passing formatter hooks
 - By annotating schemas with `message` or `messageMissingKey` or `messageUnexpectedKey`
 
+For the exact rule used by the default formatter for identifiers, filter
+`expected`, and `message` annotations, see
+[Filter error messages and schema identifiers](#filter-error-messages-and-schema-identifiers).
+
 ##### Hooks
 
 Formatter hooks let you define custom messages in one place and apply them across different schemas. This can help avoid repeating message definitions and makes it easier to update them later.
@@ -6184,10 +6668,10 @@ You can use `Schema.catchDecodingWithContext` to get a fallback value from a ser
 **Example** (Retrieving a fallback value from a service)
 
 ```ts
-import { Effect, Option, Schema, ServiceMap } from "effect"
+import { Context, Effect, Option, Schema } from "effect"
 
 // Define a service that provides a fallback value
-class Service extends ServiceMap.Service<Service, { fallback: Effect.Effect<string> }>()("Service") {}
+class Service extends Context.Service<Service, { fallback: Effect.Effect<string> }>()("Service") {}
 
 //      ┌─── Codec<string, string, Service, never>
 //      ▼
@@ -6223,7 +6707,7 @@ This section covers Schema's internal type machinery and advanced features. You 
 
 A "schema" is a strongly typed wrapper around an untyped AST (abstract syntax tree) node.
 
-The base interface is `Bottom`, which sits at the bottom of the schema type hierarchy. In Schema v4, the number of tracked type parameters has increased to 14, allowing for more precise and flexible schema definitions.
+The base interface is `Bottom`, which sits at the bottom of the schema type hierarchy. In Schema v4, the number of tracked type parameters has increased to 15, allowing for more precise and flexible schema definitions.
 
 ```ts
 export interface Bottom<
@@ -6246,9 +6730,8 @@ export interface Bottom<
   readonly [TypeId]: typeof TypeId
 
   readonly ast: Ast
-  readonly "~rebuild.out": RebuildOut
+  readonly "Rebuild": RebuildOut
   readonly "~type.parameters": TypeParameters
-  readonly "~annotate.in": Annotations.Bottom<T, TypeParameters>
 
   readonly Type: T
   readonly Encoded: E
@@ -6265,14 +6748,14 @@ export interface Bottom<
   readonly "~encoded.mutability": EncodedMutability
   readonly "~encoded.optionality": EncodedOptionality
 
-  annotate(annotations: this["~annotate.in"]): this["~rebuild.out"]
-  annotateKey(annotations: Annotations.Key<this["Type"]>): this["~rebuild.out"]
-  check(...checks: readonly [AST.Check<this["Type"]>, ...Array<AST.Check<this["Type"]>>]): this["~rebuild.out"]
-  rebuild(ast: this["ast"]): this["~rebuild.out"]
+  annotate(annotations: Annotations.Bottom<this["Type"], this["~type.parameters"]>): this["Rebuild"]
+  annotateKey(annotations: Annotations.Key<this["Type"]>): this["Rebuild"]
+  check(...checks: readonly [AST.Check<this["Type"]>, ...Array<AST.Check<this["Type"]>>]): this["Rebuild"]
+  rebuild(ast: this["ast"]): this["Rebuild"]
   /**
    * @throws {Error} The issue is contained in the error cause.
    */
-  makeUnsafe(input: this["~type.make.in"], options?: MakeOptions): this["Type"]
+  make(input: this["~type.make.in"], options?: MakeOptions): this["Type"]
 }
 ```
 
@@ -6284,7 +6767,7 @@ export interface Bottom<
 - `RE`: the type of the services required for encoding
 - `Ast`: the AST node type
 - `RebuildOut`: the type returned when modifying the schema (namely when you add annotations or checks)
-- `TypeMakeIn`: the type of the input to the `makeUnsafe` constructor
+- `TypeMakeIn`: the type of the input to the `make` constructor
 - `Iso`: the type of the focus of the default `Optic.Iso`
 - `TypeParameters`: the type of the type parameters
 
@@ -6376,7 +6859,31 @@ type TypeMutability2 = (typeof schema)["~type.mutability"] // "readonly" | "muta
 
 ## Typed Annotations
 
-You can retrieve typed annotations with the `Annotations.resolveInto` function.
+You can retrieve typed annotations with the `Schema.resolveAnnotations` function. The function is called "resolve" rather than "get" because it performs a lookup: if the schema has checks, the annotations are taken from the last check; otherwise they are taken from the base schema instance. This means annotations placed on a check (e.g. via `.check(myCheck.annotate({ ... }))`) take precedence over annotations on the schema itself.
+
+**Example** (Resolving annotations from a base schema)
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.String.annotate({ title: "my string" })
+
+console.log(Schema.resolveAnnotations(schema))
+// Output: { title: "my string" }
+```
+
+**Example** (Annotations on the last check take precedence)
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.String
+  .annotate({ title: "base" })
+  .check(Schema.isNonEmpty().annotate({ title: "from check" }))
+
+console.log(Schema.resolveAnnotations(schema)?.title)
+// Output: "from check"
+```
 
 You can also extend the available annotations by adding your own in a module declaration file.
 
@@ -6398,13 +6905,28 @@ declare module "effect/Schema" {
 const schema = Schema.String.annotate({ version: [1, 2, 0] })
 
 // const version: readonly [major: number, minor: number, patch: number] | undefined
-const version = Schema.resolveInto(schema)?.["version"]
+const version = Schema.resolveAnnotations(schema)?.["version"]
 
 if (version) {
   // Access individual parts of the version
   console.log(version[1])
   // Output: 2
 }
+```
+
+### Key-level Annotations
+
+Key-level annotations are attached via `annotateKey` and apply to a field's position inside a `Struct` or `Tuple` rather than to the field's value type. Use `Schema.resolveAnnotationsKey` to retrieve them.
+
+**Example** (Resolving key-level annotations)
+
+```ts
+import { Schema } from "effect"
+
+const schema = Schema.String.annotateKey({ messageMissingKey: "required" })
+
+console.log(Schema.resolveAnnotationsKey(schema))
+// Output: { messageMissingKey: "required" }
 ```
 
 ## Generics Improvements
@@ -6434,10 +6956,10 @@ This makes it easier to work with schemas in contexts where one direction has no
 
 ```ts
 import type { Effect } from "effect"
-import { Schema, ServiceMap } from "effect"
+import { Context, Schema } from "effect"
 
 // A service that retrieves full user info from an ID
-class UserDatabase extends ServiceMap.Service<
+class UserDatabase extends Context.Service<
   UserDatabase,
   {
     getUserById: (id: string) => Effect.Effect<{ readonly id: string; readonly name: string }>
