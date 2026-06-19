@@ -26,7 +26,7 @@ function ProgramOutcomeControl({ control }: ControlRenderProps<ProgramOutcome>) 
     <div ref={rootRef} className="flex items-center justify-start gap-3">
       <span className="font-mono tracking-wider text-neutral-500 select-none">OUTCOME</span>
       <Tabs value={value} onValueChange={(value) => setValue(value)}>
-        <TabsList className="relative isolate gap-3 overflow-hidden border border-zinc-700 bg-zinc-900 p-1 group-data-horizontal/tabs:h-11">
+        <TabsList className="relative isolate gap-3 overflow-hidden border border-zinc-700 bg-zinc-900 p-1 group-data-[orientation=horizontal]/tabs:h-11">
           <TabsIndicator rect={indicatorRect} variant="fill" className="rounded-md bg-zinc-950" />
 
           {PROGRAM_OUTCOMES.map((option) => (

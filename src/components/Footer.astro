@@ -1,9 +1,11 @@
 ---
 import { Image } from "astro:assets"
+
+import { ArrowUpRight } from "@lucide/astro"
+
 import EffectLogoBlack from "@/assets/logos/effect/combination-mark/svg/effect-logo-black.svg"
 import EffectLogoWhite from "@/assets/logos/effect/combination-mark/svg/effect-logo-white.svg"
 import { Link } from "@/components/ui/Link"
-import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 interface Props {
   readonly class?: string | undefined
@@ -66,7 +68,7 @@ const communityBorder = hideCommunityBorder
                 className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 Workshops
-                <i class="ri-arrow-right-up-line text-sm"></i>
+                <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </li>
             <li>
@@ -105,7 +107,7 @@ const communityBorder = hideCommunityBorder
                 className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 Effect LSP
-                <i class="ri-arrow-right-up-line text-sm"></i>
+                <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </li>
             <li>
@@ -115,7 +117,7 @@ const communityBorder = hideCommunityBorder
                 className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 VS Code Extension
-                <i class="ri-arrow-right-up-line text-sm"></i>
+                <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </li>
           </ul>
@@ -144,7 +146,7 @@ const communityBorder = hideCommunityBorder
                 className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 Events & meetups
-                <i class="ri-arrow-right-up-line text-sm"></i>
+                <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </li>
             <li>
@@ -154,7 +156,7 @@ const communityBorder = hideCommunityBorder
                 className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 Discord
-                <i class="ri-arrow-right-up-line text-sm"></i>
+                <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </li>
             <li>

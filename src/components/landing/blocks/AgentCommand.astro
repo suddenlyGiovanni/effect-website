@@ -1,0 +1,135 @@
+---
+import { Copy, Check } from "@lucide/astro"
+
+const PREVIEW = "Help me build an Effect app in TypeScript…"
+---
+
+<effect-agent-command class="flex flex-col overflow-hidden rounded-md bg-zinc-900/50 p-1 ring-1 ring-inset ring-zinc-700">
+  <div class="flex border-b border-zinc-800">
+    <div class="relative flex items-center gap-1.5 px-3 py-2 font-mono text-xs tracking-wider text-white uppercase">
+      Prompt for AI agents
+      <div class="absolute inset-x-0 bottom-0 h-px bg-white"></div>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    data-role="copy"
+    class="flex flex-1 w-full cursor-pointer items-center justify-between gap-4 px-5 py-2 font-mono text-sm text-zinc-300 transition-colors hover:bg-zinc-800/30"
+    aria-label="Copy prompt for AI agents"
+  >
+    <span class="truncate">{PREVIEW}</span>
+    <Copy data-role="copy-icon-idle" class="shrink-0 text-zinc-400" size={16} aria-hidden="true" />
+    <Check data-role="copy-icon-copied" class="hidden shrink-0 text-zinc-200" size={16} aria-hidden="true" />
+  </button>
+
+  <p role="status" aria-live="polite" data-role="status" class="sr-only"></p>
+</effect-agent-command>
+
+<script>
+  const AGENT_PROMPT = `Help me build an Effect app in TypeScript. Start by reading https://effect.website/docs/getting-started and follow it exactly: scaffold a fresh TypeScript project, install \`effect\`, create a \`main.ts\` with a simple \`Effect.gen\` program that logs "hello, world", and run it with \`bun run main.ts\` (or the npm/pnpm/yarn equivalent) so I see it execute. Confirm it runs before moving on.
+
+Then STOP and ASK ME what I want to build. From there, consult only the docs you need for what I asked for — don't march me through every guide.
+
+Guides — foundations, work through whichever parts I haven't touched:
+  https://effect.website/docs/getting-started/why-effect      Why Effect
+  https://effect.website/docs/error-management/two-error-types Error tracking
+  https://effect.website/docs/requirements-management/services Services & dependency injection
+  https://effect.website/docs/concurrency/fibers              Concurrency
+  https://effect.website/docs/observability/tracing           Observability
+
+For everything else (Schema, Platform, RPC, AI SDK, Cluster), fetch https://effect.website/llms.txt — it's the index of every doc on the site. Use it to look up the specific page you need instead of guessing URLs.
+
+Important:
+- Confirm with me before each install or deploy. Don't batch.
+- Use \`bun add effect\` (or the npm/pnpm/yarn equivalent).
+- Effect v4 is in beta — if I'm using v3, follow the v3 docs; if I'm starting fresh, use v4 from https://effect.website/blog/effect-v4-beta.
+- Effect uses \`Effect.gen\` with generators, not async/await — don't try to mix them.`
+
+  const COPY_RESET_TIMEOUT_MS = 1500
+
+  class EffectAgentCommandElement extends HTMLElement {
+    #copyButton: HTMLButtonElement | null = null
+    #statusElement: HTMLElement | null = null
+    #copyIdleIcon: HTMLElement | null = null
+    #copySuccessIcon: HTMLElement | null = null
+    #copyResetTimeout: ReturnType<typeof setTimeout> | undefined = undefined
+
+    connectedCallback() {
+      const copyButton = this.querySelector("[data-role='copy']")
+      const statusElement = this.querySelector("[data-role='status']")
+      const copyIdleIcon = this.querySelector("[data-role='copy-icon-idle']")
+      const copySuccessIcon = this.querySelector("[data-role='copy-icon-copied']")
+
+      if (
+        !(copyButton instanceof HTMLButtonElement) ||
+        !(statusElement instanceof HTMLElement) ||
+        !(copyIdleIcon instanceof HTMLElement) ||
+        !(copySuccessIcon instanceof HTMLElement)
+      ) {
+        return
+      }
+
+      this.#copyButton = copyButton
+      this.#statusElement = statusElement
+      this.#copyIdleIcon = copyIdleIcon
+      this.#copySuccessIcon = copySuccessIcon
+
+      this.#copyButton.addEventListener("click", this.#onCopyClick)
+    }
+
+    disconnectedCallback() {
+      if (this.#copyButton) {
+        this.#copyButton.removeEventListener("click", this.#onCopyClick)
+      }
+      if (this.#copyResetTimeout !== undefined) {
+        clearTimeout(this.#copyResetTimeout)
+      }
+      this.#copyButton = null
+      this.#statusElement = null
+      this.#copyIdleIcon = null
+      this.#copySuccessIcon = null
+      this.#copyResetTimeout = undefined
+    }
+
+    #setCopyFeedback = (state: "idle" | "copied" | "error") => {
+      if (!this.#statusElement || !this.#copyIdleIcon || !this.#copySuccessIcon) return
+      const copied = state === "copied"
+      this.#copyIdleIcon.classList.toggle("hidden", copied)
+      this.#copySuccessIcon.classList.toggle("hidden", !copied)
+      this.#statusElement.textContent =
+        state === "copied"
+          ? "Prompt copied"
+          : state === "error"
+            ? "Could not copy prompt"
+            : ""
+    }
+
+    #setTemporaryCopyFeedback = (state: "copied" | "error") => {
+      this.#setCopyFeedback(state)
+      if (this.#copyResetTimeout !== undefined) clearTimeout(this.#copyResetTimeout)
+      this.#copyResetTimeout = setTimeout(() => {
+        this.#setCopyFeedback("idle")
+        this.#copyResetTimeout = undefined
+      }, COPY_RESET_TIMEOUT_MS)
+    }
+
+    #onCopyClick = async () => {
+      const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard
+      if (clipboard === undefined) {
+        this.#setTemporaryCopyFeedback("error")
+        return
+      }
+      try {
+        await clipboard.writeText(AGENT_PROMPT)
+        this.#setTemporaryCopyFeedback("copied")
+      } catch {
+        this.#setTemporaryCopyFeedback("error")
+      }
+    }
+  }
+
+  if (!customElements.get("effect-agent-command")) {
+    customElements.define("effect-agent-command", EffectAgentCommandElement)
+  }
+</script>

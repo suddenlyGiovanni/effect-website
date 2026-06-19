@@ -1,4 +1,3 @@
-import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import mdx from "@astrojs/mdx"
@@ -8,7 +7,7 @@ import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-s
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers"
 import tailwindcss from "@tailwindcss/vite"
 import expressiveCode from "astro-expressive-code"
-import { defineConfig, fontProviders } from "astro/config"
+import { defineConfig, fontProviders, svgoOptimizer } from "astro/config"
 import svgr from "vite-plugin-svgr"
 
 import { twieRedirectList } from "./src/generated/twie-redirects"
@@ -20,6 +19,11 @@ export default defineConfig({
   site: "https://effect.website",
 
   adapter: vercel(),
+
+  experimental: {
+    svgOptimizer: svgoOptimizer(),
+    rustCompiler: true,
+  },
 
   vite: {
     plugins: [tailwindcss(), svgr()],
@@ -46,9 +50,7 @@ export default defineConfig({
       ],
       themes: ["github-light", "github-dark"],
     }),
-    react({
-      include: ["**/react/*", "**/components/**/*", "**/examples/**/*"],
-    }),
+    react(),
     mdx(),
   ],
 

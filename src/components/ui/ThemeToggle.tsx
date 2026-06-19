@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Sun, Monitor, Moon, type LucideIcon } from "lucide-react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -55,10 +56,10 @@ export function ThemeToggle() {
 		}
 	}, []);
 
-	const options: { value: Theme; icon: string; label: string }[] = [
-		{ value: "light", icon: "ri-sun-line", label: "Light" },
-		{ value: "system", icon: "ri-computer-line", label: "System" },
-		{ value: "dark", icon: "ri-moon-line", label: "Dark" },
+	const options: { value: Theme; Icon: LucideIcon; label: string }[] = [
+		{ value: "light", Icon: Sun, label: "Light" },
+		{ value: "system", Icon: Monitor, label: "System" },
+		{ value: "dark", Icon: Moon, label: "Dark" },
 	];
 
 	return (
@@ -75,7 +76,7 @@ export function ThemeToggle() {
 							: "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
 					}`}
 				>
-					<i className={`${opt.icon} text-sm`} />
+					<opt.Icon size={14} />
 				</button>
 			))}
 		</div>
