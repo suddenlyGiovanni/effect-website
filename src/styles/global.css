@@ -334,20 +334,6 @@ pre,
 	animation: fadeOut 0.3s ease-in forwards;
 }
 
-/* Quotes scroll animation */
-.quotes-scroll-animation {
-	animation: scroll-left 30s linear infinite;
-	cursor: grab;
-	user-select: none;
-}
-
-.quotes-scroll-animation:active {
-	cursor: grabbing;
-}
-
-.quotes-scroll-animation:hover {
-	animation-play-state: paused;
-}
 
 /* Pointer cursor on interactive buttons (Tailwind v4 removed the default) */
 button:not(:disabled):not([aria-disabled="true"]),
