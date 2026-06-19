@@ -10,5 +10,5 @@ export class EmbedManagerAtomParams extends Data.Class<{
 
 export const embedManagerAtom = Atom.family(({ video, options }: EmbedManagerAtomParams) => {
   const runtime = Atom.runtime(EmbedManager.layer(video, options))
-  return runtime.atom(EmbedManager.asEffect())
+  return runtime.atom(EmbedManager)
 })

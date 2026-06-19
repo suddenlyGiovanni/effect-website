@@ -244,8 +244,6 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
 <script>
   const links = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")
   if (links.length > 0) {
-    const ACTIVE = ["font-semibold", "text-zinc-900", "dark:text-white"]
-    const INACTIVE = ["text-zinc-700", "dark:text-zinc-400"]
 
     function setActive(id: string | null) {
       for (const link of links) {

@@ -7,7 +7,7 @@ import * as Queue from "effect/Queue"
 import * as RcRef from "effect/RcRef"
 import * as Schedule from "effect/Schedule"
 import * as Schema from "effect/Schema"
-import * as ServiceMap from "effect/ServiceMap"
+import * as Context from "effect/Context"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import { YOUTUBE_NOCOOKIE_URL } from "./constants"
@@ -27,7 +27,7 @@ export interface EmbedManagerOptions {
   readonly debug?: boolean | undefined
 }
 
-export class EmbedManager extends ServiceMap.Service<
+export class EmbedManager extends Context.Service<
   EmbedManager,
   {
     readonly previewAtom: Atom.Writable<boolean>
@@ -49,7 +49,7 @@ export class EmbedManager extends ServiceMap.Service<
       (_, command: EmbedCommand) => Queue.offerUnsafe(queue, command),
     )
 
-    const services = yield* Effect.services()
+    const services = yield* Effect.context()
     const runFork = Effect.runForkWith(services)
     const decodeEvent = Schema.decodeUnknownEffect(Schema.fromJsonString(YouTubeEvent))
     const encodeCommand = Schema.encodeUnknownEffect(Schema.fromJsonString(EmbedCommand))

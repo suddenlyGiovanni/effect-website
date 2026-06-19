@@ -2,7 +2,7 @@ import * as Clock from "effect/Clock"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Scope from "effect/Scope"
-import * as ServiceMap from "effect/ServiceMap"
+import * as Context from "effect/Context"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import { soundCueKey, type SoundCue } from "@/features/visual-effect/model/sound"
 import { prefersReducedMotionAtom, soundPreferenceAtom } from "@/features/visual-effect/state/atoms"
@@ -17,7 +17,7 @@ export interface ToneEngine {
   readonly stopAll: Effect.Effect<void>
 }
 
-export class SoundManager extends ServiceMap.Service<
+export class SoundManager extends Context.Service<
   SoundManager,
   {
     readonly play: (cue: SoundCue) => Effect.Effect<void>

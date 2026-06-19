@@ -78,7 +78,7 @@ export const defineExample = <const Features extends ExampleFeatureInput = {}>(
       const step = registerStep(stepOptions)
       return Effect.suspend(() =>
         Effect.withSpan(self, step.label, {
-          annotations: ExampleStep.serviceMap({
+          annotations: ExampleStep.context({
             definition,
             step,
           }),

@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect"
 import { identity } from "effect/Function"
 import * as Random from "effect/Random"
-import * as ServiceMap from "effect/ServiceMap"
+import * as Context from "effect/Context"
 import * as String from "effect/String"
 import { defineExample } from "../model/define-example"
 import { Notifications } from "../model/example-definition"
@@ -28,7 +28,7 @@ const PASSWORDS = [
   "dragon",
 ]
 
-class Password extends ServiceMap.Service<Password, string>()("Password", {
+class Password extends Context.Service<Password, string>()("Password", {
   make: Effect.gen(function* () {
     const index = yield* Random.nextIntBetween(0, PASSWORDS.length, {
       halfOpen: true,

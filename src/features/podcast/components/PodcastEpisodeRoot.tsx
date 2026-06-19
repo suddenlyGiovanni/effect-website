@@ -4,8 +4,13 @@ import * as React from "react"
 import { YouTubeEmbedProvider } from "@/features/youtube-embed"
 import { PodcastEpisodeEntry } from "../collection"
 import { PodcastContextProvider } from "../context"
-import { PodcastEpisode, PodcastEpisodeId, type SrtCue } from "../domain"
-import { normalizePodcastChapters, normalizePodcastTranscript } from "../utils"
+import { type PodcastEpisode, PodcastEpisodeId, type SrtCue } from "../domain"
+import {
+  formatPodcastDuration,
+  formatPodcastPublicationDate,
+  normalizePodcastChapters,
+  normalizePodcastTranscript,
+} from "../utils"
 import { PodcastEpisodeLayout } from "./PodcastEpisodeLayout"
 
 export function PodcastEpisodeRoot({
@@ -20,8 +25,8 @@ export function PodcastEpisodeRoot({
 
   const podcastEpisodeId = React.useMemo(
     () =>
-      PodcastEpisodeId.makeUnsafe(`${podcast.youtubeId}-${reactId.replace(/:/g, "")}`, {
-        disableValidation: true,
+      PodcastEpisodeId.make(`${podcast.youtubeId}-${reactId.replace(/:/g, "")}`, {
+        disableChecks: true,
       }),
     [podcast.youtubeId, reactId],
   )
@@ -36,22 +41,25 @@ export function PodcastEpisodeRoot({
     [transcript],
   )
 
-  const podcastEpisode = PodcastEpisode.makeUnsafe(
-    {
-      id: podcastEpisodeId,
-      number: podcast.episodeNumber,
-      title: podcast.title,
-      guest: podcast.guest,
-      company: podcast.company,
-      chapters: podcastChapters,
-      transcript: podcastTranscript,
-      links: podcast.links,
-      youtube: { id: podcast.youtubeId },
-      duration: Duration.seconds(podcast.duration),
-      publishedOn: DateTime.makeUnsafe(podcast.date),
+  const podcastEpisode = {
+    id: podcastEpisodeId,
+    number: podcast.episodeNumber,
+    title: podcast.title,
+    guest: podcast.guest,
+    company: podcast.company,
+    chapters: podcastChapters,
+    transcript: podcastTranscript,
+    links: podcast.links,
+    youtube: { id: podcast.youtubeId },
+    duration: Duration.seconds(podcast.duration),
+    publishedOn: DateTime.makeUnsafe(podcast.date),
+    get formattedDuration() {
+      return formatPodcastDuration(this.duration)
     },
-    { disableValidation: true },
-  )
+    get formattedPublicationDate() {
+      return formatPodcastPublicationDate(this.publishedOn)
+    },
+  } as unknown as PodcastEpisode
 
   return (
     <YouTubeEmbedProvider

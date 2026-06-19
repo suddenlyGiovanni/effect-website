@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect"
 import * as Random from "effect/Random"
-import * as ServiceMap from "effect/ServiceMap"
+import * as Context from "effect/Context"
 import * as String from "effect/String"
 import { defineExample } from "../model/define-example"
 import { Notifications } from "../model/example-definition"
@@ -8,7 +8,7 @@ import { HighlightSelector } from "../model/snippet-definition"
 import { ErrorResult } from "../ui/results/error"
 import { PrimitiveResult } from "../ui/results/primitive"
 
-class ShouldFail extends ServiceMap.Service<ShouldFail>()("ShouldFail", {
+class ShouldFail extends Context.Service<ShouldFail>()("ShouldFail", {
   make: Effect.gen(function* () {
     const failingIndex = yield* Random.nextIntBetween(0, 2)
     return (index: number) => failingIndex === index

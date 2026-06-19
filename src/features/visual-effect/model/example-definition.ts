@@ -1,7 +1,7 @@
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Scope from "effect/Scope"
-import * as ServiceMap from "effect/ServiceMap"
+import * as Context from "effect/Context"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as React from "react"
 import type { RenderableResult } from "./domain"
@@ -75,7 +75,7 @@ export interface StepDefinition {
   readonly addToTimeline?: boolean
 }
 
-export class ExampleStep extends ServiceMap.Service<
+export class ExampleStep extends Context.Service<
   ExampleStep,
   {
     readonly definition: ExampleDefinition
@@ -113,7 +113,7 @@ export interface ControlValues {
   readonly get: <A>(control: ExampleControl<A>) => A
 }
 
-export class ControlSnapshot extends ServiceMap.Service<
+export class ControlSnapshot extends Context.Service<
   ControlSnapshot,
   { readonly get: <A>(atom: Atom.Atom<A>) => A }
 >()("ControlSnapshot") {}
@@ -137,7 +137,7 @@ export interface NotificationOptions {
   readonly showOnHover?: boolean | undefined
 }
 
-export class Notifications extends ServiceMap.Service<
+export class Notifications extends Context.Service<
   Notifications,
   {
     readonly notify: (
@@ -147,7 +147,7 @@ export class Notifications extends ServiceMap.Service<
   }
 >()("Notifications") {}
 
-export class VisualFinalizers extends ServiceMap.Service<
+export class VisualFinalizers extends Context.Service<
   VisualFinalizers,
   {
     readonly register: (label: string) => Effect.Effect<string>

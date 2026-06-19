@@ -120,7 +120,7 @@ export function normalizePodcastChapters(
     title: chapter.title,
     label: chapter.start,
     startTimeSeconds: parseTimestampToSeconds(chapter.start),
-  }))
+  })) as any
 }
 
 // =============================================================================
@@ -150,5 +150,5 @@ export function normalizePodcastTranscript(
     text: cue.text,
     startTimeSeconds: parseTimestampToSeconds(cue.startTime),
     endTimeSeconds: parseTimestampToSeconds(cue.endTime),
-  }))
+  })) as any
 }

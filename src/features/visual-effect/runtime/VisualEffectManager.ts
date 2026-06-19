@@ -7,7 +7,7 @@ import * as Fiber from "effect/Fiber"
 import * as FiberMap from "effect/FiberMap"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
-import * as ServiceMap from "effect/ServiceMap"
+import * as Context from "effect/Context"
 import * as Tracer from "effect/Tracer"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
@@ -31,7 +31,7 @@ import {
 } from "./state"
 import { scheduleTimer, updateScheduleTimeline } from "./timeline"
 
-export class VisualEffectManager extends ServiceMap.Service<
+export class VisualEffectManager extends Context.Service<
   VisualEffectManager,
   {
     start: (example: ExampleDefinition) => Effect.Effect<void>
@@ -39,14 +39,14 @@ export class VisualEffectManager extends ServiceMap.Service<
     reset: (example: ExampleDefinition, options?: ResetOptions) => Effect.Effect<void>
   }
 >()("VisualEffectManager") {
-  static readonly layer = Layer.effectServices(
+  static readonly layer = Layer.effectContext(
     Effect.gen(function* () {
       const clock = yield* Clock.Clock
       const tracer = yield* Effect.tracer
       const registry = yield* AtomRegistry.AtomRegistry
       const soundManager = yield* SoundManager
       const fiberMap = yield* FiberMap.make<ExampleDefinition>()
-      const services = yield* Effect.services()
+      const services = yield* Effect.context()
       const runSync = Effect.runSyncWith(services)
       const resettingExamples = new Set<string>()
       const exampleRunIds = new Map<string, number>()
@@ -125,7 +125,7 @@ export class VisualEffectManager extends ServiceMap.Service<
       const visualEffectTracer = Tracer.make({
         span(options) {
           const span = tracer.span(options)
-          const details = ServiceMap.getOrUndefined(span.annotations, ExampleStep)
+          const details = Context.getOrUndefined(span.annotations, ExampleStep)
 
           if (!details) {
             return span
@@ -189,7 +189,7 @@ export class VisualEffectManager extends ServiceMap.Service<
               return Effect.void
             }
 
-            const details = ServiceMap.getOrUndefined(span.annotations, ExampleStep)
+            const details = Context.getOrUndefined(span.annotations, ExampleStep)
 
             if (details === undefined) {
               setExampleNotification(example, message, attributes)
@@ -232,9 +232,9 @@ export class VisualEffectManager extends ServiceMap.Service<
 
             yield* setExampleState(example, startState)
 
-            const services = ServiceMap.make(ControlSnapshot, snapshot).pipe(
-              ServiceMap.add(Notifications, { notify }),
-              ServiceMap.add(
+            const services = Context.make(ControlSnapshot, snapshot).pipe(
+              Context.add(Notifications, { notify }),
+              Context.add(
                 VisualFinalizers,
                 makeVisualFinalizers({
                   example,
@@ -304,8 +304,8 @@ export class VisualEffectManager extends ServiceMap.Service<
           ),
       })
 
-      return Tracer.Tracer.serviceMap(visualEffectTracer).pipe(
-        ServiceMap.add(VisualEffectManager, manager),
+      return Tracer.Tracer.context(visualEffectTracer).pipe(
+        Context.add(VisualEffectManager, manager),
       )
     }),
   )

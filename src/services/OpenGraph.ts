@@ -5,7 +5,7 @@ import * as Encoding from "effect/Encoding"
 import * as FileSystem from "effect/FileSystem"
 import * as Layer from "effect/Layer"
 import * as Path from "effect/Path"
-import * as ServiceMap from "effect/ServiceMap"
+import * as Context from "effect/Context"
 import satori, { type SatoriOptions } from "satori"
 import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/open-graph"
 
@@ -26,7 +26,7 @@ export type OgFonts = readonly [SatoriFont, ...SatoriFont[]]
 const dashSvg =
   "<svg xmlns='http://www.w3.org/2000/svg' width='1' height='4'><rect x='0' y='0' width='1' height='2' fill='rgba(63,63,70,0.7)'/></svg>"
 
-export class OpenGraph extends ServiceMap.Service<OpenGraph>()("OpenGraph", {
+export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
   make: Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
     const path = yield* Path.Path
