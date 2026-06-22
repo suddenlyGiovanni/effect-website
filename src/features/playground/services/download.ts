@@ -9,7 +9,7 @@ export class Zip extends Context.Service<Zip>()("app/Download/Zip", {
       <T>(zipWriter: zip.ZipWriter<T>) =>
       (tree: Workspace["tree"], basePath: string): Effect.Effect<void> =>
         Effect.gen(function* () {
-          for (const fileOrDir of tree as Array<File | Directory>) {
+          for (const fileOrDir of tree) {
             if (fileOrDir._tag === "File") {
               yield* Effect.promise(() =>
                 zipWriter.add(basePath + fileOrDir.name, new zip.TextReader(fileOrDir.initialContent))

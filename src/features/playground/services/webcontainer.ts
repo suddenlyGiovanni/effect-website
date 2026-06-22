@@ -49,11 +49,10 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      *
      * When the associated scope is closed, the process will be killed.
      */
-    const createShell = (cwd?: string) => Effect.uninterruptible(
+    const createShell = Effect.uninterruptible(
       Effect.gen(function* () {
         const process = yield* Effect.promise(() =>
           container.spawn("jsh", [], {
-            cwd,
             env: {
               PATH: WEBCONTAINER_BIN_PATH,
               NODE_NO_WARNINGS: "1"
@@ -65,7 +64,11 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         // hitting cross-origin Comlink proxy properties
         return {
           getWriter: () => process.input.getWriter(),
-          pipeOutput: (writable: WritableStream) => process.output.pipeTo(writable),
+          pipeOutput: (writable: WritableStream) => process.output.pipeTo(writable, {
+            preventCancel: true,
+            preventAbort: true,
+            preventClose: true
+          }),
         } as const
       })
     )
@@ -75,14 +78,13 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      *
      * When the associated scope is closed, the process will be killed.
      */
-    function spawn(command: string) {
+    function spawn(command: string, cwd?: string) {
       return Effect.uninterruptible(
         Effect.gen(function* () {
           const process = yield* Effect.promise(() =>
             container.spawn("jsh", ["-c", command], {
-              env: {
-                PATH: WEBCONTAINER_BIN_PATH
-              }
+              cwd,
+              env: { PATH: WEBCONTAINER_BIN_PATH }
             })
           )
           yield* Effect.addFinalizer(() => Effect.sync(() => process.kill()))
@@ -99,8 +101,8 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      * Spawns the specified `command` into a `jsh` shell and waits for the
      * program to exit.
      */
-    function run(command: string) {
-      return spawn(command).pipe(
+    function run(command: string, cwd?: string) {
+      return spawn(command, cwd).pipe(
         Effect.flatMap((proc) => proc.waitExit()),
         Effect.scoped
       )
@@ -311,7 +313,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
        * The command will be run in the root directory of the workspace.
        */
       function spawnInWorkspace(command: string) {
-        return spawn(`cd ${workspace.name} && ${command}`)
+        return spawn(command, workspace.name)
       }
 
       /**
@@ -321,7 +323,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
        * The command will be run in the root directory of the workspace.
        */
       function runInWorkspace(command: string) {
-        return run(`cd ${workspace.name} && ${command}`)
+        return run(command, workspace.name)
       }
 
       /**
@@ -469,23 +471,24 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       yield* installExe("run", runExe)
       yield* installExe("dev-tools-proxy", devToolsProxyExe)
 
-      // Start the DevTools proxy
+      // Start the DevTools proxy — runs detached so React strict mode
+      // unmount/mount doesn't kill the proxy and close the ReadableStream
       const devToolsEvents = yield* PubSub.sliding<Request.WithoutPing>(128)
       cachedDevToolsEvents = devToolsEvents
       yield* spawn("./dev-tools-proxy").pipe(
         Effect.tap((proc) =>
-          Stream.fromReadableStream({ evaluate: proc.getOutput as () => any, onError: identity }).pipe(
+          Stream.fromReadableStream({ evaluate: proc.getOutput, onError: identity, releaseLockOnEnd: true }).pipe(
             Stream.orDie,
             Stream.pipeThroughChannel(
               Ndjson.decodeSchemaString(Request)({
                 ignoreEmptyLines: true
               })
             ),
-            Stream.runForEach((event) => (event._tag === "Ping" ? Effect.void : PubSub.publish(devToolsEvents, event)))
+            Stream.runForEach((event) => (event._tag === "Ping" ? Effect.void : PubSub.publish(devToolsEvents, event))),
+            Effect.catchCause(() => Effect.void)
           )
         ),
-        Effect.forever,
-        Effect.forkScoped
+        Effect.forkDetach
       )
     }
 
@@ -513,7 +516,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
 function treeFromWorkspace(workspace: Workspace): FileSystemTree {
   function walk(children: Workspace["tree"]): FileSystemTree {
     const tree: FileSystemTree = {}
-    ;(children as Array<File | Directory>).forEach((child) => {
+    children.forEach((child) => {
       if (child._tag === "File") {
         tree[child.name] = {
           file: { contents: child.initialContent }
@@ -575,8 +578,11 @@ const devToolsProxyExe = `#!/usr/bin/env node
 const Net = require("node:net")
 
 const server = Net.createServer((socket) => {
+  socket.on("error", () => {})
   socket.pipe(process.stdout, { end: false })
 })
+process.stdout.on("error", () => {})
+server.on("error", () => {})
 
 server.listen(34437)
 `

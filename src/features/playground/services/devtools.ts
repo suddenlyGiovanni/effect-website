@@ -55,7 +55,7 @@ export const DevToolsLayer = Layer.effectDiscard(
           }
         }
       }),
-      Effect.forkScoped
+      Effect.forkDetach
     )
   })
 ).pipe(Layer.provide(WebContainer.layer))

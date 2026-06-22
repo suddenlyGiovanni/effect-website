@@ -1,10 +1,6 @@
 import * as Atom from "effect/unstable/reactivity/Atom"
 import { Span } from "../domain/devtools"
-import { DevToolsLayer, rootSpansAtom } from "../services/devtools"
-
-export interface AtomDevTools extends Atom.Success<typeof devToolsAtom> {}
-
-export const devToolsAtom = Atom.runtime(DevToolsLayer)
+import { rootSpansAtom } from "../services/devtools"
 
 export const selectedSpanIndexAtom = Atom.make(0)
 

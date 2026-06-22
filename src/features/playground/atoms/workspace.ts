@@ -23,8 +23,9 @@ import { Loader } from "../services/loader"
 import { Terminal } from "../services/terminal"
 import { Dracula, NightOwlishLight } from "../services/terminal/themes"
 import { WebContainer } from "../services/webcontainer"
+import { DevToolsLayer } from "../services/devtools"
 
-const runtime = Atom.runtime(Layer.mergeAll(Loader.layer, Terminal.layer, Toaster.layer, WebContainer.layer))
+const runtime = Atom.runtime(Layer.mergeAll(Loader.layer, Terminal.layer, Toaster.layer, DevToolsLayer, WebContainer.layer))
 
 const terminalThemeAtom = themeAtom.pipe(Atom.map((theme) => (theme === "light" ? NightOwlishLight : Dracula)))
 
@@ -72,7 +73,7 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
         const terminalAtom = runtime.atom(
           Effect.fnUntraced(function* (get) {
             const el = yield* get.some(element)
-            const shell = yield* container.createShell(workspace.name)
+            const shell = yield* container.createShell
             const spawned = yield* terminal.spawn({
               theme: get.once(terminalThemeAtom)
             })
@@ -93,9 +94,12 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             })
             dataListener.dispose = () => disposable.dispose()
             get.addFinalizer(() => dataListener.dispose())
+            // Navigate to workspace directory
+            yield* Effect.promise(() =>
+              writer.write(`cd "${workspace.name}"\n`).catch(() => undefined)
+            )
             /**
-             * Install dependencies, acquire types, and setup formatters in the
-             * background
+             * Install dependencies
              */
             const fiber = yield* handle.spawn(workspace.prepare).pipe(
               Effect.tap((proc) =>
@@ -109,7 +113,7 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
                       })
                     )
                     .catch(() => undefined)
-                )
+                ).pipe(Effect.forkScoped)
               ),
               Effect.flatMap((proc) => proc.waitExit()),
               Effect.forkScoped
@@ -247,7 +251,11 @@ function setupWorkspaceTypeAcquisition(workspace: Workspace) {
           { concurrency: files.length, discard: true }
         )
 
-        yield* Effect.forEach(directories, (directory) => acquireTypesAt(storePath, `${path}/${directory}`), {
+        yield* Effect.forEach(directories, (directory) => {
+            // // Skip node_modules symlink inside .pnpm to avoid circular path
+            // if (directory === "node_modules") return Effect.void
+            return acquireTypesAt(storePath, `${path}/${directory}`)
+          }, {
           concurrency: directories.length,
           discard: true
         })

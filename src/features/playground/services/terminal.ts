@@ -15,8 +15,8 @@ export class Terminal extends Context.Service<Terminal>()("app/Terminal", {
         terminal.loadAddon(fitAddon)
 
         const prevOpen = terminal.open
-        terminal.open = function () {
-          prevOpen.apply(terminal, arguments as any)
+        terminal.open = function (this: XTerm, parent: HTMLElement) {
+          prevOpen.call(this, parent)
           fitAddon.fit()
         }
 

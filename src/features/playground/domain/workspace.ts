@@ -174,9 +174,7 @@ export class Workspace extends Schema.Class<Workspace>("Workspace")({
     return this.filterMap((item) => (item === node ? Option.none() : Option.some(item)))
   }
   findFile(name: string) {
-    return Iterable.findFirst(this.filePaths, ([_, path]) => _._tag === "File" && path === name) as Option.Option<
-      [File, string]
-    >
+    return Iterable.findFirst(this.filePaths, ([_, path]) => _._tag === "File" && path === name)
   }
   get initialFile(): File {
     if (this.initialFilePath) {
