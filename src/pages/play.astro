@@ -1,0 +1,21 @@
+---
+import Navigation from "@/components/navigation/Navigation.astro"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import { CodeEditor } from "@/features/playground/index"
+
+Astro.response.headers.set("Cross-Origin-Embedder-Policy", "require-corp")
+Astro.response.headers.set("Cross-Origin-Opener-Policy", "same-origin")
+---
+
+<BaseLayout title="Playground" description="Effect Playground">
+  <div class="relative flex h-screen flex-col overflow-hidden bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-white">
+    <Navigation activeSlug="playground" wide />
+
+    <div id={PAGE_TITLE_ID} class="flex flex-1 overflow-hidden pt-16">
+      <div class="js-editor h-full w-full">
+        <CodeEditor client:only="react" />
+      </div>
+    </div>
+  </div>
+</BaseLayout>
