@@ -112,14 +112,18 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
                 )
               ),
               Effect.flatMap((proc) => proc.waitExit()),
-              Effect.andThen(setupWorkspaceTypeAcquisition(workspace)),
-              Effect.andThen(setupWorkspaceFormatters(workspace)),
               Effect.forkScoped
             )
+
+            // Run type acquisition and formatters in background — don't block command
+            yield* setupWorkspaceTypeAcquisition(workspace).pipe(Effect.ignore, Effect.forkScoped)
+
+            yield* setupWorkspaceFormatters(workspace).pipe(Effect.ignore, Effect.forkScoped)
+
             if (command !== undefined) {
               /**
-               * Wait for dependencies, type acquisition, etc. to be complete
-               * before running the workspace command
+               * Wait for dependencies to be complete before running
+               * the workspace command
                */
               yield* Fiber.join(fiber).pipe(
                 Effect.andThen(
