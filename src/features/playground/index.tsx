@@ -51,7 +51,7 @@ function CodeEditorPanels() {
       </Panel>
       <Separator className="h-px bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-700 dark:hover:bg-zinc-500 transition-colors" />
       <Panel defaultSize={30} minSize={10} onResize={onResize}>
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col" data-tab-container>
           <div className="flex border-b border-zinc-200 dark:border-zinc-800">
             <TabButton id="terminal" defaultActive>
               <SquareTerminalIcon size={16} />
@@ -82,7 +82,7 @@ function TabButton({
 }) {
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      const container = e.currentTarget.closest("[data-tab-content]")?.parentElement
+      const container = e.currentTarget.closest("[data-tab-container]")
       if (!container) return
       const buttons = container.querySelectorAll("[data-tab-id]")
       const panels = container.querySelectorAll("[data-tab-panel]")
