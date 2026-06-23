@@ -6,7 +6,7 @@ import { CodeEditor } from "@/features/playground/index"
 
 export const prerender = false
 
-Astro.response.headers.set("Cross-Origin-Embedder-Policy", "require-corp")
+Astro.response.headers.set("Cross-Origin-Embedder-Policy", "credentialless")
 Astro.response.headers.set("Cross-Origin-Opener-Policy", "same-origin")
 ---
 

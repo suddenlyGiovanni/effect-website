@@ -41,7 +41,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       container = cachedContainer
     } else {
       if (!containerBootPromise) {
-        containerBootPromise = WC.boot()
+        containerBootPromise = WC.boot({ coep: "credentialless" })
       }
       const boot = containerBootPromise
       container = yield* Effect.promise(() => boot).pipe(
