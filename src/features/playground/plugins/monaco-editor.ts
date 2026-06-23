@@ -1,12 +1,12 @@
-import { createRequire } from "node:module"
-import * as path from "node:path"
 import type {
   EditorLanguage,
   EditorFeature,
   IFeatureDefinition,
-  IWorkerDefinition
+  IWorkerDefinition,
 } from "@effect/monaco-editor/esm/metadata"
 import type { Plugin } from "vite"
+import { createRequire } from "node:module"
+import * as path from "node:path"
 const require = createRequire(import.meta.url)
 const metadata = require("@effect/monaco-editor/esm/metadata")
 
@@ -22,7 +22,7 @@ export type PluginMonacoEditorFeatures = "all" | ReadonlyArray<EditorFeature | `
 
 function resolveLanguages(
   languages: PluginMonacoEditorLanguages,
-  customLanguages: ReadonlyArray<IFeatureDefinition>
+  customLanguages: ReadonlyArray<IFeatureDefinition>,
 ) {
   if (languages === "all") {
     return (metadata.languages as ReadonlyArray<IFeatureDefinition>)
@@ -30,9 +30,9 @@ function resolveLanguages(
       .filter((language) => language != null)
   }
 
-  const languageById: Record<string, IFeatureDefinition> = {};
+  const languageById: Record<string, IFeatureDefinition> = {}
 
-  (metadata.languages as ReadonlyArray<IFeatureDefinition>).forEach((language) => {
+  ;(metadata.languages as ReadonlyArray<IFeatureDefinition>).forEach((language) => {
     languageById[language.label] = language
   })
 
@@ -42,7 +42,7 @@ function resolveLanguages(
       console.error("[monaco-editor]: Unknown language detected: ", label)
       return null
     }
-    return lang;
+    return lang
   }
 
   return languages
@@ -51,16 +51,14 @@ function resolveLanguages(
     .filter((language) => language != null)
 }
 
-function resolveFeatures(
-  features: PluginMonacoEditorFeatures
-) {
+function resolveFeatures(features: PluginMonacoEditorFeatures) {
   if (features === "all") {
-    return (metadata.features as ReadonlyArray<IFeatureDefinition>)
+    return metadata.features as ReadonlyArray<IFeatureDefinition>
   }
 
-  const featureById: Record<string, IFeatureDefinition> = {};
+  const featureById: Record<string, IFeatureDefinition> = {}
 
-  (metadata.features as ReadonlyArray<IFeatureDefinition>).forEach((feature) => {
+  ;(metadata.features as ReadonlyArray<IFeatureDefinition>).forEach((feature) => {
     featureById[feature.label] = feature
   })
 
@@ -89,9 +87,7 @@ function resolveFeatures(
       .filter((feature) => feature != null)
   }
 
-  return features
-    .map(resolveFeature)
-    .filter((feature) => feature != null)
+  return features.map(resolveFeature).filter((feature) => feature != null)
 }
 
 const EDITOR_MODULE: IFeatureDefinition = {
@@ -104,20 +100,38 @@ const EDITOR_MODULE: IFeatureDefinition = {
 }
 function resolveWorkers(
   languages: ReadonlyArray<IFeatureDefinition>,
-  features: ReadonlyArray<IFeatureDefinition>
+  features: ReadonlyArray<IFeatureDefinition>,
 ) {
   const modules = [EDITOR_MODULE].concat(languages).concat(features)
   const workers: Array<IWorkerDefinition & { readonly label: string }> = []
+  const seen = new Set<string>()
   modules.forEach((mod) => {
     if (mod.worker) {
-      workers.push({
-        label: mod.label,
-        id: mod.worker.id,
-        entry: mod.worker.entry,
-      })
+      for (const label of workerLabels(mod.label)) {
+        if (seen.has(label)) continue
+        seen.add(label)
+        workers.push({
+          label,
+          id: mod.worker.id,
+          entry: mod.worker.entry,
+        })
+      }
     }
   })
   return workers
+}
+
+function workerLabels(label: string): ReadonlyArray<string> {
+  switch (label) {
+    case "typescript":
+      return ["typescript", "javascript"]
+    case "css":
+      return ["css", "scss", "less"]
+    case "html":
+      return ["html", "handlebars", "razor"]
+    default:
+      return [label]
+  }
 }
 
 function resolveModule(file: string) {
@@ -128,22 +142,15 @@ function resolveModule(file: string) {
 function resolveMonacoPath(file: string) {
   try {
     return resolveModule(path.join("@effect/monaco-editor/esm", file))
-  }
-  catch (e) { }
+  } catch (e) {}
   try {
     return resolveModule(path.join(process.cwd(), "node_modules/@effect/monaco-editor/esm", file))
-  }
-  catch (e) { }
+  } catch (e) {}
   return resolveModule(file)
 }
 
 export function monacoEditorPlugin(options: PluginMonacoEditorOptions = {}): Plugin {
-  const {
-    globalAPI = false,
-    languages = [],
-    customLanguages = [],
-    features = []
-  } = options
+  const { globalAPI = false, languages = [], customLanguages = [], features = [] } = options
   const resolvedLanguages = resolveLanguages(languages, customLanguages)
   const resolvedFeatures = resolveFeatures(features)
   const resolvedWorkers = resolveWorkers(resolvedLanguages, resolvedFeatures)
@@ -165,36 +172,50 @@ export function monacoEditorPlugin(options: PluginMonacoEditorOptions = {}): Plu
     },
     load(id) {
       if (id.match(/esm[/\\]vs[/\\]editor[/\\]editor.main.js/)) {
-        const workerPaths = resolvedWorkers.map((worker) => `"${worker.label}": () => new ${worker.label}()`)
+        const workerPaths = resolvedWorkers.map(
+          (worker) => `"${worker.label}": () => new ${worker.label}()`,
+        )
         const workerPathsJson = `{${workerPaths.join(",")}}`
-        const workerImports = resolvedWorkers.map((worker) => `import ${worker.label} from "${resolveMonacoPath(worker.entry)}?worker"`)
+        const workerImports = resolvedWorkers.map(
+          (worker) => `import ${worker.label} from "${resolveMonacoPath(worker.entry)}?worker"`,
+        )
         const featureImports = resolvedFeatures
-          .flatMap((feature) => feature.entry === undefined ? [] : Array.isArray(feature.entry) ? feature.entry : [feature.entry])
+          .flatMap((feature) =>
+            feature.entry === undefined
+              ? []
+              : Array.isArray(feature.entry)
+                ? feature.entry
+                : [feature.entry],
+          )
           .map((entry) => `import "${resolveMonacoPath(entry)}"`)
         const languageImports = resolvedLanguages
-          .flatMap((language) => language.entry === undefined ? [] : Array.isArray(language.entry) ? language.entry : [language.entry])
+          .flatMap((language) =>
+            language.entry === undefined
+              ? []
+              : Array.isArray(language.entry)
+                ? language.entry
+                : [language.entry],
+          )
           .map((entry) => `import "${resolveMonacoPath(entry)}"`)
         const monacoEnvironment = `self["MonacoEnvironment"] = (function(paths) {
   return {
     globalAPI: ${globalAPI},
     getWorker: function(moduleId, label) {
-      const result = paths[label]
+      const result = paths[label] ?? paths.editorWorkerService
       return result()
     }
   }
 })(${workerPathsJson})`
-        const editorExport = "export * from \"./editor.api.js\""
+        const editorExport = 'export * from "./editor.api.js"'
         return workerImports
           .concat([monacoEnvironment])
           .concat(featureImports)
           .concat(languageImports)
           .concat([editorExport])
           .join("\n")
-      }
-      else if (id.match(/esm[/\\]vs[/\\]editor[/\\]editor.all.js/)) {
+      } else if (id.match(/esm[/\\]vs[/\\]editor[/\\]editor.all.js/)) {
         return "throw \"Please use 'esm/vs/editor.main.js' or '@effect/monaco-editor' directly instead!\""
-      }
-      else if (id.match(/esm[/\\]vs[/\\]editor[/\\]edcore.main.js/)) {
+      } else if (id.match(/esm[/\\]vs[/\\]editor[/\\]edcore.main.js/)) {
         return "throw \"Please use 'esm/vs/editor.main.js' or '@effect/monaco-editor' directly!\""
       }
       return null
@@ -207,6 +228,6 @@ export function monacoEditorPlugin(options: PluginMonacoEditorOptions = {}): Plu
         }
         next()
       })
-    }
+    },
   }
 }
