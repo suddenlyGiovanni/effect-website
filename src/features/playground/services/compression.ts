@@ -11,6 +11,7 @@ export class CompressionError extends Data.TaggedError("CompressionError")<{
 }> {}
 
 export class Compression extends Context.Service<Compression>()("app/Compression", {
+  // oxlint-disable-next-line require-yield
   make: Effect.gen(function* () {
     const compress = (content: string) =>
       Effect.tryPromise({
@@ -40,7 +41,12 @@ export class Compression extends Context.Service<Compression>()("app/Compression
         Effect.andThen(decompress)
       )
 
-    return { compress, compressBase64, decompress, decompressBase64 } as const
+    return { 
+      compress, 
+      compressBase64, 
+      decompress, 
+      decompressBase64 
+    } as const
   })
 }) {
   static readonly layer = Layer.effect(this, this.make)

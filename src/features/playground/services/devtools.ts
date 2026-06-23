@@ -1,12 +1,14 @@
-import * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema"
 import * as Array from "effect/Array"
-import { Effect, Layer, Stream } from "effect"
+import * as Effect from "effect/Effect"
 import { pipe } from "effect/Function"
+import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
-import { Span } from "../domain/devtools"
-import { WebContainer } from "./webcontainer"
+import * as Stream from "effect/Stream"
+import * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
+import { Span } from "../domain/devtools"
+import { WebContainer } from "./webcontainer"
 
 export const rootSpansAtom = Atom.make<ReadonlyArray<Span>>([])
 

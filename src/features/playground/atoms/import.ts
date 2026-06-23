@@ -1,20 +1,19 @@
-import * as Atom from "effect/unstable/reactivity/Atom"
-import * as Option from "effect/Option"
-import * as Schema from "effect/Schema"
-import { Effect, Layer } from "effect"
 import * as BrowserKeyValueStore from "@effect/platform-browser/BrowserKeyValueStore"
 import * as Cause from "effect/Cause"
-import { hashAtom } from "./location"
-import { ShortenClient } from "../services/shorten"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Option from "effect/Option"
+import * as Schema from "effect/Schema"
+import * as Atom from "effect/unstable/reactivity/Atom"
 import { makeFile, Workspace } from "../domain/workspace"
 import { WorkspaceCompression } from "../services/compression"
-import { defaultWorkspace, main, makeDefaultWorkspace, type AtomWorkspaceHandle } from "./workspace"
+import { ShortenClient } from "../services/shorten"
 import { WebContainer } from "../services/webcontainer"
+import { hashAtom } from "./location"
+import { defaultWorkspace, main, makeDefaultWorkspace, type AtomWorkspaceHandle } from "./workspace"
 
-// importAtom runtime: no WebContainer (resolves synchronously via fallback)
 const runtime = Atom.runtime(Layer.mergeAll(ShortenClient.layer, WorkspaceCompression.layer))
 
-// autoSaveAtom runtime: needs WebContainer (runs later, after container booted by workspace)
 const autoSaveRuntime = Atom.runtime(Layer.mergeAll(WebContainer.layer, WorkspaceCompression.layer))
 
 const codeAtom = Atom.searchParam("code", {

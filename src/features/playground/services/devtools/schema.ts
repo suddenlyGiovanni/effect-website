@@ -34,7 +34,9 @@ const SpanExit = Schema.Exit(
 export const SpanStatusEnded = Schema.TaggedStruct("Ended", {
   startTime: Schema.BigInt,
   endTime: Schema.BigInt,
-  exit: Schema.optional(SpanExit)
+  exit: SpanExit.pipe(
+    Schema.withDecodingDefaultType(Effect.succeed(Exit.succeed(undefined)))
+  )
 }) 
 export type SpanStatusEnded = Schema.Schema.Type<typeof SpanStatusEnded>
 
@@ -74,7 +76,7 @@ export interface SpanEncoded {
   readonly sampled: boolean
   readonly attributes: ReadonlyMap<string, unknown>
   readonly status: SpanStatusEncoded
-  readonly parent: Option.Option<ParentSpan>
+  readonly parent: Option.Option<ParentSpanEncoded>
 }
 
 export const Span: Schema.Codec<Span, SpanEncoded> = Schema.TaggedStruct("Span", {
@@ -104,6 +106,7 @@ export const SpanEvent = Schema.TaggedStruct("SpanEvent", {
 export type SpanEvent = Schema.Schema.Type<typeof SpanEvent>
 
 export type ParentSpan = Span | ExternalSpan
+export type ParentSpanEncoded = SpanEncoded | ExternalSpan
 
 export const ParentSpan = Schema.Union([Span, ExternalSpan])
 

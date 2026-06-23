@@ -1,11 +1,22 @@
 import { FitAddon } from "@xterm/addon-fit"
 import { type ITerminalInitOnlyOptions, type ITerminalOptions, Terminal as XTerm } from "@xterm/xterm"
-import { Context, Effect, Layer } from "effect"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Scope from "effect/Scope"
 
-export class Terminal extends Context.Service<Terminal>()("app/Terminal", {
-  make: Effect.gen(function* () {
-    const spawn = (options: ITerminalOptions | ITerminalInitOnlyOptions) =>
-      Effect.gen(function* () {
+export interface SpawnedTerminal {
+  readonly terminal: XTerm
+  readonly resize: Effect.Effect<void>
+}
+
+export class Terminal extends Context.Service<Terminal, {
+  readonly spawn: (
+    options: ITerminalOptions | ITerminalInitOnlyOptions
+  ) => Effect.Effect<SpawnedTerminal, never, Scope.Scope>
+}>()("app/Terminal") {
+  static readonly layer = Layer.succeed(this, {
+    spawn: Effect.fnUntraced(function*(options) {
         const terminal = yield* Effect.acquireRelease(
           Effect.sync(() => new XTerm(options)),
           (terminal) => Effect.sync(() => terminal.dispose())
@@ -26,12 +37,6 @@ export class Terminal extends Context.Service<Terminal>()("app/Terminal", {
             fitAddon.fit()
           })
         }
-      })
-
-    return {
-      spawn
-    } as const
+    })
   })
-}) {
-  static readonly layer = Layer.effect(this, this.make)
 }

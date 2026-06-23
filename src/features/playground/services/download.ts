@@ -1,6 +1,8 @@
-import { Context, Effect, Layer } from "effect"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
 import { pipe } from "effect/Function"
-import { Directory, File, FileTree, Workspace } from "../domain/workspace"
+import * as Layer from "effect/Layer"
+import { FileTree, Workspace } from "../domain/workspace"
 import * as zip from "@zip.js/zip.js"
 
 export class Zip extends Context.Service<Zip>()("app/Download/Zip", {

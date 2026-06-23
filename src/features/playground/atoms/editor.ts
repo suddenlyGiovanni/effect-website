@@ -1,13 +1,15 @@
-import * as Atom from "effect/unstable/reactivity/Atom"
 import * as monaco from "@effect/monaco-editor"
+import * as Atom from "effect/unstable/reactivity/Atom"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Schedule from "effect/Schedule"
-import { Effect, Layer, Stream } from "effect"
-import { themeAtom } from "./theme"
+import * as Stream from "effect/Stream"
 import { Toaster } from "../services/toaster"
 import { File, FullPath } from "../domain/workspace"
 import { Loader } from "../services/loader"
 import { Monaco } from "../services/monaco"
+import { themeAtom } from "./theme"
 import type { AtomWorkspaceHandle } from "./workspace"
 
 export const editorThemeAtom = themeAtom.pipe(Atom.map((theme) => (theme === "dark" ? "dracula" : "vs")))

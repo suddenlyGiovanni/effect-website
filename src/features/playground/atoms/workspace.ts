@@ -1,15 +1,15 @@
-import * as Atom from "effect/unstable/reactivity/Atom"
-import * as monaco from "@effect/monaco-editor"
 import { createStreaming, type Formatter } from "@dprint/formatter"
+import * as monaco from "@effect/monaco-editor"
+import * as Atom from "effect/unstable/reactivity/Atom"
 import * as Array from "effect/Array"
 import * as Cache from "effect/Cache"
-import { Effect, Layer, Stream } from "effect"
+import * as Effect from "effect/Effect"
 import * as Fiber from "effect/Fiber"
+import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Result from "effect/Result"
 import * as Sink from "effect/Sink"
-import { themeAtom } from "./theme"
-import { Toaster } from "../services/toaster"
+import * as Stream from "effect/Stream"
 import {
   Directory,
   File,
@@ -19,11 +19,13 @@ import {
   WorkspaceShell,
   WorkspaceTerminal
 } from "../domain/workspace"
+import { DevToolsLayer } from "../services/devtools"
 import { Loader } from "../services/loader"
 import { Terminal } from "../services/terminal"
 import { Dracula, NightOwlishLight } from "../services/terminal/themes"
+import { Toaster } from "../services/toaster"
 import { WebContainer } from "../services/webcontainer"
-import { DevToolsLayer } from "../services/devtools"
+import { themeAtom } from "./theme"
 
 const runtime = Atom.runtime(Layer.mergeAll(Loader.layer, Terminal.layer, Toaster.layer, DevToolsLayer, WebContainer.layer))
 

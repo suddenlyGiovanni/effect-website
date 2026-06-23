@@ -1,5 +1,9 @@
 import * as monaco from "@effect/monaco-editor"
-import { Context, Effect, Layer, Queue, Stream } from "effect"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Queue from "effect/Queue"
+import * as Stream from "effect/Stream"
 import type ts from "typescript"
 import { ChromeDevTools, Dracula } from "./monaco/themes"
 
@@ -7,6 +11,8 @@ type MonacoApi = typeof import("@effect/monaco-editor")
 
 export class Monaco extends Context.Service<Monaco>()("app/Monaco", {
   make: Effect.gen(function* () {
+    yield* Effect.logDebug("Setting up Monaco editor")
+
     monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true)
 
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({

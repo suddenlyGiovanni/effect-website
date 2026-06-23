@@ -1,9 +1,15 @@
-import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import * as Array from "effect/Array"
+import * as Context from "effect/Context"
 import * as Data from "effect/Data"
 import * as Duration from "effect/Duration"
-import { Context, Effect, Fiber, Layer, Queue, Ref, Stream } from "effect"
+import * as Effect from "effect/Effect"
+import * as Fiber from "effect/Fiber"
+import * as Layer from "effect/Layer"
+import * as Queue from "effect/Queue"
+import * as Ref from "effect/Ref"
+import * as Stream from "effect/Stream"
+import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
+import * as Atom from "effect/unstable/reactivity/Atom"
 
 export class Step extends Data.Class<{
   readonly id: number
