@@ -1,19 +1,31 @@
 import { useAtomValue } from "@effect/atom-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CircleCheck, Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { isLoadedAtom } from "../atoms/loader"
 import { loaderStepsAtom } from "../services/loader"
 
 export function PlaygroundLoader() {
   const isReady = useAtomValue(isLoadedAtom)
+  const [isVisible, setIsVisible] = useState(true)
   const steps = useAtomValue(loaderStepsAtom, (steps) => {
     return steps.every((step) => step.done)
       ? steps
       : steps.slice(0, steps.findIndex((step) => !step.done) + 1)
   })
+
+  // Keep the overlay mounted for the commit where `isReady` first becomes true.
+  // The final loader steps can be added and completed in the same React batch;
+  // hiding from render immediately would skip painting those completed steps.
+  useEffect(() => {
+    if (isReady) {
+      setIsVisible(false)
+    }
+  }, [isReady])
+
   return (
     <AnimatePresence initial={false}>
-      {!isReady && (
+      {isVisible && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}

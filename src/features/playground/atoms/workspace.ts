@@ -53,16 +53,14 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
         return Effect.forEach(
           workspace.filePaths,
           ([file, path]: [File | Directory, string]) => {
-            const fullPath = workspace.relativePath(path)
             if (file._tag === "Directory") {
-              return container.makeDirectory(fullPath).pipe(
-                Effect.catchTag("FileAlreadyExistsError", () => Effect.void),
-                Effect.asVoid,
-              )
+              return Effect.void
             }
-            return container
-              .writeFile(fullPath, file.initialContent, file.language ?? "typescript")
-              .pipe(Effect.asVoid)
+            return container.loadModel(
+              workspace.relativePath(path),
+              file.initialContent,
+              file.language ?? "typescript",
+            )
           },
           { discard: true },
         )

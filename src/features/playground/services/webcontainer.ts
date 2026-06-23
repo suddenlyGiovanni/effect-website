@@ -221,6 +221,25 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       )
     }
 
+    function loadModel(path: string, content: string, language: string) {
+      return getModel(path).pipe(
+        Effect.tap((model) =>
+          Effect.sync(() => {
+            if (model.getValue() !== content) {
+              model.setValue(content)
+            }
+          }),
+        ),
+        Effect.catch(() => createModel(path, content, language)),
+        Effect.asVoid,
+        Effect.tapCause(Effect.logError),
+        Effect.annotateLogs({
+          service: "WebContainer",
+          method: "loadModel",
+        }),
+      )
+    }
+
     /**
      * Attempts to write provided content to the file at the specified path on
      * the WebContainer's file system.
@@ -507,6 +526,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       renameFile,
       writeFile,
       writeFileString,
+      loadModel,
       makeDirectory: mkdir,
       watchFile,
     } as const
