@@ -293,7 +293,7 @@ function setupWorkspaceTypeAcquisition(workspace: Workspace) {
     const acquireTypes = container.readDirectory(pnpmStorePath).pipe(
       Effect.map(
         Array.filterMap((entry) =>
-          entry.isDirectory()
+          entry.isDirectory() && entry.name !== "node_modules"
             ? Result.succeed(`${pnpmStorePath}/${entry.name}`)
             : Result.failVoid
         )

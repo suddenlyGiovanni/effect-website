@@ -128,6 +128,15 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       })
     }
 
+    function installRuntimePackageJson() {
+      return Effect.promise(() =>
+        container.fs.writeFile(
+          "package.json",
+          JSON.stringify({ private: true, type: "commonjs" }, undefined, 2)
+        )
+      )
+    }
+
     /**
      * Attempts to retrieve the Monaco editor model at the specified path.
      *
@@ -475,6 +484,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
     if (!sideEffectsDone) {
       sideEffectsDone = true
 
+      yield* installRuntimePackageJson()
       yield* installExe("run", runExe)
       yield* installExe("dev-tools-proxy", devToolsProxyExe)
 
