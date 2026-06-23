@@ -1,16 +1,22 @@
-import { Request } from "effect/unstable/devtools/DevToolsSchema"
+import * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema"
 import * as Ndjson from "effect/unstable/encoding/Ndjson"
 import { WebContainer as WC, type FileSystemTree } from "@webcontainer/api"
 import * as monaco from "@effect/monaco-editor/esm/vs/editor/editor.api"
-import { Context, Effect, Layer, Queue, Stream } from "effect"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
 import { identity } from "effect/Function"
+import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as PubSub from "effect/PubSub"
-import { FileAlreadyExistsError, FileNotFoundError, FileValidationError } from "../domain/errors"
-import { makeDirectory, makeFile, File, Directory, Workspace } from "../domain/workspace"
-import { Loader } from "./loader"
+import * as Queue from "effect/Queue"
+import * as Schema from "effect/Schema"
+import * as Stream from "effect/Stream"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
+import { FileAlreadyExistsError, FileNotFoundError, FileValidationError } from "../domain/errors"
+import { makeDirectory, makeFile, File, Directory, Workspace } from "../domain/workspace"
+import * as DevToolsSchemaCompat from "./devtools/schema"
+import { Loader } from "./loader"
 
 const WEBCONTAINER_BIN_PATH = "node_modules/.bin:/usr/local/bin:/usr/bin:/bin"
 
@@ -19,7 +25,7 @@ const WEBCONTAINER_BIN_PATH = "node_modules/.bin:/usr/local/bin:/usr/bin:/bin"
 let cachedContainer: WC | null = null
 let containerBootPromise: Promise<WC> | null = null
 let sideEffectsDone = false
-let cachedDevToolsEvents: PubSub.PubSub<Request.WithoutPing> | null = null
+let cachedDevToolsEvents: PubSub.PubSub<DevToolsSchema.Request> | null = null
 
 export class WebContainer extends Context.Service<WebContainer>()("app/WebContainer", {
   make: Effect.gen(function* () {
@@ -83,7 +89,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         Effect.gen(function* () {
           const process = yield* Effect.promise(() =>
             container.spawn("jsh", ["-c", command], {
-              cwd,
+              ...(cwd === undefined ? {} : { cwd }),
               env: { PATH: WEBCONTAINER_BIN_PATH }
             })
           )
@@ -473,17 +479,18 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
 
       // Start the DevTools proxy — runs detached so React strict mode
       // unmount/mount doesn't kill the proxy and close the ReadableStream
-      const devToolsEvents = yield* PubSub.sliding<Request.WithoutPing>(128)
+      const devToolsEvents = yield* PubSub.sliding<DevToolsSchema.Request>(128)
       cachedDevToolsEvents = devToolsEvents
       yield* spawn("./dev-tools-proxy").pipe(
         Effect.tap((proc) =>
           Stream.fromReadableStream({ evaluate: proc.getOutput, onError: identity, releaseLockOnEnd: true }).pipe(
             Stream.orDie,
             Stream.pipeThroughChannel(
-              Ndjson.decodeSchemaString(Request)({
+              Ndjson.decodeSchemaString(Schema.toCodecJson(DevToolsSchemaCompat.Request))({
                 ignoreEmptyLines: true
               })
             ),
+            Stream.tapCause(Effect.logError),
             Stream.runForEach((event) => (event._tag === "Ping" ? Effect.void : PubSub.publish(devToolsEvents, event))),
             Effect.catchCause(() => Effect.void)
           )

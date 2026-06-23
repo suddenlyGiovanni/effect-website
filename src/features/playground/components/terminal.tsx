@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useAtomSet, useAtomMount } from "@effect/atom-react"
 import * as Option from "effect/Option"
 import { constVoid } from "effect/Function"
@@ -6,6 +6,7 @@ import { useWorkspaceHandle } from "../context/workspace"
 import { WorkspaceTerminal, type WorkspaceShell } from "../domain/workspace"
 
 import "@xterm/xterm/css/xterm.css"
+import "./terminal.css"
 
 export function Terminal({ shell }: { readonly shell: WorkspaceShell }) {
   return (
