@@ -81,7 +81,7 @@ function CodeEditorPanels() {
 
       <ResizableHandle className="h-px bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-700 dark:hover:bg-zinc-500" />
 
-      <ResizablePanel defaultSize={30} minSize={10} onResize={onResize}>
+      <ResizablePanel defaultSize={30} minSize={10} onResize={onResize} className="h-full">
         <ResizablePanelGroup orientation="horizontal">
           <Tabs defaultValue="terminal" className="h-full w-full flex flex-col gap-0">
             <TabsList variant="line">
