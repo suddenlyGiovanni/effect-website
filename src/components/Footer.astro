@@ -1,6 +1,4 @@
 ---
-import { Image } from "astro:assets"
-
 import { ArrowUpRight } from "@lucide/astro"
 
 import EffectLogoBlack from "@/assets/logos/effect/combination-mark/svg/effect-logo-black.svg"
@@ -232,8 +230,20 @@ const communityBorder = hideCommunityBorder
           <!-- Logo -->
           <div class="md:pl-4">
             <a href="/" aria-label="Go to Effect homepage">
-              <Image class="block h-7 w-auto dark:hidden" src={EffectLogoBlack} alt="Effect" />
-              <Image class="hidden h-7 w-auto dark:block" src={EffectLogoWhite} alt="Effect" />
+              <img
+                class="block h-7 w-auto dark:hidden"
+                src={EffectLogoBlack.src}
+                alt="Effect"
+                width={EffectLogoBlack.width}
+                height={EffectLogoBlack.height}
+              />
+              <img
+                class="hidden h-7 w-auto dark:block"
+                src={EffectLogoWhite.src}
+                alt="Effect"
+                width={EffectLogoWhite.width}
+                height={EffectLogoWhite.height}
+              />
             </a>
           </div>
 
