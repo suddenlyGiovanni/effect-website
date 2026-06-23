@@ -1,24 +1,22 @@
-import * as Brand from "effect/Brand";
-import * as Data from "effect/Data";
-import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
-import * as Hash from "effect/Hash";
-import * as Iterable from "effect/Iterable";
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
+import * as Brand from "effect/Brand"
+import * as Data from "effect/Data"
+import * as Effect from "effect/Effect"
+import { pipe } from "effect/Function"
+import * as Hash from "effect/Hash"
+import * as Iterable from "effect/Iterable"
+import * as Option from "effect/Option"
+import * as Schema from "effect/Schema"
 
-export type FullPath = Brand.Branded<string, "FullPath">;
-export const FullPath = Brand.nominal<FullPath>();
+export type FullPath = Brand.Branded<string, "FullPath">
+export const FullPath = Brand.nominal<FullPath>()
 
-export class WorkspaceShell extends Schema.Class<WorkspaceShell>(
-  "WorkspaceShell",
-)({
+export class WorkspaceShell extends Schema.Class<WorkspaceShell>("WorkspaceShell")({
   command: Schema.optional(Schema.String),
   label: Schema.optional(Schema.String),
 }) {}
 
 export class WorkspaceTerminal extends Data.Class<{
-  command: string | undefined;
+  command: string | undefined
 }> {}
 
 export class File extends Schema.TaggedClass<File>()("File", {
@@ -38,22 +36,18 @@ export class File extends Schema.TaggedClass<File>()("File", {
     return new File({
       ...this,
       initialContent: content,
-    });
+    })
   }
 }
-export function makeFile(
-  name: string,
-  content: string,
-  userManaged = false,
-): File {
-  return new File({ name, userManaged, initialContent: content });
+export function makeFile(name: string, content: string, userManaged = false): File {
+  return new File({ name, userManaged, initialContent: content })
 }
 
 export interface Directory {
-  readonly _tag: "Directory";
-  readonly name: string;
-  readonly userManaged?: boolean;
-  readonly children: ReadonlyArray<Directory | File>;
+  readonly _tag: "Directory"
+  readonly name: string
+  readonly userManaged?: boolean
+  readonly children: ReadonlyArray<Directory | File>
 }
 const Directory_: Schema.Codec<Directory, any, never, never> = Schema.Struct({
   _tag: Schema.tag("Directory"),
@@ -65,40 +59,38 @@ const Directory_: Schema.Codec<Directory, any, never, never> = Schema.Struct({
   children: Schema.Array(
     Schema.Union([
       File,
-      Schema.suspend(
-        (): Schema.Codec<Directory, any, never, never> => Directory_,
-      ),
+      Schema.suspend((): Schema.Codec<Directory, any, never, never> => Directory_),
     ]),
   ),
-});
-export const Directory: Schema.Codec<Directory, any, never, never> = Directory_;
+})
+export const Directory: Schema.Codec<Directory, any, never, never> = Directory_
 export function makeDirectory(
   name: string,
   children: ReadonlyArray<File | Directory>,
   userManaged: boolean = false,
 ): Directory {
-  return { _tag: "Directory", name, userManaged, children };
+  return { _tag: "Directory", name, userManaged, children }
 }
 
-export const FileTree = Schema.Array(Schema.Union([File, Directory_]));
-export type FileTree = ReadonlyArray<File | Directory>;
+export const FileTree = Schema.Array(Schema.Union([File, Directory_]))
+export type FileTree = ReadonlyArray<File | Directory>
 
 export declare namespace Workspace {
-  export type FileType = "File" | "Directory";
+  export type FileType = "File" | "Directory"
 
   export interface CreateFileOptions {
-    readonly parent?: Directory;
+    readonly parent?: Directory
   }
 }
 
 export interface WorkspaceCreate {
-  readonly name: string;
-  readonly dependencies?: Record<string, string>;
-  readonly tree?: ReadonlyArray<Directory | File>;
-  readonly initialFilePath?: string | undefined;
-  readonly prepare?: string;
-  readonly shells: ReadonlyArray<WorkspaceShell>;
-  readonly snapshots?: ReadonlyArray<string>;
+  readonly name: string
+  readonly dependencies?: Record<string, string>
+  readonly tree?: ReadonlyArray<Directory | File>
+  readonly initialFilePath?: string | undefined
+  readonly prepare?: string
+  readonly shells: ReadonlyArray<WorkspaceShell>
+  readonly snapshots?: ReadonlyArray<string>
 }
 
 export class Workspace extends Schema.Class<Workspace>("Workspace")({
@@ -115,16 +107,16 @@ export class Workspace extends Schema.Class<Workspace>("Workspace")({
   ),
 }) {
   get filePaths(): Map<File | Directory, string> {
-    return makeFilePaths(this.tree);
+    return makeFilePaths(this.tree)
   }
 
   static new(options: WorkspaceCreate): Workspace {
-    let prepare = options.prepare ?? "pnpm install";
+    let prepare = options.prepare ?? "pnpm install"
     if (options.dependencies !== undefined) {
       const dependencies = Object.entries(options.dependencies)
         .map(([name, version]) => `${name}@${version}`)
-        .join(" ");
-      prepare = `${prepare} -E ${dependencies}`;
+        .join(" ")
+      prepare = `${prepare} -E ${dependencies}`
     }
     return new Workspace(
       {
@@ -152,17 +144,17 @@ export class Workspace extends Schema.Class<Workspace>("Workspace")({
         ],
       },
       { disableChecks: true },
-    );
+    )
   }
 
   private _clone(
     overrides: Partial<{
-      name: string;
-      tree: FileTree;
-      initialFilePath: string | undefined;
-      prepare: string;
-      shells: ReadonlyArray<WorkspaceShell>;
-      snapshots: ReadonlyArray<string>;
+      name: string
+      tree: FileTree
+      initialFilePath: string | undefined
+      prepare: string
+      shells: ReadonlyArray<WorkspaceShell>
+      snapshots: ReadonlyArray<string>
     }>,
   ): Workspace {
     return new Workspace(
@@ -178,107 +170,94 @@ export class Workspace extends Schema.Class<Workspace>("Workspace")({
         snapshots: overrides.snapshots ?? this.snapshots,
       },
       { disableChecks: true },
-    );
+    )
   }
 
   withName(name: string) {
-    return this._clone({ name });
+    return this._clone({ name })
   }
   withPrepare(prepare: string) {
-    return this._clone({ prepare });
+    return this._clone({ prepare })
   }
   get withNoSnapshot() {
-    return this._clone({ snapshots: [] });
+    return this._clone({ snapshots: [] })
   }
   append(...children: FileTree) {
-    return this._clone({ tree: [...this.tree, ...children] });
+    return this._clone({ tree: [...this.tree, ...children] })
   }
   setTree(tree: FileTree) {
-    return this._clone({ tree });
+    return this._clone({ tree })
   }
   filterMap(f: (item: File | Directory) => Option.Option<File | Directory>) {
-    return this.setTree(filterMapTree(this.tree, f));
+    return this.setTree(filterMapTree(this.tree, f))
   }
   replaceNode(node: File | Directory, replacement: File | Directory) {
-    return this.filterMap((item) =>
-      item === node ? Option.some(replacement) : Option.some(item),
-    );
+    return this.filterMap((item) => (item === node ? Option.some(replacement) : Option.some(item)))
   }
   removeNode(node: File | Directory) {
-    return this.filterMap((item) =>
-      item === node ? Option.none() : Option.some(item),
-    );
+    return this.filterMap((item) => (item === node ? Option.none() : Option.some(item)))
   }
   findFile(name: string): Option.Option<[File, string]> {
     return Iterable.findFirst(
       this.filePaths,
-      (entry): entry is [File, string] =>
-        entry[0]._tag === "File" && entry[1] === name,
-    );
+      (entry): entry is [File, string] => entry[0]._tag === "File" && entry[1] === name,
+    )
   }
   get initialFile(): File {
     if (this.initialFilePath) {
-      return Option.getOrThrow(this.findFile(this.initialFilePath))[0];
+      return Option.getOrThrow(this.findFile(this.initialFilePath))[0]
     }
     return pipe(
       this.filePaths.keys(),
       Iterable.filter((_) => _._tag === "File"),
       Iterable.head,
       Option.getOrThrow,
-    );
+    )
   }
   get dependencies(): Record<string, string> {
-    const parse = Option.liftNullishOr(JSON.parse);
+    const parse = Option.liftNullishOr(JSON.parse)
     return this.findFile("package.json").pipe(
       Option.flatMap(([file]) => parse(file.initialContent)),
       Option.map((json) => json.dependencies),
       Option.getOrElse(() => ({})),
-    );
+    )
   }
   pathTo(file: File | Directory) {
-    return Option.fromNullishOr(this.filePaths.get(file));
+    return Option.fromNullishOr(this.filePaths.get(file))
   }
   fullPathTo(file: File | Directory) {
-    return this.pathTo(file).pipe(
-      Option.map((path) => FullPath(`${this.name}/${path}`)),
-    );
+    return this.pathTo(file).pipe(Option.map((path) => FullPath(`${this.name}/${path}`)))
   }
   relativePath(path: string) {
-    return `${this.name.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+    return `${this.name.replace(/\/$/, "")}/${path.replace(/^\//, "")}`
   }
-  updateFiles<E, R>(
-    f: (item: File, path: string) => Effect.Effect<File, E, R>,
-  ) {
+  updateFiles<E, R>(f: (item: File, path: string) => Effect.Effect<File, E, R>) {
     const walk = (
       tree: ReadonlyArray<File | Directory>,
     ): Effect.Effect<ReadonlyArray<Directory | File>, E, R> =>
       Effect.gen({ self: this }, function* () {
-        const out: Array<File | Directory> = [];
+        const out: Array<File | Directory> = []
         for (const node of tree) {
           if (node._tag === "File") {
-            out.push(yield* f(node, this.filePaths.get(node)!));
+            out.push(yield* f(node, this.filePaths.get(node)!))
           } else {
             out.push(
-              makeDirectory(
-                node.name,
-                yield* walk(node.children),
-                node.userManaged ?? false,
-              ),
-            );
+              makeDirectory(node.name, yield* walk(node.children), node.userManaged ?? false),
+            )
           }
         }
-        return out;
-      });
-    return Effect.map(walk(this.tree), (tree) => this._clone({ tree }));
+        return out
+      })
+    return Effect.map(walk(this.tree), (tree) => this._clone({ tree }))
   }
   addShell(shell: WorkspaceShell) {
-    return this._clone({ shells: [...this.shells, shell] });
+    return this._clone({ shells: [...this.shells, shell] })
   }
   removeShell(shell: WorkspaceShell) {
-    return this._clone({ shells: this.shells.filter((s) => s !== shell) });
+    return this._clone({ shells: this.shells.filter((s) => s !== shell) })
   }
   [Hash.symbol]() {
-    return Hash.string(this.name);
+    return Hash.string(this.name)
   }
 }
 
@@ -330,31 +309,31 @@ export const defaultFiles = [
       2,
     ),
   }),
-];
+]
 
 function makeFilePaths(tree: FileTree) {
-  const paths = new Map<File | Directory, string>();
+  const paths = new Map<File | Directory, string>()
   function walk(prefix: string, children: FileTree) {
     for (const child of children) {
-      paths.set(child, `${prefix}${child.name}`);
+      paths.set(child, `${prefix}${child.name}`)
       if (child._tag === "Directory") {
-        walk(`${prefix}${child.name}/`, child.children);
+        walk(`${prefix}${child.name}/`, child.children)
       }
     }
   }
-  walk("", tree);
-  return paths;
+  walk("", tree)
+  return paths
 }
 
 function filterMapTree(
   tree: FileTree,
   f: (node: File | Directory) => Option.Option<File | Directory>,
 ): FileTree {
-  const out: Array<File | Directory> = [];
+  const out: Array<File | Directory> = []
   for (const node of tree) {
-    const result = f(node);
+    const result = f(node)
     if (result._tag === "None") {
-      continue;
+      continue
     }
     if (result.value === node && result.value._tag === "Directory") {
       out.push(
@@ -363,12 +342,12 @@ function filterMapTree(
           filterMapTree(result.value.children, f),
           result.value.userManaged ?? false,
         ),
-      );
+      )
     } else {
-      out.push(result.value);
+      out.push(result.value)
     }
   }
-  return out;
+  return out
 }
 
 export const main = makeFile(
@@ -388,7 +367,7 @@ program.pipe(
   NodeRuntime.runMain
 )
 `,
-);
+)
 
 const devTools = makeFile(
   "DevTools.ts",
@@ -400,7 +379,7 @@ export const DevToolsLayer = DevTools.layerSocket.pipe(
   Layer.provide(NodeSocket.layerNet({ port: 34437 }))
 )
 `,
-);
+)
 
 export const defaultWorkspace = Workspace.new({
   name: "playground",
@@ -416,12 +395,12 @@ export const defaultWorkspace = Workspace.new({
   shells: [new WorkspaceShell({ command: "../run src/main.ts" })],
   initialFilePath: "src/main.ts",
   tree: [makeDirectory("src", [main, devTools])],
-});
+})
 
 export function makeDefaultWorkspace() {
   const suffix =
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
-      : String(Date.now());
-  return defaultWorkspace.withName(`playground-${suffix}`);
+      : String(Date.now())
+  return defaultWorkspace.withName(`playground-${suffix}`)
 }

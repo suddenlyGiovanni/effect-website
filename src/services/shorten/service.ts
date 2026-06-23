@@ -1,6 +1,6 @@
-import * as Crypto from "node:crypto"
-import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore"
 import { Context, Effect, Layer } from "effect"
+import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore"
+import * as Crypto from "node:crypto"
 import { ShortenKVS } from "../kvs"
 import { ShortenError } from "./domain"
 
@@ -25,21 +25,17 @@ export class Shorten extends Context.Service<Shorten>()("app/Shorten", {
       }).pipe(
         Effect.catchIf(
           (err) => err._tag !== "ShortenError",
-          (_) => new ShortenError({ reason: "Unknown", method: "shorten" })
-        )
+          (_) => new ShortenError({ reason: "Unknown", method: "shorten" }),
+        ),
       )
 
     const retrieve = (hash: string) =>
-      store.get(hash).pipe(
-        Effect.mapError(
-          (_) => new ShortenError({ reason: "Unknown", method: "retrieve" })
-        )
-      )
+      store
+        .get(hash)
+        .pipe(Effect.mapError((_) => new ShortenError({ reason: "Unknown", method: "retrieve" })))
 
     return { shorten, retrieve } as const
-  })
+  }),
 }) {
-  static readonly layer = Layer.effect(this, this.make).pipe(
-    Layer.provide(ShortenKVS)
-  )
+  static readonly layer = Layer.effect(this, this.make).pipe(Layer.provide(ShortenKVS))
 }

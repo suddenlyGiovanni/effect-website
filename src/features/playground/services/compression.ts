@@ -56,11 +56,11 @@ export class Compression extends Context.Service<Compression>()("app/Compression
 
 const decodeWorkspace = flow(
   Schema.decodeEffect(Schema.fromJsonString(Workspace)),
-  Effect.mapError((cause) => new CompressionError({ method: "decompress", cause }))
+  Effect.mapError((cause) => new CompressionError({ method: "decompress", cause })),
 )
 const encodeWorkspace = flow(
   Schema.encodeEffect(Schema.fromJsonString(Workspace)),
-  Effect.mapError((cause) => new CompressionError({ method: "compress", cause }))
+  Effect.mapError((cause) => new CompressionError({ method: "compress", cause })),
 )
 
 export class WorkspaceCompression extends Context.Service<WorkspaceCompression>()(

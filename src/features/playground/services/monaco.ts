@@ -424,9 +424,14 @@ function setupTwoslashIntegration(monaco: MonacoApi) {
         const inlineQueryRegex = /^[^\S\r\n]*(?<start>\S).*\/\/\s*(?<end>=>)/gm
         const results: Array<monaco.languages.InlayHint> = []
 
-        const worker = await monaco.languages.typescript
-          .getTypeScriptWorker()
-          .then((worker) => worker(model.uri))
+        const worker = yieldTypeScriptLikeWorker(monaco, model)
+
+        if (!worker) {
+          return {
+            hints: [],
+            dispose: () => {},
+          }
+        }
 
         if (model.isDisposed()) {
           return {
@@ -560,4 +565,21 @@ async function getLeftMostQuickInfoOfLine(
   }
 
   return Promise.resolve(undefined)
+}
+
+async function yieldTypeScriptLikeWorker(monaco: MonacoApi, model: monaco.editor.ITextModel) {
+  const language = model.getLanguageId()
+  const getWorker =
+    language === "javascript" || language === "javascriptreact"
+      ? monaco.languages.typescript.getJavaScriptWorker
+      : monaco.languages.typescript.getTypeScriptWorker
+
+  try {
+    return await getWorker().then((worker) => worker(model.uri))
+  } catch (error) {
+    if (error === "TypeScript not registered!" || error === "JavaScript not registered!") {
+      return undefined
+    }
+    throw error
+  }
 }

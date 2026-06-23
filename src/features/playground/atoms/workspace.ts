@@ -80,75 +80,54 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
         const terminalAtom = runtime.atom(
           Effect.fnUntraced(function* (get) {
             const el = yield* get.some(element)
-            const shell = yield* container.createShell(workspace.name)
+            const process = yield* container.createShell(workspace.name)
             const spawned = yield* terminal.spawn({
               theme: get.once(terminalThemeAtom),
             })
-            const writer = shell.getWriter()
-            const dataListener: { dispose: () => void } = { dispose: () => {} }
-            yield* Effect.promise(() =>
-              shell
-                .pipeOutput(
-                  new WritableStream({
-                    write(data) {
-                      spawned.terminal.write(data)
-                    },
-                  }),
-                )
-                .catch(() => undefined),
-            ).pipe(Effect.forkScoped)
-            const disposable = spawned.terminal.onData((data) => {
-              writer.write(data).catch(() => {})
+            const writer = process.input.getWriter()
+            const mount = Effect.sync(() => {
+              process.output.pipeTo(
+                new WritableStream({
+                  write(data) {
+                    spawned.terminal.write(data)
+                  },
+                }),
+              )
+              spawned.terminal.onData((data) => {
+                writer.write(data)
+              })
             })
-            dataListener.dispose = () => disposable.dispose()
-            get.addFinalizer(() => dataListener.dispose())
-            /**
-             * Install dependencies
-             */
-            const fiber = yield* handle.spawn(workspace.prepare).pipe(
-              Effect.tap((proc) =>
-                Effect.promise(() =>
-                  proc
-                    .getOutput()
-                    .pipeTo(
-                      new WritableStream({
-                        write(data) {
-                          spawned.terminal.write(data)
-                        },
-                      }),
-                    )
-                    .catch(() => undefined),
-                ).pipe(Effect.forkScoped),
-              ),
-              Effect.flatMap((proc) => proc.waitExit()),
-              Effect.forkScoped,
-            )
+            yield* mount
 
-            /**
-             * Wait for install, then fork type acquisition and formatters
-             * in background (don't block command).
-             */
-            yield* Fiber.join(fiber).pipe(
-              Effect.andThen(
-                Effect.all(
-                  [
-                    setupWorkspaceTypeAcquisition(workspace).pipe(Effect.ignore),
-                    setupWorkspaceFormatters(workspace).pipe(Effect.ignore),
-                  ],
-                  { discard: true },
+            // Install workspace dependencies, perform type acquisition, etc.
+            // in the background
+            const fiber = yield* handle.spawn(workspace.prepare).pipe(
+              Effect.tap((process) =>
+                Effect.promise(() =>
+                  process.output.pipeTo(
+                    new WritableStream({
+                      write(data) {
+                        spawned.terminal.write(data)
+                      },
+                    }),
+                  ),
                 ),
               ),
+              Effect.flatMap((process) => Effect.promise(() => process.exit)),
+              Effect.andThen(setupWorkspaceTypeAcquisition(workspace)),
+              Effect.andThen(setupWorkspaceFormatters(workspace)),
               Effect.forkScoped,
             )
 
             if (command !== undefined) {
+              // Wait for dependencies, type acquisition, etc. to finish before
+              // running the workspace command
               yield* Fiber.join(fiber).pipe(
-                Effect.andThen(
-                  Effect.promise(() => writer.write(`${command}\n`).catch(() => undefined)),
-                ),
+                Effect.andThen(Effect.promise(() => writer.write(`${command}\n`))),
                 Effect.forkScoped,
               )
             }
+
             get.subscribe(
               terminalThemeAtom,
               (theme) => {
@@ -424,7 +403,7 @@ function setupWorkspaceFormatters(workspace: Workspace) {
       return parseJson(config).pipe(
         Effect.flatMap((json) =>
           Effect.sync(() => {
-            const { plugins, ...rest } = json
+            const { plugins: _plugins, ...rest } = json
             return Object.entries(rest).forEach(([language, config]) => {
               setLanguageConfig(language, config)
             })

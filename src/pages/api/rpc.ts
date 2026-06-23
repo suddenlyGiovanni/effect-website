@@ -10,22 +10,21 @@ export const prerender = false
 const rpcRoute = RpcServer.layerHttp({
   group: ShortenRpcs,
   path: "/api/rpc",
-  protocol: "http"
-}).pipe(
-  Layer.provide(ShortenLayer),
-  Layer.provide(RpcSerialization.layerJson)
-)
+  protocol: "http",
+}).pipe(Layer.provide(ShortenLayer), Layer.provide(RpcSerialization.layerJson))
 
-const appLayer = HttpRouter.layer.pipe(
-  Layer.provideMerge(rpcRoute)
-)
+const appLayer = HttpRouter.layer.pipe(Layer.provideMerge(rpcRoute))
 
 const { dispose, handler } = HttpRouter.toWebHandler(appLayer)
 
 function cleanup() {
   dispose().then(
-    () => { process.exit(0) },
-    () => { process.exit(1) }
+    () => {
+      process.exit(0)
+    },
+    () => {
+      process.exit(1)
+    },
   )
 }
 

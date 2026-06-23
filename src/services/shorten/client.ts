@@ -11,15 +11,12 @@ export class ShortenClient extends Context.Service<
   ShortenClient,
   RpcClient.RpcClient<RpcGroup.Rpcs<typeof ShortenRpcs>, RpcClientError>
 >()("app/ShortenClient") {
-  static readonly layer = Layer.effect(
-    ShortenClient,
-    RpcClient.make(ShortenRpcs)
-  ).pipe(
+  static readonly layer = Layer.effect(ShortenClient, RpcClient.make(ShortenRpcs)).pipe(
     Layer.provide(
       RpcClient.layerProtocolHttp({ url: "/api/rpc" }).pipe(
         Layer.provide(FetchHttpClient.layer),
-        Layer.provide(RpcSerialization.layerJson)
-      )
-    )
+        Layer.provide(RpcSerialization.layerJson),
+      ),
+    ),
   )
 }

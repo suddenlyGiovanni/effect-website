@@ -11,13 +11,13 @@ export class ShortenRpcs extends RpcGroup.make(
   Rpc.make("shorten", {
     payload: { text: Schema.String },
     error: ShortenError,
-    success: Schema.String
+    success: Schema.String,
   }),
   Rpc.make("retrieve", {
     payload: { hash: Schema.String },
     error: ShortenError,
-    success: Schema.Option(Schema.String)
-  })
+    success: Schema.Option(Schema.String),
+  }),
 ) {}
 
 export const ShortenLayer = ShortenRpcs.toLayer(
@@ -26,7 +26,7 @@ export const ShortenLayer = ShortenRpcs.toLayer(
     return {
       shorten: (params: { text: string }) => svc.shorten(params.text),
       retrieve: (params: { hash: string }) =>
-        svc.retrieve(params.hash).pipe(Effect.map(Option.fromNullishOr))
+        svc.retrieve(params.hash).pipe(Effect.map(Option.fromNullishOr)),
     }
-  })
+  }),
 ).pipe(Layer.provide(Shorten.layer))

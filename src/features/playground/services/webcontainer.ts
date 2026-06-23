@@ -8,6 +8,7 @@ import * as Option from "effect/Option"
 import * as PubSub from "effect/PubSub"
 import * as Queue from "effect/Queue"
 import * as Schema from "effect/Schema"
+import * as Semaphore from "effect/Semaphore"
 import * as Stream from "effect/Stream"
 import * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema"
 import * as Ndjson from "effect/unstable/encoding/Ndjson"
@@ -20,67 +21,43 @@ import { Loader } from "./loader"
 
 const WEBCONTAINER_BIN_PATH = "node_modules/.bin:/usr/local/bin:/usr/bin:/bin"
 
-// Module-level cache so WebContainer.layer can be shared across multiple
-// Atom.runtime instances without deadlocking or double-booting.
-let cachedContainer: WC | null = null
-let containerBootPromise: Promise<WC> | null = null
-let sideEffectsDone = false
-let cachedDevToolsEvents: PubSub.PubSub<DevToolsSchema.Request.WithoutPing> | null = null
+const semaphore = Semaphore.makeUnsafe(1)
 
 export class WebContainer extends Context.Service<WebContainer>()("app/WebContainer", {
   make: Effect.gen(function* () {
     const registry = yield* AtomRegistry.AtomRegistry
 
+    // Only one instance of a web container can be running at a time
+    yield* Effect.acquireRelease(Semaphore.take(semaphore, 1), () =>
+      Semaphore.release(semaphore, 1),
+    )
+
     const loader = yield* Loader
 
-    // Boot the WebContainer exactly once, even when the layer is
-    // provided to multiple Atom.runtime instances.  WC.boot() throws
-    // on second call, so we cache the result at module level.
-    let container: WC
-    if (cachedContainer) {
-      container = cachedContainer
-    } else {
-      if (!containerBootPromise) {
-        containerBootPromise = WC.boot()
-      }
-      const boot = containerBootPromise
-      container = yield* Effect.promise(() => boot).pipe(
-        loader.withIndicator("Booting webcontainer"),
-      )
-      cachedContainer = container
-    }
+    const container = yield* Effect.acquireRelease(
+      Effect.promise(() => WC.boot()).pipe(loader.withIndicator("Booting webcontainer")),
+      (container) => Effect.sync(() => container.teardown()),
+    )
 
     /**
      * Spawns `jsh`, a custom shell that ships with the WebContainer API.
      *
      * When the associated scope is closed, the process will be killed.
      */
-    const createShell = (cwd: string) =>
-      Effect.uninterruptible(
-        Effect.gen(function* () {
-          const process = yield* Effect.promise(() =>
-            container.spawn("jsh", [], {
-              cwd,
-              env: {
-                PATH: WEBCONTAINER_BIN_PATH,
-                NODE_NO_WARNINGS: "1",
-              },
-            }),
-          )
-          yield* Effect.addFinalizer(() => Effect.sync(() => process.kill()))
-          // Return thunks instead of raw process to avoid Effect Hash.hash()
-          // hitting cross-origin Comlink proxy properties
-          return {
-            getWriter: () => process.input.getWriter(),
-            pipeOutput: (writable: WritableStream) =>
-              process.output.pipeTo(writable, {
-                preventCancel: true,
-                preventAbort: true,
-                preventClose: true,
-              }),
-          } as const
-        }),
+    function createShell(cwd: string) {
+      return Effect.acquireRelease(
+        Effect.promise(() =>
+          container.spawn("jsh", [], {
+            cwd,
+            env: {
+              PATH: WEBCONTAINER_BIN_PATH,
+              NODE_NO_WARNINGS: "1",
+            },
+          }),
+        ),
+        (process) => Effect.sync(() => process.kill()),
       )
+    }
 
     /**
      * Spawns the specified `command` into a `jsh` shell.
@@ -88,21 +65,14 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      * When the associated scope is closed, the process will be killed.
      */
     function spawn(command: string, cwd?: string) {
-      return Effect.uninterruptible(
-        Effect.gen(function* () {
-          const process = yield* Effect.promise(() =>
-            container.spawn("jsh", ["-c", command], {
-              ...(cwd === undefined ? {} : { cwd }),
-              env: { PATH: WEBCONTAINER_BIN_PATH },
-            }),
-          )
-          yield* Effect.addFinalizer(() => Effect.sync(() => process.kill()))
-          // Return thunks to avoid Effect Hash.hash() on cross-origin Comlink proxy
-          return {
-            getOutput: () => process.output,
-            waitExit: () => Effect.promise(() => process.exit),
-          } as const
-        }),
+      return Effect.acquireRelease(
+        Effect.promise(() =>
+          container.spawn("jsh", ["-c", command], {
+            ...(cwd === undefined ? {} : { cwd }),
+            env: { PATH: WEBCONTAINER_BIN_PATH },
+          }),
+        ),
+        (process) => Effect.sync(() => process.kill()),
       )
     }
 
@@ -112,7 +82,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      */
     function run(command: string, cwd?: string) {
       return spawn(command, cwd).pipe(
-        Effect.flatMap((proc) => proc.waitExit()),
+        Effect.flatMap((process) => Effect.promise(() => process.exit)),
         Effect.scoped,
       )
     }
@@ -497,47 +467,39 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       } as const
     })
 
-    // Install executables and start DevTools proxy – only once, even
-    // when the layer is provided to multiple Atom.runtime instances.
-    if (!sideEffectsDone) {
-      sideEffectsDone = true
+    // Install the default files / executables into the container
+    yield* installRuntimePackageJson()
+    yield* installExe("run", runExe)
+    yield* installExe("dev-tools-proxy", devToolsProxyExe)
 
-      yield* installRuntimePackageJson()
-      yield* installExe("run", runExe)
-      yield* installExe("dev-tools-proxy", devToolsProxyExe)
-
-      // Start the DevTools proxy — runs detached so React strict mode
-      // unmount/mount doesn't kill the proxy and close the ReadableStream
-      const devToolsEvents = yield* PubSub.sliding<DevToolsSchema.Request.WithoutPing>(128)
-      cachedDevToolsEvents = devToolsEvents
-      yield* spawn("./dev-tools-proxy").pipe(
-        Effect.tap((proc) =>
-          Stream.fromReadableStream({
-            evaluate: proc.getOutput,
-            onError: identity,
-            releaseLockOnEnd: true,
-          }).pipe(
-            Stream.orDie,
-            Stream.pipeThroughChannel(
-              Ndjson.decodeSchemaString(Schema.toCodecJson(DevToolsSchemaCompat.Request))({
-                ignoreEmptyLines: true,
-              }),
-            ),
-            Stream.tapCause(Effect.logError),
-            Stream.runForEach((event) =>
-              event._tag === "Ping" ? Effect.void : PubSub.publish(devToolsEvents, event),
-            ),
-            Effect.catchCause(() => Effect.void),
+    const devToolsEvents = yield* PubSub.sliding<DevToolsSchema.Request.WithoutPing>(128)
+    yield* spawn("./dev-tools-proxy").pipe(
+      Effect.tap((process) =>
+        Stream.fromReadableStream({
+          evaluate: () => process.output,
+          onError: identity,
+          releaseLockOnEnd: true,
+        }).pipe(
+          Stream.orDie,
+          Stream.pipeThroughChannel(
+            Ndjson.decodeSchemaString(Schema.toCodecJson(DevToolsSchemaCompat.Request))({
+              ignoreEmptyLines: true,
+            }),
+          ),
+          Stream.tapCause(Effect.logError),
+          Stream.runForEach((event) =>
+            event._tag === "Ping" ? Effect.void : PubSub.publish(devToolsEvents, event),
           ),
         ),
-        Effect.forkDetach,
-      )
-    }
+      ),
+      Effect.forever,
+      Effect.forkScoped,
+    )
 
     return {
       createShell,
       createWorkspaceHandle,
-      devTools: Stream.fromPubSub(cachedDevToolsEvents!),
+      devTools: Stream.fromPubSub(devToolsEvents),
       run,
       readFile,
       readFileString,

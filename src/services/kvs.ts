@@ -1,8 +1,8 @@
-import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore"
 import * as Config from "effect/Config"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Redacted from "effect/Redacted"
+import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore"
 
 const VercelKVS = Layer.unwrap(
   Effect.gen(function* () {
@@ -11,10 +11,10 @@ const VercelKVS = Layer.unwrap(
     }
     const config = yield* Config.all({
       url: Config.string("KV_REST_API_URL"),
-      token: Config.redacted("KV_REST_API_TOKEN")
+      token: Config.redacted("KV_REST_API_TOKEN"),
     })
     return makeVercelKVS(config.url, config.token)
-  })
+  }),
 )
 
 const makeVercelKVS = (url: string, token: Redacted.Redacted) =>
@@ -33,8 +33,8 @@ const makeVercelKVS = (url: string, token: Redacted.Redacted) =>
                 message: "Failed to get key",
                 method: "get",
                 key,
-                cause
-              })
+                cause,
+              }),
           }).pipe(Effect.map((v) => v ?? undefined)),
         set: (key, value) =>
           Effect.tryPromise({
@@ -44,8 +44,8 @@ const makeVercelKVS = (url: string, token: Redacted.Redacted) =>
                 message: "Failed to set key",
                 method: "set",
                 key,
-                cause
-              })
+                cause,
+              }),
           }).pipe(Effect.asVoid),
         remove: (key) =>
           Effect.tryPromise({
@@ -55,8 +55,8 @@ const makeVercelKVS = (url: string, token: Redacted.Redacted) =>
                 message: "Failed to remove key",
                 method: "remove",
                 key,
-                cause
-              })
+                cause,
+              }),
           }).pipe(Effect.asVoid),
         clear: Effect.void,
         size: Effect.tryPromise({
@@ -65,11 +65,11 @@ const makeVercelKVS = (url: string, token: Redacted.Redacted) =>
             new KeyValueStore.KeyValueStoreError({
               message: "Failed to get size",
               method: "size",
-              cause
-            })
-        }).pipe(Effect.map((keys) => keys.length))
+              cause,
+            }),
+        }).pipe(Effect.map((keys) => keys.length)),
       })
-    })
+    }),
   )
 
 export const ShortenKVS = VercelKVS
