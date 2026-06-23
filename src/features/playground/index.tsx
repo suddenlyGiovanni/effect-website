@@ -63,7 +63,7 @@ function CodeEditorPanels() {
       orientation="vertical" 
       className="h-full"
     >
-      <ResizablePanel>
+      <ResizablePanel defaultSize={70}>
         <ResizablePanelGroup 
           {...sidebarLayout}
           orientation="horizontal" 
@@ -73,7 +73,7 @@ function CodeEditorPanels() {
             <FileExplorer />
           </ResizablePanel>
           <ResizableHandle className="w-px bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-700 dark:hover:bg-zinc-500" />
-          <ResizablePanel>
+          <ResizablePanel defaultSize={80}>
             <FileEditor />
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -129,10 +129,11 @@ function WorkspaceShells() {
     <Fragment>
       {shells.map((shell, index) => {
         const id = `shell-${index}`
+        const defaultSize = 100 / shells.length
         return (
           <Fragment key={id}>
             {index > 0 && <ResizableHandle id={id} />}
-            <ResizablePanel id={id} onResize={onResize} order={index} orientation="vertical" className="h-full">
+            <ResizablePanel id={id} defaultSize={defaultSize} onResize={onResize}>
               <Terminal shell={shell} />
             </ResizablePanel>
           </Fragment>
