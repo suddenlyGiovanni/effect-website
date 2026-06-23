@@ -38,6 +38,7 @@ export class Compression extends Context.Service<Compression>()("app/Compression
 
     const decompressBase64 = (base64: string) =>
       Effect.fromResult(Encoding.decodeBase64(base64)).pipe(
+        Effect.catch(() => Effect.fromResult(Encoding.decodeBase64Url(base64))),
         Effect.mapError((cause) => new CompressionError({ method: "decompress", cause })),
         Effect.andThen(decompress),
       )
@@ -53,8 +54,14 @@ export class Compression extends Context.Service<Compression>()("app/Compression
   static readonly layer = Layer.effect(this, this.make)
 }
 
-const decodeWorkspace = flow(Schema.decodeEffect(Schema.fromJsonString(Workspace)), Effect.orDie)
-const encodeWorkspace = flow(Schema.encodeEffect(Schema.fromJsonString(Workspace)), Effect.orDie)
+const decodeWorkspace = flow(
+  Schema.decodeEffect(Schema.fromJsonString(Workspace)),
+  Effect.mapError((cause) => new CompressionError({ method: "decompress", cause }))
+)
+const encodeWorkspace = flow(
+  Schema.encodeEffect(Schema.fromJsonString(Workspace)),
+  Effect.mapError((cause) => new CompressionError({ method: "compress", cause }))
+)
 
 export class WorkspaceCompression extends Context.Service<WorkspaceCompression>()(
   "app/Compression/Workspace",

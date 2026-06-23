@@ -1,5 +1,4 @@
 import * as BrowserKeyValueStore from "@effect/platform-browser/BrowserKeyValueStore"
-import * as Cause from "effect/Cause"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
@@ -7,7 +6,7 @@ import * as Schema from "effect/Schema"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import { makeFile, Workspace } from "../domain/workspace"
 import { WorkspaceCompression } from "../services/compression"
-import { ShortenClient } from "../services/shorten"
+import { ShortenClient } from "@/services/shorten/client"
 import { WebContainer } from "../services/webcontainer"
 import { hashAtom } from "./location"
 import { defaultWorkspace, main, makeDefaultWorkspace, type AtomWorkspaceHandle } from "./workspace"
@@ -70,16 +69,17 @@ export const importAtom = runtime.atom(
           .pipe(Effect.flatMap(Effect.fromOption))
 
         const compression = yield* WorkspaceCompression
+
         return yield* compression.decompress(compressed)
       }
 
       const code = get(codeAtom)
       if (Option.isSome(code)) {
         const node = makeFile("main.ts", code.value, false)
-        return makeDefaultWorkspace().replaceNode(main, node)
+        return defaultWorkspace.replaceNode(main, node)
       }
 
-      return yield* new Cause.NoSuchElementError()
+      return yield* Effect.fail("No playground source")
     },
     (effect, get) =>
       Effect.catch(effect, () =>

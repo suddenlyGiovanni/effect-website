@@ -520,10 +520,6 @@ export const defaultWorkspace = Workspace.new({
   tree: [makeDirectory("src", [main, devTools])],
 })
 
-let cachedDefaultWorkspace: Workspace | null = null
-
 export function makeDefaultWorkspace() {
-  if (cachedDefaultWorkspace) return cachedDefaultWorkspace
-  cachedDefaultWorkspace = defaultWorkspace.withName(`playground-${Date.now()}`)
-  return cachedDefaultWorkspace
+  return defaultWorkspace.withName(`playground-${Date.now()}`)
 }
