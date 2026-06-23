@@ -104,6 +104,7 @@ function CodeEditorPanels() {
             <TabsContent 
               value="trace-viewer"
               className="h-full w-full m-0 overflow-y-auto data-[state=inactive]:hidden"
+              keepMounted
             >
               <TraceViewer />
             </TabsContent>
