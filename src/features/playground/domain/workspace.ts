@@ -173,8 +173,11 @@ export class Workspace extends Schema.Class<Workspace>("Workspace")({
   removeNode(node: File | Directory) {
     return this.filterMap((item) => (item === node ? Option.none() : Option.some(item)))
   }
-  findFile(name: string) {
-    return Iterable.findFirst(this.filePaths, ([_, path]) => _._tag === "File" && path === name)
+  findFile(name: string): Option.Option<[File, string]> {
+    return Iterable.findFirst(
+      this.filePaths, 
+      (entry): entry is [File, string] => entry[0]._tag === "File" && entry[1] === name
+    )
   }
   get initialFile(): File {
     if (this.initialFilePath) {
@@ -205,20 +208,19 @@ export class Workspace extends Schema.Class<Workspace>("Workspace")({
     return `${this.name.replace(/\/$/, "")}/${path.replace(/^\//, "")}`
   }
   updateFiles<E, R>(f: (item: File, path: string) => Effect.Effect<File, E, R>) {
-    const self = this
     const walk = (tree: ReadonlyArray<File | Directory>): Effect.Effect<ReadonlyArray<Directory | File>, E, R> =>
-      Effect.gen(function* () {
+      Effect.gen({ self: this }, function* () {
         const out: Array<File | Directory> = []
         for (const node of tree) {
           if (node._tag === "File") {
-            out.push(yield* f(node, self.filePaths.get(node)!))
+            out.push(yield* f(node, this.filePaths.get(node)!))
           } else {
             out.push(makeDirectory(node.name, yield* walk(node.children), node.userManaged ?? false))
           }
         }
         return out
       })
-    return Effect.map(walk(this.tree), (tree) => self._clone({ tree }))
+    return Effect.map(walk(this.tree), (tree) => this._clone({ tree }))
   }
   addShell(shell: WorkspaceShell) {
     return this._clone({ shells: [...this.shells, shell] })
@@ -252,8 +254,8 @@ export const defaultFiles = [
           "arrowFunction.useParentheses": "force"
         },
         plugins: [
-          "https://plugins.dprint.dev/json-0.22.0.wasm",
-          "https://plugins.dprint.dev/typescript-0.96.1.wasm"
+         "https://plugins.dprint.dev/json-0.22.0.wasm",
+         "https://plugins.dprint.dev/typescript-0.96.1.wasm"
         ]
       },
       undefined,

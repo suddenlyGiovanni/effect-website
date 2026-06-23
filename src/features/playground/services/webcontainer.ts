@@ -25,7 +25,7 @@ const WEBCONTAINER_BIN_PATH = "node_modules/.bin:/usr/local/bin:/usr/bin:/bin"
 let cachedContainer: WC | null = null
 let containerBootPromise: Promise<WC> | null = null
 let sideEffectsDone = false
-let cachedDevToolsEvents: PubSub.PubSub<DevToolsSchema.Request> | null = null
+let cachedDevToolsEvents: PubSub.PubSub<DevToolsSchema.Request.WithoutPing > | null = null
 
 export class WebContainer extends Context.Service<WebContainer>()("app/WebContainer", {
   make: Effect.gen(function* () {
@@ -480,7 +480,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
 
       // Start the DevTools proxy — runs detached so React strict mode
       // unmount/mount doesn't kill the proxy and close the ReadableStream
-      const devToolsEvents = yield* PubSub.sliding<DevToolsSchema.Request>(128)
+      const devToolsEvents = yield* PubSub.sliding<DevToolsSchema.Request.WithoutPing>(128)
       cachedDevToolsEvents = devToolsEvents
       yield* spawn("./dev-tools-proxy").pipe(
         Effect.tap((proc) =>
