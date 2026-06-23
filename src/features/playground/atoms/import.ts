@@ -44,9 +44,8 @@ export const autoSaveAtom = Atom.family((handle: AtomWorkspaceHandle) =>
   ),
 )
 
-export const resetAtom = Atom.fnSync((handle: AtomWorkspaceHandle, get) => {
-  const workspace = makeDefaultWorkspace()
-  get.set(handle.workspaceAtom, workspace)
+export const resetAtom = Atom.fnSync((_handle: AtomWorkspaceHandle, get) => {
+  window.location.hash = ""
   get.set(autoSaveWorkspaceAtom, Option.none())
   get.refresh(importAtom)
 })
