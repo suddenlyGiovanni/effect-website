@@ -26,7 +26,7 @@ export const Dracula = {
   brightCyan: "#8be9fd",
 
   white: "#bbbbbb",
-  brightWhite: "#ffffff"
+  brightWhite: "#ffffff",
 }
 
 export const NightOwlishLight = {
@@ -57,5 +57,5 @@ export const NightOwlishLight = {
   brightCyan: "#00c990",
 
   white: "#7a8181",
-  brightWhite: "#989fb1"
+  brightWhite: "#989fb1",
 }

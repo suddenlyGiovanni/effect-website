@@ -28,16 +28,13 @@ import { Effect, Layer, Logger } from "effect"
 const myStringLogger = Logger.logfmtLogger
 
 // Apply toFile to write logs to "/tmp/log.txt"
-const fileLogger = myStringLogger.pipe(
-  PlatformLogger.toFile("/tmp/log.txt")
-)
+const fileLogger = myStringLogger.pipe(PlatformLogger.toFile("/tmp/log.txt"))
 
 // Replace the default logger, providing NodeFileSystem
 // to access the file system
-const LoggerLive = Logger.replaceScoped(
-  Logger.defaultLogger,
-  fileLogger
-).pipe(Layer.provide(NodeFileSystem.layer))
+const LoggerLive = Logger.replaceScoped(Logger.defaultLogger, fileLogger).pipe(
+  Layer.provide(NodeFileSystem.layer),
+)
 
 const program = Effect.log("Hello")
 
@@ -58,19 +55,16 @@ import { PlatformLogger } from "@effect/platform"
 import { NodeFileSystem } from "@effect/platform-node"
 import { Effect, Layer, Logger } from "effect"
 
-const fileLogger = Logger.logfmtLogger.pipe(
-  PlatformLogger.toFile("/tmp/log.txt")
-)
+const fileLogger = Logger.logfmtLogger.pipe(PlatformLogger.toFile("/tmp/log.txt"))
 
 // Combine the pretty logger for console output with the file logger
 const bothLoggers = Effect.map(fileLogger, (fileLogger) =>
-  Logger.zip(Logger.prettyLoggerDefault, fileLogger)
+  Logger.zip(Logger.prettyLoggerDefault, fileLogger),
 )
 
-const LoggerLive = Logger.replaceScoped(
-  Logger.defaultLogger,
-  bothLoggers
-).pipe(Layer.provide(NodeFileSystem.layer))
+const LoggerLive = Logger.replaceScoped(Logger.defaultLogger, bothLoggers).pipe(
+  Layer.provide(NodeFileSystem.layer),
+)
 
 const program = Effect.log("Hello")
 

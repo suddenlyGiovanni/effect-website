@@ -20,9 +20,7 @@ can be useful when you want to know what elements are in one chunk but not in
 another.
 
 ```ts
-expect(
-  Chunk.difference(Chunk.make(1, 2, 3, 4, 5), Chunk.make(1, 2, 3))
-).toEqual(Chunk.make(4, 5))
+expect(Chunk.difference(Chunk.make(1, 2, 3, 4, 5), Chunk.make(1, 2, 3))).toEqual(Chunk.make(4, 5))
 ```
 
 ## Span's now capture source location
@@ -34,9 +32,7 @@ the source location to any errors created within the span.
 To disable this feature, pass `captureStackTrace: false` to the `Effect.withSpan` options:
 
 ```ts
-Effect.log("Hello World").pipe(
-  Effect.withSpan("my span", { captureStackTrace: false })
-)
+Effect.log("Hello World").pipe(Effect.withSpan("my span", { captureStackTrace: false }))
 ```
 
 ## Cause.prettyErrors
@@ -60,8 +56,8 @@ const getTodo = Effect.functionWithSpan({
   body: (id: number) => Effect.succeed(`Got todo ${id}!`),
   options: (id) => ({
     name: `getTodo-${id}`,
-    attributes: { id }
-  })
+    attributes: { id },
+  }),
 })
 ```
 
@@ -74,12 +70,9 @@ sequential manner.
 const props = pipe(
   Array.Do,
   Array.bind("size", () => ["small", "medium", "large"] as const),
-  Array.bind(
-    "theme",
-    () => ["dark", "light", "contrast-light", "contrast-dark"] as const
-  ),
+  Array.bind("theme", () => ["dark", "light", "contrast-light", "contrast-dark"] as const),
   Array.bind("disabled", () => [false, true]),
-  Array.bind("loading", () => [false, true])
+  Array.bind("loading", () => [false, true]),
 )
 ```
 
@@ -106,8 +99,7 @@ type Result<E, A> = Data.TaggedEnum<{
 interface ResultDefinition extends Data.TaggedEnum.WithGenerics<2> {
   readonly taggedEnum: Result<this["A"], this["B"]>
 }
-const { $is, $match, Failure, Success } =
-  Data.taggedEnum<ResultDefinition>()
+const { $is, $match, Failure, Success } = Data.taggedEnum<ResultDefinition>()
 
 const result: Result<string, number> = Success({ value: 1 })
 
@@ -115,8 +107,8 @@ pipe(
   result,
   $match({
     Success: (_) => _.value,
-    Failure: (_) => _.error
-  })
+    Failure: (_) => _.error,
+  }),
 ) satisfies string | number
 ```
 

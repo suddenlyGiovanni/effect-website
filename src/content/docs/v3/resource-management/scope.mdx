@@ -25,17 +25,11 @@ const program =
   // create a new scope
   Scope.make().pipe(
     // add finalizer 1
-    Effect.tap((scope) =>
-      Scope.addFinalizer(scope, Console.log("finalizer 1"))
-    ),
+    Effect.tap((scope) => Scope.addFinalizer(scope, Console.log("finalizer 1"))),
     // add finalizer 2
-    Effect.tap((scope) =>
-      Scope.addFinalizer(scope, Console.log("finalizer 2"))
-    ),
+    Effect.tap((scope) => Scope.addFinalizer(scope, Console.log("finalizer 2"))),
     // close the scope
-    Effect.andThen((scope) =>
-      Scope.close(scope, Exit.succeed("scope closed successfully"))
-    )
+    Effect.andThen((scope) => Scope.close(scope, Exit.succeed("scope closed successfully"))),
   )
 
 Effect.runPromise(program)
@@ -68,9 +62,7 @@ import { Effect, Console } from "effect"
 //      ┌─── Effect<string, never, Scope>
 //      ▼
 const program = Effect.gen(function* () {
-  yield* Effect.addFinalizer((exit) =>
-    Console.log(`Finalizer executed. Exit status: ${exit._tag}`)
-  )
+  yield* Effect.addFinalizer((exit) => Console.log(`Finalizer executed. Exit status: ${exit._tag}`))
   return "some result"
 })
 
@@ -98,7 +90,7 @@ import { Effect, Console } from "effect"
 //      ┌─── Effect<string, never, Scope>
 //      ▼
 const program = Effect.addFinalizer((exit) =>
-  Console.log(`Finalizer executed. Exit status: ${exit._tag}`)
+  Console.log(`Finalizer executed. Exit status: ${exit._tag}`),
 ).pipe(Effect.andThen(Effect.succeed("some result")))
 
 // Wrapping the effect in a scope
@@ -130,9 +122,8 @@ const program: Effect<string, never, Scope>
 shows that the workflow requires a `Scope` to run. You can provide this `Scope` using the `Effect.scoped` function, which creates a new scope, runs the effect within it, and ensures the finalizers are executed when the scope is closed.
 
 <Aside type="note" title="Finalizer Execution Order">
-  Finalizers are executed in reverse order of how they were added,
-  ensuring that resources are released in the proper sequence, just like
-  in stack unwinding.
+  Finalizers are executed in reverse order of how they were added, ensuring that resources are
+  released in the proper sequence, just like in stack unwinding.
 </Aside>
 
 **Example** (Adding a Finalizer on Failure)
@@ -147,9 +138,7 @@ import { Effect, Console } from "effect"
 //      ┌─── Effect<never, string, Scope>
 //      ▼
 const program = Effect.gen(function* () {
-  yield* Effect.addFinalizer((exit) =>
-    Console.log(`Finalizer executed. Exit status: ${exit._tag}`)
-  )
+  yield* Effect.addFinalizer((exit) => Console.log(`Finalizer executed. Exit status: ${exit._tag}`))
   return yield* Effect.fail("Uh oh!")
 })
 
@@ -181,7 +170,7 @@ import { Effect, Console } from "effect"
 //      ┌─── Effect<never, string, Scope>
 //      ▼
 const program = Effect.addFinalizer((exit) =>
-  Console.log(`Finalizer executed. Exit status: ${exit._tag}`)
+  Console.log(`Finalizer executed. Exit status: ${exit._tag}`),
 ).pipe(Effect.andThen(Effect.fail("Uh oh!")))
 
 // Wrapping the effect in a scope
@@ -220,9 +209,7 @@ import { Effect, Console } from "effect"
 //      ┌─── Effect<never, never, Scope>
 //      ▼
 const program = Effect.gen(function* () {
-  yield* Effect.addFinalizer((exit) =>
-    Console.log(`Finalizer executed. Exit status: ${exit._tag}`)
-  )
+  yield* Effect.addFinalizer((exit) => Console.log(`Finalizer executed. Exit status: ${exit._tag}`))
   return yield* Effect.interrupt
 })
 
@@ -263,7 +250,7 @@ import { Effect, Console } from "effect"
 //      ┌─── Effect<never, never, Scope>
 //      ▼
 const program = Effect.addFinalizer((exit) =>
-  Console.log(`Finalizer executed. Exit status: ${exit._tag}`)
+  Console.log(`Finalizer executed. Exit status: ${exit._tag}`),
 ).pipe(Effect.andThen(Effect.interrupt))
 
 // Wrapping the effect in a scope
@@ -386,10 +373,9 @@ finalizer after task 2
 In this example, we create two separate scopes, `scope1` and `scope2`, and extend the scope of each task into its respective scope. When you run the program, it outputs the tasks and their finalizers in a different order.
 
 <Aside type="note" title="Extending a Scope">
-  The `Scope.extend` function allows you to extend the scope of an effect
-  workflow that requires a scope into another scope without closing the
-  scope when the workflow finishes executing. This allows you to extend a
-  scoped value into a larger scope.
+  The `Scope.extend` function allows you to extend the scope of an effect workflow that requires a
+  scope into another scope without closing the scope when the workflow finishes executing. This
+  allows you to extend a scoped value into a larger scope.
 </Aside>
 
 You might wonder what happens when a scope is closed, but a task within that scope hasn't completed yet.
@@ -460,7 +446,7 @@ const getMyResource = (): Promise<MyResource> =>
       new Promise((resolve) => {
         console.log("Resource released")
         resolve()
-      })
+      }),
   })
 
 // Define how the resource is acquired
@@ -470,7 +456,7 @@ const acquire = Effect.tryPromise({
       console.log("Resource acquired")
       return res
     }),
-  catch: () => new Error("getMyResourceError")
+  catch: () => new Error("getMyResourceError"),
 })
 
 // Define how the resource is released
@@ -514,7 +500,7 @@ const getMyResource = (): Promise<MyResource> =>
       new Promise((resolve) => {
         console.log("Resource released")
         resolve()
-      })
+      }),
   })
 
 // Define how the resource is acquired
@@ -524,7 +510,7 @@ const acquire = Effect.tryPromise({
       console.log("Resource acquired")
       return res
     }),
-  catch: () => new Error("getMyResourceError")
+  catch: () => new Error("getMyResourceError"),
 })
 
 // Define how the resource is released
@@ -562,7 +548,7 @@ const getMyResource = (): Promise<MyResource> =>
       new Promise((resolve) => {
         console.log("Resource released")
         resolve()
-      })
+      }),
   })
 
 // Define how the resource is acquired
@@ -572,7 +558,7 @@ const acquire = Effect.tryPromise({
       console.log("Resource acquired")
       return res
     }),
-  catch: () => new Error("getMyResourceError")
+  catch: () => new Error("getMyResourceError"),
 })
 
 // Define how the resource is released
@@ -587,7 +573,7 @@ const program = Effect.scoped(
   Effect.gen(function* () {
     const res = yield* resource
     console.log(`content is ${res.contents}`)
-  })
+  }),
 )
 
 // We now have a workflow that is ready to run
@@ -628,9 +614,7 @@ class S3 extends Context.Tag("S3")<
   }
 >() {}
 
-class ElasticSearchError extends Data.TaggedError(
-  "ElasticSearchError"
-)<{}> {}
+class ElasticSearchError extends Data.TaggedError("ElasticSearchError")<{}> {}
 
 interface Index {
   readonly id: string
@@ -653,10 +637,7 @@ interface Entry {
 class Database extends Context.Tag("Database")<
   Database,
   {
-    readonly createEntry: (
-      bucket: Bucket,
-      index: Index
-    ) => Effect.Effect<Entry, DatabaseError>
+    readonly createEntry: (bucket: Bucket, index: Index) => Effect.Effect<Entry, DatabaseError>
     readonly deleteEntry: (entry: Entry) => Effect.Effect<void>
   }
 >() {}
@@ -681,9 +662,7 @@ class S3 extends Context.Tag("S3")<
   }
 >() {}
 
-class ElasticSearchError extends Data.TaggedError(
-  "ElasticSearchError"
-)<{}> {}
+class ElasticSearchError extends Data.TaggedError("ElasticSearchError")<{}> {}
 
 interface Index {
   readonly id: string
@@ -706,10 +685,7 @@ interface Entry {
 class Database extends Context.Tag("Database")<
   Database,
   {
-    readonly createEntry: (
-      bucket: Bucket,
-      index: Index
-    ) => Effect.Effect<Entry, DatabaseError>
+    readonly createEntry: (bucket: Bucket, index: Index) => Effect.Effect<Entry, DatabaseError>
     readonly deleteEntry: (entry: Entry) => Effect.Effect<void>
   }
 >() {}
@@ -728,7 +704,7 @@ const createBucket = Effect.gen(function* () {
     // succeeded, Exit.isFailure(exit) will be false, and the function
     // will return Effect.void, representing a successful, but
     // do-nothing effect.
-    Exit.isFailure(exit) ? deleteBucket(bucket) : Effect.void
+    Exit.isFailure(exit) ? deleteBucket(bucket) : Effect.void,
   )
 })
 
@@ -737,7 +713,7 @@ const createBucket = Effect.gen(function* () {
 const createIndex = Effect.gen(function* () {
   const { createIndex, deleteIndex } = yield* ElasticSearch
   return yield* Effect.acquireRelease(createIndex, (index, exit) =>
-    Exit.isFailure(exit) ? deleteIndex(index) : Effect.void
+    Exit.isFailure(exit) ? deleteIndex(index) : Effect.void,
   )
 })
 
@@ -746,10 +722,8 @@ const createIndex = Effect.gen(function* () {
 const createEntry = (bucket: Bucket, index: Index) =>
   Effect.gen(function* () {
     const { createEntry, deleteEntry } = yield* Database
-    return yield* Effect.acquireRelease(
-      createEntry(bucket, index),
-      (entry, exit) =>
-        Exit.isFailure(exit) ? deleteEntry(entry) : Effect.void
+    return yield* Effect.acquireRelease(createEntry(bucket, index), (entry, exit) =>
+      Exit.isFailure(exit) ? deleteEntry(entry) : Effect.void,
     )
   })
 
@@ -758,7 +732,7 @@ const make = Effect.scoped(
     const bucket = yield* createBucket
     const index = yield* createIndex
     return yield* createEntry(bucket, index)
-  })
+  }),
 )
 ```
 
@@ -783,9 +757,7 @@ class S3 extends Context.Tag("S3")<
   }
 >() {}
 
-class ElasticSearchError extends Data.TaggedError(
-  "ElasticSearchError"
-)<{}> {}
+class ElasticSearchError extends Data.TaggedError("ElasticSearchError")<{}> {}
 
 interface Index {
   readonly id: string
@@ -808,10 +780,7 @@ interface Entry {
 class Database extends Context.Tag("Database")<
   Database,
   {
-    readonly createEntry: (
-      bucket: Bucket,
-      index: Index
-    ) => Effect.Effect<Entry, DatabaseError>
+    readonly createEntry: (bucket: Bucket, index: Index) => Effect.Effect<Entry, DatabaseError>
     readonly deleteEntry: (entry: Entry) => Effect.Effect<void>
   }
 >() {}
@@ -830,7 +799,7 @@ const createBucket = Effect.gen(function* () {
     // succeeded, Exit.isFailure(exit) will be false, and the function
     // will return Effect.void, representing a successful, but
     // do-nothing effect.
-    Exit.isFailure(exit) ? deleteBucket(bucket) : Effect.void
+    Exit.isFailure(exit) ? deleteBucket(bucket) : Effect.void,
   )
 })
 
@@ -839,7 +808,7 @@ const createBucket = Effect.gen(function* () {
 const createIndex = Effect.gen(function* () {
   const { createIndex, deleteIndex } = yield* ElasticSearch
   return yield* Effect.acquireRelease(createIndex, (index, exit) =>
-    Exit.isFailure(exit) ? deleteIndex(index) : Effect.void
+    Exit.isFailure(exit) ? deleteIndex(index) : Effect.void,
   )
 })
 
@@ -848,10 +817,8 @@ const createIndex = Effect.gen(function* () {
 const createEntry = (bucket: Bucket, index: Index) =>
   Effect.gen(function* () {
     const { createEntry, deleteEntry } = yield* Database
-    return yield* Effect.acquireRelease(
-      createEntry(bucket, index),
-      (entry, exit) =>
-        Exit.isFailure(exit) ? deleteEntry(entry) : Effect.void
+    return yield* Effect.acquireRelease(createEntry(bucket, index), (entry, exit) =>
+      Exit.isFailure(exit) ? deleteEntry(entry) : Effect.void,
     )
   })
 
@@ -860,7 +827,7 @@ const make = Effect.scoped(
     const bucket = yield* createBucket
     const index = yield* createIndex
     return yield* createEntry(bucket, index)
-  })
+  }),
 )
 
 // The `FailureCaseLiterals` type allows us to provide different error
@@ -878,10 +845,7 @@ const make = Effect.scoped(
 // services and verify their behavior under different error conditions.
 type FailureCaseLiterals = "S3" | "ElasticSearch" | "Database" | undefined
 
-class FailureCase extends Context.Tag("FailureCase")<
-  FailureCase,
-  FailureCaseLiterals
->() {}
+class FailureCase extends Context.Tag("FailureCase")<FailureCase, FailureCaseLiterals>() {}
 
 // Create a test layer for the S3 service
 
@@ -898,10 +862,9 @@ const S3Test = Layer.effect(
           return { name: "<bucket.name>" }
         }
       }),
-      deleteBucket: (bucket) =>
-        Console.log(`[S3] delete bucket ${bucket.name}`)
+      deleteBucket: (bucket) => Console.log(`[S3] delete bucket ${bucket.name}`),
     }
-  })
+  }),
 )
 
 // Create a test layer for the ElasticSearch service
@@ -919,10 +882,9 @@ const ElasticSearchTest = Layer.effect(
           return { id: "<index.id>" }
         }
       }),
-      deleteIndex: (index) =>
-        Console.log(`[ElasticSearch] delete index ${index.id}`)
+      deleteIndex: (index) => Console.log(`[ElasticSearch] delete index ${index.id}`),
     }
-  })
+  }),
 )
 
 // Create a test layer for the Database service
@@ -935,8 +897,7 @@ const DatabaseTest = Layer.effect(
       createEntry: (bucket, index) =>
         Effect.gen(function* () {
           console.log(
-            "[Database] creating entry for bucket" +
-              `${bucket.name} and index ${index.id}`
+            "[Database] creating entry for bucket" + `${bucket.name} and index ${index.id}`,
           )
           if (failureCase === "Database") {
             return yield* Effect.fail(new DatabaseError())
@@ -944,10 +905,9 @@ const DatabaseTest = Layer.effect(
             return { id: "<entry.id>" }
           }
         }),
-      deleteEntry: (entry) =>
-        Console.log(`[Database] delete entry ${entry.id}`)
+      deleteEntry: (entry) => Console.log(`[Database] delete entry ${entry.id}`),
     }
-  })
+  }),
 )
 
 // Merge all the test layers for S3, ElasticSearch, and Database
@@ -957,10 +917,7 @@ const layer = Layer.mergeAll(S3Test, ElasticSearchTest, DatabaseTest)
 // Create a runnable effect to test the Workspace code. The effect is
 // provided with the test layer and a FailureCase service with undefined
 // value (no failure case).
-const runnable = make.pipe(
-  Effect.provide(layer),
-  Effect.provideService(FailureCase, undefined)
-)
+const runnable = make.pipe(Effect.provide(layer), Effect.provideService(FailureCase, undefined))
 
 Effect.runPromise(Effect.either(runnable)).then(console.log)
 ```
@@ -979,10 +936,7 @@ In this case, all operations succeed, and we see a successful result with `right
 Now, let's simulate a failure in the `Database`:
 
 ```ts showLineNumbers=false
-const runnable = make.pipe(
-  Effect.provide(layer),
-  Effect.provideService(FailureCase, "Database")
-)
+const runnable = make.pipe(Effect.provide(layer), Effect.provideService(FailureCase, "Database"))
 ```
 
 The console output will be:
@@ -1003,7 +957,7 @@ Let's now make the index creation fail instead:
 ```ts showLineNumbers=false
 const runnable = make.pipe(
   Effect.provide(layer),
-  Effect.provideService(FailureCase, "ElasticSearch")
+  Effect.provideService(FailureCase, "ElasticSearch"),
 )
 ```
 

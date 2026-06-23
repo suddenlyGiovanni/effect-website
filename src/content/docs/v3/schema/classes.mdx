@@ -17,9 +17,8 @@ Classes offer several features that simplify the schema creation process:
 - **Value Hashing and Equality**: Utilize the built-in capability for checking value equality and applying hashing (thanks to `Class` implementing [Data.Class](/docs/data-types/data/#class)).
 
 <Aside type="caution" title="Class Schemas Are Transformations">
-  Classes defined with `Schema.Class` act as
-  [transformations](/docs/schema/transformations/). See [Class Schemas are
-  Transformations](#class-schemas-are-transformations) for details.
+  Classes defined with `Schema.Class` act as [transformations](/docs/schema/transformations/). See
+  [Class Schemas are Transformations](#class-schemas-are-transformations) for details.
 </Aside>
 
 ## Definition
@@ -37,7 +36,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 ```
 
@@ -50,7 +49,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 console.log(new Person({ id: 1, name: "John" }))
@@ -90,7 +89,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 const person = Person.make({ id: 1, name: "John" })
@@ -137,10 +136,8 @@ import { Schema } from "effect"
 class WithFilter extends Schema.Class<WithFilter>("WithFilter")(
   Schema.Struct({
     a: Schema.NumberFromString,
-    b: Schema.NumberFromString
-  }).pipe(
-    Schema.filter(({ a, b }) => a >= b || "a must be greater than b")
-  )
+    b: Schema.NumberFromString,
+  }).pipe(Schema.filter(({ a, b }) => a >= b || "a must be greater than b")),
 ) {}
 
 // Constructor
@@ -179,7 +176,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 // Create an instance with valid properties
@@ -197,7 +194,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 // Attempt to create an instance with an invalid `name`
@@ -225,7 +222,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 // Bypass validation during instantiation
@@ -251,7 +248,7 @@ import { Equal } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 const john1 = new Person({ id: 1, name: "John" })
@@ -275,18 +272,18 @@ import { Equal } from "effect"
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
   name: Schema.NonEmptyString,
-  hobbies: Schema.Array(Schema.String) // Standard array schema
+  hobbies: Schema.Array(Schema.String), // Standard array schema
 }) {}
 
 const john1 = new Person({
   id: 1,
   name: "John",
-  hobbies: ["reading", "coding"]
+  hobbies: ["reading", "coding"],
 })
 const john2 = new Person({
   id: 1,
   name: "John",
-  hobbies: ["reading", "coding"]
+  hobbies: ["reading", "coding"],
 })
 
 // Equality fails because `hobbies` are not deeply compared
@@ -305,18 +302,18 @@ import { Data, Equal } from "effect"
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
   name: Schema.NonEmptyString,
-  hobbies: Schema.Data(Schema.Array(Schema.String)) // Enable deep equality
+  hobbies: Schema.Data(Schema.Array(Schema.String)), // Enable deep equality
 }) {}
 
 const john1 = new Person({
   id: 1,
   name: "John",
-  hobbies: Data.array(["reading", "coding"])
+  hobbies: Data.array(["reading", "coding"]),
 })
 const john2 = new Person({
   id: 1,
   name: "John",
-  hobbies: Data.array(["reading", "coding"])
+  hobbies: Data.array(["reading", "coding"]),
 })
 
 // Equality succeeds because `hobbies` are deeply compared
@@ -339,7 +336,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {
   // Custom getter to return the name in uppercase
   get upperName() {
@@ -365,7 +362,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {
   // Custom method to return a greeting
   greet() {
@@ -391,7 +388,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 // Use the Person class in an array schema
@@ -413,7 +410,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 //       ┌─── {
@@ -435,7 +432,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 ```
 
@@ -444,7 +441,7 @@ Under the hood, this definition creates a transformation schema that maps:
 ```ts showLineNumbers=false
 Schema.Struct({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 })
 ```
 
@@ -470,7 +467,7 @@ import { Schema, SchemaAST } from "effect"
 class Person extends Schema.Class<Person>("Person")(
   {
     id: Schema.Number,
-    name: Schema.NonEmptyString
+    name: Schema.NonEmptyString,
   },
   [
     // Annotations for the "to" schema
@@ -480,8 +477,8 @@ class Person extends Schema.Class<Person>("Person")(
     { description: `"transformation" description` },
 
     // Annotations for the "from" schema
-    { description: `"from" description` }
-  ]
+    { description: `"from" description` },
+  ],
 ) {}
 
 console.log(SchemaAST.getDescriptionAnnotation(Person.ast.to))
@@ -504,15 +501,15 @@ import { Schema, SchemaAST } from "effect"
 class Person extends Schema.Class<Person>("Person")(
   {
     id: Schema.Number,
-    name: Schema.NonEmptyString
+    name: Schema.NonEmptyString,
   },
   [
     // No annotations for the "to" schema
     undefined,
 
     // Annotations for the "transformation schema
-    { description: `"transformation" description` }
-  ]
+    { description: `"transformation" description` },
+  ],
 ) {}
 
 console.log(SchemaAST.getDescriptionAnnotation(Person.ast.to))
@@ -537,7 +534,7 @@ import { Schema, SchemaAST } from "effect"
 //                                           ▼
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {}
 
 console.log(SchemaAST.getIdentifierAnnotation(Person.ast.to))
@@ -557,16 +554,13 @@ import { Schema } from "effect"
 // Define a Category schema with a recursive subcategories field
 class Category extends Schema.Class<Category>("Category")({
   name: Schema.String,
-  subcategories: Schema.Array(
-    Schema.suspend((): Schema.Schema<Category> => Category)
-  )
+  subcategories: Schema.Array(Schema.suspend((): Schema.Schema<Category> => Category)),
 }) {}
 ```
 
 <Aside type="note" title="Correct Inference">
-  It is necessary to add an explicit type annotation because otherwise
-  TypeScript would struggle to infer types correctly. Without this
-  annotation, you might encounter this error message:
+  It is necessary to add an explicit type annotation because otherwise TypeScript would struggle to
+  infer types correctly. Without this annotation, you might encounter this error message:
 </Aside>
 
 **Example** (Missing Type Annotation Error)
@@ -577,7 +571,7 @@ import { Schema } from "effect"
 // @errors: 2506 7024
 class Category extends Schema.Class<Category>("Category")({
   name: Schema.String,
-  subcategories: Schema.Array(Schema.suspend(() => Category))
+  subcategories: Schema.Array(Schema.suspend(() => Category)),
 }) {}
 ```
 
@@ -594,15 +588,15 @@ class Expression extends Schema.Class<Expression>("Expression")({
   type: Schema.Literal("expression"),
   value: Schema.Union(
     Schema.Number,
-    Schema.suspend((): Schema.Schema<Operation> => Operation)
-  )
+    Schema.suspend((): Schema.Schema<Operation> => Operation),
+  ),
 }) {}
 
 class Operation extends Schema.Class<Operation>("Operation")({
   type: Schema.Literal("operation"),
   operator: Schema.Literal("+", "-"),
   left: Expression,
-  right: Expression
+  right: Expression,
 }) {}
 ```
 
@@ -623,9 +617,9 @@ class Category extends Schema.Class<Category>("Category")({
   id: Schema.NumberFromString,
   name: Schema.String,
   subcategories: Schema.Array(
-// @errors: 2322
-    Schema.suspend((): Schema.Schema<Category> => Category)
-  )
+    // @errors: 2322
+    Schema.suspend((): Schema.Schema<Category> => Category),
+  ),
 }) {}
 ```
 
@@ -646,10 +640,8 @@ class Category extends Schema.Class<Category>("Category")({
   id: Schema.NumberFromString,
   name: Schema.String,
   subcategories: Schema.Array(
-    Schema.suspend(
-      (): Schema.Schema<Category, CategoryEncoded> => Category
-    )
-  )
+    Schema.suspend((): Schema.Schema<Category, CategoryEncoded> => Category),
+  ),
 }) {}
 ```
 
@@ -663,7 +655,7 @@ import { Schema } from "effect"
 
 const fields = {
   id: Schema.NumberFromString,
-  name: Schema.String
+  name: Schema.String,
   // ...possibly other fields
 }
 
@@ -676,10 +668,8 @@ class Category extends Schema.Class<Category>("Category")({
   ...fields, // Include the fields
   subcategories: Schema.Array(
     // Define `subcategories` using recursion
-    Schema.suspend(
-      (): Schema.Schema<Category, CategoryEncoded> => Category
-    )
-  )
+    Schema.suspend((): Schema.Schema<Category, CategoryEncoded> => Category),
+  ),
 }) {}
 ```
 
@@ -693,16 +683,13 @@ You can also create classes that extend [TaggedClass](/docs/data-types/data/#tag
 import { Schema } from "effect"
 
 // Define a tagged class with a "name" field
-class TaggedPerson extends Schema.TaggedClass<TaggedPerson>()(
-  "TaggedPerson",
-  {
-    name: Schema.String
-  }
-) {}
+class TaggedPerson extends Schema.TaggedClass<TaggedPerson>()("TaggedPerson", {
+  name: Schema.String,
+}) {}
 
 // Define a tagged error with a "status" field
 class HttpError extends Schema.TaggedError<HttpError>()("HttpError", {
-  status: Schema.Number
+  status: Schema.Number,
 }) {}
 
 const joe = new TaggedPerson({ name: "Joe" })
@@ -728,7 +715,7 @@ import { Schema } from "effect"
 // Define the base class
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {
   // A custom getter that converts the name to uppercase
   get upperName() {
@@ -737,11 +724,9 @@ class Person extends Schema.Class<Person>("Person")({
 }
 
 // Extend the base class to include an "age" field
-class PersonWithAge extends Person.extend<PersonWithAge>("PersonWithAge")(
-  {
-    age: Schema.Number
-  }
-) {
+class PersonWithAge extends Person.extend<PersonWithAge>("PersonWithAge")({
+  age: Schema.Number,
+}) {
   // A custom getter to check if the person is an adult
   get isAdult() {
     return this.age >= 18
@@ -763,7 +748,7 @@ import { Schema } from "effect"
 
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 }) {
   get upperName() {
     return this.name.toUpperCase()
@@ -771,7 +756,7 @@ class Person extends Schema.Class<Person>("Person")({
 }
 
 class BadExtension extends Person.extend<BadExtension>("BadExtension")({
-  name: Schema.Number
+  name: Schema.Number,
 }) {}
 /*
 throws:
@@ -796,7 +781,7 @@ import { Effect, Option, Schema, ParseResult } from "effect"
 // Base class definition
 class Person extends Schema.Class<Person>("Person")({
   id: Schema.Number,
-  name: Schema.String
+  name: Schema.String,
 }) {}
 
 console.log(Schema.decodeUnknownSync(Person)({ id: 1, name: "name" }))
@@ -812,27 +797,26 @@ function getAge(id: number): Effect.Effect<number, Error> {
 
 // Extended class with a transformation
 class PersonWithTransform extends Person.transformOrFail<PersonWithTransform>(
-  "PersonWithTransform"
+  "PersonWithTransform",
 )(
   {
-    age: Schema.optionalWith(Schema.Number, { exact: true, as: "Option" })
+    age: Schema.optionalWith(Schema.Number, { exact: true, as: "Option" }),
   },
   {
     // Decoding logic for the new field
     decode: (input) =>
       Effect.mapBoth(getAge(input.id), {
-        onFailure: (e) =>
-          new ParseResult.Type(Schema.String.ast, input.id, e.message),
+        onFailure: (e) => new ParseResult.Type(Schema.String.ast, input.id, e.message),
         // Must return { age: Option<number> }
-        onSuccess: (age) => ({ ...input, age: Option.some(age) })
+        onSuccess: (age) => ({ ...input, age: Option.some(age) }),
       }),
-    encode: ParseResult.succeed
-  }
+    encode: ParseResult.succeed,
+  },
 ) {}
 
 Schema.decodeUnknownPromise(PersonWithTransform)({
   id: 1,
-  name: "name"
+  name: "name",
 }).then(console.log)
 /*
 Output:
@@ -845,26 +829,25 @@ PersonWithTransform {
 
 // Extended class with a conditional Transformation
 class PersonWithTransformFrom extends Person.transformOrFailFrom<PersonWithTransformFrom>(
-  "PersonWithTransformFrom"
+  "PersonWithTransformFrom",
 )(
   {
-    age: Schema.optionalWith(Schema.Number, { exact: true, as: "Option" })
+    age: Schema.optionalWith(Schema.Number, { exact: true, as: "Option" }),
   },
   {
     decode: (input) =>
       Effect.mapBoth(getAge(input.id), {
-        onFailure: (e) =>
-          new ParseResult.Type(Schema.String.ast, input, e.message),
+        onFailure: (e) => new ParseResult.Type(Schema.String.ast, input, e.message),
         // Must return { age?: number }
-        onSuccess: (age) => (age > 18 ? { ...input, age } : { ...input })
+        onSuccess: (age) => (age > 18 ? { ...input, age } : { ...input }),
       }),
-    encode: ParseResult.succeed
-  }
+    encode: ParseResult.succeed,
+  },
 ) {}
 
 Schema.decodeUnknownPromise(PersonWithTransformFrom)({
   id: 1,
-  name: "name"
+  name: "name",
 }).then(console.log)
 /*
 Output:

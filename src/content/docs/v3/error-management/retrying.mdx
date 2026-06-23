@@ -113,7 +113,7 @@ const action = Effect.failSync(() => {
 
 // Retry the action until a specific condition is met
 const program = Effect.retry(action, {
-  until: (err) => err === "Error 3"
+  until: (err) => err === "Error 3",
 })
 
 Effect.runPromiseExit(program).then(console.log)
@@ -131,10 +131,8 @@ Action called 3 time(s)
 ```
 
 <Aside type="tip" title="Alternative">
-  You can also use
-  [Effect.repeat](/docs/scheduling/repetition/#repeating-based-on-a-condition)
-  if your retry condition is based on successful outcomes rather than
-  errors.
+  You can also use [Effect.repeat](/docs/scheduling/repetition/#repeating-based-on-a-condition) if
+  your retry condition is based on successful outcomes rather than errors.
 </Aside>
 
 ## retryOrElse
@@ -172,7 +170,7 @@ const repeated = Effect.retryOrElse(
   task,
   policy,
   // fallback
-  () => Console.log("orElse").pipe(Effect.as("default value"))
+  () => Console.log("orElse").pipe(Effect.as("default value")),
 )
 
 Effect.runPromise(repeated).then(console.log)

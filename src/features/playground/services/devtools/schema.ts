@@ -13,31 +13,29 @@ import * as SchemaTransformation from "effect/SchemaTransformation"
 
 export const SpanStatusStarted = Schema.Struct({
   _tag: Schema.tag("Started"),
-  startTime: Schema.BigInt
+  startTime: Schema.BigInt,
 })
 export type SpanStatusStarted = Schema.Schema.Type<typeof SpanStatusStarted>
 
 const SpanExit = Schema.Exit(
-  Schema.Void, 
-  Schema.Defect({ includeStack: true }), 
-  Schema.Defect({ includeStack: true })
+  Schema.Void,
+  Schema.Defect({ includeStack: true }),
+  Schema.Defect({ includeStack: true }),
 ).pipe(
   Schema.decodeTo(
     Schema.Exit(Schema.Unknown, Schema.Unknown, Schema.Unknown),
     SchemaTransformation.transform({
       decode: identity,
-      encode: Exit.asVoid
-    })
-  )
+      encode: Exit.asVoid,
+    }),
+  ),
 )
 
 export const SpanStatusEnded = Schema.TaggedStruct("Ended", {
   startTime: Schema.BigInt,
   endTime: Schema.BigInt,
-  exit: SpanExit.pipe(
-    Schema.withDecodingDefaultType(Effect.succeed(Exit.succeed(undefined)))
-  )
-}) 
+  exit: SpanExit.pipe(Schema.withDecodingDefaultType(Effect.succeed(Exit.succeed(undefined)))),
+})
 export type SpanStatusEnded = Schema.Schema.Type<typeof SpanStatusEnded>
 
 export const SpanStatus = Schema.Union([SpanStatusStarted, SpanStatusEnded])
@@ -54,7 +52,7 @@ export interface ExternalSpan {
 export const ExternalSpan = Schema.TaggedStruct("ExternalSpan", {
   spanId: Schema.String,
   traceId: Schema.String,
-  sampled: Schema.Boolean
+  sampled: Schema.Boolean,
 })
 
 export interface Span {
@@ -86,7 +84,7 @@ export const Span: Schema.Codec<Span, SpanEncoded> = Schema.TaggedStruct("Span",
   sampled: Schema.Boolean,
   attributes: Schema.ReadonlyMap(Schema.String, Schema.Any),
   status: SpanStatus,
-  parent: Schema.Option(Schema.suspend(() => ParentSpan))
+  parent: Schema.Option(Schema.suspend(() => ParentSpan)),
 })
 
 /**
@@ -101,7 +99,7 @@ export const SpanEvent = Schema.TaggedStruct("SpanEvent", {
   spanId: Schema.String,
   name: Schema.String,
   startTime: Schema.BigInt,
-  attributes: Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))
+  attributes: Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any)),
 })
 export type SpanEvent = Schema.Schema.Type<typeof SpanEvent>
 
@@ -121,14 +119,11 @@ export type MetricsRequest = Schema.Schema.Type<typeof MetricsRequest>
 
 export const MetricLabel = Schema.Struct({
   key: Schema.String,
-  value: Schema.String
+  value: Schema.String,
 })
 export type MetricLabel = Schema.Schema.Type<typeof MetricLabel>
 
-const metric = <
-  Type extends string,
-  State extends Schema.Top
->(type: Type, state: State) =>
+const metric = <Type extends string, State extends Schema.Top>(type: Type, state: State) =>
   Schema.Struct({
     id: Schema.String,
     type: Schema.tag(type),
@@ -137,61 +132,74 @@ const metric = <
         decode: SchemaGetter.transformOptional(
           Option.match({
             onNone: () => Option.some(undefined),
-            onSome: Option.some
-          })
+            onSome: Option.some,
+          }),
         ),
-        encode: SchemaGetter.passthrough()
-      })
+        encode: SchemaGetter.passthrough(),
+      }),
     ),
     attributes: Schema.Array(MetricLabel).pipe(
       Schema.decodeTo(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String)), {
-        decode: SchemaGetter.transform((entries) => entries.length > 0 ? entries.reduce((acc, curr) => {
-          acc[curr.key] = curr.value
-          return acc
-        }, {} as Record<string, string>) : undefined),
-        encode: SchemaGetter.transform((record) => record === undefined ? [] : Object.entries(record).map(([key, value]) => ({ key, value })))
-      })
-
+        decode: SchemaGetter.transform((entries) =>
+          entries.length > 0
+            ? entries.reduce(
+                (acc, curr) => {
+                  acc[curr.key] = curr.value
+                  return acc
+                },
+                {} as Record<string, string>,
+              )
+            : undefined,
+        ),
+        encode: SchemaGetter.transform((record) =>
+          record === undefined
+            ? []
+            : Object.entries(record).map(([key, value]) => ({ key, value })),
+        ),
+      }),
     ),
-    state
-  }).pipe(Schema.encodeKeys({ 
-    type: "_tag" ,
-    id: "name",
-    attributes: "tags"
-  }))
+    state,
+  }).pipe(
+    Schema.encodeKeys({
+      type: "_tag",
+      id: "name",
+      attributes: "tags",
+    }),
+  )
 
 export const Counter = metric(
   "Counter",
   Schema.Struct({
     count: Schema.Union([Schema.Number, Schema.BigInt]),
-    incremental: Schema.Boolean.pipe(
-      Schema.withDecodingDefault(Effect.succeed(true))
-    )
-  })
+    incremental: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
+  }),
 )
 export type Counter = Schema.Schema.Type<typeof Counter>
 
 export const Frequency = metric(
   "Frequency",
   Schema.Struct({
-    occurrences: Schema.ReadonlyMap(Schema.String, Schema.Number)
-  })
+    occurrences: Schema.ReadonlyMap(Schema.String, Schema.Number),
+  }),
 )
 export type Frequency = Schema.Schema.Type<typeof Frequency>
 
 export const Gauge = metric(
   "Gauge",
   Schema.Struct({
-    value: Schema.Union([Schema.Number, Schema.BigInt])
-  })
+    value: Schema.Union([Schema.Number, Schema.BigInt]),
+  }),
 )
 export type Gauge = Schema.Schema.Type<typeof Gauge>
 
 const NumberOrInfinity = Schema.NullOr(Schema.Number).pipe(
-  Schema.decodeTo(Schema.Number,  SchemaTransformation.transform({
-    decode: (i) => i === null ? Number.POSITIVE_INFINITY : i,
-    encode: (i) => Number.isFinite(i) ? i : null
-  }))
+  Schema.decodeTo(
+    Schema.Number,
+    SchemaTransformation.transform({
+      decode: (i) => (i === null ? Number.POSITIVE_INFINITY : i),
+      encode: (i) => (Number.isFinite(i) ? i : null),
+    }),
+  ),
 )
 
 export const Histogram = metric(
@@ -201,8 +209,8 @@ export const Histogram = metric(
     count: Schema.Number,
     min: Schema.Number,
     max: Schema.Number,
-    sum: Schema.Number
-  })
+    sum: Schema.Number,
+  }),
 )
 export type Histogram = Schema.Schema.Type<typeof Histogram>
 
@@ -213,8 +221,8 @@ export const Summary = metric(
     count: Schema.Number,
     min: Schema.Number,
     max: Schema.Number,
-    sum: Schema.Number
-  })
+    sum: Schema.Number,
+  }),
 )
 export type Summary = Schema.Schema.Type<typeof Summary>
 
@@ -222,7 +230,7 @@ export const Metric = Schema.Union([Counter, Frequency, Gauge, Histogram, Summar
 export type Metric = Schema.Schema.Type<typeof Metric>
 
 export const MetricsSnapshot = Schema.TaggedStruct("MetricsSnapshot", {
-  metrics: Schema.Array(Metric)
+  metrics: Schema.Array(Metric),
 })
 export type MetricsSnapshot = Schema.Schema.Type<typeof MetricsSnapshot>
 

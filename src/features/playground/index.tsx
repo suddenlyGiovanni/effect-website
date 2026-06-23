@@ -1,26 +1,17 @@
-import { useCallback, Fragment, Suspense } from "react"
-import { SquareTerminalIcon, ChartGanttIcon } from "lucide-react"
 import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
+import { SquareTerminalIcon, ChartGanttIcon } from "lucide-react"
+import { useCallback, Fragment, Suspense } from "react"
 import { useDefaultLayout } from "react-resizable-panels"
-import { 
-  ResizableHandle, 
-  ResizablePanel, 
-  ResizablePanelGroup 
-} from "../../components/ui/resizable"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "../../components/ui/tabs"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../components/ui/resizable"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { importAtom } from "./atoms/import"
 import { FileEditor } from "./components/file-editor"
 import { FileExplorer } from "./components/file-explorer"
 import { PlaygroundLoader } from "./components/loader"
 import { Terminal } from "./components/terminal"
 import { TraceViewer } from "./components/trace-viewer"
 import { WorkspaceProvider, useWorkspaceHandle, useWorkspaceShells } from "./context/workspace"
-import { importAtom } from "./atoms/import"
 
 export function CodeEditor() {
   const result = useAtomValue(importAtom)
@@ -45,30 +36,22 @@ function CodeEditorPanels() {
     function (..._: any) {
       setSize()
     },
-    [setSize]
+    [setSize],
   )
 
   const editorLayout = useDefaultLayout({
     id: "editor",
-    storage: globalThis.localStorage
+    storage: globalThis.localStorage,
   })
   const sidebarLayout = useDefaultLayout({
     id: "sidebar",
-    storage: globalThis.localStorage
+    storage: globalThis.localStorage,
   })
 
   return (
-    <ResizablePanelGroup 
-      {...editorLayout}
-      orientation="vertical" 
-      className="h-full"
-    >
+    <ResizablePanelGroup {...editorLayout} orientation="vertical" className="h-full">
       <ResizablePanel defaultSize={70}>
-        <ResizablePanelGroup 
-          {...sidebarLayout}
-          orientation="horizontal" 
-          className="h-full"
-        >
+        <ResizablePanelGroup {...sidebarLayout} orientation="horizontal" className="h-full">
           <ResizablePanel defaultSize={20} minSize={10}>
             <FileExplorer />
           </ResizablePanel>
@@ -83,7 +66,7 @@ function CodeEditorPanels() {
 
       <ResizablePanel defaultSize={30} minSize={10} onResize={onResize} className="h-full">
         <ResizablePanelGroup orientation="horizontal">
-          <Tabs defaultValue="terminal" className="h-full w-full flex flex-col gap-0">
+          <Tabs defaultValue="terminal" className="flex h-full w-full flex-col gap-0">
             <TabsList variant="line">
               <TabsTrigger value="terminal" className="transition-none">
                 <SquareTerminalIcon size={16} />
@@ -94,16 +77,12 @@ function CodeEditorPanels() {
                 <span>Trace Viewer</span>
               </TabsTrigger>
             </TabsList>
-            <TabsContent 
-              value="terminal" 
-              className="h-full w-full m-0 overflow-y-auto"
-              keepMounted
-            >
+            <TabsContent value="terminal" className="m-0 h-full w-full overflow-y-auto" keepMounted>
               <WorkspaceShells />
             </TabsContent>
-            <TabsContent 
+            <TabsContent
               value="trace-viewer"
-              className="h-full w-full m-0 overflow-y-auto data-[state=inactive]:hidden"
+              className="m-0 h-full w-full overflow-y-auto data-[state=inactive]:hidden"
               keepMounted
             >
               <TraceViewer />
@@ -123,7 +102,7 @@ function WorkspaceShells() {
     function (..._: any) {
       setSize()
     },
-    [setSize]
+    [setSize],
   )
   return (
     <ResizablePanelGroup orientation="vertical" className="h-full">

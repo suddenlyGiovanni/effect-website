@@ -1,5 +1,5 @@
-import * as Atom from "effect/unstable/reactivity/Atom"
 import * as Option from "effect/Option"
+import * as Atom from "effect/unstable/reactivity/Atom"
 
 function getHash() {
   const hash = location.hash.slice(1)

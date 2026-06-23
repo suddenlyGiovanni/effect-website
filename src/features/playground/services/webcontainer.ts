@@ -1,7 +1,5 @@
-import * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema"
-import * as Ndjson from "effect/unstable/encoding/Ndjson"
-import { WebContainer as WC, type FileSystemTree } from "@webcontainer/api"
 import * as monaco from "@effect/monaco-editor/esm/vs/editor/editor.api"
+import { WebContainer as WC, type FileSystemTree } from "@webcontainer/api"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import { identity } from "effect/Function"
@@ -11,6 +9,8 @@ import * as PubSub from "effect/PubSub"
 import * as Queue from "effect/Queue"
 import * as Schema from "effect/Schema"
 import * as Stream from "effect/Stream"
+import * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema"
+import * as Ndjson from "effect/unstable/encoding/Ndjson"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry"
 import { FileAlreadyExistsError, FileNotFoundError, FileValidationError } from "../domain/errors"
@@ -25,7 +25,7 @@ const WEBCONTAINER_BIN_PATH = "node_modules/.bin:/usr/local/bin:/usr/bin:/bin"
 let cachedContainer: WC | null = null
 let containerBootPromise: Promise<WC> | null = null
 let sideEffectsDone = false
-let cachedDevToolsEvents: PubSub.PubSub<DevToolsSchema.Request.WithoutPing > | null = null
+let cachedDevToolsEvents: PubSub.PubSub<DevToolsSchema.Request.WithoutPing> | null = null
 
 export class WebContainer extends Context.Service<WebContainer>()("app/WebContainer", {
   make: Effect.gen(function* () {
@@ -45,7 +45,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       }
       const boot = containerBootPromise
       container = yield* Effect.promise(() => boot).pipe(
-        loader.withIndicator("Booting webcontainer")
+        loader.withIndicator("Booting webcontainer"),
       )
       cachedContainer = container
     }
@@ -55,30 +55,32 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      *
      * When the associated scope is closed, the process will be killed.
      */
-    const createShell = (cwd: string) => Effect.uninterruptible(
-      Effect.gen(function* () {
-        const process = yield* Effect.promise(() =>
-          container.spawn("jsh", [], {
-            cwd,
-            env: {
-              PATH: WEBCONTAINER_BIN_PATH,
-              NODE_NO_WARNINGS: "1"
-            }
-          })
-        )
-        yield* Effect.addFinalizer(() => Effect.sync(() => process.kill()))
-        // Return thunks instead of raw process to avoid Effect Hash.hash()
-        // hitting cross-origin Comlink proxy properties
-        return {
-          getWriter: () => process.input.getWriter(),
-          pipeOutput: (writable: WritableStream) => process.output.pipeTo(writable, {
-            preventCancel: true,
-            preventAbort: true,
-            preventClose: true
-          }),
-        } as const
-      })
-    )
+    const createShell = (cwd: string) =>
+      Effect.uninterruptible(
+        Effect.gen(function* () {
+          const process = yield* Effect.promise(() =>
+            container.spawn("jsh", [], {
+              cwd,
+              env: {
+                PATH: WEBCONTAINER_BIN_PATH,
+                NODE_NO_WARNINGS: "1",
+              },
+            }),
+          )
+          yield* Effect.addFinalizer(() => Effect.sync(() => process.kill()))
+          // Return thunks instead of raw process to avoid Effect Hash.hash()
+          // hitting cross-origin Comlink proxy properties
+          return {
+            getWriter: () => process.input.getWriter(),
+            pipeOutput: (writable: WritableStream) =>
+              process.output.pipeTo(writable, {
+                preventCancel: true,
+                preventAbort: true,
+                preventClose: true,
+              }),
+          } as const
+        }),
+      )
 
     /**
      * Spawns the specified `command` into a `jsh` shell.
@@ -91,16 +93,16 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
           const process = yield* Effect.promise(() =>
             container.spawn("jsh", ["-c", command], {
               ...(cwd === undefined ? {} : { cwd }),
-              env: { PATH: WEBCONTAINER_BIN_PATH }
-            })
+              env: { PATH: WEBCONTAINER_BIN_PATH },
+            }),
           )
           yield* Effect.addFinalizer(() => Effect.sync(() => process.kill()))
           // Return thunks to avoid Effect Hash.hash() on cross-origin Comlink proxy
           return {
             getOutput: () => process.output,
-            waitExit: () => Effect.promise(() => process.exit)
+            waitExit: () => Effect.promise(() => process.exit),
           } as const
-        })
+        }),
       )
     }
 
@@ -111,7 +113,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
     function run(command: string, cwd?: string) {
       return spawn(command, cwd).pipe(
         Effect.flatMap((proc) => proc.waitExit()),
-        Effect.scoped
+        Effect.scoped,
       )
     }
 
@@ -132,8 +134,8 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       return Effect.promise(() =>
         container.fs.writeFile(
           "package.json",
-          JSON.stringify({ private: true, type: "commonjs" }, undefined, 2)
-        )
+          JSON.stringify({ private: true, type: "commonjs" }, undefined, 2),
+        ),
       )
     }
 
@@ -145,7 +147,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      */
     function getModel(path: string) {
       return Effect.fromNullishOr(monaco.editor.getModel(monaco.Uri.file(path))).pipe(
-        Effect.mapError(() => new FileNotFoundError({ path }))
+        Effect.mapError(() => new FileNotFoundError({ path })),
       )
     }
 
@@ -171,17 +173,19 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       return readFileString(path).pipe(
         Effect.bindTo("content"),
         Effect.bind("model", () => getModel(path)),
-        Effect.tap(({ content, model }) => Effect.sync(() => {
-          if (model.getValue() !== content) {
-            model.setValue(content)
-          }
-        })),
+        Effect.tap(({ content, model }) =>
+          Effect.sync(() => {
+            if (model.getValue() !== content) {
+              model.setValue(content)
+            }
+          }),
+        ),
         Effect.map(({ model }) => model),
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WebContainer",
-          method: "readFile"
-        })
+          method: "readFile",
+        }),
       )
     }
 
@@ -195,14 +199,14 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
     function readFileString(path: string) {
       return Effect.tryPromise({
         try: () => container.fs.readFile(path),
-        catch: () => new FileNotFoundError({ path })
+        catch: () => new FileNotFoundError({ path }),
       }).pipe(
         Effect.map((bytes) => new TextDecoder().decode(bytes)),
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WebContainer",
-          method: "readFileString"
-        })
+          method: "readFileString",
+        }),
       )
     }
 
@@ -213,13 +217,13 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
     function readDirectory(path: string) {
       return Effect.tryPromise({
         try: () => container.fs.readdir(path, { withFileTypes: true }),
-        catch: () => new FileNotFoundError({ path })
+        catch: () => new FileNotFoundError({ path }),
       }).pipe(
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WebContainer",
-          method: "readDirectory"
-        })
+          method: "readDirectory",
+        }),
       )
     }
 
@@ -229,21 +233,22 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      * WebContainer file system at the corresponding path.
      */
     function writeFile(path: string, content: string, language: string) {
-      return getModel(path)
-        .pipe(
-          Effect.tap((model) => Effect.sync(() => {
+      return getModel(path).pipe(
+        Effect.tap((model) =>
+          Effect.sync(() => {
             if (model.getValue() !== content) {
               model.setValue(content)
             }
-          })),
-          Effect.catch(() => createModel(path, content, language)),
-          Effect.tap(() => writeFileString(path, content)),
-          Effect.tapCause(Effect.logError),
-          Effect.annotateLogs({
-            service: "WebContainer",
-            method: "writeFile"
-          })
-        )
+          }),
+        ),
+        Effect.catch(() => createModel(path, content, language)),
+        Effect.tap(() => writeFileString(path, content)),
+        Effect.tapCause(Effect.logError),
+        Effect.annotateLogs({
+          service: "WebContainer",
+          method: "writeFile",
+        }),
+      )
     }
 
     /**
@@ -255,8 +260,8 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WebContainer",
-          method: "writeFileString"
-        })
+          method: "writeFileString",
+        }),
       )
     }
 
@@ -275,8 +280,8 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WebContainer",
-          method: "renameFile"
-        })
+          method: "renameFile",
+        }),
       )
     }
 
@@ -293,21 +298,21 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WebContainer",
-          method: "removeFile"
-        })
+          method: "removeFile",
+        }),
       )
     }
 
     function mkdir(path: string) {
       return Effect.tryPromise({
         try: () => container.fs.mkdir(path, { recursive: true }),
-        catch: () => new FileAlreadyExistsError({ path })
+        catch: () => new FileAlreadyExistsError({ path }),
       }).pipe(
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WebContainer",
-          method: "mkdir"
-        })
+          method: "mkdir",
+        }),
       )
     }
 
@@ -318,7 +323,11 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         })
         return Effect.sync(() => watcher.close())
       }).pipe(Stream.mapEffect(() => readFileString(path)))
-      return Stream.fromEffect(readFileString(path)).pipe(Stream.concat(changes), Stream.changes, Stream.tapCause(Effect.logError))
+      return Stream.fromEffect(readFileString(path)).pipe(
+        Stream.concat(changes),
+        Stream.changes,
+        Stream.tapCause(Effect.logError),
+      )
     }
 
     const createWorkspaceHandle = Effect.fnUntraced(function* (workspace: Workspace) {
@@ -350,7 +359,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
           await container.fs.rm(workspace.name, { recursive: true, force: true }).catch(() => {})
           await container.fs.mkdir(workspace.name, { recursive: true })
           await container.mount(treeFromWorkspace(workspace), {
-            mountPoint: workspace.name
+            mountPoint: workspace.name,
           })
         })
       }
@@ -360,7 +369,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
        */
       function unmountWorkspace(workspace: Workspace) {
         return Effect.promise(() =>
-          container.fs.rm(workspace.name, { recursive: true, force: true }).catch(() => undefined)
+          container.fs.rm(workspace.name, { recursive: true, force: true }).catch(() => undefined),
         ).pipe(Effect.ignore)
       }
 
@@ -375,7 +384,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
             return yield* new FileValidationError({ reason: "InvalidName" })
           } else if (fileType === "File" && !fileName.endsWith(".ts")) {
             return yield* new FileValidationError({
-              reason: "UnsupportedType"
+              reason: "UnsupportedType",
             })
           }
         })
@@ -385,19 +394,24 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
        * Creates a new file in the workspace.
        */
       const create = Effect.fnUntraced(
-        function* (fileName: string, fileType: Workspace.FileType, options: Workspace.CreateFileOptions = {}) {
+        function* (
+          fileName: string,
+          fileType: Workspace.FileType,
+          options: Workspace.CreateFileOptions = {},
+        ) {
           yield* validateFileName(fileName, fileType)
           const workspace: Workspace = registry.get(workspaceRef)
           const parent = Option.fromNullishOr(options.parent)
           // Determine the path to the new file
           const newPath = Option.match(parent, {
             onNone: () => fileName,
-            onSome: (parent) => `${Option.getOrThrow(workspace.pathTo(parent))}/${fileName}`
+            onSome: (parent) => `${Option.getOrThrow(workspace.pathTo(parent))}/${fileName}`,
           })
           yield* fileType === "File"
             ? writeFile(workspace.relativePath(newPath), "", "typescript")
             : mkdir(workspace.relativePath(newPath))
-          const node = fileType === "File" ? makeFile(fileName, "", true) : makeDirectory(fileName, [], true)
+          const node =
+            fileType === "File" ? makeFile(fileName, "", true) : makeDirectory(fileName, [], true)
           registry.set(
             workspaceRef,
             Option.match(parent, {
@@ -405,17 +419,21 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
               onSome: (parent) =>
                 workspace.replaceNode(
                   parent,
-                  makeDirectory(parent.name, [...parent.children, node], parent.userManaged ?? false)
-                )
-            })
+                  makeDirectory(
+                    parent.name,
+                    [...parent.children, node],
+                    parent.userManaged ?? false,
+                  ),
+                ),
+            }),
           )
           return node
         },
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WorkspaceHandle",
-          method: "createFile"
-        })
+          method: "createFile",
+        }),
       )
 
       /**
@@ -440,8 +458,8 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WorkspaceHandle",
-          method: "renameFile"
-        })
+          method: "renameFile",
+        }),
       )
 
       /**
@@ -459,8 +477,8 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         Effect.tapCause(Effect.logError),
         Effect.annotateLogs({
           service: "WorkspaceHandle",
-          method: "removeFile"
-        })
+          method: "removeFile",
+        }),
       )
 
       // Create a Atom to track changes to the workspace
@@ -475,7 +493,7 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
         run: runInWorkspace,
         createFile: create,
         renameFile: rename,
-        removeFile: remove
+        removeFile: remove,
       } as const
     })
 
@@ -494,19 +512,25 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       cachedDevToolsEvents = devToolsEvents
       yield* spawn("./dev-tools-proxy").pipe(
         Effect.tap((proc) =>
-          Stream.fromReadableStream({ evaluate: proc.getOutput, onError: identity, releaseLockOnEnd: true }).pipe(
+          Stream.fromReadableStream({
+            evaluate: proc.getOutput,
+            onError: identity,
+            releaseLockOnEnd: true,
+          }).pipe(
             Stream.orDie,
             Stream.pipeThroughChannel(
               Ndjson.decodeSchemaString(Schema.toCodecJson(DevToolsSchemaCompat.Request))({
-                ignoreEmptyLines: true
-              })
+                ignoreEmptyLines: true,
+              }),
             ),
             Stream.tapCause(Effect.logError),
-            Stream.runForEach((event) => (event._tag === "Ping" ? Effect.void : PubSub.publish(devToolsEvents, event))),
-            Effect.catchCause(() => Effect.void)
-          )
+            Stream.runForEach((event) =>
+              event._tag === "Ping" ? Effect.void : PubSub.publish(devToolsEvents, event),
+            ),
+            Effect.catchCause(() => Effect.void),
+          ),
         ),
-        Effect.forkDetach
+        Effect.forkDetach,
       )
     }
 
@@ -522,13 +546,11 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
       writeFile,
       writeFileString,
       makeDirectory: mkdir,
-      watchFile
+      watchFile,
     } as const
-  })
+  }),
 }) {
-  static readonly layer = Layer.effect(this, this.make).pipe(
-    Layer.provide(Loader.layer)
-  )
+  static readonly layer = Layer.effect(this, this.make).pipe(Layer.provide(Loader.layer))
 }
 
 function treeFromWorkspace(workspace: Workspace): FileSystemTree {
@@ -537,11 +559,11 @@ function treeFromWorkspace(workspace: Workspace): FileSystemTree {
     children.forEach((child) => {
       if (child._tag === "File") {
         tree[child.name] = {
-          file: { contents: child.initialContent }
+          file: { contents: child.initialContent },
         }
       } else {
         tree[child.name] = {
-          directory: walk(child.children)
+          directory: walk(child.children),
         }
       }
     })

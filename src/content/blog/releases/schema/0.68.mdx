@@ -32,23 +32,21 @@ const Password = Schema.Trim.pipe(Schema.minLength(1))
 
 const MyForm = Schema.Struct({
   password: Password,
-  confirm_password: Password
+  confirm_password: Password,
 }).pipe(
   Schema.filter((input) => {
     if (input.password !== input.confirm_password) {
       return "Passwords do not match"
     }
-  })
+  }),
 )
 
 console.log(
   "%o",
   Schema.decodeUnknownEither(MyForm)({
     password: "abc",
-    confirm_password: "d"
-  }).pipe(
-    Either.mapLeft((error) => ArrayFormatter.formatErrorSync(error))
-  )
+    confirm_password: "d",
+  }).pipe(Either.mapLeft((error) => ArrayFormatter.formatErrorSync(error))),
 )
 /*
 {
@@ -81,26 +79,24 @@ const Password = Schema.Trim.pipe(Schema.minLength(1))
 
 const MyForm = Schema.Struct({
   password: Password,
-  confirm_password: Password
+  confirm_password: Password,
 }).pipe(
   Schema.filter((input) => {
     if (input.password !== input.confirm_password) {
       return {
         path: ["confirm_password"],
-        message: "Passwords do not match"
+        message: "Passwords do not match",
       }
     }
-  })
+  }),
 )
 
 console.log(
   "%o",
   Schema.decodeUnknownEither(MyForm)({
     password: "abc",
-    confirm_password: "d"
-  }).pipe(
-    Either.mapLeft((error) => ArrayFormatter.formatErrorSync(error))
-  )
+    confirm_password: "d",
+  }).pipe(Either.mapLeft((error) => ArrayFormatter.formatErrorSync(error))),
 )
 /*
 {
@@ -136,7 +132,7 @@ const MyForm = Schema.Struct({
   password: Password,
   confirm_password: Password,
   name: OptionalString,
-  surname: OptionalString
+  surname: OptionalString,
 }).pipe(
   Schema.filter((input) => {
     const issues: Array<Schema.FilterIssue> = []
@@ -144,28 +140,26 @@ const MyForm = Schema.Struct({
     if (input.password !== input.confirm_password) {
       issues.push({
         path: ["confirm_password"],
-        message: "Passwords do not match"
+        message: "Passwords do not match",
       })
     }
     // either name or surname must be present
     if (!input.name && !input.surname) {
       issues.push({
         path: ["surname"],
-        message: "Surname must be present if name is not present"
+        message: "Surname must be present if name is not present",
       })
     }
     return issues
-  })
+  }),
 )
 
 console.log(
   "%o",
   Schema.decodeUnknownEither(MyForm)({
     password: "abc",
-    confirm_password: "d"
-  }).pipe(
-    Either.mapLeft((error) => ArrayFormatter.formatErrorSync(error))
-  )
+    confirm_password: "d",
+  }).pipe(Either.mapLeft((error) => ArrayFormatter.formatErrorSync(error))),
 )
 /*
 {
@@ -261,12 +255,12 @@ import { JSONSchema, Schema } from "@effect/schema"
 const Point = Schema.Tuple(
   Schema.element(Schema.Number).annotations({
     title: "X",
-    description: "X coordinate"
+    description: "X coordinate",
   }),
   Schema.optionalElement(Schema.Number).annotations({
     title: "Y",
-    description: "optional Y coordinate"
-  })
+    description: "optional Y coordinate",
+  }),
 )
 
 // Generating a JSON Schema from the tuple
@@ -301,8 +295,8 @@ import { Schema } from "@effect/schema"
 
 const Person = Schema.Struct({
   name: Schema.propertySignature(Schema.String).annotations({
-    missingMessage: () => "Name is required"
-  })
+    missingMessage: () => "Name is required",
+  }),
 })
 
 Schema.decodeUnknownSync(Person)({})
@@ -321,11 +315,11 @@ import { Schema } from "@effect/schema"
 
 const Point = Schema.Tuple(
   Schema.element(Schema.Number).annotations({
-    missingMessage: () => "X coordinate is required"
+    missingMessage: () => "X coordinate is required",
   }),
   Schema.element(Schema.Number).annotations({
-    missingMessage: () => "Y coordinate is required"
-  })
+    missingMessage: () => "Y coordinate is required",
+  }),
 )
 
 Schema.decodeUnknownSync(Point)([], { errors: "all" })
@@ -362,7 +356,7 @@ const schema = Schema.String.annotations({ identifier: "myIdentitifer" })
 // or
 const schema2 = Schema.String.pipe(
   // Using the annotations function in a pipe-able format
-  Schema.annotations({ identifier: "myIdentitifer" })
+  Schema.annotations({ identifier: "myIdentitifer" }),
 )
 ```
 
@@ -379,9 +373,7 @@ try {
   console.log(ParseResult.isParseError(e)) // true
 }
 
-const asserts: (u: unknown) => asserts u is string = Schema.asserts(
-  Schema.String
-)
+const asserts: (u: unknown) => asserts u is string = Schema.asserts(Schema.String)
 try {
   asserts(null)
 } catch (e) {

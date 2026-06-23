@@ -16,7 +16,7 @@ export const themeAtom = Atom.make<"light" | "dark">((get) => {
     observer.disconnect()
   })
   observer.observe(document.documentElement, {
-    attributeFilter: ["class"]
+    attributeFilter: ["class"],
   })
   return getTheme()
 })

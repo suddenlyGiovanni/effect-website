@@ -36,9 +36,7 @@ Another way to consume elements of a stream is by using `Stream.runForEach`. It 
 ```ts twoslash
 import { Stream, Effect, Console } from "effect"
 
-const effect = Stream.make(1, 2, 3).pipe(
-  Stream.runForEach((n) => Console.log(n))
-)
+const effect = Stream.make(1, 2, 3).pipe(Stream.runForEach((n) => Console.log(n)))
 
 Effect.runPromise(effect).then(console.log)
 /*
@@ -59,9 +57,7 @@ The `Stream.fold` function is another way to consume a stream by performing a fo
 ```ts twoslash
 import { Stream, Effect } from "effect"
 
-const foldedStream = Stream.make(1, 2, 3, 4, 5).pipe(
-  Stream.runFold(0, (a, b) => a + b)
-)
+const foldedStream = Stream.make(1, 2, 3, 4, 5).pipe(Stream.runFold(0, (a, b) => a + b))
 
 Effect.runPromise(foldedStream).then(console.log)
 // Output: 15
@@ -70,8 +66,8 @@ const foldedWhileStream = Stream.make(1, 2, 3, 4, 5).pipe(
   Stream.runFoldWhile(
     0,
     (n) => n <= 3,
-    (a, b) => a + b
-  )
+    (a, b) => a + b,
+  ),
 )
 
 Effect.runPromise(foldedWhileStream).then(console.log)

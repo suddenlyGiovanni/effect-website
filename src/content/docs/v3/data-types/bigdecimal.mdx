@@ -131,8 +131,8 @@ console.log(BigDecimal.unsafeFromNumber(123.456))
 ```
 
 <Aside type="caution" title="Avoid Direct Conversion">
-  Avoid converting floating-point numbers directly to `BigDecimal`, as
-  their representation may already introduce precision issues.
+  Avoid converting floating-point numbers directly to `BigDecimal`, as their representation may
+  already introduce precision issues.
 </Aside>
 
 ## Basic Arithmetic Operations
@@ -192,11 +192,7 @@ console.log(String(BigDecimal.negate(dec1)))
 // Output: BigDecimal(-1.05)
 
 // Modulus (unsafe, throws if divisor is zero)
-console.log(
-  String(
-    BigDecimal.unsafeRemainder(dec2, BigDecimal.unsafeFromString("0.6"))
-  )
-)
+console.log(String(BigDecimal.unsafeRemainder(dec2, BigDecimal.unsafeFromString("0.6"))))
 // Output: BigDecimal(0.3)
 ```
 
@@ -286,15 +282,12 @@ console.log(BigDecimal.isNegative(dec2))
 console.log(
   BigDecimal.between({
     minimum: BigDecimal.unsafeFromString("1"),
-    maximum: BigDecimal.unsafeFromString("2")
-  })(dec1)
+    maximum: BigDecimal.unsafeFromString("2"),
+  })(dec1),
 )
 // Output: true
 
-console.log(
-  BigDecimal.isInteger(dec2),
-  BigDecimal.isInteger(BigDecimal.fromBigInt(3n))
-)
+console.log(BigDecimal.isInteger(dec2), BigDecimal.isInteger(BigDecimal.fromBigInt(3n)))
 // Output: false true
 ```
 

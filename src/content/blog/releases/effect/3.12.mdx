@@ -23,14 +23,16 @@ and improvements. Here's a summary of what's new:
 import { NodeRuntime } from "@effect/platform-node"
 import { Effect } from "effect"
 
-const boomFunction = Effect.fn(function* (n: number) { // line 4
+const boomFunction = Effect.fn(function* (n: number) {
+  // line 4
   yield* Effect.annotateCurrentSpan("n", n)
   yield* Effect.fail(new Error("boom")) // line 6
 })
 
-boomFunction(42).pipe( // line 9
+boomFunction(42).pipe(
+  // line 9
   Effect.catchAllCause(Effect.logError),
-  NodeRuntime.runMain
+  NodeRuntime.runMain,
 )
 
 /*

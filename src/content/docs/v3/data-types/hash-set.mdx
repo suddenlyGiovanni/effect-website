@@ -147,7 +147,7 @@ class Person implements Equal.Equal {
   constructor(
     readonly id: number,
     readonly name: string,
-    readonly age: number
+    readonly age: number,
   ) {}
 
   // Two Person instances are equal if their id, name, and age match
@@ -171,7 +171,7 @@ class Person implements Equal.Equal {
 // Add two different instances with the same content
 const set = HashSet.empty().pipe(
   HashSet.add(new Person(1, "Alice", 30)),
-  HashSet.add(new Person(1, "Alice", 30))
+  HashSet.add(new Person(1, "Alice", 30)),
 )
 
 // Only one instance is kept
@@ -201,11 +201,7 @@ console.log(Equal.equals(person1, person2))
 // Output: true
 
 // Add both to a HashSet — only one will be stored
-const set = pipe(
-  HashSet.empty(),
-  HashSet.add(person1),
-  HashSet.add(person2)
-)
+const set = pipe(HashSet.empty(), HashSet.add(person1), HashSet.add(person2))
 
 console.log(HashSet.size(set))
 // Output: 1
@@ -221,8 +217,8 @@ const PersonSchema = Schema.Data(
   Schema.Struct({
     id: Schema.Number,
     name: Schema.String,
-    age: Schema.Number
-  })
+    age: Schema.Number,
+  }),
 )
 
 // Decode values from plain objects
@@ -236,10 +232,7 @@ console.log(Equal.equals(person1, person2))
 // Output: true
 
 // Add both to a MutableHashSet — only one will be stored
-const set = MutableHashSet.empty().pipe(
-  MutableHashSet.add(person1),
-  MutableHashSet.add(person2)
-)
+const set = MutableHashSet.empty().pipe(MutableHashSet.add(person1), MutableHashSet.add(person2))
 
 console.log(MutableHashSet.size(set))
 // Output: 1
@@ -332,7 +325,7 @@ const result = pipe(
   // Double each value
   HashSet.map((n) => n * 2),
   // Convert to array
-  HashSet.toValues
+  HashSet.toValues,
 )
 
 console.log(result)
@@ -439,7 +432,6 @@ console.log(array)
 ```
 
 <Aside type="caution" title="Performance considerations">
-  Avoid repeatedly converting between `HashSet` and JavaScript arrays in
-  hot paths or large collections. These operations involve copying data
-  and can impact memory and speed.
+  Avoid repeatedly converting between `HashSet` and JavaScript arrays in hot paths or large
+  collections. These operations involve copying data and can impact memory and speed.
 </Aside>

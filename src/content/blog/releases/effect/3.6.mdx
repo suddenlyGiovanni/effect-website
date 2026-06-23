@@ -38,9 +38,7 @@ Effect.gen(function* () {
   // Convert to a different time zone
   // The UTC portion of the `DateTime` is preserved and only the time zone is
   // changed
-  const sydneyTime = tomorrow.pipe(
-    DateTime.unsafeSetZoneNamed("Australia/Sydney")
-  )
+  const sydneyTime = tomorrow.pipe(DateTime.unsafeSetZoneNamed("Australia/Sydney"))
 }).pipe(DateTime.withCurrentZoneNamed("America/New_York"))
 ```
 
@@ -65,9 +63,9 @@ Stream.asyncPush<string>(
         Effect.gen(function* () {
           yield* Effect.log("unsubscribing")
           clearInterval(handle)
-        })
+        }),
     ),
-  { bufferSize: 16, strategy: "dropping" }
+  { bufferSize: 16, strategy: "dropping" },
 )
 ```
 
@@ -83,7 +81,7 @@ const symbol: unique symbol = Symbol()
 const value = {
   a: 1,
   b: 2,
-  [symbol]: 3
+  [symbol]: 3,
 }
 
 const keys: Array<"a" | "b"> = Struct.keys(value)
@@ -96,10 +94,7 @@ query builder apis.
 
 ```ts
 // create a Tag with your `Database` type
-class KyselyDB extends Context.Tag("KyselyDB")<
-  KyselyDB,
-  Kysely<Database>
->() {}
+class KyselyDB extends Context.Tag("KyselyDB")<KyselyDB, Kysely<Database>>() {}
 
 Effect.gen(function* () {
   // access the service and execute queries
@@ -110,15 +105,9 @@ Effect.gen(function* () {
     .addColumn("id", "integer", (c) => c.primaryKey().autoIncrement())
     .addColumn("userName", "text", (c) => c.notNull())
 
-  const inserted = yield* db
-    .insertInto("users")
-    .values({ userName: "Alice" })
-    .returningAll()
+  const inserted = yield* db.insertInto("users").values({ userName: "Alice" }).returningAll()
   const selected = yield* db.selectFrom("users").selectAll()
-  const updated = yield* db
-    .updateTable("users")
-    .set({ userName: "Bob" })
-    .returningAll()
+  const updated = yield* db.updateTable("users").set({ userName: "Bob" }).returningAll()
   const deleted = yield* db.deleteFrom("users").returningAll()
 })
 ```

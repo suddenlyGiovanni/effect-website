@@ -80,9 +80,8 @@ This counter has a value of 2.
 ```
 
 <Aside type="note" title="Ref Operations Are Effectful">
-  All the operations on the `Ref` data type are effectful. So when we are
-  reading from or writing to a `Ref`, we are performing an effectful
-  operation.
+  All the operations on the `Ref` data type are effectful. So when we are reading from or writing to
+  a `Ref`, we are performing an effectful operation.
 </Aside>
 
 ## Using Ref in a Concurrent Environment
@@ -114,10 +113,7 @@ const program = Effect.gen(function* () {
   const counter = yield* make
 
   // Helper to log the counter's value before running an effect
-  const logCounter = <R, E, A>(
-    label: string,
-    effect: Effect.Effect<A, E, R>
-  ) =>
+  const logCounter = <R, E, A>(label: string, effect: Effect.Effect<A, E, R>) =>
     Effect.gen(function* () {
       const value = yield* counter.get
       yield* Effect.log(`${label} get: ${value}`)
@@ -127,7 +123,7 @@ const program = Effect.gen(function* () {
   yield* logCounter("task 1", counter.inc).pipe(
     Effect.zip(logCounter("task 2", counter.inc), { concurrent: true }),
     Effect.zip(logCounter("task 3", counter.dec), { concurrent: true }),
-    Effect.zip(logCounter("task 4", counter.inc), { concurrent: true })
+    Effect.zip(logCounter("task 4", counter.inc), { concurrent: true }),
   )
   const value = yield* counter.get
   yield* Effect.log(`This counter has a value of ${value}.`)
@@ -154,10 +150,7 @@ You can pass a `Ref` as a [service](/docs/requirements-management/services/) to 
 import { Effect, Context, Ref } from "effect"
 
 // Create a Tag for our state
-class MyState extends Context.Tag("MyState")<
-  MyState,
-  Ref.Ref<number>
->() {}
+class MyState extends Context.Tag("MyState")<MyState, Ref.Ref<number>>() {}
 
 // Subprogram 1: Increment the state value twice
 const subprogram1 = Effect.gen(function* () {
@@ -191,9 +184,7 @@ const program = Effect.gen(function* () {
 const initialState = Ref.make(0)
 
 // Provide the Ref as a service
-const runnable = program.pipe(
-  Effect.provideServiceEffect(MyState, initialState)
-)
+const runnable = program.pipe(Effect.provideServiceEffect(MyState, initialState))
 
 // Run the program and observe the output
 Effect.runPromise(runnable)
@@ -226,13 +217,13 @@ const readLine = (message: string): Effect.Effect<string> =>
       new Promise((resolve) => {
         const rl = NodeReadLine.createInterface({
           input: process.stdin,
-          output: process.stdout
+          output: process.stdout,
         })
         rl.question(message, (answer) => {
           rl.close()
           resolve(answer)
         })
-      })
+      }),
   )
 ```
 
@@ -249,13 +240,13 @@ const readLine = (message: string): Effect.Effect<string> =>
       new Promise((resolve) => {
         const rl = NodeReadLine.createInterface({
           input: process.stdin,
-          output: process.stdout
+          output: process.stdout,
         })
         rl.question(message, (answer) => {
           rl.close()
           resolve(answer)
         })
-      })
+      }),
   )
 
 const getNames = Effect.gen(function* () {
@@ -300,13 +291,13 @@ const readLine = (message: string): Effect.Effect<string> =>
       new Promise((resolve) => {
         const rl = NodeReadLine.createInterface({
           input: process.stdin,
-          output: process.stdout
+          output: process.stdout,
         })
         rl.question(message, (answer) => {
           rl.close()
           resolve(answer)
         })
-      })
+      }),
   )
 
 const getNames = Effect.gen(function* () {
@@ -316,15 +307,13 @@ const getNames = Effect.gen(function* () {
   const fiber1 = yield* Effect.fork(
     Effect.gen(function* () {
       while (true) {
-        const name = yield* readLine(
-          "Please enter a name or `q` to exit: "
-        )
+        const name = yield* readLine("Please enter a name or `q` to exit: ")
         if (name === "q") {
           break
         }
         yield* Ref.update(ref, (state) => Chunk.append(state, name))
       }
-    })
+    }),
   )
 
   // Fiber 2: Updating the state with predefined names
@@ -334,7 +323,7 @@ const getNames = Effect.gen(function* () {
         yield* Ref.update(ref, (state) => Chunk.append(state, name))
         yield* Effect.sleep("1 second")
       }
-    })
+    }),
   )
   yield* Fiber.join(fiber1)
   yield* Fiber.join(fiber2)

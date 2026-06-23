@@ -9,8 +9,8 @@ export class Toaster extends Context.Service<
   }
 >()("app/Toaster", {
   make: Effect.succeed({
-    toast: (_opts: { title: string; description: string }) => Effect.void
-  })
+    toast: (_opts: { title: string; description: string }) => Effect.void,
+  }),
 }) {
   static readonly layer = Layer.effect(this, this.make)
 }

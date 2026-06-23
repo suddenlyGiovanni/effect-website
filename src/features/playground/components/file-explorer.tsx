@@ -1,7 +1,7 @@
-import { useCallback } from "react"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import { useAtomSet, useAtomValue } from "@effect/atom-react"
 import * as Data from "effect/Data"
+import * as Atom from "effect/unstable/reactivity/Atom"
+import { useCallback } from "react"
 import { useWorkspaceHandle, useWorkspaceTree } from "../context/workspace"
 import { Directory, File, Workspace } from "../domain/workspace"
 import { FileTree } from "./file-explorer/file-tree"
@@ -33,7 +33,7 @@ export const useCreate = () => {
       create([name, type, { parent }])
       dispatch(State.Idle())
     },
-    [create, dispatch]
+    [create, dispatch],
   )
 }
 export const useRename = () => {
@@ -45,7 +45,7 @@ export const useRename = () => {
       rename([node, name])
       dispatch(State.Idle())
     },
-    [rename, dispatch]
+    [rename, dispatch],
   )
 }
 export const useRemove = () => {
@@ -57,7 +57,7 @@ export const useRemove = () => {
       remove(node)
       dispatch(State.Idle())
     },
-    [remove, dispatch]
+    [remove, dispatch],
   )
 }
 

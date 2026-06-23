@@ -1,6 +1,5 @@
 import { createStreaming, type Formatter } from "@dprint/formatter"
 import * as monaco from "@effect/monaco-editor"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import * as Array from "effect/Array"
 import * as Cache from "effect/Cache"
 import * as Effect from "effect/Effect"
@@ -10,6 +9,7 @@ import * as Option from "effect/Option"
 import * as Result from "effect/Result"
 import * as Sink from "effect/Sink"
 import * as Stream from "effect/Stream"
+import * as Atom from "effect/unstable/reactivity/Atom"
 import {
   Directory,
   File,
@@ -17,7 +17,7 @@ import {
   makeFile,
   Workspace,
   WorkspaceShell,
-  WorkspaceTerminal
+  WorkspaceTerminal,
 } from "../domain/workspace"
 import { DevToolsLayer } from "../services/devtools"
 import { Loader } from "../services/loader"
@@ -27,9 +27,13 @@ import { Toaster } from "../services/toaster"
 import { WebContainer } from "../services/webcontainer"
 import { themeAtom } from "./theme"
 
-const runtime = Atom.runtime(Layer.mergeAll(Loader.layer, Terminal.layer, Toaster.layer, DevToolsLayer, WebContainer.layer))
+const runtime = Atom.runtime(
+  Layer.mergeAll(Loader.layer, Terminal.layer, Toaster.layer, DevToolsLayer, WebContainer.layer),
+)
 
-const terminalThemeAtom = themeAtom.pipe(Atom.map((theme) => (theme === "light" ? NightOwlishLight : Dracula)))
+const terminalThemeAtom = themeAtom.pipe(
+  Atom.map((theme) => (theme === "light" ? NightOwlishLight : Dracula)),
+)
 
 export interface AtomWorkspaceHandle extends Atom.Success<ReturnType<typeof workspaceHandleAtom>> {}
 
@@ -51,15 +55,16 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
           ([file, path]: [File | Directory, string]) => {
             const fullPath = workspace.relativePath(path)
             if (file._tag === "Directory") {
-              return container
-                .makeDirectory(fullPath)
-                .pipe(Effect.catchTag("FileAlreadyExistsError", () => Effect.void), Effect.asVoid)
+              return container.makeDirectory(fullPath).pipe(
+                Effect.catchTag("FileAlreadyExistsError", () => Effect.void),
+                Effect.asVoid,
+              )
             }
             return container
               .writeFile(fullPath, file.initialContent, file.language ?? "typescript")
               .pipe(Effect.asVoid)
           },
-          { discard: true }
+          { discard: true },
         )
       }
 
@@ -77,19 +82,20 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             const el = yield* get.some(element)
             const shell = yield* container.createShell(workspace.name)
             const spawned = yield* terminal.spawn({
-              theme: get.once(terminalThemeAtom)
+              theme: get.once(terminalThemeAtom),
             })
             const writer = shell.getWriter()
             const dataListener: { dispose: () => void } = { dispose: () => {} }
             yield* Effect.promise(() =>
-              shell.pipeOutput(
+              shell
+                .pipeOutput(
                   new WritableStream({
                     write(data) {
                       spawned.terminal.write(data)
-                    }
-                  })
+                    },
+                  }),
                 )
-                .catch(() => undefined)
+                .catch(() => undefined),
             ).pipe(Effect.forkScoped)
             const disposable = spawned.terminal.onData((data) => {
               writer.write(data).catch(() => {})
@@ -102,19 +108,20 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             const fiber = yield* handle.spawn(workspace.prepare).pipe(
               Effect.tap((proc) =>
                 Effect.promise(() =>
-                  proc.getOutput()
+                  proc
+                    .getOutput()
                     .pipeTo(
                       new WritableStream({
                         write(data) {
                           spawned.terminal.write(data)
-                        }
-                      })
+                        },
+                      }),
                     )
-                    .catch(() => undefined)
-                ).pipe(Effect.forkScoped)
+                    .catch(() => undefined),
+                ).pipe(Effect.forkScoped),
               ),
               Effect.flatMap((proc) => proc.waitExit()),
-              Effect.forkScoped
+              Effect.forkScoped,
             )
 
             /**
@@ -126,20 +133,20 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
                 Effect.all(
                   [
                     setupWorkspaceTypeAcquisition(workspace).pipe(Effect.ignore),
-                    setupWorkspaceFormatters(workspace).pipe(Effect.ignore)
+                    setupWorkspaceFormatters(workspace).pipe(Effect.ignore),
                   ],
-                  { discard: true }
-                )
+                  { discard: true },
+                ),
               ),
-              Effect.forkScoped
+              Effect.forkScoped,
             )
 
             if (command !== undefined) {
               yield* Fiber.join(fiber).pipe(
                 Effect.andThen(
-                  Effect.promise(() => writer.write(`${command}\n`).catch(() => undefined))
+                  Effect.promise(() => writer.write(`${command}\n`).catch(() => undefined)),
                 ),
-                Effect.forkScoped
+                Effect.forkScoped,
               )
             }
             get.subscribe(
@@ -147,15 +154,15 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
               (theme) => {
                 spawned.terminal.options.theme = theme
               },
-              { immediate: true }
+              { immediate: true },
             )
             yield* get.stream(terminalSize).pipe(
               Stream.runForEach(() => spawned.resize),
-              Effect.forkScoped
+              Effect.forkScoped,
             )
             spawned.terminal.open(el)
             return spawned.terminal
-          }, Effect.tapCause(Effect.logError))
+          }, Effect.tapCause(Effect.logError)),
         )
         return { element, terminal: terminalAtom } as const
       })
@@ -163,7 +170,7 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
       let size = 0
       const terminalSize = Atom.writable(
         () => size,
-        (ctx, _: void) => ctx.setSelf(size++)
+        (ctx, _: void) => ctx.setSelf(size++),
       ).pipe(Atom.debounce("250 millis"))
 
       return {
@@ -182,7 +189,7 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             if (node._tag === "File") {
               get.set(selectedFile, node)
             }
-          })
+          }),
         ),
         renameFile: Atom.fn<Parameters<typeof handle.renameFile>>()(
           Effect.fnUntraced(function* (params, get) {
@@ -194,7 +201,7 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             if (Option.isNone(workspace.pathTo(get(selectedFile)))) {
               get.set(selectedFile, node)
             }
-          })
+          }),
         ),
         removeFile: Atom.fn<File | Directory>()(
           Effect.fnUntraced(function* (node, get) {
@@ -203,13 +210,12 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             if (workspace.pathTo(get(selectedFile))._tag === "None") {
               get.set(selectedFile, workspace.initialFile)
             }
-          })
-        )
+          }),
+        ),
       } as const
-    })
-  )
+    }),
+  ),
 )
-
 
 function setupWorkspaceTypeAcquisition(workspace: Workspace) {
   return Effect.gen(function* () {
@@ -230,9 +236,9 @@ function setupWorkspaceTypeAcquisition(workspace: Workspace) {
           .pipe(
             Effect.map((entries) =>
               Array.partition(entries, (entry) =>
-                entry.isDirectory() ? Result.succeed(entry.name) : Result.fail(entry.name)
-              )
-            )
+                entry.isDirectory() ? Result.succeed(entry.name) : Result.fail(entry.name),
+              ),
+            ),
           )
 
         yield* Effect.forEach(
@@ -249,22 +255,26 @@ function setupWorkspaceTypeAcquisition(workspace: Workspace) {
                   const extraLib = fullPath.replace(storePath, "")
                   return addExtraLib(extraLib, content)
                 }),
-                Effect.catchTag("FileNotFoundError", () => Effect.void)
+                Effect.catchTag("FileNotFoundError", () => Effect.void),
               )
             }
             return Effect.void
           },
-          { concurrency: files.length, discard: true }
+          { concurrency: files.length, discard: true },
         )
 
-        yield* Effect.forEach(directories, (directory) => {
+        yield* Effect.forEach(
+          directories,
+          (directory) => {
             // Skip node_modules symlink inside .pnpm to avoid circular path
             if (directory === "node_modules") return Effect.void
             return acquireTypesAt(storePath, `${path}/${directory}`)
-          }, {
-          concurrency: directories.length,
-          discard: true
-        })
+          },
+          {
+            concurrency: directories.length,
+            discard: true,
+          },
+        )
       }).pipe(Effect.ignore)
     }
 
@@ -295,14 +305,14 @@ function setupWorkspaceTypeAcquisition(workspace: Workspace) {
         Array.filterMap((entry) =>
           entry.isDirectory() && entry.name !== "node_modules"
             ? Result.succeed(`${pnpmStorePath}/${entry.name}`)
-            : Result.failVoid
-        )
+            : Result.failVoid,
+        ),
       ),
       Effect.flatMap(
         Effect.forEach((storePath) => acquireTypesAt(storePath), {
-          concurrency: "unbounded"
-        })
-      )
+          concurrency: "unbounded",
+        }),
+      ),
     )
 
     const packageJson = workspace.findFile("package.json")
@@ -323,7 +333,7 @@ function setupWorkspaceTypeAcquisition(workspace: Workspace) {
     // running `pnpm install <package>`)
     yield* updates.pipe(
       Stream.runForEach(() => acquireTypes),
-      Effect.forkScoped
+      Effect.forkScoped,
     )
   })
 }
@@ -347,7 +357,7 @@ function setupWorkspaceFormatters(workspace: Workspace) {
         if (action) {
           action.run()
         }
-      }
+      },
     })
 
     const formatters = new Map<string, Formatter>()
@@ -355,7 +365,7 @@ function setupWorkspaceFormatters(workspace: Workspace) {
     const pluginCache = yield* Cache.make({
       capacity: 10,
       timeToLive: Number.MAX_SAFE_INTEGER,
-      lookup: (plugin: string) => loadPlugin(plugin)
+      lookup: (plugin: string) => loadPlugin(plugin),
     })
 
     const LANGUAGE_REGEX = /^\/vendor\/dprint\/plugins\/([a-zA-Z0-9_-]+)-.*\.wasm$/
@@ -368,13 +378,13 @@ function setupWorkspaceFormatters(workspace: Workspace) {
     function loadPlugin(plugin: string): Effect.Effect<FormatterPlugin> {
       return Effect.all({
         language: Effect.fromNullishOr(extractLanguage(plugin)),
-        formatter: Effect.promise(() => createStreaming(fetch(plugin)))
+        formatter: Effect.promise(() => createStreaming(fetch(plugin))),
       }).pipe(Effect.orDie)
     }
 
     function loadPlugins(plugins: Array<string>) {
       return Effect.forEach(plugins, (plugin) => Cache.get(pluginCache, plugin), {
-        concurrency: plugins.length
+        concurrency: plugins.length,
       })
     }
 
@@ -389,15 +399,15 @@ function setupWorkspaceFormatters(workspace: Workspace) {
                   {
                     text: formatter.formatText({
                       fileText: model.getValue(),
-                      filePath: model.uri.toString()
+                      filePath: model.uri.toString(),
                     }),
-                    range: model.getFullModelRange()
-                  }
+                    range: model.getFullModelRange(),
+                  },
                 ]
-              }
+              },
             })
           }),
-        { concurrency: plugins.length, discard: true }
+        { concurrency: plugins.length, discard: true },
       )
     }
 
@@ -418,9 +428,9 @@ function setupWorkspaceFormatters(workspace: Workspace) {
             return Object.entries(rest).forEach(([language, config]) => {
               setLanguageConfig(language, config)
             })
-          })
+          }),
         ),
-        Effect.ignore
+        Effect.ignore,
       )
     }
 
@@ -435,9 +445,9 @@ function setupWorkspaceFormatters(workspace: Workspace) {
       Effect.map((plugins) =>
         plugins.forEach(({ language, formatter }) => {
           formatters.set(language, formatter)
-        })
+        }),
       ),
-      Effect.ignore
+      Effect.ignore,
     )
 
     const path: string = Option.getOrThrow(workspace.fullPathTo(config.value[0]))
@@ -454,11 +464,11 @@ function setupWorkspaceFormatters(workspace: Workspace) {
       Stream.tap(() =>
         toaster.toast({
           title: "Effect Playground",
-          description: "Updated formatter settings!"
-        })
+          description: "Updated formatter settings!",
+        }),
       ),
       Stream.runForEach(configurePlugin),
-      Effect.forkScoped
+      Effect.forkScoped,
     )
   })
 }
@@ -479,7 +489,7 @@ program.pipe(
   Effect.provide(DevToolsLive),
   NodeRuntime.runMain
 )
-`
+`,
 )
 
 const devTools = makeFile(
@@ -491,7 +501,7 @@ import { Layer } from "effect"
 export const DevToolsLive = DevTools.layerSocket.pipe(
   Layer.provide(NodeSocket.layerNet({ port: 34437 }))
 )
-`
+`,
 )
 
 export const defaultWorkspace = Workspace.new({
@@ -503,11 +513,11 @@ export const defaultWorkspace = Workspace.new({
     "@types/node": "latest",
     effect: "latest",
     "tsc-watch": "latest",
-    typescript: "latest"
+    typescript: "latest",
   },
   shells: [new WorkspaceShell({ command: "../run src/main.ts" })],
   initialFilePath: "src/main.ts",
-  tree: [makeDirectory("src", [main, devTools])]
+  tree: [makeDirectory("src", [main, devTools])],
 })
 
 let cachedDefaultWorkspace: Workspace | null = null

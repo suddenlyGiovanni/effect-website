@@ -81,7 +81,7 @@ For example, in an `Effect.ensuring` operation (analogous to `try-finally`), if 
 import { Effect, Cause } from "effect"
 
 const program = Effect.failCause(Cause.fail("Oh no!")).pipe(
-  Effect.ensuring(Effect.failCause(Cause.die("Boom!")))
+  Effect.ensuring(Effect.failCause(Cause.die("Boom!"))),
 )
 
 Effect.runPromiseExit(program).then(console.log)
@@ -112,11 +112,8 @@ In Effect programs, two operations may run in parallel, potentially leading to m
 import { Effect, Cause } from "effect"
 
 const program = Effect.all(
-  [
-    Effect.failCause(Cause.fail("Oh no!")),
-    Effect.failCause(Cause.die("Boom!"))
-  ],
-  { concurrency: 2 }
+  [Effect.failCause(Cause.fail("Oh no!")), Effect.failCause(Cause.die("Boom!"))],
+  { concurrency: 2 },
 )
 
 Effect.runPromiseExit(program).then(console.log)
@@ -190,10 +187,7 @@ The `Cause.match` function provides a straightforward way to handle each case of
 ```ts twoslash
 import { Cause } from "effect"
 
-const cause = Cause.parallel(
-  Cause.fail(new Error("my fail message")),
-  Cause.die("my die message")
-)
+const cause = Cause.parallel(Cause.fail(new Error("my fail message")), Cause.die("my die message"))
 
 console.log(
   Cause.match(cause, {
@@ -201,11 +195,9 @@ console.log(
     onFail: (error) => `(error: ${error.message})`,
     onDie: (defect) => `(defect: ${defect})`,
     onInterrupt: (fiberId) => `(fiberId: ${fiberId})`,
-    onSequential: (left, right) =>
-      `(onSequential (left: ${left}) (right: ${right}))`,
-    onParallel: (left, right) =>
-      `(onParallel (left: ${left}) (right: ${right})`
-  })
+    onSequential: (left, right) => `(onSequential (left: ${left}) (right: ${right}))`,
+    onParallel: (left, right) => `(onParallel (left: ${left}) (right: ${right})`,
+  }),
 )
 /*
 Output:
@@ -247,9 +239,7 @@ Output:
 All fibers interrupted without errors.
 */
 
-console.log(
-  Cause.pretty(Cause.sequential(Cause.fail("fail1"), Cause.fail("fail2")))
-)
+console.log(Cause.pretty(Cause.sequential(Cause.fail("fail1"), Cause.fail("fail2"))))
 /*
 Output:
 Error: fail1
@@ -268,11 +258,7 @@ import { Effect, Cause } from "effect"
 
 const program = Effect.gen(function* () {
   const cause = yield* Effect.cause(
-    Effect.all([
-      Effect.fail("error 1"),
-      Effect.die("defect"),
-      Effect.fail("error 2")
-    ])
+    Effect.all([Effect.fail("error 1"), Effect.die("defect"), Effect.fail("error 2")]),
   )
   console.log(Cause.failures(cause))
   console.log(Cause.defects(cause))

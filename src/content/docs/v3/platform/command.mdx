@@ -107,11 +107,11 @@ import { Effect } from "effect"
 
 const command = Command.make("echo", "-n", "$MY_CUSTOM_VAR").pipe(
   Command.env({
-    MY_CUSTOM_VAR: "Hello, this is a custom environment variable!"
+    MY_CUSTOM_VAR: "Hello, this is a custom environment variable!",
   }),
   // Use shell to interpret variables correctly
   // on Windows and Unix-like systems
-  Command.runInShell(true)
+  Command.runInShell(true),
 )
 
 const program = Effect.gen(function* () {
@@ -156,13 +156,8 @@ import { NodeContext, NodeRuntime } from "@effect/platform-node"
 import { Effect, Stream, String, pipe } from "effect"
 
 // Helper function to collect stream output as a string
-const runString = <E, R>(
-  stream: Stream.Stream<Uint8Array, E, R>
-): Effect.Effect<string, E, R> =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(String.empty, String.concat)
-  )
+const runString = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<string, E, R> =>
+  stream.pipe(Stream.decodeText(), Stream.runFold(String.empty, String.concat))
 
 const program = Effect.gen(function* () {
   const command = Command.make("ls")
@@ -179,18 +174,16 @@ const program = Effect.gen(function* () {
           // The standard output stream of the process
           runString(process.stdout),
           // The standard error stream of the process
-          runString(process.stderr)
+          runString(process.stderr),
         ],
-        { concurrency: 3 }
-      )
-    )
+        { concurrency: 3 },
+      ),
+    ),
   )
   console.log({ exitCode, stdout, stderr })
 })
 
-NodeRuntime.runMain(
-  Effect.scoped(program).pipe(Effect.provide(NodeContext.layer))
-)
+NodeRuntime.runMain(Effect.scoped(program).pipe(Effect.provide(NodeContext.layer)))
 ```
 
 ## Streaming stdout to process.stdout
@@ -207,7 +200,7 @@ import { Effect } from "effect"
 // Create a command to run `cat` on a file and inherit stdout
 const program = Command.make("cat", "./some-file.txt").pipe(
   Command.stdout("inherit"), // Stream stdout to process.stdout
-  Command.exitCode // Get the exit code
+  Command.exitCode, // Get the exit code
 )
 
 NodeRuntime.runMain(program.pipe(Effect.provide(NodeContext.layer)))

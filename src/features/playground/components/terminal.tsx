@@ -1,7 +1,7 @@
-import { useCallback, useMemo } from "react"
 import { useAtomSet, useAtomMount } from "@effect/atom-react"
-import * as Option from "effect/Option"
 import { constVoid } from "effect/Function"
+import * as Option from "effect/Option"
+import { useCallback, useMemo } from "react"
 import { useWorkspaceHandle } from "../context/workspace"
 import { WorkspaceTerminal, type WorkspaceShell } from "../domain/workspace"
 
@@ -10,7 +10,7 @@ import "./terminal.css"
 
 export function Terminal({ shell }: { readonly shell: WorkspaceShell }) {
   return (
-    <div className="relative z-0 h-full flex flex-col">
+    <div className="relative z-0 flex h-full flex-col">
       <div className="flex-1 overflow-hidden">
         <Shell shell={shell} />
       </div>
@@ -21,7 +21,7 @@ export function Terminal({ shell }: { readonly shell: WorkspaceShell }) {
 function Shell({ shell }: { readonly shell: WorkspaceShell }) {
   const handle = useWorkspaceHandle()
   const { element, terminal } = handle.createTerminal(
-    new WorkspaceTerminal({ command: shell.command })
+    new WorkspaceTerminal({ command: shell.command }),
   )
   useMemo(constVoid, [terminal])
   useAtomMount(terminal)
@@ -31,7 +31,7 @@ function Shell({ shell }: { readonly shell: WorkspaceShell }) {
     (node: HTMLDivElement | null) => {
       if (node) setElement(Option.some(node))
     },
-    [setElement]
+    [setElement],
   )
 
   return <div ref={containerRef} id="terminal" className="h-full" />

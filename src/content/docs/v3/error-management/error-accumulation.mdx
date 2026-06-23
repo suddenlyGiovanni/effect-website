@@ -21,11 +21,7 @@ const task2 = Effect.fail("Oh uh!").pipe(Effect.as(2))
 const task3 = Console.log("task2").pipe(Effect.as(3))
 const task4 = Effect.fail("Oh no!").pipe(Effect.as(4))
 
-const program = task1.pipe(
-  Effect.zip(task2),
-  Effect.zip(task3),
-  Effect.zip(task4)
-)
+const program = task1.pipe(Effect.zip(task2), Effect.zip(task3), Effect.zip(task4))
 
 Effect.runPromise(program).then(console.log, console.error)
 /*
@@ -76,11 +72,7 @@ const task2 = Effect.fail("Oh uh!").pipe(Effect.as(2))
 const task3 = Console.log("task2").pipe(Effect.as(3))
 const task4 = Effect.fail("Oh no!").pipe(Effect.as(4))
 
-const program = task1.pipe(
-  Effect.validate(task2),
-  Effect.validate(task3),
-  Effect.validate(task4)
-)
+const program = task1.pipe(Effect.validate(task2), Effect.validate(task3), Effect.validate(task4))
 
 Effect.runPromiseExit(program).then(console.log)
 /*
@@ -136,9 +128,9 @@ item 3
 ```
 
 <Aside type="caution" title="Loss of Successes">
-  Note that this function is lossy, which means that if there are any
-  errors, all successes will be lost. If you need to preserve both
-  successes and failures, consider using [Effect.partition](#partition).
+  Note that this function is lossy, which means that if there are any errors, all successes will be
+  lost. If you need to preserve both successes and failures, consider using
+  [Effect.partition](#partition).
 </Aside>
 
 ## validateFirst

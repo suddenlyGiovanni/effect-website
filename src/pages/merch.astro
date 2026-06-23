@@ -13,10 +13,9 @@ import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
 
 const products = await getCollection("merch")
 
-const merchImages = import.meta.glob<{ default: ImageMetadata }>(
-  "/src/assets/merch/*.avif",
-  { eager: true },
-)
+const merchImages = import.meta.glob<{ default: ImageMetadata }>("/src/assets/merch/*.avif", {
+  eager: true,
+})
 function getMerchImage(filename: string): ImageMetadata | undefined {
   return Object.entries(merchImages).find(([p]) => p.endsWith(`/${filename}`))?.[1].default
 }
@@ -220,7 +219,10 @@ function getMerchImage(filename: string): ImageMetadata | undefined {
           <div class="mt-16 border-t border-zinc-200 pt-4 text-center">
             <p class="text-sm text-zinc-700">
               All orders are processed and fulfilled by{" "}
-              <Link href="https://www.printful.com" class="text-zinc-700 underline hover:text-zinc-900 hover:no-underline">
+              <Link
+                href="https://www.printful.com"
+                class="text-zinc-700 underline hover:text-zinc-900 hover:no-underline"
+              >
                 Printful
               </Link>. Payments and profits go directly to Printful.
             </p>

@@ -22,20 +22,20 @@ const {
   parent = "effect.website",
   time = "0h0m0s",
   title = "twitch-player-non-interactive",
-  video
+  video,
 } = Astro.props
 
 const params = new URLSearchParams()
 
 if (channel) {
-  params.append("channel", channel);
+  params.append("channel", channel)
 } else {
   if (video) {
-    params.append("video", video);
+    params.append("video", video)
   }
 
   if (collection) {
-    params.append("collection", collection);
+    params.append("collection", collection)
   }
 }
 
@@ -44,27 +44,28 @@ params.append("muted", muted.toString())
 params.append("time", time)
 
 if (Array.isArray(parent)) {
-  parent.forEach((parent) => params.append("parent", parent));
+  parent.forEach((parent) => params.append("parent", parent))
 } else {
   params.append("parent", parent as string)
 }
 
-const playerUrl = `https://player.twitch.tv/?${params.toString()}`;
-
+const playerUrl = `https://player.twitch.tv/?${params.toString()}`
 ---
+
 <iframe
   class="twitch-player-non-interactive"
   title={title}
   height={height}
   width={width}
   src={playerUrl}
-  frame-border="0"
-></iframe>
+  frame-border="0"></iframe>
 
-<style define:vars={{ 
-  twitchPlayerHeight: `${height}px`, 
-  twitchPlayerWidth: `${width}px` 
-}}>
+<style
+  define:vars={{
+    twitchPlayerHeight: `${height}px`,
+    twitchPlayerWidth: `${width}px`,
+  }}
+>
   .twitch-player-non-interactive {
     height: var(--twitchPlayerHeight) !important;
     width: var(--twitchPlayerWidth) !important;

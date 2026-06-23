@@ -7,7 +7,9 @@ import { loaderStepsAtom } from "../services/loader"
 export function PlaygroundLoader() {
   const isReady = useAtomValue(isLoadedAtom)
   const steps = useAtomValue(loaderStepsAtom, (steps) => {
-    return steps.every((step) => step.done) ? steps : steps.slice(0, steps.findIndex((step) => !step.done) + 1)
+    return steps.every((step) => step.done)
+      ? steps
+      : steps.slice(0, steps.findIndex((step) => !step.done) + 1)
   })
   return (
     <AnimatePresence initial={false}>
@@ -16,11 +18,11 @@ export function PlaygroundLoader() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="fixed inset-0 z-50 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950"
         >
-          <div className="w-full flex max-w-md px-4 pb-8 pt-4 md:pt-8 rounded-sm bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-lg">
+          <div className="flex w-full max-w-md rounded-sm bg-zinc-100 px-4 pt-4 pb-8 text-zinc-900 shadow-lg md:pt-8 dark:bg-zinc-900 dark:text-white">
             <div className="m-auto flex flex-col justify-center">
-              <h2 className="text-2xl font-bold mb-6 text-center">Loading the Effect Playground</h2>
+              <h2 className="mb-6 text-center text-2xl font-bold">Loading the Effect Playground</h2>
               <div className="flex flex-col space-y-4">
                 <AnimatePresence initial={false}>
                   {steps.map((step) => (
@@ -30,7 +32,7 @@ export function PlaygroundLoader() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="w-full max-w-[280px] flex items-center space-x-3"
+                      className="flex w-full max-w-[280px] items-center space-x-3"
                     >
                       <motion.div
                         className="flex"
@@ -39,12 +41,14 @@ export function PlaygroundLoader() {
                         transition={{ duration: 0.2, delay: 0.1 }}
                       >
                         {step.done ? (
-                          <CircleCheck className="w-6 h-6 text-green-500" />
+                          <CircleCheck className="h-6 w-6 text-green-500" />
                         ) : (
-                          <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
+                          <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
                         )}
                       </motion.div>
-                      <span className={step.done ? "text-zinc-500" : "text-zinc-900 dark:text-white"}>
+                      <span
+                        className={step.done ? "text-zinc-500" : "text-zinc-900 dark:text-white"}
+                      >
                         {step.message}
                       </span>
                     </motion.div>

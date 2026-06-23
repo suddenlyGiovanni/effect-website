@@ -261,16 +261,16 @@ export function PodcastTranscript() {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="rounded-lg border border-zinc-700 bg-card lg:flex lg:min-h-0 lg:flex-col lg:data-open:flex-1"
+      className="bg-card rounded-lg border border-zinc-700 lg:flex lg:min-h-0 lg:flex-col lg:data-open:flex-1"
     >
-      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-lg bg-card px-4 py-3 transition-colors hover:bg-accent/50 data-panel-open:rounded-b-none lg:shrink-0">
+      <CollapsibleTrigger className="bg-card hover:bg-accent/50 flex w-full cursor-pointer items-center justify-between rounded-lg px-4 py-3 transition-colors data-panel-open:rounded-b-none lg:shrink-0">
         <h2 className="text-sm font-semibold">Transcript</h2>
         <ChevronDownIcon className="size-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
         <div
           ref={rootRef}
-          className="border-t border-zinc-700 bg-card lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
+          className="bg-card border-t border-zinc-700 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
         >
           <ScrollArea className="h-80 p-2 lg:h-auto lg:max-h-none lg:min-h-0 lg:flex-1">
             <ul className="space-y-1 pr-2">
@@ -286,7 +286,7 @@ export function PodcastTranscript() {
                       aria-current={isActive ? "true" : undefined}
                       aria-label={`Jump to ${cue.label}`}
                       className={cn(
-                        "group flex w-full cursor-pointer items-baseline gap-4 rounded-md bg-inherit px-3 py-2.5 text-left hover:bg-accent/50",
+                        "group hover:bg-accent/50 flex w-full cursor-pointer items-baseline gap-4 rounded-md bg-inherit px-3 py-2.5 text-left",
                         isActive && "bg-accent",
                       )}
                     >

@@ -14,9 +14,9 @@ Repetition is a common requirement when working with effects in software develop
 The `Effect.repeat` function returns a new effect that repeats the given effect according to a specified schedule or until the first failure.
 
 <Aside type="note" title="Initial Execution Included">
-  The scheduled recurrences are in addition to the initial execution, so
-  `Effect.repeat(action, Schedule.once)` executes `action` once initially,
-  and if it succeeds, repeats it an additional time.
+  The scheduled recurrences are in addition to the initial execution, so `Effect.repeat(action,
+  Schedule.once)` executes `action` once initially, and if it succeeds, repeats it an additional
+  time.
 </Aside>
 
 **Example** (Repeating a Successful Effect)
@@ -165,7 +165,7 @@ const program = Effect.repeatOrElse(action, policy, () =>
   Effect.sync(() => {
     console.log("orElse")
     return count - 1
-  })
+  }),
 )
 
 Effect.runPromise(program).then((n) => console.log(`repetitions: ${n}`))
@@ -209,8 +209,6 @@ Action called 3 time(s)
 ```
 
 <Aside type="tip" title="Retrying on Errors">
-  You can use
-  [Effect.retry](/docs/error-management/retrying/#retrying-based-on-a-condition)
-  if you need to set conditions based on error occurrences rather than
-  success outcomes.
+  You can use [Effect.retry](/docs/error-management/retrying/#retrying-based-on-a-condition) if you
+  need to set conditions based on error occurrences rather than success outcomes.
 </Aside>

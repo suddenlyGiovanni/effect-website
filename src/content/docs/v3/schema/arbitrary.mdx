@@ -20,7 +20,7 @@ import { Arbitrary, FastCheck, Schema } from "effect"
 // Define a Person schema with constraints
 const Person = Schema.Struct({
   name: Schema.NonEmptyString,
-  age: Schema.Int.pipe(Schema.between(1, 80))
+  age: Schema.Int.pipe(Schema.between(1, 80)),
 })
 
 // Create an Arbitrary based on the schema
@@ -37,9 +37,8 @@ Example Output:
 To make the output more realistic, see the [Customizing Arbitrary Data Generation](#customizing-arbitrary-data-generation) section.
 
 <Aside type="tip" title="Access FastCheck API">
-  The entirety of `fast-check`'s API is accessible via the `FastCheck`
-  export, allowing direct use of all its functionalities within your
-  projects.
+  The entirety of `fast-check`'s API is accessible via the `FastCheck` export, allowing direct use
+  of all its functionalities within your projects.
 </Aside>
 
 ## Filters
@@ -98,8 +97,8 @@ This approach ensures all patterns have an equal chance of generating values whe
 When generating arbitrary data, it is important to understand how transformations and filters are handled within a schema:
 
 <Aside type="caution" title="Filters Ignored">
-  Filters applied before the last transformation in the transformation
-  chain are not considered during the generation of arbitrary data.
+  Filters applied before the last transformation in the transformation chain are not considered
+  during the generation of arbitrary data.
 </Aside>
 
 **Example** (Filters and Transformations)
@@ -108,9 +107,7 @@ When generating arbitrary data, it is important to understand how transformation
 import { Arbitrary, FastCheck, Schema } from "effect"
 
 // Schema with filters before the transformation
-const schema1 = Schema.compose(Schema.NonEmptyString, Schema.Trim).pipe(
-  Schema.maxLength(500)
-)
+const schema1 = Schema.compose(Schema.NonEmptyString, Schema.Trim).pipe(Schema.maxLength(500))
 
 // May produce empty strings due to ignored NonEmpty filter
 console.log(FastCheck.sample(Arbitrary.make(schema1), 2))
@@ -120,10 +117,7 @@ Example Output:
 */
 
 // Schema with filters applied after transformations
-const schema2 = Schema.Trim.pipe(
-  Schema.nonEmptyString(),
-  Schema.maxLength(500)
-)
+const schema2 = Schema.Trim.pipe(Schema.nonEmptyString(), Schema.maxLength(500))
 
 // Adheres to all filters, avoiding empty strings
 console.log(FastCheck.sample(Arbitrary.make(schema2), 2))
@@ -173,8 +167,8 @@ const improved = Schema.transform(
   {
     strict: true,
     decode: (s) => s.trim().toLowerCase(),
-    encode: (s) => s
-  }
+    encode: (s) => s,
+  },
 )
 ```
 
@@ -188,15 +182,14 @@ You can customize how arbitrary data is generated using the `arbitrary` annotati
 import { Arbitrary, FastCheck, Schema } from "effect"
 
 const Name = Schema.NonEmptyString.annotations({
-  arbitrary: () => (fc) =>
-    fc.constantFrom("Alice Johnson", "Dante Howell", "Marta Reyes")
+  arbitrary: () => (fc) => fc.constantFrom("Alice Johnson", "Dante Howell", "Marta Reyes"),
 })
 
 const Age = Schema.Int.pipe(Schema.between(1, 80))
 
 const Person = Schema.Struct({
   name: Name,
-  age: Age
+  age: Age,
 })
 
 const arb = Arbitrary.make(Person)
@@ -227,14 +220,14 @@ const Name = Schema.NonEmptyString.annotations({
     fc.constant(null).map(() => {
       // Each time the arbitrary is sampled, faker generates a new name
       return faker.person.fullName()
-    })
+    }),
 })
 
 const Age = Schema.Int.pipe(Schema.between(1, 80))
 
 const Person = Schema.Struct({
   name: Name,
-  age: Age
+  age: Age,
 })
 
 const arb = Arbitrary.make(Person)

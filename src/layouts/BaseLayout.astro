@@ -48,8 +48,7 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
       ;(function () {
         var stored = localStorage.getItem("theme")
         var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-        var isDark =
-          stored === "dark" || (stored !== "light" && prefersDark)
+        var isDark = stored === "dark" || (stored !== "light" && prefersDark)
         document.documentElement.classList.toggle("dark", isDark)
         document.documentElement.dataset.theme = isDark ? "dark" : "light"
         new MutationObserver(function () {

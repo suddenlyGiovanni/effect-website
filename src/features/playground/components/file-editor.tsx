@@ -1,12 +1,11 @@
-import { useCallback, useMemo } from "react"
 import { useAtomMount, useAtomSet } from "@effect/atom-react"
-import * as Option from "effect/Option"
 import { constVoid } from "effect/Function"
-
-import { useWorkspaceHandle } from "../context/workspace"
+import * as Option from "effect/Option"
+import { useCallback, useMemo } from "react"
 import { editorAtom } from "../atoms/editor"
-import { ShareButton } from "./share-button"
+import { useWorkspaceHandle } from "../context/workspace"
 import { ResetButton } from "./reset-button"
+import { ShareButton } from "./share-button"
 
 export function FileEditor() {
   const handle = useWorkspaceHandle()
@@ -21,11 +20,11 @@ export function FileEditor() {
     (node: HTMLDivElement) => {
       setElement(Option.some(node))
     },
-    [setElement]
+    [setElement],
   )
 
   return (
-    <section className="h-full relative">
+    <section className="relative h-full">
       <div ref={containerRef} className="h-full" />
       <div className="absolute top-2 right-6 z-10 flex gap-2">
         <ResetButton />

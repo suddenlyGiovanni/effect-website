@@ -27,7 +27,7 @@ const program = Effect.gen(function* () {
   const fibFiber = yield* fib(20).pipe(
     Effect.supervised(supervisor),
     // Fork the Fibonacci effect into a fiber
-    Effect.fork
+    Effect.fork,
   )
 
   // Define a schedule to periodically monitor the fiber count every 500ms
@@ -35,9 +35,9 @@ const program = Effect.gen(function* () {
     Schedule.whileInputEffect((_) =>
       Fiber.status(fibFiber).pipe(
         // Continue while the Fibonacci fiber is not done
-        Effect.andThen((status) => status !== FiberStatus.done)
-      )
-    )
+        Effect.andThen((status) => status !== FiberStatus.done),
+      ),
+    ),
   )
 
   // Start monitoring the fibers, using the supervisor to track the count
@@ -45,7 +45,7 @@ const program = Effect.gen(function* () {
     // Repeat the monitoring according to the schedule
     Effect.repeat(policy),
     // Fork the monitoring into its own fiber
-    Effect.fork
+    Effect.fork,
   )
 
   // Join the monitor and Fibonacci fibers to ensure they complete
@@ -57,7 +57,7 @@ const program = Effect.gen(function* () {
 
 // Function to monitor and log the number of active fibers
 const monitorFibers = (
-  supervisor: Supervisor.Supervisor<Array<Fiber.RuntimeFiber<any, any>>>
+  supervisor: Supervisor.Supervisor<Array<Fiber.RuntimeFiber<any, any>>>,
 ): Effect.Effect<void> =>
   Effect.gen(function* () {
     const fibers = yield* supervisor.value // Get the current set of fibers

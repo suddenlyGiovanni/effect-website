@@ -277,7 +277,7 @@ const Int = Brand.refined<Int>(
   // Validation to ensure the value is an integer
   (n) => Number.isInteger(n),
   // Provide an error if validation fails
-  (n) => Brand.error(`Expected ${n} to be an integer`)
+  (n) => Brand.error(`Expected ${n} to be an integer`),
 )
 ```
 
@@ -292,7 +292,7 @@ const Int = Brand.refined<Int>(
   // Check if the value is an integer
   (n) => Number.isInteger(n),
   // Error message if the value is not an integer
-  (n) => Brand.error(`Expected ${n} to be an integer`)
+  (n) => Brand.error(`Expected ${n} to be an integer`),
 )
 
 // Create a valid Int value
@@ -315,7 +315,7 @@ type Int = number & Brand.Brand<"Int">
 
 const Int = Brand.refined<Int>(
   (n) => Number.isInteger(n),
-  (n) => Brand.error(`Expected ${n} to be an integer`)
+  (n) => Brand.error(`Expected ${n} to be an integer`),
 )
 
 // Correct usage
@@ -343,14 +343,14 @@ type Int = number & Brand.Brand<"Int">
 
 const Int = Brand.refined<Int>(
   (n) => Number.isInteger(n),
-  (n) => Brand.error(`Expected ${n} to be an integer`)
+  (n) => Brand.error(`Expected ${n} to be an integer`),
 )
 
 type Positive = number & Brand.Brand<"Positive">
 
 const Positive = Brand.refined<Positive>(
   (n) => n > 0,
-  (n) => Brand.error(`Expected ${n} to be positive`)
+  (n) => Brand.error(`Expected ${n} to be positive`),
 )
 
 // Combine the Int and Positive constructors

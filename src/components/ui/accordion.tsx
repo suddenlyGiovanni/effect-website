@@ -36,7 +36,7 @@ function AccordionTrigger({ className, children, ...props }: AccordionPrimitive.
         {children}
         <div
           data-slot="accordion-trigger-icon"
-          className="flex h-6 w-6 shrink-0 items-center justify-center transition-all duration-200 bg-zinc-800/80 text-zinc-400 group-hover/accordion-trigger:bg-zinc-700 group-aria-expanded/accordion-trigger:bg-white group-aria-expanded/accordion-trigger:text-zinc-900"
+          className="flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-800/80 text-zinc-400 transition-all duration-200 group-hover/accordion-trigger:bg-zinc-700 group-aria-expanded/accordion-trigger:bg-white group-aria-expanded/accordion-trigger:text-zinc-900"
         >
           <ChevronDown className="h-4 w-4 transition-transform duration-200 group-aria-expanded/accordion-trigger:rotate-180" />
         </div>
@@ -49,7 +49,7 @@ function AccordionContent({ className, children, ...props }: AccordionPrimitive.
   return (
     <AccordionPrimitive.Panel
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
+      className="data-open:animate-accordion-down data-closed:animate-accordion-up overflow-hidden text-sm"
       {...props}
     >
       <div

@@ -44,10 +44,7 @@ The `KeyValueStore` interface includes the following operations:
 **Example** (Basic Operations with a Key-Value Store)
 
 ```ts twoslash
-import {
-  KeyValueStore,
-  layerMemory
-} from "@effect/platform/KeyValueStore"
+import { KeyValueStore, layerMemory } from "@effect/platform/KeyValueStore"
 import { Effect } from "effect"
 
 const program = Effect.gen(function* () {
@@ -98,16 +95,13 @@ A `SchemaStore` uses a [schema](/docs/schema/introduction/) to validate and conv
 **Example** (Storing a Typed Object Using a Schema)
 
 ```ts twoslash
-import {
-  KeyValueStore,
-  layerMemory
-} from "@effect/platform/KeyValueStore"
+import { KeyValueStore, layerMemory } from "@effect/platform/KeyValueStore"
 import { Effect, Schema } from "effect"
 
 // Define a JSON-compatible schema
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 const program = Effect.gen(function* () {

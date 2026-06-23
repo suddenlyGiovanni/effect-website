@@ -16,7 +16,7 @@ import { Schema } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 // Generate an equivalence function based on the schema
@@ -75,7 +75,7 @@ import { Schema } from "effect"
 const schema = Schema.String.annotations({
   equivalence: (/**typeParameters**/) => (s1, s2) =>
     // Custom rule: Compare only the first character of the strings
-    s1.charAt(0) === s2.charAt(0)
+    s1.charAt(0) === s2.charAt(0),
 })
 
 // Generate the equivalence function

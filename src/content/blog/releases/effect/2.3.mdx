@@ -52,9 +52,7 @@ interface Service {
   // ...
 }
 
-const Service = Context.GenericTag<ServiceId, Service>(
-  "@services/Service"
-)
+const Service = Context.GenericTag<ServiceId, Service>("@services/Service")
 ```
 
 instead of:
@@ -80,15 +78,9 @@ For example:
 ```ts
 import { Context, Effect } from "effect"
 
-class MyService extends Context.Tag("MyService")<
-  MyService,
-  { methodA: Effect.Effect<void> }
->() {}
+class MyService extends Context.Tag("MyService")<MyService, { methodA: Effect.Effect<void> }>() {}
 
-const effect: Effect.Effect<void, never, MyService> = Effect.flatMap(
-  MyService,
-  (_) => _.methodA
-)
+const effect: Effect.Effect<void, never, MyService> = Effect.flatMap(MyService, (_) => _.methodA)
 ```
 
 For the changes above, a code-mod has been released to make migration as easy as possible.
@@ -130,23 +122,18 @@ export type UserId = S.Schema.To<typeof UserId>
 
 export class User extends S.Class<User>()({
   id: UserId,
-  name: S.string
+  name: S.string,
 }) {}
 
 export class GetUserIds extends Rpc.StreamRequest<GetUserIds>()(
   "GetUserIds",
   S.never,
   UserId,
-  {}
+  {},
 ) {}
-export class GetUser extends S.TaggedRequest<GetUser>()(
-  "GetUser",
-  S.never,
-  User,
-  {
-    id: UserId
-  }
-) {}
+export class GetUser extends S.TaggedRequest<GetUser>()("GetUser", S.never, User, {
+  id: UserId,
+}) {}
 ```
 
 We then define our router:
@@ -162,12 +149,8 @@ import { GetUser, GetUserIds, User, UserId } from "./schema.js"
 
 // Implement the RPC server router
 const router = Router.make(
-  Rpc.stream(GetUserIds, () =>
-    Stream.fromIterable(Array.makeBy(1000, UserId))
-  ),
-  Rpc.effect(GetUser, ({ id }) =>
-    Effect.succeed(new User({ id, name: "John Doe" }))
-  )
+  Rpc.stream(GetUserIds, () => Stream.fromIterable(Array.makeBy(1000, UserId))),
+  Rpc.effect(GetUser, ({ id }) => Effect.succeed(new User({ id, name: "John Doe" }))),
 )
 
 export type UserRouter = typeof router
@@ -177,7 +160,7 @@ const HttpLive = Http.router.empty.pipe(
   Http.router.post("/rpc", HttpRouter.toHttpApp(router)),
   Http.server.serve(Http.middleware.logger),
   Http.server.withLogAddress,
-  Layer.provide(NodeHttpServer.server.layer(createServer, { port: 3000 }))
+  Layer.provide(NodeHttpServer.server.layer(createServer, { port: 3000 })),
 )
 
 Layer.launch(HttpLive).pipe(NodeRuntime.runMain)
@@ -197,11 +180,7 @@ import { GetUser, GetUserIds } from "./schema.js"
 const client = HttpResolver.make<UserRouter>(
   Http.client
     .fetchOk()
-    .pipe(
-      Http.client.mapRequest(
-        Http.request.prependUrl("http://localhost:3000/rpc")
-      )
-    )
+    .pipe(Http.client.mapRequest(Http.request.prependUrl("http://localhost:3000/rpc"))),
 ).pipe(Resolver.toClient)
 
 // Use the client
@@ -209,11 +188,11 @@ client(new GetUserIds()).pipe(
   Stream.runCollect,
   Effect.flatMap(
     Effect.forEach((id) => client(new GetUser({ id })), {
-      batching: true
-    })
+      batching: true,
+    }),
   ),
   Effect.tap(Console.log),
-  Effect.runFork
+  Effect.runFork,
 )
 ```
 
@@ -226,9 +205,7 @@ class ApiLimiter extends Context.Tag("@services/ApiLimiter")<
   ApiLimiter,
   RateLimiter.RateLimiter
 >() {
-  static Live = RateLimiter.make(10, "2 seconds").pipe(
-    Layer.scoped(ApiLimiter)
-  )
+  static Live = RateLimiter.make(10, "2 seconds").pipe(Layer.scoped(ApiLimiter))
 }
 
 const program = Effect.gen(function* () {

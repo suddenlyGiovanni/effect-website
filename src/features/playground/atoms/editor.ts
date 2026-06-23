@@ -1,21 +1,23 @@
 import * as monaco from "@effect/monaco-editor"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Schedule from "effect/Schedule"
 import * as Stream from "effect/Stream"
-import { Toaster } from "../services/toaster"
+import * as Atom from "effect/unstable/reactivity/Atom"
+import type { AtomWorkspaceHandle } from "./workspace"
 import { File, FullPath } from "../domain/workspace"
 import { Loader } from "../services/loader"
 import { Monaco } from "../services/monaco"
+import { Toaster } from "../services/toaster"
 import { themeAtom } from "./theme"
-import type { AtomWorkspaceHandle } from "./workspace"
 
-export const editorThemeAtom = themeAtom.pipe(Atom.map((theme) => (theme === "dark" ? "dracula" : "vs")))
+export const editorThemeAtom = themeAtom.pipe(
+  Atom.map((theme) => (theme === "dark" ? "dracula" : "vs")),
+)
 
 const runtime = Atom.runtime(Layer.mergeAll(Loader.layer, Monaco.layer, Toaster.layer)).pipe(
-  Atom.setIdleTTL("10 seconds")
+  Atom.setIdleTTL("10 seconds"),
 )
 
 export const editorAtom = Atom.family((handle: AtomWorkspaceHandle) => {
@@ -29,7 +31,9 @@ export const editorAtom = Atom.family((handle: AtomWorkspaceHandle) => {
       const el = yield* get.some(element)
       const editor = yield* createEditor(el)
 
-      get.subscribe(editorThemeAtom, (theme) => editor.editor.updateOptions({ theme }), { immediate: true })
+      get.subscribe(editorThemeAtom, (theme) => editor.editor.updateOptions({ theme }), {
+        immediate: true,
+      })
 
       setupGoToDefinition(handle, get)
 
@@ -39,7 +43,7 @@ export const editorAtom = Atom.family((handle: AtomWorkspaceHandle) => {
         const path = workspace.fullPathTo(file)
         return Option.match(path, {
           onNone: () => Effect.void,
-          onSome: (path) => handle.writeFile(path, editor.editor.getValue(), "typescript")
+          onSome: (path) => handle.writeFile(path, editor.editor.getValue(), "typescript"),
         })
       })
 
@@ -48,7 +52,9 @@ export const editorAtom = Atom.family((handle: AtomWorkspaceHandle) => {
           Stream.tap((model) => editor.loadModel(model)),
           Stream.switchMap(() => editor.content.pipe(Stream.drop(1))),
           Stream.debounce("2 seconds"),
-          Stream.tap((content) => handle.writeFile(fullPath, content, file.language ?? "typescript")),
+          Stream.tap((content) =>
+            handle.writeFile(fullPath, content, file.language ?? "typescript"),
+          ),
           Stream.ensuring(
             Effect.suspend(() => {
               const content = editor.editor.getValue()
@@ -56,8 +62,8 @@ export const editorAtom = Atom.family((handle: AtomWorkspaceHandle) => {
                 return Effect.void
               }
               return handle.writeFile(fullPath, content, file.language ?? "typescript")
-            })
-          )
+            }),
+          ),
         )
       }
 
@@ -65,26 +71,26 @@ export const editorAtom = Atom.family((handle: AtomWorkspaceHandle) => {
       yield* get.stream(handle.selectedFile).pipe(
         Stream.bindTo("file"),
         Stream.bindEffect("fullPath", ({ file }) =>
-          Effect.fromOption(get.once(handle.workspace).fullPathTo(file))
+          Effect.fromOption(get.once(handle.workspace).fullPathTo(file)),
         ),
         Stream.switchMap(({ file, fullPath }) => sync(fullPath, file)),
         Stream.runDrain,
         Effect.retry(Schedule.spaced("200 millis")),
-        Effect.forkScoped
+        Effect.forkScoped,
       )
 
       yield* loader.finish
 
       return {
         ...editor,
-        save
+        save,
       } as const
-    })
+    }),
   )
 
   return {
     element,
-    editor
+    editor,
   } as const
 })
 
@@ -106,8 +112,8 @@ function setupGoToDefinition(handle: AtomWorkspaceHandle, get: Atom.AtomContext)
         onSome: ([file]) => {
           get.set(handle.selectedFile, file)
           return true
-        }
+        },
       })
-    }
+    },
   })
 }

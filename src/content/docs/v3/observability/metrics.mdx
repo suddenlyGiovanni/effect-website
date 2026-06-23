@@ -45,7 +45,7 @@ import { Metric, Effect } from "effect"
 
 const requestCount = Metric.counter("request_count", {
   // Optional
-  description: "A counter for tracking requests"
+  description: "A counter for tracking requests",
 })
 ```
 
@@ -85,8 +85,8 @@ CounterState {
 ```
 
 <Aside type="note" title="Type Preservation">
-  Applying a counter to an effect doesn't change its original type. The
-  metric simply adds tracking without affecting the effect's output type.
+  Applying a counter to an effect doesn't change its original type. The metric simply adds tracking
+  without affecting the effect's output type.
 </Aside>
 
 ### Counter Types
@@ -97,13 +97,13 @@ You can specify whether the counter tracks a `number` or `bigint`.
 import { Metric } from "effect"
 
 const numberCounter = Metric.counter("request_count", {
-  description: "A counter for tracking requests"
+  description: "A counter for tracking requests",
   // bigint: false // default
 })
 
 const bigintCounter = Metric.counter("error_count", {
   description: "A counter for tracking errors",
-  bigint: true
+  bigint: true,
 })
 ```
 
@@ -118,7 +118,7 @@ import { Metric, Effect } from "effect"
 
 const incrementalCounter = Metric.counter("count", {
   description: "a counter that only increases its value",
-  incremental: true
+  incremental: true,
 })
 
 const program = Effect.gen(function* () {
@@ -156,7 +156,7 @@ You can configure a counter to always increment by a fixed value each time it is
 import { Metric, Effect } from "effect"
 
 const taskCount = Metric.counter("task_count").pipe(
-  Metric.withConstantInput(1) // Automatically increments by 1
+  Metric.withConstantInput(1), // Automatically increments by 1
 )
 
 const task1 = Effect.succeed(1).pipe(Effect.delay("100 millis"))
@@ -211,7 +211,7 @@ import { Metric } from "effect"
 
 const memory = Metric.gauge("memory_usage", {
   // Optional
-  description: "A gauge for memory usage"
+  description: "A gauge for memory usage",
 })
 ```
 
@@ -263,9 +263,8 @@ GaugeState {
 ```
 
 <Aside type="note" title="Gauge Behavior">
-  Gauges capture the most recent value set, so if you're tracking a
-  sequence of updates, the final state will show only the last recorded
-  value, not the entire series.
+  Gauges capture the most recent value set, so if you're tracking a sequence of updates, the final
+  state will show only the last recorded value, not the entire series.
 </Aside>
 
 ### Gauge Types
@@ -276,13 +275,13 @@ You can specify whether the gauge tracks a `number` or `bigint`.
 import { Metric } from "effect"
 
 const numberGauge = Metric.gauge("memory_usage", {
-  description: "A gauge for memory usage"
+  description: "A gauge for memory usage",
   // bigint: false // default
 })
 
 const bigintGauge = Metric.gauge("cpu_load", {
   description: "A gauge for CPU load",
-  bigint: true
+  bigint: true,
 })
 ```
 
@@ -313,9 +312,8 @@ Common use cases for histograms include:
 - **Aggregation**: Histograms can be aggregated across multiple instances, making them ideal for distributed systems where you need to collect data from different sources.
 
 <Aside type="note" title="Histogram Buckets and Precision">
-  Keep in mind that histograms don't retain exact values. Instead, they
-  group values into buckets, so the precision of your data depends on how
-  you define these buckets.
+  Keep in mind that histograms don't retain exact values. Instead, they group values into buckets,
+  so the precision of your data depends on how you define these buckets.
 </Aside>
 
 **Example** (Histogram With Linear Buckets)
@@ -333,7 +331,7 @@ const latency = Metric.histogram(
   // Buckets from 0-100, with an extra Infinity bucket
   MetricBoundaries.linear({ start: 0, width: 10, count: 11 }),
   // Optional
-  "Measures the distribution of request latency."
+  "Measures the distribution of request latency.",
 )
 
 const program = Effect.gen(function* () {
@@ -472,14 +470,12 @@ const responseTimeSummary = Metric.summary({
   error: 0.03, // Error margin for quantile calculation
   quantiles: [0.1, 0.5, 0.9], // Quantiles to observe (10%, 50%, 90%)
   // Optional
-  description: "Measures the distribution of response times"
+  description: "Measures the distribution of response times",
 })
 
 const program = Effect.gen(function* () {
   // Record 100 random response times between 1 and 120 ms
-  yield* responseTimeSummary(Random.nextIntBetween(1, 120)).pipe(
-    Effect.repeatN(99)
-  )
+  yield* responseTimeSummary(Random.nextIntBetween(1, 120)).pipe(Effect.repeatN(99))
 
   // Retrieve and log the current state of the summary
   const state = yield* Metric.value(responseTimeSummary)
@@ -524,7 +520,7 @@ import { Metric, Random, Effect } from "effect"
 // Define a frequency metric to track errors
 const errorFrequency = Metric.frequency("error_frequency", {
   // Optional
-  description: "Counts the occurrences of errors."
+  description: "Counts the occurrences of errors.",
 })
 
 const task = Effect.gen(function* () {
@@ -579,9 +575,7 @@ import { Metric } from "effect"
 
 // Create a counter metric for request count
 // and tag it with "environment: production"
-const counter = Metric.counter("request_count").pipe(
-  Metric.tagged("environment", "production")
-)
+const counter = Metric.counter("request_count").pipe(Metric.tagged("environment", "production"))
 ```
 
 Here, the `request_count` metric is tagged with `"environment": "production"`, allowing you to filter or analyze metrics by this tag later.

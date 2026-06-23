@@ -10,5 +10,5 @@ export const selectedSpanAtom = Atom.writable(
     const index = get(selectedSpanIndexAtom)
     return rootSpans[index]
   },
-  (ctx, index: number) => ctx.set(selectedSpanIndexAtom, index)
+  (ctx, index: number) => ctx.set(selectedSpanIndexAtom, index),
 )

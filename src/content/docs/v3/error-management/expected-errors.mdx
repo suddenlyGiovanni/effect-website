@@ -268,7 +268,7 @@ const recovered = Effect.gen(function* () {
   const failureOrSuccess = yield* Effect.either(program)
   return Either.match(failureOrSuccess, {
     onLeft: (error) => `Recovering from ${error._tag}`,
-    onRight: (value) => value // Do nothing in case of success
+    onRight: (value) => value, // Do nothing in case of success
   })
 })
 ```
@@ -336,9 +336,8 @@ effect. This ensures that the program continues without failing by recovering
 from errors using the provided fallback logic.
 
 <Aside type="note" title="Recoverable Errors Only">
-  `Effect.catchAll` only handles recoverable errors. It will not recover
-  from unrecoverable defects. See [Effect.catchAllCause](#catchallcause)
-  for handling all types of failures.
+  `Effect.catchAll` only handles recoverable errors. It will not recover from unrecoverable defects.
+  See [Effect.catchAllCause](#catchallcause) for handling all types of failures.
 </Aside>
 
 **Example** (Providing Recovery Logic for Recoverable Errors)
@@ -367,9 +366,7 @@ const program = Effect.gen(function* () {
 //      ┌─── Effect<string, never, never>
 //      ▼
 const recovered = program.pipe(
-  Effect.catchAll((error) =>
-    Effect.succeed(`Recovering from ${error._tag}`)
-  )
+  Effect.catchAll((error) => Effect.succeed(`Recovering from ${error._tag}`)),
 )
 ```
 
@@ -403,8 +400,8 @@ const recovered = program.pipe(
   Effect.catchAllCause((cause) =>
     Cause.isFailType(cause)
       ? Effect.succeed("Recovered from a regular error")
-      : Effect.succeed("Recovered from a defect")
-  )
+      : Effect.succeed("Recovered from a defect"),
+  ),
 )
 
 Effect.runPromise(recovered).then(console.log)
@@ -412,9 +409,9 @@ Effect.runPromise(recovered).then(console.log)
 ```
 
 <Aside type="tip" title="When to Recover from Defects">
-  Defects are unexpected errors that typically shouldn't be recovered
-  from, as they often indicate serious issues. However, in some cases,
-  such as dynamically loaded plugins, controlled recovery might be needed.
+  Defects are unexpected errors that typically shouldn't be recovered from, as they often indicate
+  serious issues. However, in some cases, such as dynamically loaded plugins, controlled recovery
+  might be needed.
 </Aside>
 
 ## Catching Some Errors
@@ -565,7 +562,7 @@ const recovered = program.pipe(
     } else {
       return Option.none()
     }
-  })
+  }),
 )
 ```
 
@@ -617,8 +614,8 @@ const recovered = program.pipe(
   Effect.catchIf(
     // Only handle HttpError errors
     (error) => error._tag === "HttpError",
-    () => Effect.succeed("Recovering from HttpError")
-  )
+    () => Effect.succeed("Recovering from HttpError"),
+  ),
 )
 ```
 
@@ -662,8 +659,8 @@ const recovered = program.pipe(
   Effect.catchIf(
     // User-defined type guard
     (error): error is HttpError => error._tag === "HttpError",
-    () => Effect.succeed("Recovering from HttpError")
-  )
+    () => Effect.succeed("Recovering from HttpError"),
+  ),
 )
 ```
 
@@ -706,9 +703,7 @@ const program = Effect.gen(function* () {
 //      ▼
 const recovered = program.pipe(
   // Only handle HttpError errors
-  Effect.catchTag("HttpError", (_HttpError) =>
-    Effect.succeed("Recovering from HttpError")
-  )
+  Effect.catchTag("HttpError", (_HttpError) => Effect.succeed("Recovering from HttpError")),
 )
 ```
 
@@ -753,12 +748,10 @@ const program = Effect.gen(function* () {
 //      ▼
 const recovered = program.pipe(
   // Handle both HttpError and ValidationError
-  Effect.catchTag("HttpError", (_HttpError) =>
-    Effect.succeed("Recovering from HttpError")
-  ),
+  Effect.catchTag("HttpError", (_HttpError) => Effect.succeed("Recovering from HttpError")),
   Effect.catchTag("ValidationError", (_ValidationError) =>
-    Effect.succeed("Recovering from ValidationError")
-  )
+    Effect.succeed("Recovering from ValidationError"),
+  ),
 )
 ```
 
@@ -771,8 +764,8 @@ const recovered: Effect<string, never, never>
 indicating that all errors have been handled.
 
 <Aside type="caution" title="Error Type Requirement">
-  The error type must have a readonly `_tag` field to use `catchTag`. This
-  field is used to identify and match errors.
+  The error type must have a readonly `_tag` field to use `catchTag`. This field is used to identify
+  and match errors.
 </Aside>
 
 ### catchTags
@@ -812,11 +805,9 @@ const program = Effect.gen(function* () {
 //      ▼
 const recovered = program.pipe(
   Effect.catchTags({
-    HttpError: (_HttpError) =>
-      Effect.succeed(`Recovering from HttpError`),
-    ValidationError: (_ValidationError) =>
-      Effect.succeed(`Recovering from ValidationError`)
-  })
+    HttpError: (_HttpError) => Effect.succeed(`Recovering from HttpError`),
+    ValidationError: (_ValidationError) => Effect.succeed(`Recovering from ValidationError`),
+  }),
 )
 ```
 
@@ -824,8 +815,8 @@ This function takes an object where each property represents a specific error `_
 and the corresponding value is the error handler function to be executed when that particular error occurs.
 
 <Aside type="caution" title="Error Type Requirement">
-  The error type must have a readonly `_tag` field to use `catchTag`. This
-  field is used to identify and match errors.
+  The error type must have a readonly `_tag` field to use `catchTag`. This field is used to identify
+  and match errors.
 </Aside>
 
 ## Effect.fn
@@ -874,10 +865,7 @@ timestamp=... level=ERROR fiber=#0 cause="Error: Boom!
 ```ts twoslash
 import { Effect } from "effect"
 import { NodeSdk } from "@effect/opentelemetry"
-import {
-  ConsoleSpanExporter,
-  BatchSpanProcessor
-} from "@opentelemetry/sdk-trace-base"
+import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 
 const myfunc = Effect.fn("myspan")(function* <N extends number>(n: N) {
   yield* Effect.annotateCurrentSpan("n", n)
@@ -890,7 +878,7 @@ const program = myfunc(100)
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
   // Export span data to the console
-  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
 }))
 
 Effect.runFork(program.pipe(Effect.provide(NodeSdkLive)))
@@ -958,7 +946,7 @@ const myfunc = Effect.fn(
     yield* Effect.fail(new Error("Boom!"))
   },
   // You can access both the created effect and the original arguments
-  (effect, n) => Effect.delay(effect, `${n / 100} seconds`)
+  (effect, n) => Effect.delay(effect, `${n / 100} seconds`),
 )
 
 Effect.runFork(myfunc(100).pipe(Effect.catchAllCause(Effect.logError)))

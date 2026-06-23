@@ -1,14 +1,14 @@
 import { useCallback, useState } from "react"
 import { Directory } from "../../domain/workspace"
 import { useCreate, useExplorerState } from "../file-explorer"
+import { FileInput } from "./file-input"
 import { FileNode } from "./file-node"
 import { FileTree } from "./file-tree"
-import { FileInput } from "./file-input"
 
 export function DirectoryNode({
   depth,
   node,
-  path
+  path,
 }: {
   readonly node: Directory
   readonly depth: number
@@ -23,15 +23,30 @@ export function DirectoryNode({
 
   return (
     <>
-      <FileNode type="directory" node={node} depth={depth} path={path} isOpen={open} onClick={handleToggle} />
+      <FileNode
+        type="directory"
+        node={node}
+        depth={depth}
+        path={path}
+        isOpen={open}
+        onClick={handleToggle}
+      />
       {open && (
         <>
           {isCreating && state.type === "Directory" && (
-            <FileInput type={state.type} depth={depth + 1} onSubmit={(name) => create(node, name, "Directory")} />
+            <FileInput
+              type={state.type}
+              depth={depth + 1}
+              onSubmit={(name) => create(node, name, "Directory")}
+            />
           )}
           <FileTree tree={node.children} depth={depth + 1} path={path} />
           {isCreating && state.type === "File" && (
-            <FileInput type={state.type} depth={depth + 1} onSubmit={(name) => create(node, name, "File")} />
+            <FileInput
+              type={state.type}
+              depth={depth + 1}
+              onSubmit={(name) => create(node, name, "File")}
+            />
           )}
         </>
       )}

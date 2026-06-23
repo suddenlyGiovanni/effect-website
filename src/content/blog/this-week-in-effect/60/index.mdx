@@ -28,19 +28,22 @@ To get started, below you’ll find links to our documentation as well as our gu
 
 Recent major updates:
 
-- We started publishing the [talks from Effect Days 2025](https://www.youtube.com/playlist?list=PLDf3uQLaK2B9bEBZbwMv04e_zSbRNPKH6)! 
+- We started publishing the [talks from Effect Days 2025](https://www.youtube.com/playlist?list=PLDf3uQLaK2B9bEBZbwMv04e_zSbRNPKH6)!
 - The [Effect community](https://discord.gg/effect-ts) on Discord reached 4000+ members!
 - [Effect 3.14](https://effect.website/blog/releases/effect/314) has been released.
 
 &nbsp;
 
 ## Technology
-[Maxwell Brown](https://x.com/imax153), Effect Core Contributor and Founding Engineer at Effectful Technologies, wrote about [Developing AI Applications with Effect](https://effect.website/blog/effect-ai/), showing how Effect’s AI integration packages simplify working with LLMs, enabling developers to build scalable, provider-agnostic AI applications with less complexity and greater flexibility. 
+
+[Maxwell Brown](https://x.com/imax153), Effect Core Contributor and Founding Engineer at Effectful Technologies, wrote about [Developing AI Applications with Effect](https://effect.website/blog/effect-ai/), showing how Effect’s AI integration packages simplify working with LLMs, enabling developers to build scalable, provider-agnostic AI applications with less complexity and greater flexibility.
+
 <Tweet id="1907757221645009178" />
 
 Here are all the technical changes from this week.
 
 ### Effect Core
+
 - [Add docs to effect/HashSet module](https://github.com/Effect-TS/effect/pull/4664) (Documentation Update)
 - [Fix Data.TaggedEnum with generics regression](https://github.com/Effect-TS/effect/pull/4670) (Bug Fix)
 - [Docs(effect/HashSet): fix HashSet.md api docs](https://github.com/Effect-TS/effect/pull/4667) (Documentation Update)
@@ -51,23 +54,24 @@ Here are all the technical changes from this week.
 - [Add Layer.setRandom, for over-riding the default Random service](https://github.com/Effect-TS/effect/pull/4694) (Feature, next-minor)
 - [Fix JSONSchema generation for record values that include undefined](https://github.com/Effect-TS/effect/pull/4699) (Bug Fix)
 
-
 ### Effect AI
+
 - [Handle arbitrary length StreamChunkPart](https://github.com/Effect-TS/effect/pull/4630) (Bug Fix)
 - [Add manual gpt-4.5-preview fix for CreateChatCompletionResponse schema](https://github.com/Effect-TS/effect/pull/4638) (Bug Fix)
 
-
 ### Effect Cluster
+
 - [Fix Data.TaggedEnum with generics regression](https://github.com/Effect-TS/effect/pull/4670) (Bug Fix)
 
-
 ### Effect Platform
+
 - [Pass options to HttpServerResponse.raw](https://github.com/Effect-TS/effect/pull/4642) (Bug Fix)
 - [Fix(platform-node): Handle empty chunks in streams](https://github.com/Effect-TS/effect/pull/4653) (Bug Fix)
 - [Allow removing multiple Headers](https://github.com/Effect-TS/effect/pull/4627) (Feature, next-minor)
 - [Re-export default from Undici](https://github.com/Effect-TS/effect/pull/4688) (Bug Fix)
 
 ### Effect RPC
+
 - [Ensure RpcClient fiber is defined before polling](https://github.com/Effect-TS/effect/pull/4671) (Bug Fix)
 - [Allow RpcGroup.merge to accept multiple groups](https://github.com/Effect-TS/effect/pull/4677) (Feature)
 - [Remove trailing slash from rpc http requests](https://github.com/Effect-TS/effect/pull/4678) (Bug Fix)
@@ -75,20 +79,24 @@ Here are all the technical changes from this week.
 - [Fix rpc README server example](https://github.com/Effect-TS/effect/pull/4693) (Documentation Update)
 
 ### Effect SQL
+
 - [Fix(sql-kysely): prevent non-object proxy creation error](https://github.com/Effect-TS/effect/pull/4661) (Bug Fix)
 
 &nbsp;
 
 ## Community Highlights
+
 - We're excited to share another community milestone: the [Effect Discord](https://discord.gg/effect-ts) reached 4k+ members!🚀
 
 - Another thrilling news from this week: Effect has been featured in the [Thoughtworks Technology Radar Vol 32](https://www.thoughtworks.com/radar/languages-and-frameworks/effect) in the Languages and Framework section, with the Thoughtworks team highlighting that after using Effect, their team found no reason to go back.
 
 - [Marcelo Bairros](https://x.com/marcelohbairros) shared a [demo application](https://github.com/sellooh/effect-cluster-via-sst) showing how to run an Effect Cluster app with the SST Cluster component with a 1-command deploy. A great starting point if you want to see Effect Cluster in action.
-<Tweet id="1907073765655056868" />
+
+  <Tweet id="1907073765655056868" />
 
 - [Victor Korzunin](https://x.com/F1oydRose) built an interface for uploading large files (up to 5 TiB) for developers working with Effect and AWS S3 service.
-<Tweet id="1905786474152505350" />
+
+  <Tweet id="1905786474152505350" />
 
 - Dillon Mulroy live-streamed four episodes of his series **Freelance project with TypeScript, Svelte 5, and EffectTS 🚀** on his Twitch channel.
 
@@ -101,6 +109,7 @@ Here are all the technical changes from this week.
 We've published the first two talks from Effect Days 2025:
 
 - Opening remarks by Johannes Schickling, DX at Effect. Johannes shared updates on Effect's advancements over the past year and key improvements like documentation, Effect AI, and the Effect Playground. He emphasized how Effect continues to simplify the complexities of building production-grade systems, especially in the AI space.
+
   <YouTube
     id="https://www.youtube.com/embed/6ZMap42Hj9U?si=C_3YLftEOAqcp07n"
     title="Opening Remarks | Johannes Schickling (Effect Days 2025)"

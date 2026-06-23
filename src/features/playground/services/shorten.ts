@@ -12,8 +12,8 @@ export class ShortenClient extends Context.Service<
 >()("app/ShortenClient", {
   make: Effect.succeed({
     shorten: (_opts: { text: string }) => Effect.succeed("stub-hash"),
-    retrieve: (_opts: { hash: string }) => Effect.succeed(Option.none<string>())
-  })
+    retrieve: (_opts: { hash: string }) => Effect.succeed(Option.none<string>()),
+  }),
 }) {
   static readonly layer = Layer.effect(this, this.make)
 }

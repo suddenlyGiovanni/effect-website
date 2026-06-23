@@ -1,7 +1,7 @@
 ---
 pagefind: false
 title: "This Week in Effect - #66"
-excerpt: Effect Cluster by Tim Smart. Effect 3.15 release. 
+excerpt: Effect Cluster by Tim Smart. Effect 3.15 release.
 date: 2025-05-16
 authors:
   - davide_scognamiglio
@@ -43,6 +43,7 @@ Recent major updates:
 [Mattia Manzati](https://x.com/MattiaManzati) released two major updates to Effect's Dev Tools:
 
 - The Effect's LSP diagnostics are now also available at compile time thanks to ts-patch.
+
   <Tweet id="1921943196851950036" />
 
 - TS interfaces and type aliases can now be transformed into an Effect Schema with a single refactor click.
@@ -51,38 +52,44 @@ Recent major updates:
 Here are all the technical changes from the past week (note that changes included in the 3.15 release will not be listed).
 
 ### Effect Core
-- [Ensure generic refinements work with Effect.filterOr*](https://github.com/Effect-TS/effect/pull/4870) (Bug Fix)
+
+- [Ensure generic refinements work with Effect.filterOr\*](https://github.com/Effect-TS/effect/pull/4870) (Bug Fix)
 - [Preserve name & this in Effect.fn apis](https://github.com/Effect-TS/effect/pull/4857) (Bug Fix)
 - [More type-safeHashMap.has/get](https://github.com/Effect-TS/effect/pull/4659) (Bug Fix)
 - [Add Schedule.CurrentIterationMetadata Reference](https://github.com/Effect-TS/effect/pull/4828) (Feature, next-mior)
 
 ### Effect AI
+
 - [Refactor the AI packages](https://github.com/Effect-TS/effect/pull/4766) (Refactor)
 - [Preserve tool call results in AiResponse.merge](https://github.com/Effect-TS/effect/pull/4866) (Bug Fix)
 - [Ensure that the finish reason is set properly](https://github.com/Effect-TS/effect/pull/4878) (Bug Fix)
 - [Ensure that multiple tool calls are processed properly for OpenAi](https://github.com/Effect-TS/effect/pull/4880) (Bug Fix)
 
 ### Effect Cluster
+
 - [Add EntityNotAssignedToRunner error](https://github.com/Effect-TS/effect/pull/4883) (Improvement)
 
 ### Effect Platform
+
 - [Remove content headers for FormData bodies](https://github.com/Effect-TS/effect/pull/4882) (Bug Fix)
 - [Add HttpBody.formDataRecord](https://github.com/Effect-TS/effect/pull/4889) (Feature)
 
 ### Effect RPC
+
 - [Add apis for implementing and accessing single rpc handlers](https://github.com/Effect-TS/effect/pull/4858) (Feature)
 - [Ensure socket close events are not errors in RpcServer](https://github.com/Effect-TS/effect/pull/4860) (Bug Fix)
 
 ### General Chores
+
 - [Chore: upgrade TSTyche](https://github.com/Effect-TS/effect/pull/4745)
 - [Update dev dependencies](https://github.com/Effect-TS/effect/pull/4885)
-
 
 &nbsp;
 
 ## Effect Days 2025 Updates
 
 This week, we published Tim Smart's **Effect Cluster** talk, where he introduces Effect Cluster, a distributed runtime for Effect, and a major step toward production-grade systems in TypeScript.
+
 <YouTube
   id="https://www.youtube.com/embed/4lEDdMuTDJg?si=JI18K3wOc1IL_9G6"
   title="Effect Cluster | Tim Smart (Effect Days 2025)"
@@ -97,9 +104,10 @@ This week, we published Tim Smart's **Effect Cluster** talk, where he introduces
   <Tweet id="1922982695820259331" />
 
 - [Lucas Barake](https://www.youtube.com/@lucas-barake) published a new video, **Goodbye Fetch, Hello Effect's HttpClient**.
+
   <YouTube
-  id="https://www.youtube.com/embed/VQy8VrvX24s?si=zDkBr2gZetMQLt2W"
-  title="Goodbye Fetch, Hello Effect's HttpClient"
+    id="https://www.youtube.com/embed/VQy8VrvX24s?si=zDkBr2gZetMQLt2W"
+    title="Goodbye Fetch, Hello Effect's HttpClient"
   />
 
 - Kishore is working on an [Effect Playground](https://effect-ts.vercel.app/playground) that runs totally on web browser without any server.
@@ -107,6 +115,7 @@ This week, we published Tim Smart's **Effect Cluster** talk, where he introduces
 - [Aleks Marchenko](https://github.com/AMar4enko) released his first iteration of an [Avro codec for effect/Schema](https://github.com/AMar4enko/effect-schema-avro).
 
 - A reminder that the 5th edition of the [Effect Paris Meetup](https://www.meetup.com/fr-FR/effect-paris/events/307558421) is coming on May 20th, hosted by [Spiko](https://www.spiko.io/) and sponsored by [Evryg](https://www.evryg.com/en). The meetup will be in French.
+
   <Tweet id="1917474538104754182" />
 
 - Dillon Mulroy livestreamed five episodes of his series **Building a tool to sync Splitwise and YNAB with EffectTS 🚀** on his Twitch channel.
@@ -114,16 +123,17 @@ This week, we published Tim Smart's **Effect Cluster** talk, where he introduces
   <TwitchPlayerNonInteractive video="2456805012" />
 
 &nbsp;
+
 ## Effect Content Update
 
 - Mattia Manzati was live on Twitch and X(Twitter) with a new episode of **Building an Effect Warehouse App**.
+
   <Tweet id="1922207195032162475" />
 
 - Maxwell Brown and Tim Smart were live on X(Twitter) and Twitch on Tuesday with a new episode of **Reimagining ContentLayer with Effect**.
   <Tweet id="1922761447609622725" />
 
 &nbsp;
-
 
 ## Cause & Effect Podcast
 

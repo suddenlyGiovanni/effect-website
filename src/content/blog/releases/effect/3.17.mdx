@@ -32,7 +32,7 @@ class MyService extends Context.Tag("MyService")<
 
 // Mocking a service with a partial implementation
 const MyServiceTest = Layer.mock(MyService, {
-  two: () => Effect.succeed(2)
+  two: () => Effect.succeed(2),
 })
 ```
 

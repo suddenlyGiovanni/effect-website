@@ -6,7 +6,7 @@ import { FileNode } from "./file-node"
 export function FileTree({
   tree,
   depth = 0,
-  path = ""
+  path = "",
 }: {
   readonly tree: Tree
   readonly depth?: number
@@ -14,7 +14,7 @@ export function FileTree({
 }) {
   const directories = useMemo(
     () => tree.filter((node): node is Directory => node._tag === "Directory"),
-    [tree]
+    [tree],
   )
   const files = useMemo(() => tree.filter((node): node is File => node._tag === "File"), [tree])
 

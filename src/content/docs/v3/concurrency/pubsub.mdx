@@ -39,7 +39,7 @@ const program = Effect.scoped(
     // Each subscriber receives the message
     console.log("Subscriber 1: " + (yield* Queue.take(dequeue1)))
     console.log("Subscriber 2: " + (yield* Queue.take(dequeue2)))
-  })
+  }),
 )
 
 Effect.runFork(program)
@@ -51,9 +51,9 @@ Subscriber 2: Hello from a PubSub!
 ```
 
 <Aside type="caution" title="Subscribe Before Publishing">
-  A subscriber only receives messages published while it is actively
-  subscribed. To ensure a subscriber receives a particular message,
-  establish the subscription before publishing the message.
+  A subscriber only receives messages published while it is actively subscribed. To ensure a
+  subscriber receives a particular message, establish the subscription before publishing the
+  message.
 </Aside>
 
 ## Creating a PubSub
@@ -137,7 +137,7 @@ const program = Effect.scoped(
     const dequeue = yield* PubSub.subscribe(pubsub)
     yield* PubSub.publishAll(pubsub, ["Message 1", "Message 2"])
     console.log(yield* Queue.takeAll(dequeue))
-  })
+  }),
 )
 
 Effect.runFork(program)

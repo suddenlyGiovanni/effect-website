@@ -75,9 +75,7 @@ import { Effect } from "effect"
 
 //      ┌─── Effect<never, Error, never>
 //      ▼
-const failure = Effect.fail(
-  new Error("Operation failed due to network error")
-)
+const failure = Effect.fail(new Error("Operation failed due to network error"))
 ```
 
 The type of `failure` is `Effect<never, Error, never>`, which means:
@@ -122,9 +120,7 @@ Here's how you can rewrite the [`divide`](#why-not-throw-errors) function using 
 import { Effect } from "effect"
 
 const divide = (a: number, b: number): Effect.Effect<number, Error> =>
-  b === 0
-    ? Effect.fail(new Error("Cannot divide by zero"))
-    : Effect.succeed(a / b)
+  b === 0 ? Effect.fail(new Error("Cannot divide by zero")) : Effect.succeed(a / b)
 ```
 
 In this example, the `divide` function indicates in its return type `Effect<number, Error>` that the operation can either succeed with a `number` or fail with an `Error`.
@@ -156,7 +152,7 @@ const getUser = (userId: number): Effect.Effect<User, Error> => {
   // Normally, you would access a database or API here, but we'll mock it
   const userDatabase: Record<number, User> = {
     1: { id: 1, name: "John Doe" },
-    2: { id: 2, name: "Jane Smith" }
+    2: { id: 2, name: "Jane Smith" },
   }
 
   // Check if the user exists in our "database" and return appropriately
@@ -181,8 +177,7 @@ For a deeper dive into managing errors in your applications, refer to the [Error
 In JavaScript, you can delay the execution of synchronous computations using "thunks".
 
 <Aside type="note" title="Thunks">
-  A "thunk" is a function that takes no arguments and may return some
-  value.
+  A "thunk" is a function that takes no arguments and may return some value.
 </Aside>
 
 Thunks are useful for delaying the computation of a value until it is needed.
@@ -262,7 +257,7 @@ const parse = (input: string) =>
     // JSON.parse may throw for bad input
     try: () => JSON.parse(input),
     // remap the error
-    catch: (unknown) => new Error(`something went wrong ${unknown}`)
+    catch: (unknown) => new Error(`something went wrong ${unknown}`),
   })
 
 //      ┌─── Effect<any, Error, never>
@@ -310,7 +305,7 @@ const delay = (message: string) =>
         setTimeout(() => {
           resolve(message)
         }, 2000)
-      })
+      }),
   )
 
 //      ┌─── Effect<string, never, never>
@@ -339,9 +334,7 @@ import { Effect } from "effect"
 
 const getTodo = (id: number) =>
   // Will catch any errors and propagate them as UnknownException
-  Effect.tryPromise(() =>
-    fetch(`https://jsonplaceholder.typicode.com/todos/${id}`)
-  )
+  Effect.tryPromise(() => fetch(`https://jsonplaceholder.typicode.com/todos/${id}`))
 
 //      ┌─── Effect<Response, UnknownException, never>
 //      ▼
@@ -367,7 +360,7 @@ const getTodo = (id: number) =>
   Effect.tryPromise({
     try: () => fetch(`https://jsonplaceholder.typicode.com/todos/${id}`),
     // remap the error
-    catch: (unknown) => new Error(`something went wrong ${unknown}`)
+    catch: (unknown) => new Error(`something went wrong ${unknown}`),
   })
 
 //      ┌─── Effect<Response, Error, never>
@@ -473,9 +466,7 @@ const writeFileWithCleanup = (filename: string, data: string) =>
   })
 
 const program = Effect.gen(function* () {
-  const fiber = yield* Effect.fork(
-    writeFileWithCleanup("example.txt", "Some long data...")
-  )
+  const fiber = yield* Effect.fork(writeFileWithCleanup("example.txt", "Some long data..."))
   // Simulate interrupting the fiber after 1 second
   yield* Effect.sleep("1 second")
   yield* Fiber.interrupt(fiber) // This will trigger the cleanup
@@ -565,10 +556,8 @@ console.log(Effect.runSync(good)) // Output: 2
 ```
 
 <Aside type="note" title="Running Effects">
-  This example utilizes `Effect.runSync` to execute effects and display
-  their results (refer to [Running
-  Effects](/docs/getting-started/running-effects/#runsync) for more
-  details).
+  This example utilizes `Effect.runSync` to execute effects and display their results (refer to
+  [Running Effects](/docs/getting-started/running-effects/#runsync) for more details).
 </Aside>
 
 In this example, `bad` is the result of calling `Effect.succeed(i++)` a single time, which increments the scoped variable but [returns its original value](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Increment#postfix_increment). `Effect.runSync(bad)` does not result in any new computation, because `Effect.succeed(i++)` has already been called. On the other hand, each time `Effect.runSync(good)` is called, the thunk passed to `Effect.suspend()` will be executed, outputting the scoped variable's most recent value.
@@ -584,9 +573,7 @@ For example it's fairly common for `Effect.suspend` to be used in recursive func
 import { Effect } from "effect"
 
 const blowsUp = (n: number): Effect.Effect<number> =>
-  n < 2
-    ? Effect.succeed(1)
-    : Effect.zipWith(blowsUp(n - 1), blowsUp(n - 2), (a, b) => a + b)
+  n < 2 ? Effect.succeed(1) : Effect.zipWith(blowsUp(n - 1), blowsUp(n - 2), (a, b) => a + b)
 
 // console.log(Effect.runSync(blowsUp(32)))
 // crash: JavaScript heap out of memory
@@ -597,17 +584,15 @@ const allGood = (n: number): Effect.Effect<number> =>
     : Effect.zipWith(
         Effect.suspend(() => allGood(n - 1)),
         Effect.suspend(() => allGood(n - 2)),
-        (a, b) => a + b
+        (a, b) => a + b,
       )
 
 console.log(Effect.runSync(allGood(32))) // Output: 3524578
 ```
 
 <Aside type="note" title="Running Effects">
-  This example utilizes `Effect.zipWith` to combine the results of two
-  effects (refer to the documentation on
-  [zipping](/docs/getting-started/control-flow/#zipwith) for more
-  details).
+  This example utilizes `Effect.zipWith` to combine the results of two effects (refer to the
+  documentation on [zipping](/docs/getting-started/control-flow/#zipwith) for more details).
 </Aside>
 
 The `blowsUp` function creates a recursive Fibonacci sequence without deferring execution. Each call to `blowsUp` triggers further immediate recursive calls, rapidly increasing the JavaScript call stack size.
@@ -631,9 +616,7 @@ import { Effect } from "effect"
       Effect<never, Error, never> | Effect<number, never, never>
 */
 const withoutSuspend = (a: number, b: number) =>
-  b === 0
-    ? Effect.fail(new Error("Cannot divide by zero"))
-    : Effect.succeed(a / b)
+  b === 0 ? Effect.fail(new Error("Cannot divide by zero")) : Effect.succeed(a / b)
 
 /*
   Using suspend to unify return types.
@@ -643,9 +626,7 @@ const withoutSuspend = (a: number, b: number) =>
 */
 const withSuspend = (a: number, b: number) =>
   Effect.suspend(() =>
-    b === 0
-      ? Effect.fail(new Error("Cannot divide by zero"))
-      : Effect.succeed(a / b)
+    b === 0 ? Effect.fail(new Error("Cannot divide by zero")) : Effect.succeed(a / b),
   )
 ```
 

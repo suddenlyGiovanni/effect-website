@@ -1,14 +1,14 @@
 import * as Clipboard from "@effect/platform-browser/Clipboard"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import * as Atom from "effect/unstable/reactivity/Atom"
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
-import { ShortenClient } from "../services/shorten"
+import * as Atom from "effect/unstable/reactivity/Atom"
+import type { AtomWorkspaceHandle } from "./workspace"
 import { WorkspaceCompression } from "../services/compression"
 import { WorkspaceDownload } from "../services/download"
+import { ShortenClient } from "../services/shorten"
 import { WebContainer } from "../services/webcontainer"
 import { editorAtom } from "./editor"
-import type { AtomWorkspaceHandle } from "./workspace"
 
 const runtime = Atom.runtime(
   Layer.mergeAll(
@@ -16,8 +16,8 @@ const runtime = Atom.runtime(
     ShortenClient.layer,
     WebContainer.layer,
     WorkspaceCompression.layer,
-    WorkspaceDownload.layer
-  )
+    WorkspaceDownload.layer,
+  ),
 )
 
 export const shareAtom = Atom.family((handle: AtomWorkspaceHandle) => {
@@ -42,9 +42,9 @@ export const shareAtom = Atom.family((handle: AtomWorkspaceHandle) => {
 
       return {
         url: url.toString(),
-        zipFile: { name: `play-${hash}.zip`, content: zipFile }
+        zipFile: { name: `play-${hash}.zip`, content: zipFile },
       }
-    }, Effect.tapCause(Effect.logError))
+    }, Effect.tapCause(Effect.logError)),
   )
 })
 
@@ -54,9 +54,9 @@ export const copyLinkAtom = Atom.fn<AtomWorkspaceHandle>()(
     navigator.clipboard.writeText(url)
     yield* Effect.sleep(2000).pipe(
       Effect.tap(() => Effect.sync(() => get.setSelf(AsyncResult.initial()))),
-      Effect.forkScoped
+      Effect.forkScoped,
     )
-  })
+  }),
 )
 
 export const downloadAtom = Atom.fn<AtomWorkspaceHandle>()(
@@ -72,7 +72,7 @@ export const downloadAtom = Atom.fn<AtomWorkspaceHandle>()(
     link.click()
     yield* Effect.sleep(2000).pipe(
       Effect.tap(() => Effect.sync(() => get.setSelf(AsyncResult.initial()))),
-      Effect.forkScoped
+      Effect.forkScoped,
     )
-  })
+  }),
 )

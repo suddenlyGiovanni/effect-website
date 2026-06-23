@@ -95,7 +95,7 @@ const task = Effect.gen(function* () {
 
 const timedOutEffect = Effect.all([
   task.pipe(Effect.timeoutOption("3 seconds")),
-  task.pipe(Effect.timeoutOption("1 second"))
+  task.pipe(Effect.timeoutOption("1 second")),
 ])
 
 Effect.runPromise(timedOutEffect).then(console.log)
@@ -116,10 +116,9 @@ Start processing...
 When an operation does not finish within the specified duration, the behavior of the `Effect.timeout` depends on whether the operation is "uninterruptible".
 
 <Aside type="note" title="Uninterruptible Effects">
-  An uninterruptible effect is one that, once started, cannot be stopped
-  mid-execution by the timeout mechanism directly. This could be because
-  the operations within the effect need to run to completion to avoid
-  leaving the system in an inconsistent state.
+  An uninterruptible effect is one that, once started, cannot be stopped mid-execution by the
+  timeout mechanism directly. This could be because the operations within the effect need to run to
+  completion to avoid leaving the system in an inconsistent state.
 </Aside>
 
 1. **Interruptible Operation**: If the operation can be interrupted, it is terminated immediately once the timeout threshold is reached, resulting in a `TimeoutException`.
@@ -164,10 +163,7 @@ When an operation does not finish within the specified duration, the behavior of
      return "Result"
    })
 
-   const timedEffect = task.pipe(
-     Effect.uninterruptible,
-     Effect.timeout("1 second")
-   )
+   const timedEffect = task.pipe(Effect.uninterruptible, Effect.timeout("1 second"))
 
    // Outputs a TimeoutException after the task completes,
    // because the task is uninterruptible
@@ -223,7 +219,7 @@ const timedEffect = longRunningTask.pipe(
   Effect.uninterruptible,
   // Allows the task to finish in the background if it times out
   Effect.disconnect,
-  Effect.timeout("1 second")
+  Effect.timeout("1 second"),
 )
 
 Effect.runPromiseExit(timedEffect).then(console.log)
@@ -270,8 +266,8 @@ class MyTimeoutError extends Data.TaggedError("MyTimeoutError")<{}> {}
 const program = task.pipe(
   Effect.timeoutFail({
     duration: "1 second",
-    onTimeout: () => new MyTimeoutError() // Custom timeout error
-  })
+    onTimeout: () => new MyTimeoutError(), // Custom timeout error
+  }),
 )
 
 Effect.runPromiseExit(program).then(console.log)
@@ -309,8 +305,8 @@ const task = Effect.gen(function* () {
 const program = task.pipe(
   Effect.timeoutFailCause({
     duration: "1 second",
-    onTimeout: () => Cause.die("Timed out!") // Custom defect for timeout
-  })
+    onTimeout: () => Cause.die("Timed out!"), // Custom defect for timeout
+  }),
 )
 
 Effect.runPromiseExit(program).then(console.log)
@@ -344,11 +340,9 @@ const task = Effect.gen(function* () {
 const program = task.pipe(
   Effect.timeoutTo({
     duration: "1 second",
-    onSuccess: (result): Either.Either<string, string> =>
-      Either.right(result),
-    onTimeout: (): Either.Either<string, string> =>
-      Either.left("Timed out!")
-  })
+    onSuccess: (result): Either.Either<string, string> => Either.right(result),
+    onTimeout: (): Either.Either<string, string> => Either.left("Timed out!"),
+  }),
 )
 
 Effect.runPromise(program).then(console.log)

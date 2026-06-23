@@ -67,13 +67,12 @@ type HttpError = Data.TaggedEnum<{
   NotFound: {}
   InternalServerError: { reason: string }
 }>
-const { $is, $match, InternalServerError, NotFound } =
-  Data.taggedEnum<HttpError>()
+const { $is, $match, InternalServerError, NotFound } = Data.taggedEnum<HttpError>()
 
 // create a matcher
 const matcher = $match({
   NotFound: () => 0,
-  InternalServerError: () => 1
+  InternalServerError: () => 1,
 })
 
 // use the guard

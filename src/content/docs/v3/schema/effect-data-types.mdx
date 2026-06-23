@@ -33,7 +33,7 @@ import { Equal } from "effect"
 
 const schema = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 const decode = Schema.decode(schema)
@@ -56,8 +56,8 @@ import { Equal } from "effect"
 const schema = Schema.Data(
   Schema.Struct({
     name: Schema.String,
-    age: Schema.Number
-  })
+    age: Schema.Number,
+  }),
 )
 
 const decode = Schema.decode(schema)
@@ -77,8 +77,7 @@ It ensures consistency in configuration data and provides detailed feedback for 
 **Syntax**
 
 ```ts showLineNumbers=false
-Config: <A, I extends string>(name: string, schema: Schema<A, I>) =>
-  Config<A>
+Config: <A, I extends string>(name: string, schema: Schema<A, I>) => Config<A>
 ```
 
 This function takes two arguments:
@@ -102,10 +101,7 @@ Behind the scenes, `Schema.Config` follows these steps:
 import { Effect, Schema } from "effect"
 
 // Define a config that expects a string with at least 4 characters
-const myConfig = Schema.Config(
-  "Foo",
-  Schema.String.pipe(Schema.minLength(4))
-)
+const myConfig = Schema.Config("Foo", Schema.String.pipe(Schema.minLength(4)))
 
 const program = Effect.gen(function* () {
   const foo = yield* myConfig
@@ -420,7 +416,7 @@ import { Option } from "effect"
 
 const schema = Schema.OptionFromNullishOr(
   Schema.NumberFromString,
-  undefined // Encode Option.none() as undefined
+  undefined, // Encode Option.none() as undefined
 )
 
 //     ┌─── string | null | undefined
@@ -485,9 +481,7 @@ type Encoded = typeof Schema.OptionFromNonEmptyTrimmedString
 //     ▼
 type Type = typeof Schema.OptionFromNonEmptyTrimmedString
 
-const decode = Schema.decodeUnknownSync(
-  Schema.OptionFromNonEmptyTrimmedString
-)
+const decode = Schema.decodeUnknownSync(Schema.OptionFromNonEmptyTrimmedString)
 const encode = Schema.encodeSync(Schema.OptionFromNonEmptyTrimmedString)
 
 // Decoding examples
@@ -546,7 +540,7 @@ import { Schema, Either } from "effect"
 
 const schema = Schema.Either({
   left: Schema.Trim,
-  right: Schema.NumberFromString
+  right: Schema.NumberFromString,
 })
 
 //     ┌─── EitherEncoded<string, string>
@@ -611,7 +605,7 @@ import { Schema, Either } from "effect"
 
 const schema = Schema.EitherFromSelf({
   left: Schema.Trim,
-  right: Schema.NumberFromString
+  right: Schema.NumberFromString,
 })
 
 //     ┌─── Either<string, string>
@@ -676,7 +670,7 @@ import { Schema, Either } from "effect"
 
 const schema = Schema.EitherFromUnion({
   left: Schema.Boolean,
-  right: Schema.NumberFromString
+  right: Schema.NumberFromString,
 })
 
 //     ┌─── string | boolean
@@ -745,7 +739,7 @@ import { Schema, Exit } from "effect"
 const schema = Schema.Exit({
   failure: Schema.String,
   success: Schema.NumberFromString,
-  defect: Schema.String
+  defect: Schema.String,
 })
 
 //     ┌─── ExitEncoded<string, string, string>
@@ -761,9 +755,7 @@ const encode = Schema.encodeSync(schema)
 
 // Decoding examples
 
-console.log(
-  decode({ _tag: "Failure", cause: { _tag: "Fail", error: "a" } })
-)
+console.log(decode({ _tag: "Failure", cause: { _tag: "Fail", error: "a" } }))
 /*
 Output:
 {
@@ -811,7 +803,7 @@ import { Schema, Exit } from "effect"
 const schema = Schema.Exit({
   failure: Schema.String,
   success: Schema.NumberFromString,
-  defect: Schema.Defect
+  defect: Schema.Defect,
 })
 
 const decode = Schema.decodeSync(schema)
@@ -831,8 +823,8 @@ console.log(encode(Exit.fail("a")))
 console.log(
   decode({
     _tag: "Failure",
-    cause: { _tag: "Die", defect: { name: "Error", message: "Message" } }
-  })
+    cause: { _tag: "Die", defect: { name: "Error", message: "Message" } },
+  }),
 )
 /*
 Output:
@@ -884,7 +876,7 @@ import { Schema, Exit } from "effect"
 const schema = Schema.ExitFromSelf({
   failure: Schema.String,
   success: Schema.NumberFromString,
-  defect: Schema.String
+  defect: Schema.String,
 })
 
 //     ┌─── Exit<string, string>
@@ -1073,7 +1065,7 @@ import { Schema } from "effect"
 
 const schema = Schema.ReadonlyMap({
   key: Schema.String,
-  value: Schema.NumberFromString
+  value: Schema.NumberFromString,
 })
 
 //     ┌─── readonly (readonly [string, string])[]
@@ -1093,8 +1085,8 @@ console.log(
   decode([
     ["a", "2"],
     ["b", "2"],
-    ["c", "3"]
-  ])
+    ["c", "3"],
+  ]),
 )
 // Output: Map(3) { 'a' => 2, 'b' => 2, 'c' => 3 }
 
@@ -1105,9 +1097,9 @@ console.log(
     new Map([
       ["a", 1],
       ["b", 2],
-      ["c", 3]
-    ])
-  )
+      ["c", 3],
+    ]),
+  ),
 )
 // Output: [ [ 'a', '1' ], [ 'b', '2' ], [ 'c', '3' ] ]
 ```
@@ -1144,7 +1136,7 @@ import { Schema } from "effect"
 
 const schema = Schema.ReadonlyMapFromSelf({
   key: Schema.String,
-  value: Schema.NumberFromString
+  value: Schema.NumberFromString,
 })
 
 //     ┌─── ReadonlyMap<string, string>
@@ -1165,9 +1157,9 @@ console.log(
     new Map([
       ["a", "2"],
       ["b", "2"],
-      ["c", "3"]
-    ])
-  )
+      ["c", "3"],
+    ]),
+  ),
 )
 // Output: Map(3) { 'a' => 2, 'b' => 2, 'c' => 3 }
 
@@ -1178,9 +1170,9 @@ console.log(
     new Map([
       ["a", 1],
       ["b", 2],
-      ["c", 3]
-    ])
-  )
+      ["c", 3],
+    ]),
+  ),
 )
 // Output: Map(3) { 'a' => '1', 'b' => '2', 'c' => '3' }
 ```
@@ -1194,7 +1186,7 @@ The `Schema.ReadonlyMapFromRecord` function is a utility to transform a `Readonl
 ```ts showLineNumbers=false
 Schema.ReadonlyMapFromRecord({
   key: Schema<KA, KI, KR>,
-  value: Schema<VA, VI, VR>
+  value: Schema<VA, VI, VR>,
 })
 ```
 
@@ -1217,7 +1209,7 @@ import { Schema } from "effect"
 
 const schema = Schema.ReadonlyMapFromRecord({
   key: Schema.NumberFromString,
-  value: Schema.NumberFromString
+  value: Schema.NumberFromString,
 })
 
 //     ┌─── { readonly [x: string]: string; }
@@ -1237,8 +1229,8 @@ console.log(
   decode({
     "1": "4",
     "2": "5",
-    "3": "6"
-  })
+    "3": "6",
+  }),
 )
 // Output: Map(3) { 1 => 4, 2 => 5, 3 => 6 }
 
@@ -1249,9 +1241,9 @@ console.log(
     new Map([
       [1, 4],
       [2, 5],
-      [3, 6]
-    ])
-  )
+      [3, 6],
+    ]),
+  ),
 )
 // Output: { '1': '4', '2': '5', '3': '6' }
 ```
@@ -1395,7 +1387,7 @@ import { HashMap } from "effect"
 
 const schema = Schema.HashMap({
   key: Schema.String,
-  value: Schema.NumberFromString
+  value: Schema.NumberFromString,
 })
 
 //     ┌─── readonly (readonly [string, string])[]
@@ -1415,8 +1407,8 @@ console.log(
   decode([
     ["a", "2"],
     ["b", "2"],
-    ["c", "3"]
-  ])
+    ["c", "3"],
+  ]),
 )
 // Output: { _id: 'HashMap', values: [ [ 'a', 2 ], [ 'c', 3 ], [ 'b', 2 ] ] }
 
@@ -1427,9 +1419,9 @@ console.log(
     HashMap.fromIterable([
       ["a", 1],
       ["b", 2],
-      ["c", 3]
-    ])
-  )
+      ["c", 3],
+    ]),
+  ),
 )
 // Output: [ [ 'a', '1' ], [ 'c', '3' ], [ 'b', '2' ] ]
 ```
@@ -1467,7 +1459,7 @@ import { HashMap } from "effect"
 
 const schema = Schema.HashMapFromSelf({
   key: Schema.String,
-  value: Schema.NumberFromString
+  value: Schema.NumberFromString,
 })
 
 //     ┌─── HashMap<string, string>
@@ -1488,9 +1480,9 @@ console.log(
     HashMap.fromIterable([
       ["a", "2"],
       ["b", "2"],
-      ["c", "3"]
-    ])
-  )
+      ["c", "3"],
+    ]),
+  ),
 )
 // Output: { _id: 'HashMap', values: [ [ 'a', 2 ], [ 'c', 3 ], [ 'b', 2 ] ] }
 
@@ -1501,9 +1493,9 @@ console.log(
     HashMap.fromIterable([
       ["a", 1],
       ["b", 2],
-      ["c", 3]
-    ])
-  )
+      ["c", 3],
+    ]),
+  ),
 )
 // Output: { _id: 'HashMap', values: [ [ 'a', '1' ], [ 'c', '3' ], [ 'b', '2' ] ] }
 ```
@@ -1594,11 +1586,7 @@ Schema.SortedSetFromSelf(
 import { Schema } from "effect"
 import { Number, SortedSet, String } from "effect"
 
-const schema = Schema.SortedSetFromSelf(
-  Schema.NumberFromString,
-  Number.Order,
-  String.Order
-)
+const schema = Schema.SortedSetFromSelf(Schema.NumberFromString, Number.Order, String.Order)
 
 //     ┌─── SortedSet<string>
 //     ▼
@@ -1758,9 +1746,7 @@ Clamps a `Duration` between a minimum and a maximum value.
 ```ts twoslash
 import { Schema, Duration } from "effect"
 
-const schema = Schema.DurationFromSelf.pipe(
-  Schema.clampDuration("5 seconds", "10 seconds")
-)
+const schema = Schema.DurationFromSelf.pipe(Schema.clampDuration("5 seconds", "10 seconds"))
 
 //     ┌─── Duration
 //     ▼
@@ -1817,9 +1803,8 @@ console.log(decode("keep it secret, keep it safe"))
 It's important to note that when successfully decoding a `Redacted`, the output is intentionally obscured (`<redacted>`) to prevent the actual secret from being revealed in logs or console outputs.
 
 <Aside type="caution" title="Potential Risks">
-  When composing the `Redacted` schema with other schemas, care must be
-  taken as decoding or encoding errors could potentially expose sensitive
-  information.
+  When composing the `Redacted` schema with other schemas, care must be taken as decoding or
+  encoding errors could potentially expose sensitive information.
 </Aside>
 
 **Example** (Exposure Risks During Errors)
@@ -1830,9 +1815,7 @@ In the example below, if the input string does not meet the criteria (e.g., cont
 import { Schema } from "effect"
 import { Redacted } from "effect"
 
-const schema = Schema.Trimmed.pipe(
-  Schema.compose(Schema.Redacted(Schema.String))
-)
+const schema = Schema.Trimmed.pipe(Schema.compose(Schema.Redacted(Schema.String)))
 
 console.log(Schema.decodeUnknownEither(schema)(" SECRET"))
 /*
@@ -1878,7 +1861,7 @@ import { Schema } from "effect"
 import { Redacted } from "effect"
 
 const schema = Schema.Trimmed.annotations({
-  message: () => "Expected Trimmed, actual <redacted>"
+  message: () => "Expected Trimmed, actual <redacted>",
 }).pipe(Schema.compose(Schema.Redacted(Schema.String)))
 
 console.log(Schema.decodeUnknownEither(schema)(" SECRET"))

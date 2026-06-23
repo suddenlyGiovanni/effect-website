@@ -1,19 +1,21 @@
-import React from "react"
 import { useAtomMount, useAtomSuspense, useAtomValue } from "@effect/atom-react"
-import { Workspace } from "../domain/workspace"
-import { workspaceHandleAtom, type AtomWorkspaceHandle } from "../atoms/workspace"
+import React from "react"
 import { autoSaveAtom } from "../atoms/import"
+import { workspaceHandleAtom, type AtomWorkspaceHandle } from "../atoms/workspace"
+import { Workspace } from "../domain/workspace"
 
 export const WorkspaceContext = React.createContext<AtomWorkspaceHandle>(null as any)
 
 export const useWorkspaceHandle = () => React.useContext(WorkspaceContext)
 export const useWorkspaceAtom = () => useWorkspaceHandle().workspaceAtom
-export const useWorkspaceShells = () => useAtomValue(useWorkspaceAtom(), (workspace) => workspace.shells)
-export const useWorkspaceTree = () => useAtomValue(useWorkspaceAtom(), (workspace) => workspace.tree)
+export const useWorkspaceShells = () =>
+  useAtomValue(useWorkspaceAtom(), (workspace) => workspace.shells)
+export const useWorkspaceTree = () =>
+  useAtomValue(useWorkspaceAtom(), (workspace) => workspace.tree)
 
 export function WorkspaceProvider({
   children,
-  workspace
+  workspace,
 }: React.PropsWithChildren<{
   readonly workspace: Workspace
 }>) {

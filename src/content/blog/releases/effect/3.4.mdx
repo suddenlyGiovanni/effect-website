@@ -20,16 +20,9 @@ The HTTP modules in `@effect/platform` have been reorganized to have a flat stru
 Instead of a single import, you now import the specific modules you need:
 
 ```ts
-import {
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse
-} from "@effect/platform"
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "@effect/platform"
 
-HttpClientRequest.get("/").pipe(
-  HttpClient.fetchOk,
-  HttpClientResponse.json
-)
+HttpClientRequest.get("/").pipe(HttpClient.fetchOk, HttpClientResponse.json)
 ```
 
 ## New Micro module

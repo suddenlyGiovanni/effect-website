@@ -73,9 +73,7 @@ import { Effect } from "effect"
 
 const recoverFromTimeout = Effect.sleep("2 seconds").pipe(
   Effect.timeout("1 second"),
-  Effect.catchTag("TimeoutException", () =>
-    Effect.log("The program timed out")
-  )
+  Effect.catchTag("TimeoutException", () => Effect.log("The program timed out")),
 )
 ```
 
@@ -94,7 +92,7 @@ import { Data } from "effect"
 
 const obj = Data.struct({
   a: 0,
-  b: 1
+  b: 1,
 })
 ```
 
@@ -140,10 +138,10 @@ Add `option` to preserve excess properties when parsing, the feature is describe
 
 ```ts
 const data = S.parseSync({
-  foo: S.string
+  foo: S.string,
 })({
   foo: "ok",
-  bar: "ok"
+  bar: "ok",
 })
 ```
 
@@ -151,15 +149,15 @@ The above code will strip the `bar` property as it is not defined in the schema,
 
 ```ts
 const data = S.parseSync({
-  foo: S.string
+  foo: S.string,
 })(
   {
     foo: "ok",
-    bar: "ok"
+    bar: "ok",
   },
   {
-    onExcessProperty: "preserve"
-  }
+    onExcessProperty: "preserve",
+  },
 )
 ```
 
@@ -211,11 +209,9 @@ Adds support for URL objects in HTTP Client, the following code is now valid:
 import { HttpClientRequest, HttpClient } from "@effect/platform"
 import { Effect } from "effect"
 
-const request = HttpClientRequest.get(
-  new URL("https://www.google.com/")
-).pipe(
+const request = HttpClientRequest.get(new URL("https://www.google.com/")).pipe(
   HttpClient.fetchOk,
-  Effect.flatMap((_) => _.text)
+  Effect.flatMap((_) => _.text),
 )
 ```
 

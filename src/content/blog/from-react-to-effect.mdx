@@ -59,7 +59,7 @@ import App from "./App.tsx"
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 )
 ```
 
@@ -373,7 +373,7 @@ const printOrFail = Effect.gen(function* () {
 
 const program = printOrFail.pipe(
   Effect.catchAll((e) => print(`Error: ${e.message}`)),
-  Effect.repeatN(10)
+  Effect.repeatN(10),
 )
 
 Effect.runPromise(program)
@@ -408,10 +408,7 @@ const print = (message: string) =>
     console.log(message)
   })
 
-class ContextualData extends Context.Tag("ContextualData")<
-  ContextualData,
-  number
->() {}
+class ContextualData extends Context.Tag("ContextualData")<ContextualData, number>() {}
 
 const printFromContext = Effect.gen(function* () {
   const n = yield* ContextualData
@@ -419,9 +416,7 @@ const printFromContext = Effect.gen(function* () {
   yield* print(`Contextual Data is: ${n}`)
 })
 
-const program = printFromContext.pipe(
-  Effect.provideService(ContextualData, 100)
-)
+const program = printFromContext.pipe(Effect.provideService(ContextualData, 100))
 
 Effect.runPromise(program)
 ```

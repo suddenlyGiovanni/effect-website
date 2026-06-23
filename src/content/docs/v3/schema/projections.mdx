@@ -24,7 +24,7 @@ declare const typeSchema: <A, I, R>(schema: Schema<A, I, R>) => Schema<A>
 import { Schema } from "effect"
 
 const Original = Schema.Struct({
-  quantity: Schema.NumberFromString.pipe(Schema.greaterThanOrEqualTo(2))
+  quantity: Schema.NumberFromString.pipe(Schema.greaterThanOrEqualTo(2)),
 })
 
 // This creates a schema where 'quantity' is defined as a number
@@ -33,7 +33,7 @@ const TypeSchema = Schema.typeSchema(Original)
 
 // TypeSchema is equivalent to:
 const TypeSchema2 = Schema.Struct({
-  quantity: Schema.Number.pipe(Schema.greaterThanOrEqualTo(2))
+  quantity: Schema.Number.pipe(Schema.greaterThanOrEqualTo(2)),
 })
 ```
 
@@ -44,9 +44,7 @@ The `Schema.encodedSchema` function enables you to extract the `Encoded` portion
 **Function Signature**
 
 ```ts showLineNumbers=false
-declare const encodedSchema: <A, I, R>(
-  schema: Schema<A, I, R>
-) => Schema<I>
+declare const encodedSchema: <A, I, R>(schema: Schema<A, I, R>) => Schema<I>
 ```
 
 **Example** (Extracting Encoded Properties Only)
@@ -55,7 +53,7 @@ declare const encodedSchema: <A, I, R>(
 import { Schema } from "effect"
 
 const Original = Schema.Struct({
-  quantity: Schema.String.pipe(Schema.minLength(3))
+  quantity: Schema.String.pipe(Schema.minLength(3)),
 })
 
 // This creates a schema where 'quantity' is just a string,
@@ -64,7 +62,7 @@ const Encoded = Schema.encodedSchema(Original)
 
 // Encoded is equivalent to:
 const Encoded2 = Schema.Struct({
-  quantity: Schema.String
+  quantity: Schema.String,
 })
 ```
 
@@ -76,9 +74,7 @@ original schema.
 **Function Signature**
 
 ```ts showLineNumbers=false
-declare const encodedBoundSchema: <A, I, R>(
-  schema: Schema<A, I, R>
-) => Schema<I>
+declare const encodedBoundSchema: <A, I, R>(schema: Schema<A, I, R>) => Schema<I>
 ```
 
 The term "bound" in this context refers to the boundary up to which refinements are preserved when extracting the encoded form of a schema. It essentially marks the limit to which initial validations and structure are maintained before any transformations are applied.
@@ -89,10 +85,7 @@ The term "bound" in this context refers to the boundary up to which refinements 
 import { Schema } from "effect"
 
 const Original = Schema.Struct({
-  foo: Schema.String.pipe(
-    Schema.minLength(3),
-    Schema.compose(Schema.Trim)
-  )
+  foo: Schema.String.pipe(Schema.minLength(3), Schema.compose(Schema.Trim)),
 })
 
 // The EncodedBoundSchema schema preserves the minLength(3) refinement,
@@ -102,6 +95,6 @@ const EncodedBoundSchema = Schema.encodedBoundSchema(Original)
 
 // EncodedBoundSchema is equivalent to:
 const EncodedBoundSchema2 = Schema.Struct({
-  foo: Schema.String.pipe(Schema.minLength(3))
+  foo: Schema.String.pipe(Schema.minLength(3)),
 })
 ```

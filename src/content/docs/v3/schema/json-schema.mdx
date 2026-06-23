@@ -17,7 +17,7 @@ import { JSONSchema, Schema } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 const jsonSchema = JSONSchema.make(Person)
@@ -61,8 +61,8 @@ const Person = Schema.Struct({
     // Refinement included in the JSON Schema
     Schema.int(),
     // Transformation excluded from the JSON Schema
-    Schema.clamp(1, 10)
-  )
+    Schema.clamp(1, 10),
+  ),
 })
 
 const jsonSchema = JSONSchema.make(Person)
@@ -113,7 +113,7 @@ import { JSONSchema, Schema } from "effect"
 const schema = Schema.Tuple(Schema.String, Schema.Number)
 
 const jsonSchema = JSONSchema.make(schema, {
-  target: "jsonSchema2020-12"
+  target: "jsonSchema2020-12",
 })
 
 console.log(JSON.stringify(jsonSchema, null, 2))
@@ -394,7 +394,7 @@ import { JSONSchema, Schema } from "effect"
 
 const schema = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 console.log(JSON.stringify(JSONSchema.make(schema), null, 2))
@@ -427,7 +427,7 @@ import { JSONSchema, Schema } from "effect"
 
 const schema = Schema.Record({
   key: Schema.String,
-  value: Schema.Number
+  value: Schema.Number,
 })
 
 console.log(JSON.stringify(JSONSchema.make(schema), null, 2))
@@ -459,12 +459,12 @@ import { JSONSchema, Schema } from "effect"
 const schema = Schema.Struct(
   {
     name: Schema.String,
-    age: Schema.Number
+    age: Schema.Number,
   },
   Schema.Record({
     key: Schema.String,
-    value: Schema.Union(Schema.String, Schema.Number)
-  })
+    value: Schema.Union(Schema.String, Schema.Number),
+  }),
 )
 
 console.log(JSON.stringify(JSONSchema.make(schema), null, 2))
@@ -508,7 +508,7 @@ import { JSONSchema, Schema } from "effect"
 
 enum Fruits {
   Apple,
-  Banana
+  Banana,
 }
 
 const schema = Schema.Enums(Fruits)
@@ -623,7 +623,7 @@ const Age = Schema.Number.annotations({ identifier: "Age" })
 
 const Person = Schema.Struct({
   name: Name,
-  age: Age
+  age: Age,
 })
 
 const jsonSchema = JSONSchema.make(Person)
@@ -679,7 +679,7 @@ const schema = Schema.String.annotations({
   description: "my custom description",
   title: "my custom title",
   default: "",
-  examples: ["a", "b"]
+  examples: ["a", "b"],
 })
 
 const jsonSchema = JSONSchema.make(schema)
@@ -713,11 +713,11 @@ import { JSONSchema, Schema } from "effect"
 
 const Person = Schema.Struct({
   firstName: Schema.propertySignature(Schema.String).annotations({
-    title: "First name"
+    title: "First name",
   }),
   lastName: Schema.propertySignature(Schema.String).annotations({
-    title: "Last Name"
-  })
+    title: "Last Name",
+  }),
 })
 
 const jsonSchema = JSONSchema.make(Person)
@@ -769,8 +769,8 @@ const Category = Schema.Struct({
   name: Schema.String,
   categories: Schema.Array(
     // Recursive reference to the Category schema
-    Schema.suspend((): Schema.Schema<Category> => Category)
-  )
+    Schema.suspend((): Schema.Schema<Category> => Category),
+  ),
 }).annotations({ identifier: "Category" })
 
 const jsonSchema = JSONSchema.make(Category)
@@ -819,7 +819,7 @@ Attempting to generate a JSON Schema for unsupported types like `bigint` will le
 import { JSONSchema, Schema } from "effect"
 
 const schema = Schema.Struct({
-  a_bigint_field: Schema.BigIntFromSelf
+  a_bigint_field: Schema.BigIntFromSelf,
 })
 
 const jsonSchema = JSONSchema.make(schema)
@@ -845,9 +845,9 @@ const schema = Schema.Struct({
   // Adding a custom JSON Schema annotation for the `bigint` type
   a_bigint_field: Schema.BigIntFromSelf.annotations({
     jsonSchema: {
-      type: "some custom way to represent a bigint in JSON Schema"
-    }
-  })
+      type: "some custom way to represent a bigint in JSON Schema",
+    },
+  }),
 })
 
 const jsonSchema = JSONSchema.make(schema)
@@ -883,15 +883,15 @@ import { JSONSchema, Schema } from "effect"
 // Define a schema with a refinement for positive numbers
 const Positive = Schema.Number.pipe(
   Schema.filter((n) => n > 0, {
-    jsonSchema: { minimum: 0 }
-  })
+    jsonSchema: { minimum: 0 },
+  }),
 )
 
 // Add an upper bound refinement to the schema
 const schema = Positive.pipe(
   Schema.filter((n) => n <= 10, {
-    jsonSchema: { maximum: 10 }
-  })
+    jsonSchema: { maximum: 10 },
+  }),
 )
 
 const jsonSchema = JSONSchema.make(schema)
@@ -922,14 +922,14 @@ import type { JSONSchema7 } from "json-schema"
 
 const Positive = Schema.Number.pipe(
   Schema.filter((n) => n > 0, {
-    jsonSchema: { minimum: 0 } // Generic object, no type enforcement
-  })
+    jsonSchema: { minimum: 0 }, // Generic object, no type enforcement
+  }),
 )
 
 const schema = Positive.pipe(
   Schema.filter((n) => n <= 10, {
-    jsonSchema: { maximum: 10 } satisfies JSONSchema7 // Enforces type constraints
-  })
+    jsonSchema: { maximum: 10 } satisfies JSONSchema7, // Enforces type constraints
+  }),
 )
 
 const jsonSchema = JSONSchema.make(schema)
@@ -955,7 +955,7 @@ import { JSONSchema, Schema } from "effect"
 
 // Define a struct with a custom JSON Schema annotation
 const schema = Schema.Struct({ foo: Schema.String }).annotations({
-  jsonSchema: { type: "object" }
+  jsonSchema: { type: "object" },
 })
 
 const jsonSchema = JSONSchema.make(schema)
@@ -999,8 +999,8 @@ import { JSONSchema, Schema } from "effect"
 const schema = Schema.parseJson(
   Schema.Struct({
     // Nested parsing: JSON string to a number
-    a: Schema.parseJson(Schema.NumberFromString)
-  })
+    a: Schema.parseJson(Schema.NumberFromString),
+  }),
 )
 
 const jsonSchema = JSONSchema.make(schema)

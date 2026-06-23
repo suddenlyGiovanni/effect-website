@@ -26,7 +26,6 @@ To get started, below you’ll find links to our documentation as well as our gu
 - [Effect Documentation](/docs/getting-started/introduction/)
 - [Installing Effect](/docs/getting-started/installation/)
 
-
 **Recent major updates:**
 
 - [Effect v4 Beta](https://effect.website/blog/releases/effect/40-beta/) Release! 🚀
@@ -41,7 +40,7 @@ To get started, below you’ll find links to our documentation as well as our gu
 ### Effect v4 Beta updates
 
 The v4 beta had another packed week, with new packages, workflow reliability fixes, and a steady stream of Schema and HTTP improvements. Here are the most notable changes that landed in `effect-smol`.
- 
+
 - **New packages & APIs**: Added `@effect/sql-pglite` for PGlite-backed SQL, added `Effect.abortSignal` for exposing the current fiber's abort signal, added `Socket.make` for low-level socket construction, and added the `Effectable` module for defining custom effect-like types.
 
 - **Workflow & Durable execution**: Fixed workflow failures being squashed by suspension interrupts, isolated workflow suspension in `DurableDeferred.into`, and fixed `Latch.release`.
@@ -63,38 +62,47 @@ You can follow the full changelog directly in the [effect-smol repository](https
 Here are all the technical changes from the past week.
 
 ### Effect Core
+
 - [Fix: floor TestClock nanoseconds before BigInt conversion](https://github.com/Effect-TS/effect/pull/6194) (Bug Fix)
 
 ### Effect AI
+
 - [[ISSUE-6009] (fix: ai-openai) Make strict mode configurable for tool definitions](https://github.com/Effect-TS/effect/pull/6174) (Bug Fix).
 - [Change 'in-memory' to 'in_memory' in prompt cache enums](https://github.com/Effect-TS/effect/pull/6187) (Bug Fix)
 - [Fix(ai-openai): deduplicate response.output items to prevent invalid JSON concatenation](https://github.com/Effect-TS/effect/pull/6178) (Bug Fix)
 - [Fix(ai-openai): Remove strict param from the OpenAI request body](https://github.com/Effect-TS/effect/pull/6188) (Bug Fix)
 
 ### Effect Cluster
+
 - [Backport cluster serialization fix for notify path](https://github.com/Effect-TS/effect/pull/6183) (Bug Fix)
 - [Fix: correct typos in source code (receive, separate)](https://github.com/Effect-TS/effect/pull/6110) (Bug Fix)
 
 ### Effect RPC
+
 - [Fix(rpc,platform): update msgpackr to 1.11.10 for Cloudflare Workers compatibility](https://github.com/Effect-TS/effect/pull/6191) (Bug Fix)
 - [Fix(rpc): make RpcSerialization.msgPack options configurable](https://github.com/Effect-TS/effect/pull/6161) (Bug Fix)
 - [Fix: correct typos in source code (receive, separate)](https://github.com/Effect-TS/effect/pull/6110) (Bug Fix)
 
 ### Effect Platform
+
 - [Fix(rpc,platform): update msgpackr to 1.11.10 for Cloudflare Workers compatibility](https://github.com/Effect-TS/effect/pull/6191) (Bug Fix)
 - [Fix(platform): preserve fiber context in HttpLayerRouter.addHttpApi so API-level middleware is applied](https://github.com/Effect-TS/effect/pull/6147) (Bug Fix)
 - [Fix(platform): preserve fiber context in HttpLayerRouter.addHttpApi so API-level middleware is applied](https://github.com/Effect-TS/effect/pull/6147) (Bug Fix)
 
 ### Effect SQL
+
 - [Fix: correct typos in source code (receive, separate)](https://github.com/Effect-TS/effect/pull/6110) (Bug Fix)
 
 ### Effect Vitest
+
 - [Docs(@effect/vitest): fix return type in fails example](https://github.com/Effect-TS/effect/pull/6163) (Documentation Update)
 
 ### Effect Workflow
+
 - [EFF-784 Backport workflow suspension failure fixes](https://github.com/Effect-TS/effect/pull/6196) (Bug Fix)
 
 ### General Chores
+
 - [Chore: disable TypeScript's nightly workflow](https://github.com/Effect-TS/effect/pull/6193)
 
 &nbsp;
@@ -103,7 +111,7 @@ Here are all the technical changes from the past week.
 
 We're happy to announce the upcoming [Effect Vienna Meetup #2](https://luma.com/c49s62t2) on May 27, sponsored by [Sentry](https://sentry.io/welcome/).
 
-  <Tweet id="2046552644718673977" />
+<Tweet id="2046552644718673977" />
 
 Visit our [Effect Community Events calendar](https://luma.com/effect-community) and subscribe for updates on upcoming Effect events and meetups.
 
@@ -111,7 +119,7 @@ Visit our [Effect Community Events calendar](https://luma.com/effect-community) 
 
 ## Community Highlights
 
-- Just *don't* listen to Mike.
+- Just _don't_ listen to Mike.
 
   <Tweet id="2047352207524167925" />
 
@@ -123,9 +131,9 @@ Visit our [Effect Community Events calendar](https://luma.com/effect-community) 
 
 &nbsp;
 
--  The best way to start a project with Effect 👇
+- The best way to start a project with Effect 👇
 
-  <Tweet id="2047368387181867357" />
+<Tweet id="2047368387181867357" />
 
 &nbsp;
 
@@ -141,7 +149,7 @@ Visit our [Effect Community Events calendar](https://luma.com/effect-community) 
 
 &nbsp;
 
-- [effql](https://github.com/gloomweaver/effql) – sqlc-style TypeScript code generation for Effect SQL using Postgres introspection. 
+- [effql](https://github.com/gloomweaver/effql) – sqlc-style TypeScript code generation for Effect SQL using Postgres introspection.
 
 &nbsp;
 
@@ -165,7 +173,7 @@ Visit our [Effect Community Events calendar](https://luma.com/effect-community) 
 
 - Effect Office Hours 26 🔥
 
- <YouTube
+<YouTube
   id="https://www.youtube.com/embed/X4BLYNVzjDA?si=MUNCHtl4sZ-UIWdW"
   title="Effect Office Hours 26 🔥"
 />
@@ -174,7 +182,7 @@ Visit our [Effect Community Events calendar](https://luma.com/effect-community) 
 
 - Roasting Tim’s OpenCode PR: refactor effect runtime.
 
- <YouTube
+<YouTube
   id="https://www.youtube.com/embed/PxQheh_YO-c?si=gmNOxwhsMGpdzJnx"
   title="Roasting Tim’s OpenCode PR: refactor effect runtime"
 />
@@ -183,7 +191,7 @@ Visit our [Effect Community Events calendar](https://luma.com/effect-community) 
 
 - Forking Typescript -- April's Fool 🤥
 
- <YouTube
+<YouTube
   id="https://www.youtube.com/embed/hmjmyMe3dDE?si=qy4wKmggYlro74ph"
   title="Forking Typescript -- April's Fool 🤥"
 />
@@ -192,7 +200,7 @@ Visit our [Effect Community Events calendar](https://luma.com/effect-community) 
 
 - Building an AI coding framework with Effect -- Clanka #1
 
- <YouTube
+<YouTube
   id="https://www.youtube.com/embed/bALynmav8D8?si=tx7NO8NvzmVb-hcw"
   title="Building an AI coding framework with Effect -- Clanka #1"
 />
@@ -224,7 +232,7 @@ More and more companies are adopting Effect in their projects. Here’s a list o
 
 - **Cari**: [Sr. Software Engineer, Backend & Infra](https://www.cari.com/careers/sr.-software-engineer-backend-infra).
 
-- **coteach.ai** is looking for a Software Engineer – see the job posting in the `#job-board` channel on [our Discord](https://discord.com/channels/795981131316985866/796153351372275743/1394724166309253290) and DM *Peter Edmonds* for further info.
+- **coteach.ai** is looking for a Software Engineer – see the job posting in the `#job-board` channel on [our Discord](https://discord.com/channels/795981131316985866/796153351372275743/1394724166309253290) and DM _Peter Edmonds_ for further info.
 
 - **Embedded Insurance** is hiring for a [Senior Software Engineering](https://embeddedinsurance.bamboohr.com/careers/23) position.
 
@@ -242,11 +250,11 @@ More and more companies are adopting Effect in their projects. Here’s a list o
 
 - **Goblins** is looking for a Product Founding Engineer. See the job posting in the `#job-board` channel on [our Discord](https://discord.com/channels/795981131316985866/796153351372275743/1439740311277404231).
 
-- **Heartbeat**: [Senior Software Engineer](https://jobs.heartbeat.chat/35182) 
+- **Heartbeat**: [Senior Software Engineer](https://jobs.heartbeat.chat/35182)
 
 - **Inato**: [Product Engineers / Fullstack Engineers](https://jobs.lever.co/inato/6df2d1e3-ce0a-487b-a930-840759803d44)
 
-- **Interfere**: [Founding Product Engineer](https://interfere.com/careers/founding-product-engineer-43d5f5aa-1887-4c7d-a8b2-2017169911fd/apply) and [Founding AI Engineer](https://interfere.com/careers/founding-ai-engineer-003772a3-6bcf-4f57-8c3c-5d840117b5e9/apply) 
+- **Interfere**: [Founding Product Engineer](https://interfere.com/careers/founding-product-engineer-43d5f5aa-1887-4c7d-a8b2-2017169911fd/apply) and [Founding AI Engineer](https://interfere.com/careers/founding-ai-engineer-003772a3-6bcf-4f57-8c3c-5d840117b5e9/apply)
 
 - **Introw**: [Staff Software Engineer](https://join.com/companies/introw/14395111-staff-software-engineer)
 
@@ -264,7 +272,7 @@ More and more companies are adopting Effect in their projects. Here’s a list o
 
 - **Microsub**: [TS Developer](https://x.com/0xdownshift/status/1880013835878154510)
 
-- **Oneiro Solutions**: Software Engineer - Core Team. [Join Effect Discord](https://discord.com/channels/795981131316985866/796153351372275743) and DM *leighman* for further info.
+- **Oneiro Solutions**: Software Engineer - Core Team. [Join Effect Discord](https://discord.com/channels/795981131316985866/796153351372275743) and DM _leighman_ for further info.
 
 - **PhosPhor** is [hiring engineers](https://phosphor.co/) experienced in Effect. You may also reach out to the Phosphor team on [our Discord](https://discord.com/channels/795981131316985866/796153351372275743/1418407399139578067).
 
@@ -312,7 +320,7 @@ More and more companies are adopting Effect in their projects. Here’s a list o
 
 - Job opening for [Japanese-speaking developers](https://note.com/luma/n/n679d4dcdb363)
 
-- **Small SaaS team** is looking for a part-time Effect Developer to implement Effect in their stack. The job posting is available in the `#job-board` channel on [our Discord](https://discord.com/channels/795981131316985866/796153351372275743/1397684638834491412), DM *jonpage* for further info.
+- **Small SaaS team** is looking for a part-time Effect Developer to implement Effect in their stack. The job posting is available in the `#job-board` channel on [our Discord](https://discord.com/channels/795981131316985866/796153351372275743/1397684638834491412), DM _jonpage_ for further info.
 
 - [**Solid**](https://trysolid.com/) is hiring its early engineering team (Bay Area). The job posting is available in the `#job-board` channel on [our Discord](https://discord.com/channels/795981131316985866/796153351372275743/1455623052636459209)
 
@@ -320,19 +328,18 @@ More and more companies are adopting Effect in their projects. Here’s a list o
 
 - **Stealth team** that has already scaled their product to 50K daily active users in the last year, is looking for [Effect Developers](https://x.com/wireless_dev/status/1930314012723687739). DM [wireless](https://x.com/wireless_dev) on X for more info.
 
-
 _Disclaimer: Please note that these job postings are shared for informational purposes, and we encourage applicants to verify details directly with the hiring companies._
 
-
 &nbsp;
+
 ## Effect Merch Store
 
 The [Effect Merch Store](https://effect.website/merch) offers a selection of Effect-branded items designed for the community. All orders are processed and fully managed through [Printful](https://www.printful.com/).
 
 <Tweet id="1868605126862385238" />
 
-
 &nbsp;
+
 ## Closing Notes
 
 That's all for this week. Thank you for being a vital part of our community. Your feedback is highly valued as we fine-tune this format. Feel free to share your thoughts, and we'll do our best to tailor it to the needs of our community.

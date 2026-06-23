@@ -21,7 +21,7 @@ import { Schema } from "@effect/schema"
 
 const PersonSchema = Schema.Struct({
   name: Schema.String,
-  age: Schema.NumberFromString
+  age: Schema.NumberFromString,
 })
 
 type PersonType = typeof PersonSchema.Type
@@ -41,7 +41,7 @@ Let's dive into each of them with some examples to understand better how they wo
 import { Schema } from "@effect/schema"
 
 const MyStruct = Schema.Struct({
-  name: Schema.NonEmpty
+  name: Schema.NonEmpty,
 })
 
 MyStruct.make({ name: "a" }) // ok
@@ -79,10 +79,7 @@ Error: a number between 1 and 10
 ```ts
 import { Schema } from "@effect/schema"
 
-const MyBrand = Schema.Number.pipe(
-  Schema.between(1, 10),
-  Schema.brand("MyNumber")
-)
+const MyBrand = Schema.Number.pipe(Schema.between(1, 10), Schema.brand("MyNumber"))
 
 // const n: number & Brand<"MyNumber">
 const n = MyBrand.make(5) // ok
@@ -115,8 +112,8 @@ const PersonSchema = Schema.Struct({
   name: Schema.NonEmpty,
   age: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => 0)
-  )
+    Schema.withConstructorDefault(() => 0),
+  ),
 })
 
 // The age field is optional and defaults to 0
@@ -133,12 +130,12 @@ const PersonSchema = Schema.Struct({
   name: Schema.NonEmpty,
   age: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => 0)
+    Schema.withConstructorDefault(() => 0),
   ),
   timestamp: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => new Date().getTime())
-  )
+    Schema.withConstructorDefault(() => new Date().getTime()),
+  ),
 })
 
 console.log(PersonSchema.make({ name: "name1" }))
@@ -158,12 +155,12 @@ class Person extends Schema.Class<Person>("Person")({
   name: Schema.NonEmpty,
   age: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => 0)
+    Schema.withConstructorDefault(() => 0),
   ),
   timestamp: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => new Date().getTime())
-  )
+    Schema.withConstructorDefault(() => new Date().getTime()),
+  ),
 }) {}
 
 console.log(new Person({ name: "name1" }))
@@ -180,9 +177,7 @@ Our new `Schema.withDecodingDefault` combinator makes it easy to handle the opti
 import { Schema } from "@effect/schema"
 
 const MySchema = Schema.Struct({
-  a: Schema.optional(Schema.String).pipe(
-    Schema.withDecodingDefault(() => "")
-  )
+  a: Schema.optional(Schema.String).pipe(Schema.withDecodingDefault(() => "")),
 })
 
 console.log(Schema.decodeUnknownSync(MySchema)({}))
@@ -202,9 +197,9 @@ const MySchema = Schema.Struct({
   a: Schema.optional(Schema.String).pipe(
     Schema.withDefaults({
       decoding: () => "",
-      constructor: () => "-"
-    })
-  )
+      constructor: () => "-",
+    }),
+  ),
 })
 
 console.log(Schema.decodeUnknownSync(MySchema)({}))
@@ -229,13 +224,10 @@ Now, custom messages no longer have absolute precedence by default. Instead, it 
 ```ts
 import { Schema } from "@effect/schema"
 
-const MyString = Schema.String.pipe(
-  Schema.minLength(1),
-  Schema.maxLength(2)
-).annotations({
+const MyString = Schema.String.pipe(Schema.minLength(1), Schema.maxLength(2)).annotations({
   // This message always takes precedence
   // So, for any error, the same message will always be shown
-  message: () => "my custom message"
+  message: () => "my custom message",
 })
 
 const decode = Schema.decodeUnknownEither(MyString)
@@ -254,12 +246,9 @@ Now, let's see how the same schema works with the new system.
 ```ts
 import { Schema } from "@effect/schema"
 
-const MyString = Schema.String.pipe(
-  Schema.minLength(1),
-  Schema.maxLength(2)
-).annotations({
+const MyString = Schema.String.pipe(Schema.minLength(1), Schema.maxLength(2)).annotations({
   // This message is shown only if the maxLength filter fails
-  message: () => "my custom message"
+  message: () => "my custom message",
 })
 
 const decode = Schema.decodeUnknownEither(MyString)
@@ -274,13 +263,10 @@ To restore the old behavior (for example, to address the scenario where a user w
 ```ts
 import { Schema } from "@effect/schema"
 
-const MyString = Schema.String.pipe(
-  Schema.minLength(1),
-  Schema.maxLength(2)
-).annotations({
+const MyString = Schema.String.pipe(Schema.minLength(1), Schema.maxLength(2)).annotations({
   // By setting the `override` flag to `true`
   // this message will always be shown for any error
-  message: () => ({ message: "my custom message", override: true })
+  message: () => ({ message: "my custom message", override: true }),
 })
 
 const decode = Schema.decodeUnknownEither(MyString)
@@ -298,7 +284,7 @@ We've introduced a new API interface to the `filter` API. This allows you to acc
 import { Schema } from "@effect/schema"
 
 const MyFilter = Schema.Struct({
-  a: Schema.String
+  a: Schema.String,
 }).pipe(Schema.filter(() => /* some filter... */ true))
 
 // const aField: typeof Schema.String
@@ -324,9 +310,7 @@ with the following semantics:
 ```ts
 import { Schema } from "@effect/schema"
 
-const Positive = Schema.Number.pipe(
-  Schema.filter((n) => (n > 0 ? undefined : "must be positive"))
-)
+const Positive = Schema.Number.pipe(Schema.filter((n) => (n > 0 ? undefined : "must be positive")))
 
 Schema.decodeUnknownSync(Positive)(-1)
 /*
@@ -349,8 +333,8 @@ import { JSONSchema, Schema } from "@effect/schema"
 const MySchema = Schema.Struct({
   foo: Schema.String.pipe(Schema.minLength(2)),
   bar: Schema.optional(Schema.NumberFromString, {
-    default: () => 0
-  })
+    default: () => 0,
+  }),
 })
 
 console.log(JSON.stringify(JSONSchema.make(MySchema), null, 2))
@@ -415,9 +399,7 @@ type Encoded = {
 At first glance, a possible solution might be to generate the JSON Schema of `Schema.encodedSchema(schema)`:
 
 ```ts
-console.log(
-  JSON.stringify(JSONSchema.make(Schema.encodedSchema(MySchema)), null, 2)
-)
+console.log(JSON.stringify(JSONSchema.make(Schema.encodedSchema(MySchema)), null, 2))
 ```
 
 But here's what the result would be:

@@ -124,7 +124,7 @@ import { Logger, Effect } from "effect"
 const addSimpleLogger = Logger.replace(
   Logger.defaultLogger,
   // Custom logger implementation
-  Logger.make(({ message }) => console.log(message))
+  Logger.make(({ message }) => console.log(message)),
 )
 
 const program = Effect.gen(function* () {
@@ -161,7 +161,7 @@ import { Logger, Effect } from "effect"
 const addSimpleLogger = Logger.replace(
   Logger.defaultLogger,
   // Custom logger implementation
-  Logger.make(({ message }) => console.log(message))
+  Logger.make(({ message }) => console.log(message)),
 )
 
 const removeDefaultLogger = Logger.remove(Logger.defaultLogger)
@@ -176,16 +176,14 @@ const program = Effect.gen(function* () {
 
     // Custom logger applied here
     yield* Effect.log("I will be logged by the simple logger.").pipe(
-      Effect.provide(addSimpleLogger)
+      Effect.provide(addSimpleLogger),
     )
 
     // This log is suppressed
-    yield* Effect.log(
-      "Reset back to the previous configuration, so I won't be logged."
-    )
+    yield* Effect.log("Reset back to the previous configuration, so I won't be logged.")
   }).pipe(
     // Remove the default logger temporarily
-    Effect.provide(removeDefaultLogger)
+    Effect.provide(removeDefaultLogger),
   )
 
   // Logs with default logger again
@@ -218,7 +216,7 @@ import { Effect, ManagedRuntime, Logger } from "effect"
 const appLayer = Logger.replace(
   Logger.defaultLogger,
   // Custom logger implementation
-  Logger.make(({ message }) => console.log(message))
+  Logger.make(({ message }) => console.log(message)),
 )
 
 // Create a custom runtime from the configuration layer
@@ -295,7 +293,7 @@ class Notifications extends Effect.Tag("Notifications")<
 >() {
   // Provide a live implementation of the Notifications service
   static Live = Layer.succeed(this, {
-    notify: (message) => Console.log(message)
+    notify: (message) => Console.log(message),
   })
 }
 

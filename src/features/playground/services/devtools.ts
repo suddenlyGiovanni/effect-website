@@ -19,27 +19,35 @@ export const DevToolsLayer = Layer.effectDiscard(
 
     function registerSpan(span: DevToolsSchema.ParentSpan) {
       return Effect.sync(() =>
-        registry.update(rootSpansAtom, (rootSpans): ReadonlyArray<Span> =>
-          pipe(
-            rootSpans,
-            Array.findFirstIndex((root) => root.traceId === span.traceId),
-            Option.flatMap((index) => Array.modify(rootSpans as Array<Span>, index, (root: Span) => root.addSpan(span))),
-            Option.getOrElse(() => Array.prepend(rootSpans, Span.fromSpan(span)))
-          )
-        )
+        registry.update(
+          rootSpansAtom,
+          (rootSpans): ReadonlyArray<Span> =>
+            pipe(
+              rootSpans,
+              Array.findFirstIndex((root) => root.traceId === span.traceId),
+              Option.flatMap((index) =>
+                Array.modify(rootSpans as Array<Span>, index, (root: Span) => root.addSpan(span)),
+              ),
+              Option.getOrElse(() => Array.prepend(rootSpans, Span.fromSpan(span))),
+            ),
+        ),
       )
     }
 
     function registerSpanEvent(event: DevToolsSchema.SpanEvent) {
       return Effect.sync(() =>
-        registry.update(rootSpansAtom, (rootSpans): ReadonlyArray<Span> =>
-          pipe(
-            rootSpans,
-            Array.findFirstIndex((root) => root.traceId === event.traceId),
-            Option.flatMap((index) => Array.modify(rootSpans as Array<Span>, index, (root: Span) => root.addEvent(event))),
-            Option.getOrElse(() => rootSpans)
-          )
-        )
+        registry.update(
+          rootSpansAtom,
+          (rootSpans): ReadonlyArray<Span> =>
+            pipe(
+              rootSpans,
+              Array.findFirstIndex((root) => root.traceId === event.traceId),
+              Option.flatMap((index) =>
+                Array.modify(rootSpans as Array<Span>, index, (root: Span) => root.addEvent(event)),
+              ),
+              Option.getOrElse(() => rootSpans),
+            ),
+        ),
       )
     }
 
@@ -57,7 +65,7 @@ export const DevToolsLayer = Layer.effectDiscard(
           }
         }
       }),
-      Effect.forkDetach
+      Effect.forkDetach,
     )
-  })
+  }),
 ).pipe(Layer.provide(WebContainer.layer))

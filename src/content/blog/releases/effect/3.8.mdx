@@ -27,7 +27,7 @@ import { Effect, Logger } from "effect"
 
 const loggerLayer = Logger.replace(
   Logger.defaultLogger,
-  Logger.withLeveledConsole(Logger.stringLogger)
+  Logger.withLeveledConsole(Logger.stringLogger),
 )
 
 Effect.gen(function* () {
@@ -81,10 +81,7 @@ Effect.gen(function* () {
   const latch = yield* Effect.makeLatch(false)
 
   // Fork a fiber that logs "open sesame" when the latch is opened
-  const fiber = yield* Effect.log("open sesame").pipe(
-    latch.whenOpen,
-    Effect.fork
-  )
+  const fiber = yield* Effect.log("open sesame").pipe(latch.whenOpen, Effect.fork)
 
   // Open the latch
   yield* latch.open
@@ -109,7 +106,7 @@ import { Effect, Stream } from "effect"
 Effect.gen(function* () {
   const sharedStream = yield* Effect.acquireRelease(
     Effect.log("Stream acquired").pipe(Effect.as(Stream.never)),
-    () => Effect.log("Stream released")
+    () => Effect.log("Stream released"),
   ).pipe(Stream.unwrapScoped, Stream.share({ capacity: 16 }))
 
   // Nothing is logged yet
@@ -141,7 +138,7 @@ Effect.gen(function* () {
 }).pipe(
   Effect.scoped,
   // the fetch client has been moved to the `FetchHttpClient` module
-  Effect.provide(FetchHttpClient.layer)
+  Effect.provide(FetchHttpClient.layer),
 )
 ```
 
@@ -154,11 +151,7 @@ Some shorthand methods have been added to the `HttpClient` interface to make
 less complex requests easier to implement.
 
 ```ts
-import {
-  FetchHttpClient,
-  HttpClient,
-  HttpClientRequest
-} from "@effect/platform"
+import { FetchHttpClient, HttpClient, HttpClientRequest } from "@effect/platform"
 import { Effect } from "effect"
 
 Effect.gen(function* () {
@@ -170,9 +163,7 @@ Effect.gen(function* () {
   yield* client.post("https://jsonplaceholder.typicode.com/todos")
 
   // execute a request instance
-  yield* client.execute(
-    HttpClientRequest.get("https://jsonplaceholder.typicode.com/todos/1")
-  )
+  yield* client.execute(HttpClientRequest.get("https://jsonplaceholder.typicode.com/todos/1"))
 })
 ```
 
@@ -192,7 +183,7 @@ Effect.gen(function* () {
 
   yield* client.get("https://jsonplaceholder.typicode.com/todos/1").pipe(
     Effect.flatMap((response) => response.json),
-    Effect.scoped // supply the `Scope`
+    Effect.scoped, // supply the `Scope`
   )
 })
 ```
@@ -255,7 +246,7 @@ For example:
 const map = MutableHashMap.make([
   ["a", "a"],
   ["b", "b"],
-  ["c", "c"]
+  ["c", "c"],
 ])
 const keys = MutableHashMap.keys(map) // ["a", "b", "c"]
 ```
@@ -265,7 +256,7 @@ And for `RcMap`:
 ```ts
 Effect.gen(function* () {
   const map = yield* RcMap.make({
-    lookup: (key) => Effect.succeed(key)
+    lookup: (key) => Effect.succeed(key),
   })
 
   yield* RcMap.get(map, "a")

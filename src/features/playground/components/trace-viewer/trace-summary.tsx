@@ -1,8 +1,8 @@
-import { useMemo } from "react"
-import { Duration, Option } from "effect"
-import { formatDuration, getTotalSpans } from "./utils"
 import { useAtomValue } from "@effect/atom-react"
+import { Duration, Option } from "effect"
+import { useMemo } from "react"
 import { selectedSpanAtom } from "../../atoms/devtools"
+import { formatDuration, getTotalSpans } from "./utils"
 
 export function TraceSummary() {
   const selectedSpan = useAtomValue(selectedSpanAtom)

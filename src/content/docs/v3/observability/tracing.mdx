@@ -6,12 +6,7 @@ sidebar:
   order: 2
 ---
 
-import {
-  Tabs,
-  TabItem,
-  Steps,
-  Aside
-} from "@astrojs/starlight/components"
+import { Tabs, TabItem, Steps, Aside } from "@astrojs/starlight/components"
 
 Although logs and metrics are useful to understand the behavior of individual services, they are not enough to provide a complete overview of the lifetime of a request in a distributed system.
 
@@ -137,9 +132,8 @@ bun add @opentelemetry/sdk-metrics
    </Tabs>
 
 <Aside type="note" title="Peer Dependency">
-  The `@opentelemetry/api` package is a peer dependency of
-  `@effect/opentelemetry`. If your package manager does not automatically
-  install peer dependencies, you must add it manually.
+  The `@opentelemetry/api` package is a peer dependency of `@effect/opentelemetry`. If your package
+  manager does not automatically install peer dependencies, you must add it manually.
 </Aside>
 
 ### Printing a Span to the Console
@@ -151,10 +145,7 @@ Once the dependencies are installed, you can set up span printing using OpenTele
 ```ts twoslash
 import { Effect } from "effect"
 import { NodeSdk } from "@effect/opentelemetry"
-import {
-  ConsoleSpanExporter,
-  BatchSpanProcessor
-} from "@opentelemetry/sdk-trace-base"
+import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 
 // Define an effect that delays for 100 milliseconds
 const program = Effect.void.pipe(Effect.delay("100 millis"))
@@ -166,7 +157,7 @@ const instrumented = program.pipe(Effect.withSpan("myspan"))
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
   // Export span data to the console
-  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
 }))
 
 // Run the effect, providing the tracing layer
@@ -225,24 +216,16 @@ Here's how a span looks when the effect encounters an error:
 ```ts twoslash "code: 2"
 import { Effect } from "effect"
 import { NodeSdk } from "@effect/opentelemetry"
-import {
-  ConsoleSpanExporter,
-  BatchSpanProcessor
-} from "@opentelemetry/sdk-trace-base"
+import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 
-const program = Effect.fail("Oh no!").pipe(
-  Effect.delay("100 millis"),
-  Effect.withSpan("myspan")
-)
+const program = Effect.fail("Oh no!").pipe(Effect.delay("100 millis"), Effect.withSpan("myspan"))
 
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
-  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
 }))
 
-Effect.runPromiseExit(program.pipe(Effect.provide(NodeSdkLive))).then(
-  console.log
-)
+Effect.runPromiseExit(program.pipe(Effect.provide(NodeSdkLive))).then(console.log)
 /*
 Example Output:
 {
@@ -301,23 +284,20 @@ This function allows you to attach key-value pairs, offering more context about 
 ```ts twoslash "attributes: { key: 'value' }"
 import { Effect } from "effect"
 import { NodeSdk } from "@effect/opentelemetry"
-import {
-  ConsoleSpanExporter,
-  BatchSpanProcessor
-} from "@opentelemetry/sdk-trace-base"
+import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 
 const program = Effect.void.pipe(
   Effect.delay("100 millis"),
   // Annotate the span with a key-value pair
   Effect.tap(() => Effect.annotateCurrentSpan("key", "value")),
   // Wrap the effect in a span named 'myspan'
-  Effect.withSpan("myspan")
+  Effect.withSpan("myspan"),
 )
 
 // Set up tracing with the OpenTelemetry SDK
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
-  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
 }))
 
 // Run the effect, providing the tracing layer
@@ -357,21 +337,15 @@ In the context of tracing, logs are converted into "Span Events." These events o
 ```ts twoslash {47}
 import { Effect } from "effect"
 import { NodeSdk } from "@effect/opentelemetry"
-import {
-  ConsoleSpanExporter,
-  BatchSpanProcessor
-} from "@opentelemetry/sdk-trace-base"
+import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 
 // Define a program that logs a message and delays for 100 milliseconds
-const program = Effect.log("Hello").pipe(
-  Effect.delay("100 millis"),
-  Effect.withSpan("myspan")
-)
+const program = Effect.log("Hello").pipe(Effect.delay("100 millis"), Effect.withSpan("myspan"))
 
 // Set up tracing with the OpenTelemetry SDK
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
-  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
 }))
 
 // Run the effect, providing the tracing layer
@@ -429,15 +403,9 @@ Spans can be nested to represent a hierarchy of operations. This allows you to t
 ```ts twoslash "a09e5c3fdfdbbc1d"
 import { Effect } from "effect"
 import { NodeSdk } from "@effect/opentelemetry"
-import {
-  ConsoleSpanExporter,
-  BatchSpanProcessor
-} from "@opentelemetry/sdk-trace-base"
+import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 
-const child = Effect.void.pipe(
-  Effect.delay("100 millis"),
-  Effect.withSpan("child")
-)
+const child = Effect.void.pipe(Effect.delay("100 millis"), Effect.withSpan("child"))
 
 const parent = Effect.gen(function* () {
   yield* Effect.sleep("20 millis")
@@ -448,7 +416,7 @@ const parent = Effect.gen(function* () {
 // Set up tracing with the OpenTelemetry SDK
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
-  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
 }))
 
 // Run the effect, providing the tracing layer
@@ -510,7 +478,7 @@ The parent-child relationship is evident in the span output, where the `parentId
 
 In this tutorial, we will guide you through visualizing traces generated by a sample Effect application. The sample application has also been configured to export traces and/or metrics via HTTP using [OTLP format](https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md).
 
-To visualize the traces being exported by our application, we will use a Docker image that contains a preconfigured OpenTelemetry backend based on the [OpenTelemetry Collector](https://opentelemetry.io/docs/collector), [Prometheus](https://github.com/prometheus/prometheus), [Loki](https://github.com/grafana/loki), [Tempo](https://github.com/grafana/tempo), and [Grafana](https://github.com/grafana/grafana). 
+To visualize the traces being exported by our application, we will use a Docker image that contains a preconfigured OpenTelemetry backend based on the [OpenTelemetry Collector](https://opentelemetry.io/docs/collector), [Prometheus](https://github.com/prometheus/prometheus), [Loki](https://github.com/grafana/loki), [Tempo](https://github.com/grafana/tempo), and [Grafana](https://github.com/grafana/grafana).
 
 ### Tools Explained
 
@@ -542,7 +510,7 @@ To get Docker, follow these steps:
 
 1. **Start the OpenTelemetry Backend**
 
-   Before we begin generating and exporting traces from our sample application, we will need to get our OpenTelemetry backend running in Docker. 
+   Before we begin generating and exporting traces from our sample application, we will need to get our OpenTelemetry backend running in Docker.
 
    This can be done using the following command:
 
@@ -644,7 +612,7 @@ To get Docker, follow these steps:
 
 3. **Simulate Traces**
 
-   Now, let's simulate traces using a sample Node.js application. 
+   Now, let's simulate traces using a sample Node.js application.
 
    The following code simulates a set of tasks and generates traces for each task. It also sets up a `Layer` which will export traces from our application to our OpenTelemetry backend over HTTP in OTLP format.
 
@@ -655,11 +623,7 @@ To get Docker, follow these steps:
    import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 
    // Function to simulate a task with possible subtasks
-   const task = (
-     name: string,
-     delay: number,
-     children: ReadonlyArray<Effect.Effect<void>> = []
-   ) =>
+   const task = (name: string, delay: number, children: ReadonlyArray<Effect.Effect<void>> = []) =>
      Effect.gen(function* () {
        yield* Effect.log(name)
        yield* Effect.sleep(`${delay} millis`)
@@ -675,28 +639,22 @@ To get Docker, follow these steps:
    const program = task("client", 2, [
      task("/api", 3, [
        task("/authN", 4, [task("/authZ", 5)]),
-       task("/payment Gateway", 6, [
-         task("DB", 7),
-         task("Ext. Merchant", 8)
-       ]),
+       task("/payment Gateway", 6, [task("DB", 7), task("Ext. Merchant", 8)]),
        task("/dispatch", 9, [
          task("/dispatch/search", 10),
          Effect.all([poll, poll, poll], { concurrency: "inherit" }),
-         task("/pollDriver/{id}", 11)
-       ])
-     ])
+         task("/pollDriver/{id}", 11),
+       ]),
+     ]),
    ])
 
    const NodeSdkLive = NodeSdk.layer(() => ({
      resource: { serviceName: "example" },
-     spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter())
+     spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
    }))
 
    Effect.runPromise(
-     program.pipe(
-       Effect.provide(NodeSdkLive),
-       Effect.catchAllCause(Effect.logError)
-     )
+     program.pipe(Effect.provide(NodeSdkLive), Effect.catchAllCause(Effect.logError)),
    )
    /*
    Output:
@@ -715,8 +673,9 @@ To get Docker, follow these steps:
    timestamp=... level=INFO fiber=#0 message=/pollDriver/{id}
    */
    ```
+
 4. **Visualize Traces**
-  
+
    Open your web browser and go to `http://localhost:3000/explore`. You should see the Grafana Tempo TraceQL interface.
 
    ![Tempo TraceQL Interface](../_assets/tempo-traceql-interface.png "The Grafana Tempo TraceQL interface without a TraceQL query specified")
@@ -745,6 +704,6 @@ import { SentrySpanProcessor } from "@sentry/opentelemetry"
 
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
-  spanProcessor: new SentrySpanProcessor()
+  spanProcessor: new SentrySpanProcessor(),
 }))
 ```

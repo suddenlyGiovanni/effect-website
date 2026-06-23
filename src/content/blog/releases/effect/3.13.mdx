@@ -21,7 +21,7 @@ This API allows you to generate a [Standard Schema v1](https://standardschema.de
 import { Schema } from "effect"
 
 const schema = Schema.Struct({
-  name: Schema.String
+  name: Schema.String,
 })
 
 //      ┌─── StandardSchemaV1<{ readonly name: string; }>
@@ -41,7 +41,7 @@ const fn = Effect.fn("my function")(
     yield* Effect.log(`n is ${n}`)
   },
   // you can now access the arguments here
-  (effect, n) => Effect.annotateLogs(effect, { n })
+  (effect, n) => Effect.annotateLogs(effect, { n }),
 )
 ```
 
@@ -56,7 +56,7 @@ import { Effect, RcMap } from "effect"
 Effect.gen(function* () {
   const map = yield* RcMap.make({
     lookup: (n: number) => Effect.succeed(n),
-    idleTimeToLive: "1 minute"
+    idleTimeToLive: "1 minute",
   })
 
   // retrieve the resource at key 1
@@ -113,8 +113,8 @@ const program = pipe(
   // Use filterEffectOrElse with an effectful predicate
   Effect.filterEffectOrElse({
     predicate: (user) => Effect.succeed(user !== null),
-    orElse: (user) => Effect.fail(new Error(`Unauthorized user: ${user}`))
-  })
+    orElse: (user) => Effect.fail(new Error(`Unauthorized user: ${user}`)),
+  }),
 )
 ```
 
@@ -138,8 +138,8 @@ const program = pipe(
   // Use filterEffectOrFail with an effectful predicate
   Effect.filterEffectOrFail({
     predicate: (user) => Effect.succeed(user !== null),
-    orFailWith: (user) => new Error(`Unauthorized user: ${user}`)
-  })
+    orFailWith: (user) => new Error(`Unauthorized user: ${user}`),
+  }),
 )
 ```
 
@@ -190,8 +190,8 @@ import { Effect, Layer } from "effect"
 
 class MyService extends Effect.Service<MyService>()("MyService", {
   succeed: {
-    name: "Tim" as string
-  }
+    name: "Tim" as string,
+  },
 }) {}
 
 declare const RequiresMyService: Layer.Layer<never, never, MyService>
@@ -200,8 +200,8 @@ const UpdateMyService = RequiresMyService.pipe(
   // update the implementation of `MyService` before providing it to `RequiresMyService`
   Layer.updateService(MyService, (obj) => ({
     ...obj,
-    name: "John"
-  }))
+    name: "John",
+  })),
 )
 ```
 

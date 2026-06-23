@@ -156,7 +156,7 @@ const mapped = Promise.resolve("Hello").then((s) => s.length)
 import { Effect } from "effect"
 
 const mapped = Effect.succeed("Hello").pipe(
-  Effect.map((s) => s.length)
+  Effect.map((s) => s.length),
   // or Effect.andThen((s) => s.length)
 )
 ```
@@ -174,9 +174,7 @@ Chaining multiple operations:
 <TabItem label="Promise">
 
 ```ts twoslash
-const flatMapped = Promise.resolve("Hello").then((s) =>
-  Promise.resolve(s.length)
-)
+const flatMapped = Promise.resolve("Hello").then((s) => Promise.resolve(s.length))
 ```
 
 </TabItem>
@@ -187,7 +185,7 @@ const flatMapped = Promise.resolve("Hello").then((s) =>
 import { Effect } from "effect"
 
 const flatMapped = Effect.succeed("Hello").pipe(
-  Effect.flatMap((s) => Effect.succeed(s.length))
+  Effect.flatMap((s) => Effect.succeed(s.length)),
   // or Effect.andThen((s) => Effect.succeed(s.length))
 )
 ```
@@ -210,9 +208,7 @@ Let's compare the two approaches:
 const increment = (x: number) => x + 1
 
 const divide = (a: number, b: number): Promise<number> =>
-  b === 0
-    ? Promise.reject(new Error("Cannot divide by zero"))
-    : Promise.resolve(a / b)
+  b === 0 ? Promise.reject(new Error("Cannot divide by zero")) : Promise.resolve(a / b)
 
 const task1 = Promise.resolve(10)
 
@@ -239,9 +235,7 @@ import { Effect } from "effect"
 const increment = (x: number) => x + 1
 
 const divide = (a: number, b: number): Effect.Effect<number, Error> =>
-  b === 0
-    ? Effect.fail(new Error("Cannot divide by zero"))
-    : Effect.succeed(a / b)
+  b === 0 ? Effect.fail(new Error("Cannot divide by zero")) : Effect.succeed(a / b)
 
 const task1 = Effect.promise(() => Promise.resolve(10))
 
@@ -342,7 +336,7 @@ const task3 = Effect.gen(function* () {
 })
 
 const program = Effect.all([task1, task2, task3], {
-  concurrency: "unbounded"
+  concurrency: "unbounded",
 })
 
 Effect.runPromise(program).then(console.log, console.error)
@@ -443,8 +437,8 @@ const program = Effect.forEach(
   [task1, task2, task3],
   (task) => Effect.either(task), // or Effect.exit
   {
-    concurrency: "unbounded"
-  }
+    concurrency: "unbounded",
+  },
 )
 
 Effect.runPromise(program).then(console.log, console.error)
@@ -675,7 +669,7 @@ const task = (delay: number, name: string) =>
     setTimeout(() => {
       console.log(`${name} done`)
       return resolve(name)
-    }, delay)
+    }, delay),
   )
 
 export async function program() {
@@ -685,7 +679,7 @@ export async function program() {
   return {
     r1,
     r2,
-    r0: await r0
+    r0: await r0,
   }
 }
 
@@ -718,7 +712,7 @@ const program = Effect.gen(function* () {
   return {
     r1,
     r2,
-    r0: yield* Fiber.join(r0)
+    r0: yield* Fiber.join(r0),
   }
 })
 

@@ -28,17 +28,13 @@ const simulatedTask = Effect.fail("Oh no!").pipe(Effect.as(1))
 
 //      ┌─── Effect<number, Error, never>
 //      ▼
-const mapped = Effect.mapError(
-  simulatedTask,
-  (message) => new Error(message)
-)
+const mapped = Effect.mapError(simulatedTask, (message) => new Error(message))
 ```
 
 <Aside type="note">
-  It's important to note that using the `Effect.mapError` function does
-  not change the overall success or failure of the effect. It only
-  transforms the values in the error channel while preserving the effect's
-  original success or failure status.
+  It's important to note that using the `Effect.mapError` function does not change the overall
+  success or failure of the effect. It only transforms the values in the error channel while
+  preserving the effect's original success or failure status.
 </Aside>
 
 ### mapBoth
@@ -58,15 +54,14 @@ const simulatedTask = Effect.fail("Oh no!").pipe(Effect.as(1))
 //      ▼
 const modified = Effect.mapBoth(simulatedTask, {
   onFailure: (message) => new Error(message),
-  onSuccess: (n) => n > 0
+  onSuccess: (n) => n > 0,
 })
 ```
 
 <Aside type="note">
-  It's important to note that using the `Effect.mapBoth` function does not
-  change the overall success or failure of the effect. It only transforms
-  the values in the error and success channels while preserving the
-  effect's original success or failure status.
+  It's important to note that using the `Effect.mapBoth` function does not change the overall
+  success or failure of the effect. It only transforms the values in the error and success channels
+  while preserving the effect's original success or failure status.
 </Aside>
 
 ## Filtering the Success Channel
@@ -90,28 +85,28 @@ import { Effect, Random, Cause } from "effect"
 const task1 = Effect.filterOrFail(
   Random.nextRange(-1, 1),
   (n) => n >= 0,
-  () => "random number is negative"
+  () => "random number is negative",
 )
 
 // Die with a custom exception if predicate is false
 const task2 = Effect.filterOrDie(
   Random.nextRange(-1, 1),
   (n) => n >= 0,
-  () => new Cause.IllegalArgumentException("random number is negative")
+  () => new Cause.IllegalArgumentException("random number is negative"),
 )
 
 // Die with a custom error message if predicate is false
 const task3 = Effect.filterOrDieMessage(
   Random.nextRange(-1, 1),
   (n) => n >= 0,
-  "random number is negative"
+  "random number is negative",
 )
 
 // Run an alternative effect if predicate is false
 const task4 = Effect.filterOrElse(
   Random.nextRange(-1, 1),
   (n) => n >= 0,
-  () => task3
+  () => task3,
 )
 ```
 
@@ -137,10 +132,10 @@ const program = pipe(
   // Use filterOrFail with a custom type guard to ensure user is not null
   Effect.filterOrFail(
     (user): user is User => user !== null, // Type guard
-    () => new Error("Unauthorized")
+    () => new Error("Unauthorized"),
   ),
   // 'user' now has the type `User` (not `User | null`)
-  Effect.andThen((user) => user.name)
+  Effect.andThen((user) => user.name),
 )
 ```
 
@@ -166,9 +161,7 @@ import { Effect, Console } from "effect"
 const task: Effect.Effect<number, string> = Effect.fail("NetworkError")
 
 // Use tapError to log the error message when the task fails
-const tapping = Effect.tapError(task, (error) =>
-  Console.log(`expected error: ${error}`)
-)
+const tapping = Effect.tapError(task, (error) => Console.log(`expected error: ${error}`))
 
 Effect.runFork(tapping)
 /*
@@ -195,13 +188,14 @@ class ValidationError extends Data.TaggedError("ValidationError")<{
 }> {}
 
 // Create a task that fails with a NetworkError
-const task: Effect.Effect<number, NetworkError | ValidationError> =
-  Effect.fail(new NetworkError({ statusCode: 504 }))
+const task: Effect.Effect<number, NetworkError | ValidationError> = Effect.fail(
+  new NetworkError({ statusCode: 504 }),
+)
 
 // Use tapErrorTag to inspect only NetworkError types
 // and log the status code
 const tapping = Effect.tapErrorTag(task, "NetworkError", (error) =>
-  Console.log(`expected error: ${error.statusCode}`)
+  Console.log(`expected error: ${error.statusCode}`),
 )
 
 Effect.runFork(tapping)
@@ -223,9 +217,7 @@ import { Effect, Console } from "effect"
 // Create a task that fails with a NetworkError
 const task1: Effect.Effect<number, string> = Effect.fail("NetworkError")
 
-const tapping1 = Effect.tapErrorCause(task1, (cause) =>
-  Console.log(`error cause: ${cause}`)
-)
+const tapping1 = Effect.tapErrorCause(task1, (cause) => Console.log(`error cause: ${cause}`))
 
 Effect.runFork(tapping1)
 /*
@@ -234,13 +226,9 @@ error cause: Error: NetworkError
 */
 
 // Simulate a severe failure in the system
-const task2: Effect.Effect<number, string> = Effect.dieMessage(
-  "Something went wrong"
-)
+const task2: Effect.Effect<number, string> = Effect.dieMessage("Something went wrong")
 
-const tapping2 = Effect.tapErrorCause(task2, (cause) =>
-  Console.log(`error cause: ${cause}`)
-)
+const tapping2 = Effect.tapErrorCause(task2, (cause) => Console.log(`error cause: ${cause}`))
 
 Effect.runFork(tapping2)
 /*
@@ -263,9 +251,7 @@ import { Effect, Console } from "effect"
 const task1: Effect.Effect<number, string> = Effect.fail("NetworkError")
 
 // tapDefect won't log anything because NetworkError is not a defect
-const tapping1 = Effect.tapDefect(task1, (cause) =>
-  Console.log(`defect: ${cause}`)
-)
+const tapping1 = Effect.tapDefect(task1, (cause) => Console.log(`defect: ${cause}`))
 
 Effect.runFork(tapping1)
 /*
@@ -273,14 +259,10 @@ No Output
 */
 
 // Simulate a severe failure in the system
-const task2: Effect.Effect<number, string> = Effect.dieMessage(
-  "Something went wrong"
-)
+const task2: Effect.Effect<number, string> = Effect.dieMessage("Something went wrong")
 
 // Log the defect using tapDefect
-const tapping2 = Effect.tapDefect(task2, (cause) =>
-  Console.log(`defect: ${cause}`)
-)
+const tapping2 = Effect.tapDefect(task2, (cause) => Console.log(`defect: ${cause}`))
 
 Effect.runFork(tapping2)
 /*
@@ -303,14 +285,13 @@ import { Effect, Random, Console } from "effect"
 const task = Effect.filterOrFail(
   Random.nextRange(-1, 1),
   (n) => n >= 0,
-  () => "random number is negative"
+  () => "random number is negative",
 )
 
 // Use tapBoth to log both success and failure outcomes
 const tapping = Effect.tapBoth(task, {
   onFailure: (error) => Console.log(`failure: ${error}`),
-  onSuccess: (randomNumber) =>
-    Console.log(`random number: ${randomNumber}`)
+  onSuccess: (randomNumber) => Console.log(`random number: ${randomNumber}`),
 })
 
 Effect.runFork(tapping)

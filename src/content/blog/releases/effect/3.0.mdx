@@ -164,11 +164,8 @@ If we were to add such a requirement our code would become:
 
 ```ts
 async function getTodo(
-  id: number
-): Promise<
-  | { ok: true; todo: Todo }
-  | { ok: false; error: "InvalidJson" | "RequestFailed" }
-> {
+  id: number,
+): Promise<{ ok: true; todo: Todo } | { ok: false; error: "InvalidJson" | "RequestFailed" }> {
   try {
     const response = await fetch(`/todos/${id}`)
     if (!response.ok) throw new Error("Not OK!")
@@ -289,56 +286,39 @@ import {
   HttpClient,
   HttpClientRequest,
   HttpClientResponse,
-  HttpClientError
+  HttpClientError,
 } from "@effect/platform"
 import type { Cause } from "effect"
 import { Effect, Schedule } from "effect"
 
 export const getTodo = (
-  id: number
-): Effect.Effect<
-  unknown,
-  HttpClientError.HttpClientError | Cause.TimeoutException,
-  never
-> =>
+  id: number,
+): Effect.Effect<unknown, HttpClientError.HttpClientError | Cause.TimeoutException, never> =>
   HttpClientRequest.get(`/todos/${id}`).pipe(
     HttpClient.fetchOk,
     HttpClientResponse.json,
     Effect.timeout("1 second"),
-    Effect.retry(
-      Schedule.exponential(1000).pipe(
-        Schedule.compose(Schedule.recurs(3))
-      )
-    ),
-    Effect.withSpan("getTodo", { attributes: { id } })
+    Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
+    Effect.withSpan("getTodo", { attributes: { id } }),
   )
 ```
 
 If we unpack each piece in its own code block and allow for type inference it becomes even simpler to read and understand:
 
 ```ts
-import {
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse
-} from "@effect/platform"
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "@effect/platform"
 import { Effect, Schedule } from "effect"
 
-const retryPolicy = Schedule.exponential(1000).pipe(
-  Schedule.compose(Schedule.recurs(3))
-)
+const retryPolicy = Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))
 
 const httpCall = (id: number) =>
-  HttpClientRequest.get(`/todos/${id}`).pipe(
-    HttpClient.fetchOk,
-    HttpClientResponse.json
-  )
+  HttpClientRequest.get(`/todos/${id}`).pipe(HttpClient.fetchOk, HttpClientResponse.json)
 
 export const getTodo = (id: number) =>
   httpCall(id).pipe(
     Effect.timeout("1 second"),
     Effect.retry(retryPolicy),
-    Effect.withSpan("getTodo", { attributes: { id } })
+    Effect.withSpan("getTodo", { attributes: { id } }),
   )
 ```
 
@@ -347,29 +327,20 @@ In this example we can truly see the power of composition, each block of Effect 
 The last problem we wanted to solve with our code is checking the types at the edge, accounting for that our full example code becomes:
 
 ```ts
-import {
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse
-} from "@effect/platform"
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "@effect/platform"
 import { Effect, Schedule } from "effect"
 import { Schema } from "@effect/schema"
 
-const retryPolicy = Schedule.exponential(1000).pipe(
-  Schedule.compose(Schedule.recurs(3))
-)
+const retryPolicy = Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))
 
 const httpCall = (id: number) =>
-  HttpClientRequest.get(`/todos/${id}`).pipe(
-    HttpClient.fetchOk,
-    HttpClientResponse.json
-  )
+  HttpClientRequest.get(`/todos/${id}`).pipe(HttpClient.fetchOk, HttpClientResponse.json)
 
 class Todo extends Schema.Class<Todo>("Todo")({
   id: Schema.Number,
   userId: Schema.Number,
   title: Schema.String,
-  completed: Schema.Boolean
+  completed: Schema.Boolean,
 }) {}
 
 export const getTodo = (id: number) =>
@@ -377,7 +348,7 @@ export const getTodo = (id: number) =>
     Effect.timeout("1 second"),
     Effect.retry(retryPolicy),
     Effect.flatMap(Schema.decodeUnknown(Todo)),
-    Effect.withSpan("getTodo", { attributes: { id } })
+    Effect.withSpan("getTodo", { attributes: { id } }),
   )
 ```
 

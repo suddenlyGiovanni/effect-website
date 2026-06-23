@@ -8,7 +8,7 @@ const toggleGroupVariants = cva(
 )
 
 const toggleGroupItemVariants = cva(
-  "inline-flex items-center justify-center rounded-md font-mono font-semibold text-zinc-500 uppercase transition-all duration-150 outline-none hover:text-zinc-100 focus-visible:ring-2 focus-visible:ring-zinc-400/50 data-pressed:bg-zinc-100 data-pressed:text-zinc-950 data-pressed:shadow-[0_0_0_1px_rgba(255,255,255,0.08)] hover:data-pressed:text-zinc-950 data-disabled:pointer-events-none data-disabled:opacity-50",
+  "inline-flex items-center justify-center rounded-md font-mono font-semibold text-zinc-500 uppercase transition-all duration-150 outline-none hover:text-zinc-100 focus-visible:ring-2 focus-visible:ring-zinc-400/50 data-disabled:pointer-events-none data-disabled:opacity-50 data-pressed:bg-zinc-100 data-pressed:text-zinc-950 data-pressed:shadow-[0_0_0_1px_rgba(255,255,255,0.08)] hover:data-pressed:text-zinc-950",
   {
     variants: {
       size: {

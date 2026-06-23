@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
 import { FileIcon, FolderIcon } from "lucide-react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Workspace } from "../../domain/workspace"
 import { State, useExplorerDispatch } from "../file-explorer"
 
@@ -7,7 +7,7 @@ export function FileInput({
   depth,
   type,
   onSubmit,
-  initialValue = ""
+  initialValue = "",
 }: {
   readonly depth: number
   readonly type: Workspace.FileType
@@ -23,7 +23,7 @@ export function FileInput({
 
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (event) => setFileName(event.target.value),
-    [setFileName]
+    [setFileName],
   )
 
   const handleSubmit = useCallback<React.FormEventHandler<HTMLFormElement>>(
@@ -32,7 +32,7 @@ export function FileInput({
       setFileName("")
       onSubmit(fileName)
     },
-    [fileName, onSubmit, setFileName]
+    [fileName, onSubmit, setFileName],
   )
 
   useEffect(() => {
@@ -56,14 +56,16 @@ export function FileInput({
   }, [dispatch])
 
   return (
-    <div style={styles} className="h-7 w-full pr-1 grid grid-cols-[16px_1fr] items-center gap-1">
-      <div className="h-4 w-4">{type === "File" ? <FileIcon size={16} /> : <FolderIcon size={16} />}</div>
+    <div style={styles} className="grid h-7 w-full grid-cols-[16px_1fr] items-center gap-1 pr-1">
+      <div className="h-4 w-4">
+        {type === "File" ? <FileIcon size={16} /> : <FolderIcon size={16} />}
+      </div>
       <div>
         <form onSubmit={handleSubmit}>
           <input
             ref={inputRef}
             type="text"
-            className="w-full p-0 px-1 bg-zinc-900 border border-zinc-600 rounded-sm text-white text-sm outline-none"
+            className="w-full rounded-sm border border-zinc-600 bg-zinc-900 p-0 px-1 text-sm text-white outline-none"
             value={fileName}
             onChange={handleChange}
             onFocus={(e) => e.target.select()}

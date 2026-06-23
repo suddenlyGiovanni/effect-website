@@ -17,7 +17,7 @@ const runtime = Atom.runtime(Layer.mergeAll(ShortenClient.layer, WorkspaceCompre
 const autoSaveRuntime = Atom.runtime(Layer.mergeAll(WebContainer.layer, WorkspaceCompression.layer))
 
 const codeAtom = Atom.searchParam("code", {
-  schema: Schema.StringFromBase64Url.pipe(Schema.check(Schema.isNonEmpty()))
+  schema: Schema.StringFromBase64Url.pipe(Schema.check(Schema.isNonEmpty())),
 })
 
 export const autoSaveAtom = Atom.family((handle: AtomWorkspaceHandle) =>
@@ -32,17 +32,17 @@ export const autoSaveAtom = Atom.family((handle: AtomWorkspaceHandle) =>
             snapshot.filePaths.size === defaultWorkspace.filePaths.size &&
             snapshot.findFile("src/main.ts").pipe(
               Option.filter(([file]) => file.initialContent === main.initialContent),
-              Option.isSome
+              Option.isSome,
             )
           if (similar) return
           get.set(autoSaveWorkspaceAtom, Option.some(snapshot))
         }),
         Effect.andThen(Effect.sleep("2 seconds")),
         Effect.forever,
-        Effect.forkScoped
+        Effect.forkScoped,
       )
-    }, Effect.tapCause(Effect.logError))
-  )
+    }, Effect.tapCause(Effect.logError)),
+  ),
 )
 
 export const resetAtom = Atom.fnSync((handle: AtomWorkspaceHandle, get) => {
@@ -56,7 +56,7 @@ const autoSaveWorkspaceAtom = Atom.kvs({
   runtime: Atom.runtime(BrowserKeyValueStore.layerLocalStorage),
   key: "workspace-autosave",
   schema: Schema.Option(Workspace),
-  defaultValue: Option.none
+  defaultValue: Option.none,
 })
 
 export const importAtom = runtime.atom(
@@ -65,7 +65,9 @@ export const importAtom = runtime.atom(
       const hash = get(hashAtom)
       if (Option.isSome(hash)) {
         const client = yield* ShortenClient
-        const compressed = yield* client.retrieve({ hash: hash.value }).pipe(Effect.flatMap(Effect.fromOption))
+        const compressed = yield* client
+          .retrieve({ hash: hash.value })
+          .pipe(Effect.flatMap(Effect.fromOption))
 
         const compression = yield* WorkspaceCompression
         return yield* compression.decompress(compressed)
@@ -81,7 +83,7 @@ export const importAtom = runtime.atom(
     },
     (effect, get) =>
       Effect.catch(effect, () =>
-        Effect.succeed(Option.getOrElse(get.once(autoSaveWorkspaceAtom), makeDefaultWorkspace))
-      )
-  )
+        Effect.succeed(Option.getOrElse(get.once(autoSaveWorkspaceAtom), makeDefaultWorkspace)),
+      ),
+  ),
 )

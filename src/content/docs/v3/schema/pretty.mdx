@@ -15,7 +15,7 @@ import { Pretty, Schema } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 // Create a pretty printer for the schema
@@ -42,7 +42,7 @@ import { Pretty, Schema } from "effect"
 
 // Define a schema with a custom pretty annotation
 const schema = Schema.Number.annotations({
-  pretty: (/**typeParameters**/) => (value) => `my format: ${value}`
+  pretty: (/**typeParameters**/) => (value) => `my format: ${value}`,
 })
 
 // Create the pretty printer

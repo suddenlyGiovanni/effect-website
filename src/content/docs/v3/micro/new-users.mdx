@@ -6,16 +6,11 @@ sidebar:
   order: 0
 ---
 
-import {
-  Aside,
-  Tabs,
-  TabItem,
-  Steps
-} from "@astrojs/starlight/components"
+import { Aside, Tabs, TabItem, Steps } from "@astrojs/starlight/components"
 
 <Aside type="caution" title="Experimental Module">
-  The Micro module is currently in its experimental stages. We encourage
-  your feedback to further improve its features.
+  The Micro module is currently in its experimental stages. We encourage your feedback to further
+  improve its features.
 </Aside>
 
 The Micro module is designed as a lighter alternative to the standard Effect module, tailored for situations where it is beneficial to reduce the bundle size.
@@ -27,9 +22,8 @@ Micro also supports use cases where a client application uses Micro, and a serve
 Integrating Micro adds a minimal footprint to your bundle, starting at **5kb gzipped**, which may increase depending on the features you use.
 
 <Aside type="danger" title="Bundle Size">
-  Utilizing major Effect modules beyond basic data modules like `Option`,
-  `Either`, `Array`, will incorporate the Effect runtime into your bundle,
-  negating the benefits of Micro.
+  Utilizing major Effect modules beyond basic data modules like `Option`, `Either`, `Array`, will
+  incorporate the Effect runtime into your bundle, negating the benefits of Micro.
 </Aside>
 
 ## Importing Micro
@@ -232,9 +226,7 @@ This guide shows how to wrap a `Promise`-based API using the `Micro` library fro
 
    Micro.runPromise(weatherEffect)
      .then((data) => console.log(`The weather in London is: ${data}`))
-     .catch((error) =>
-       console.error(`Failed to fetch weather data: ${error.message}`)
-     )
+     .catch((error) => console.error(`Failed to fetch weather data: ${error.message}`))
    /*
    Output:
    The weather in London is: Sunny
@@ -274,7 +266,7 @@ This guide shows how to wrap a `Promise`-based API using the `Micro` library fro
    Micro.runPromiseExit(weatherEffect).then(
      // ┌─── MicroExit<string, never>
      // ▼
-     (exit) => console.log(exit)
+     (exit) => console.log(exit),
    )
    /*
    Output:
@@ -318,7 +310,7 @@ This guide shows how to wrap a `Promise`-based API using the `Micro` library fro
      return Micro.tryPromise({
        try: () => fetchWeather(city),
        // remap the error
-       catch: (error) => new WeatherError(String(error))
+       catch: (error) => new WeatherError(String(error)),
      })
    }
 
@@ -328,9 +320,7 @@ This guide shows how to wrap a `Promise`-based API using the `Micro` library fro
 
    Micro.runPromise(weatherEffect)
      .then((data) => console.log(`The weather in London is: ${data}`))
-     .catch((error) =>
-       console.error(`Failed to fetch weather data: ${error}`)
-     )
+     .catch((error) => console.error(`Failed to fetch weather data: ${error}`))
    /*
    Output:
    Failed to fetch weather data: MicroCause.Fail: {"_tag":"WeatherError","message":"Error: Weather data not found for this location"}
@@ -412,7 +402,7 @@ const recovered = Micro.gen(function* () {
     // Failure case
     onLeft: (error) => `Recovering from ${error._tag}`,
     // Success case
-    onRight: (value) => `Result is: ${value}`
+    onRight: (value) => `Result is: ${value}`,
   })
 })
 
@@ -462,9 +452,7 @@ const program = Micro.gen(function* () {
 //      ┌─── Micro<string, never, never>
 //      ▼
 const recovered = program.pipe(
-  Micro.catchAll((error) =>
-    Micro.succeed(`Recovering from ${error._tag}`)
-  )
+  Micro.catchAll((error) => Micro.succeed(`Recovering from ${error._tag}`)),
 )
 
 Micro.runPromiseExit(recovered).then(console.log)
@@ -515,9 +503,7 @@ const program = Micro.gen(function* () {
 //      ┌─── Micro<string, ValidationError, never>
 //      ▼
 const recovered = program.pipe(
-  Micro.catchTag("HttpError", (_HttpError) =>
-    Micro.succeed("Recovering from HttpError")
-  )
+  Micro.catchTag("HttpError", (_HttpError) => Micro.succeed("Recovering from HttpError")),
 )
 
 Micro.runPromiseExit(recovered).then(console.log)
@@ -563,9 +549,7 @@ The `Micro.die` function returns an effect that throws a specified error. This f
 import { Micro } from "effect"
 
 const divide = (a: number, b: number): Micro.Micro<number> =>
-  b === 0
-    ? Micro.die(new Error("Cannot divide by zero"))
-    : Micro.succeed(a / b)
+  b === 0 ? Micro.die(new Error("Cannot divide by zero")) : Micro.succeed(a / b)
 
 Micro.runPromise(divide(1, 0))
 /*
@@ -585,9 +569,7 @@ The `Micro.orDie` function converts an effect's failure into a termination of th
 import { Micro } from "effect"
 
 const divide = (a: number, b: number): Micro.Micro<number, Error> =>
-  b === 0
-    ? Micro.fail(new Error("Cannot divide by zero"))
-    : Micro.succeed(a / b)
+  b === 0 ? Micro.fail(new Error("Cannot divide by zero")) : Micro.succeed(a / b)
 
 //      ┌─── Micro<number, never, never>
 //      ▼
@@ -616,9 +598,7 @@ const log = (message: string) => Micro.sync(() => console.log(message))
 // Simulating a runtime error
 const task = Micro.die("Boom!")
 
-const program = Micro.catchAllDefect(task, (defect) =>
-  log(`Unknown defect caught: ${defect}`)
-)
+const program = Micro.catchAllDefect(task, (defect) => log(`Unknown defect caught: ${defect}`))
 
 // We get a Right because we caught all defects
 Micro.runPromiseExit(program).then((exit) => console.log(exit))
@@ -687,20 +667,18 @@ const success: Micro.Micro<number, Error> = Micro.succeed(42)
 
 const program1 = Micro.match(success, {
   onFailure: (error) => `failure: ${error.message}`,
-  onSuccess: (value) => `success: ${value}`
+  onSuccess: (value) => `success: ${value}`,
 })
 
 // Run and log the result of the successful effect
 Micro.runPromise(program1).then(console.log)
 // Output: "success: 42"
 
-const failure: Micro.Micro<number, Error> = Micro.fail(
-  new Error("Uh oh!")
-)
+const failure: Micro.Micro<number, Error> = Micro.fail(new Error("Uh oh!"))
 
 const program2 = Micro.match(failure, {
   onFailure: (error) => `failure: ${error.message}`,
-  onSuccess: (value) => `success: ${value}`
+  onSuccess: (value) => `success: ${value}`,
 })
 
 // Run and log the result of the failed effect
@@ -721,15 +699,11 @@ import { Micro } from "effect"
 const log = (message: string) => Micro.sync(() => console.log(message))
 
 const success: Micro.Micro<number, Error> = Micro.succeed(42)
-const failure: Micro.Micro<number, Error> = Micro.fail(
-  new Error("Uh oh!")
-)
+const failure: Micro.Micro<number, Error> = Micro.fail(new Error("Uh oh!"))
 
 const program1 = Micro.matchEffect(success, {
-  onFailure: (error) =>
-    Micro.succeed(`failure: ${error.message}`).pipe(Micro.tap(log)),
-  onSuccess: (value) =>
-    Micro.succeed(`success: ${value}`).pipe(Micro.tap(log))
+  onFailure: (error) => Micro.succeed(`failure: ${error.message}`).pipe(Micro.tap(log)),
+  onSuccess: (value) => Micro.succeed(`success: ${value}`).pipe(Micro.tap(log)),
 })
 
 Micro.runSync(program1)
@@ -739,10 +713,8 @@ success: 42
 */
 
 const program2 = Micro.matchEffect(failure, {
-  onFailure: (error) =>
-    Micro.succeed(`failure: ${error.message}`).pipe(Micro.tap(log)),
-  onSuccess: (value) =>
-    Micro.succeed(`success: ${value}`).pipe(Micro.tap(log))
+  onFailure: (error) => Micro.succeed(`failure: ${error.message}`).pipe(Micro.tap(log)),
+  onSuccess: (value) => Micro.succeed(`success: ${value}`).pipe(Micro.tap(log)),
 })
 
 Micro.runSync(program2)
@@ -782,7 +754,7 @@ const program = Micro.matchCauseEffect(task, {
   },
   onSuccess: (value) =>
     // Log success if the task completes successfully
-    log(`succeeded with ${value} value`)
+    log(`succeeded with ${value} value`),
 })
 
 Micro.runSync(program)
@@ -835,10 +807,9 @@ yay!
 When an operation does not finish within the specified duration, the behavior of the `Micro.timeout` depends on whether the operation is "uninterruptible".
 
 <Aside type="note" title="Uninterruptible Effects">
-  An uninterruptible effect is one that, once started, cannot be stopped
-  mid-execution by the timeout mechanism directly. This could be because
-  the operations within the effect need to run to completion to avoid
-  leaving the system in an inconsistent state.
+  An uninterruptible effect is one that, once started, cannot be stopped mid-execution by the
+  timeout mechanism directly. This could be because the operations within the effect need to run to
+  completion to avoid leaving the system in an inconsistent state.
 </Aside>
 
 1. **Interruptible Operation**: If the operation can be interrupted, it is terminated immediately once the timeout threshold is reached, resulting in a `TimeoutException`.
@@ -886,10 +857,7 @@ When an operation does not finish within the specified duration, the behavior of
      return "Result"
    })
 
-   const timedEffect = task.pipe(
-     Micro.uninterruptible,
-     Micro.timeout(1_000)
-   )
+   const timedEffect = task.pipe(Micro.uninterruptible, Micro.timeout(1_000))
 
    // Outputs a TimeoutException after the task completes,
    // because the task is uninterruptible
@@ -927,9 +895,7 @@ const log = (message: string) => Micro.sync(() => console.log(message))
 
 //      ┌─── Micro<string, Error, never>
 //      ▼
-const task = Micro.fail(new Error("Oh uh!")).pipe(
-  Micro.as("primary result")
-)
+const task = Micro.fail(new Error("Oh uh!")).pipe(Micro.as("primary result"))
 
 //      ┌─── Effect<string, MicroCause<Error>, never>
 //      ▼
@@ -937,20 +903,14 @@ const sandboxed = Micro.sandbox(task)
 
 const program = sandboxed.pipe(
   Micro.catchTag("Fail", (cause) =>
-    log(`Caught a defect: ${cause.error}`).pipe(
-      Micro.as("fallback result on expected error")
-    )
+    log(`Caught a defect: ${cause.error}`).pipe(Micro.as("fallback result on expected error")),
   ),
   Micro.catchTag("Interrupt", () =>
-    log(`Caught a defect`).pipe(
-      Micro.as("fallback result on fiber interruption")
-    )
+    log(`Caught a defect`).pipe(Micro.as("fallback result on fiber interruption")),
   ),
   Micro.catchTag("Die", (cause) =>
-    log(`Caught a defect: ${cause.defect}`).pipe(
-      Micro.as("fallback result on unexpected error")
-    )
-  )
+    log(`Caught a defect: ${cause.defect}`).pipe(Micro.as("fallback result on unexpected error")),
+  ),
 )
 
 Micro.runPromise(program).then(console.log)
@@ -979,9 +939,7 @@ const log = (message: string) => Micro.sync(() => console.log(message))
 const task: Micro.Micro<number, string> = Micro.fail("NetworkError")
 
 // Use tapError to log the error message when the task fails
-const tapping = Micro.tapError(task, (error) =>
-  log(`expected error: ${error}`)
-)
+const tapping = Micro.tapError(task, (error) => log(`expected error: ${error}`))
 
 Micro.runFork(tapping)
 /*
@@ -1005,9 +963,7 @@ const log = (message: string) => Micro.sync(() => console.log(message))
 // Create a task that fails with a NetworkError
 const task1: Micro.Micro<number, string> = Micro.fail("NetworkError")
 
-const tapping1 = Micro.tapErrorCause(task1, (cause) =>
-  log(`error cause: ${cause}`)
-)
+const tapping1 = Micro.tapErrorCause(task1, (cause) => log(`error cause: ${cause}`))
 
 Micro.runFork(tapping1)
 /*
@@ -1016,13 +972,9 @@ error cause: MicroCause.Fail: NetworkError
 */
 
 // Simulate a severe failure in the system
-const task2: Micro.Micro<number, string> = Micro.die(
-  "Something went wrong"
-)
+const task2: Micro.Micro<number, string> = Micro.die("Something went wrong")
 
-const tapping2 = Micro.tapErrorCause(task2, (cause) =>
-  log(`error cause: ${cause}`)
-)
+const tapping2 = Micro.tapErrorCause(task2, (cause) => log(`error cause: ${cause}`))
 
 Micro.runFork(tapping2)
 /*
@@ -1047,9 +999,7 @@ const log = (message: string) => Micro.sync(() => console.log(message))
 const task1: Micro.Micro<number, string> = Micro.fail("NetworkError")
 
 // tapDefect won't log anything because NetworkError is not a defect
-const tapping1 = Micro.tapDefect(task1, (cause) =>
-  log(`defect: ${cause}`)
-)
+const tapping1 = Micro.tapDefect(task1, (cause) => log(`defect: ${cause}`))
 
 Micro.runFork(tapping1)
 /*
@@ -1057,14 +1007,10 @@ No Output
 */
 
 // Simulate a severe failure in the system
-const task2: Micro.Micro<number, string> = Micro.die(
-  "Something went wrong"
-)
+const task2: Micro.Micro<number, string> = Micro.die("Something went wrong")
 
 // Log the defect using tapDefect
-const tapping2 = Micro.tapDefect(task2, (cause) =>
-  log(`defect: ${cause}`)
-)
+const tapping2 = Micro.tapDefect(task2, (cause) => log(`defect: ${cause}`))
 
 Micro.runFork(tapping2)
 /*
@@ -1137,16 +1083,12 @@ export const program = Micro.gen(function* () {
   return n > 0.5
     ? "yay!"
     : n < 0.2
-    ? yield* new FooError({ message: "Oh no!" })
-    : yield* new BarError({ randomNumber: n })
+      ? yield* new FooError({ message: "Oh no!" })
+      : yield* new BarError({ randomNumber: n })
 }).pipe(
   // Handle different tagged errors using catchTag
-  Micro.catchTag("Foo", (error) =>
-    Micro.succeed(`Foo error: ${error.message}`)
-  ),
-  Micro.catchTag("Bar", (error) =>
-    Micro.succeed(`Bar error: ${error.randomNumber}`)
-  )
+  Micro.catchTag("Foo", (error) => Micro.succeed(`Foo error: ${error.message}`)),
+  Micro.catchTag("Bar", (error) => Micro.succeed(`Bar error: ${error.randomNumber}`)),
 )
 
 Micro.runPromise(program).then(console.log, console.error)
@@ -1248,7 +1190,7 @@ const program = Micro.gen(function* () {
 //      ┌─── Micro<void, never, never>
 //      ▼
 const runnable = Micro.provideService(program, Random, {
-  next: Micro.sync(() => Math.random())
+  next: Micro.sync(() => Math.random()),
 })
 
 Micro.runPromise(runnable)
@@ -1285,9 +1227,7 @@ const program =
     // add finalizer 2
     Micro.tap((scope) => scope.addFinalizer(() => log("finalizer 2"))),
     // close the scope
-    Micro.andThen((scope) =>
-      scope.close(Micro.exitSucceed("scope closed successfully"))
-    )
+    Micro.andThen((scope) => scope.close(Micro.exitSucceed("scope closed successfully"))),
   )
 
 Micro.runPromise(program)
@@ -1403,7 +1343,7 @@ const getMyResource = (): Promise<MyResource> =>
       new Promise((resolve) => {
         console.log("Resource released")
         resolve()
-      })
+      }),
   })
 
 // Define how the resource is acquired
@@ -1413,7 +1353,7 @@ const acquire = Micro.tryPromise({
       console.log("Resource acquired")
       return res
     }),
-  catch: () => new Error("getMyResourceError")
+  catch: () => new Error("getMyResourceError"),
 })
 
 // Define how the resource is released
@@ -1431,7 +1371,7 @@ const program = Micro.scoped(
   Micro.gen(function* () {
     const res = yield* resource
     console.log(`content is ${res.contents}`)
-  })
+  }),
 )
 
 Micro.runPromise(program)
@@ -1469,7 +1409,7 @@ const getMyResource = (): Promise<MyResource> =>
       new Promise((resolve) => {
         console.log("Resource released")
         resolve()
-      })
+      }),
   })
 
 // Define the acquisition of the resource with error handling
@@ -1479,14 +1419,13 @@ const acquire = Micro.tryPromise({
       console.log("Resource acquired")
       return res
     }),
-  catch: () => new Error("getMyResourceError")
+  catch: () => new Error("getMyResourceError"),
 })
 
 // Define the release of the resource
 const release = (res: MyResource) => Micro.promise(() => res.close())
 
-const use = (res: MyResource) =>
-  Micro.sync(() => console.log(`content is ${res.contents}`))
+const use = (res: MyResource) => Micro.sync(() => console.log(`content is ${res.contents}`))
 
 //      ┌─── Micro<void, Error, never>
 //      ▼
@@ -1520,9 +1459,9 @@ function returns `None`, the repetition will stop.
 The `Micro.repeat` function returns a new effect that repeats the given effect according to a specified schedule or until the first failure.
 
 <Aside type="note" title="Initial Execution Included">
-  The scheduled recurrences are in addition to the initial execution, so
-  `Micro.repeat(action, Micro.scheduleRecurs(1))` executes `action` once
-  initially, and if it succeeds, repeats it an additional time.
+  The scheduled recurrences are in addition to the initial execution, so `Micro.repeat(action,
+  Micro.scheduleRecurs(1))` executes `action` once initially, and if it succeeds, repeats it an
+  additional time.
 </Aside>
 
 **Example** (Repeating a Successful Effect)
@@ -1603,7 +1542,7 @@ import { Option, Micro } from "effect"
 // Helper function to simulate and visualize a schedule's behavior
 const dryRun = (
   schedule: Micro.MicroSchedule, // The scheduling policy to simulate
-  maxAttempt: number = 7 // Maximum number of repetitions to simulate
+  maxAttempt: number = 7, // Maximum number of repetitions to simulate
 ): Array<number> => {
   let attempt = 1 // Track the current attempt number
   let elapsed = 0 // Track the total elapsed time
@@ -1637,10 +1576,7 @@ import { Micro } from "effect"
 import * as Option from "effect/Option"
 
 // Helper function to simulate and visualize a schedule's behavior
-const dryRun = (
-  schedule: Micro.MicroSchedule,
-  maxAttempt: number = 7
-): Array<number> => {
+const dryRun = (schedule: Micro.MicroSchedule, maxAttempt: number = 7): Array<number> => {
   let attempt = 1
   let elapsed = 0
   const out: Array<number> = []
@@ -1678,10 +1614,7 @@ import { Micro } from "effect"
 import * as Option from "effect/Option"
 
 // Helper function to simulate and visualize a schedule's behavior
-const dryRun = (
-  schedule: Micro.MicroSchedule,
-  maxAttempt: number = 7
-): Array<number> => {
+const dryRun = (schedule: Micro.MicroSchedule, maxAttempt: number = 7): Array<number> => {
   let attempt = 1
   let elapsed = 0
   const out: Array<number> = []
@@ -1720,10 +1653,7 @@ import { Micro } from "effect"
 import * as Option from "effect/Option"
 
 // Helper function to simulate and visualize a schedule's behavior
-const dryRun = (
-  schedule: Micro.MicroSchedule,
-  maxAttempt: number = 7
-): Array<number> => {
+const dryRun = (schedule: Micro.MicroSchedule, maxAttempt: number = 7): Array<number> => {
   let attempt = 1
   let elapsed = 0
   const out: Array<number> = []
@@ -1738,10 +1668,7 @@ const dryRun = (
   return out
 }
 
-const policy = Micro.scheduleUnion(
-  Micro.scheduleExponential(10),
-  Micro.scheduleSpaced(300)
-)
+const policy = Micro.scheduleUnion(Micro.scheduleExponential(10), Micro.scheduleSpaced(300))
 
 console.log(dryRun(policy))
 /*
@@ -1769,10 +1696,7 @@ import { Micro } from "effect"
 import * as Option from "effect/Option"
 
 // Helper function to simulate and visualize a schedule's behavior
-const dryRun = (
-  schedule: Micro.MicroSchedule,
-  maxAttempt: number = 7
-): Array<number> => {
+const dryRun = (schedule: Micro.MicroSchedule, maxAttempt: number = 7): Array<number> => {
   let attempt = 1
   let elapsed = 0
   const out: Array<number> = []
@@ -1787,10 +1711,7 @@ const dryRun = (
   return out
 }
 
-const policy = Micro.scheduleIntersect(
-  Micro.scheduleExponential(10),
-  Micro.scheduleSpaced(300)
-)
+const policy = Micro.scheduleIntersect(Micro.scheduleExponential(10), Micro.scheduleSpaced(300))
 
 console.log(dryRun(policy))
 /*
@@ -1822,9 +1743,7 @@ The following code demonstrates how to create a single fiber using the `Micro.fo
 import { Micro } from "effect"
 
 const fib = (n: number): Micro.Micro<number> =>
-  n < 2
-    ? Micro.succeed(n)
-    : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
+  n < 2 ? Micro.succeed(n) : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
 
 //      ┌─── Micro<MicroFiber<number, never>, never, never>
 //      ▼
@@ -1842,9 +1761,7 @@ This function returns a `Micro` that will succeed or fail based on the outcome o
 import { Micro } from "effect"
 
 const fib = (n: number): Micro.Micro<number> =>
-  n < 2
-    ? Micro.succeed(n)
-    : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
+  n < 2 ? Micro.succeed(n) : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
 
 //      ┌─── Micro<MicroFiber<number, never>, never, never>
 //      ▼
@@ -1873,9 +1790,7 @@ This function returns an effect containing a `MicroExit` value, which provides d
 import { Micro } from "effect"
 
 const fib = (n: number): Micro.Micro<number> =>
-  n < 2
-    ? Micro.succeed(n)
-    : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
+  n < 2 ? Micro.succeed(n) : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
 
 //      ┌─── Micro<MicroFiber<number, never>, never, never>
 //      ▼
@@ -1927,9 +1842,7 @@ import { Micro } from "effect"
 const program = Micro.gen(function* () {
   // Fork a fiber that runs indefinitely, printing "Hi!"
   const fiber = yield* Micro.fork(
-    Micro.forever(
-      Micro.sync(() => console.log("Hi!")).pipe(Micro.delay(10))
-    )
+    Micro.forever(Micro.sync(() => console.log("Hi!")).pipe(Micro.delay(10))),
   )
   yield* Micro.sleep(30)
   // Interrupt the fiber
@@ -2025,12 +1938,10 @@ const program = Micro.forEach(
       }
       console.log(`done #${n}`)
     }),
-  { concurrency: "unbounded" }
+  { concurrency: "unbounded" },
 )
 
-Micro.runPromiseExit(program).then((exit) =>
-  console.log(JSON.stringify(exit, null, 2))
-)
+Micro.runPromiseExit(program).then((exit) => console.log(JSON.stringify(exit, null, 2)))
 /*
 Output:
 start #1

@@ -1,9 +1,8 @@
-import { ParentSpan, SpanEvent } from "effect/unstable/devtools/DevToolsSchema"
 import * as Array from "effect/Array"
 import * as Data from "effect/Data"
 import * as Duration from "effect/Duration"
-
 import * as Option from "effect/Option"
+import { ParentSpan, SpanEvent } from "effect/unstable/devtools/DevToolsSchema"
 
 export class Span {
   static fromSpan(span: ParentSpan): Span {
@@ -61,7 +60,9 @@ export class Span {
   }
 
   get hasError(): boolean {
-    return this.span._tag !== "ExternalSpan" && this.span.attributes.get("code.stacktrace") !== undefined
+    return (
+      this.span._tag !== "ExternalSpan" && this.span.attributes.get("code.stacktrace") !== undefined
+    )
   }
 
   /**
@@ -112,7 +113,7 @@ export class Span {
    */
   get duration(): Option.Option<Duration.Duration> {
     return Option.zipWith(this.startTime, this.endTime, (startTime, endTime) =>
-      Duration.subtract(Duration.nanos(endTime), Duration.nanos(startTime))
+      Duration.subtract(Duration.nanos(endTime), Duration.nanos(startTime)),
     )
   }
 
@@ -136,11 +137,13 @@ export class Span {
         new Span({
           span,
           children: this.children,
-          events: this.events
+          events: this.events,
         }),
       // Otherwise add the incoming span as a child
       onSome: (parent) =>
-        this.spanId === parent.spanId ? this.addChild(span) : this.mapChildren((child) => child.addSpan(span))
+        this.spanId === parent.spanId
+          ? this.addChild(span)
+          : this.mapChildren((child) => child.addSpan(span)),
     })
   }
 
@@ -152,7 +155,7 @@ export class Span {
       return new Span({
         span: this.span,
         children: this.children,
-        events: Array.append(this.events, Event.fromEvent(event))
+        events: Array.append(this.events, Event.fromEvent(event)),
       })
     }
     return this.mapChildren((child) => child.addEvent(event))
@@ -167,14 +170,17 @@ export class Span {
       onNone: () => Array.append(this.children, new Span({ span })),
       onSome: (index) =>
         Option.getOrThrow(
-          Array.modify(this.children, index, (child) =>
-            new Span({
-              span,
-              children: child.children,
-              events: child.events
-            })
-          )
-        )
+          Array.modify(
+            this.children,
+            index,
+            (child) =>
+              new Span({
+                span,
+                children: child.children,
+                events: child.events,
+              }),
+          ),
+        ),
     })
     return new Span({ span: this.span, children, events: this.events })
   }
@@ -186,7 +192,7 @@ export class Span {
     return new Span({
       span: this.span,
       children: Array.map(this.children, f),
-      events: this.events
+      events: this.events,
     })
   }
 
@@ -194,7 +200,7 @@ export class Span {
     return new Span({
       span: this.span,
       children: this.children,
-      events: this.events
+      events: this.events,
     })
   }
 }

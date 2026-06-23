@@ -1,12 +1,12 @@
 import { TraceSelector } from "./trace-viewer/trace-selector"
-import { TraceWaterfall } from "./trace-viewer/trace-waterfall"
 import { TraceSummary } from "./trace-viewer/trace-summary"
+import { TraceWaterfall } from "./trace-viewer/trace-waterfall"
 
 export function TraceViewer() {
   return (
-    <div className="h-full flex flex-col w-full p-2 bg-zinc-100 dark:bg-zinc-900">
-      <div className="flex justify-between items-center">
-        <div className="min-w-1/2 flex items-center shrink">
+    <div className="flex h-full w-full flex-col bg-zinc-100 p-2 dark:bg-zinc-900">
+      <div className="flex items-center justify-between">
+        <div className="flex min-w-1/2 shrink items-center">
           <h1 className="mr-3 text-3xl font-bold">Trace</h1>
           <div>
             <TraceSelector />

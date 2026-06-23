@@ -30,10 +30,7 @@ import { Console, Effect } from "effect"
 const handler = Effect.ensuring(Console.log("Cleanup completed"))
 
 // Define a successful effect
-const success = Console.log("Task completed").pipe(
-  Effect.as("some result"),
-  handler
-)
+const success = Console.log("Task completed").pipe(Effect.as("some result"), handler)
 
 Effect.runFork(success)
 /*
@@ -43,10 +40,7 @@ Cleanup completed
 */
 
 // Define a failing effect
-const failure = Console.log("Task failed").pipe(
-  Effect.andThen(Effect.fail("some error")),
-  handler
-)
+const failure = Console.log("Task failed").pipe(Effect.andThen(Effect.fail("some error")), handler)
 
 Effect.runFork(failure)
 /*
@@ -56,10 +50,7 @@ Cleanup completed
 */
 
 // Define an interrupted effect
-const interruption = Console.log("Task interrupted").pipe(
-  Effect.andThen(Effect.interrupt),
-  handler
-)
+const interruption = Console.log("Task interrupted").pipe(Effect.andThen(Effect.interrupt), handler)
 
 Effect.runFork(interruption)
 /*
@@ -86,14 +77,11 @@ import { Console, Effect, Exit } from "effect"
 
 // Define a cleanup effect that logs the result
 const handler = Effect.onExit((exit) =>
-  Console.log(`Cleanup completed: ${Exit.getOrElse(exit, String)}`)
+  Console.log(`Cleanup completed: ${Exit.getOrElse(exit, String)}`),
 )
 
 // Define a successful effect
-const success = Console.log("Task completed").pipe(
-  Effect.as("some result"),
-  handler
-)
+const success = Console.log("Task completed").pipe(Effect.as("some result"), handler)
 
 Effect.runFork(success)
 /*
@@ -103,10 +91,7 @@ Cleanup completed: some result
 */
 
 // Define a failing effect
-const failure = Console.log("Task failed").pipe(
-  Effect.andThen(Effect.fail("some error")),
-  handler
-)
+const failure = Console.log("Task failed").pipe(Effect.andThen(Effect.fail("some error")), handler)
 
 Effect.runFork(failure)
 /*
@@ -116,10 +101,7 @@ Cleanup completed: Error: some error
 */
 
 // Define an interrupted effect
-const interruption = Console.log("Task interrupted").pipe(
-  Effect.andThen(Effect.interrupt),
-  handler
-)
+const interruption = Console.log("Task interrupted").pipe(Effect.andThen(Effect.interrupt), handler)
 
 Effect.runFork(interruption)
 /*
@@ -143,15 +125,10 @@ The cleanup effect will also run if the failure is caused by interruption, and i
 import { Console, Effect } from "effect"
 
 // This handler logs the failure cause when the effect fails
-const handler = Effect.onError((cause) =>
-  Console.log(`Cleanup completed: ${cause}`)
-)
+const handler = Effect.onError((cause) => Console.log(`Cleanup completed: ${cause}`))
 
 // Define a successful effect
-const success = Console.log("Task completed").pipe(
-  Effect.as("some result"),
-  handler
-)
+const success = Console.log("Task completed").pipe(Effect.as("some result"), handler)
 
 Effect.runFork(success)
 /*
@@ -160,10 +137,7 @@ Task completed
 */
 
 // Define a failing effect
-const failure = Console.log("Task failed").pipe(
-  Effect.andThen(Effect.fail("some error")),
-  handler
-)
+const failure = Console.log("Task failed").pipe(Effect.andThen(Effect.fail("some error")), handler)
 
 Effect.runFork(failure)
 /*
@@ -175,7 +149,7 @@ Cleanup completed: Error: some error
 // Define a failing effect
 const defect = Console.log("Task failed with defect").pipe(
   Effect.andThen(Effect.die("Boom!")),
-  handler
+  handler,
 )
 
 Effect.runFork(defect)
@@ -186,10 +160,7 @@ Cleanup completed: Error: Boom!
 */
 
 // Define an interrupted effect
-const interruption = Console.log("Task interrupted").pipe(
-  Effect.andThen(Effect.interrupt),
-  handler
-)
+const interruption = Console.log("Task interrupted").pipe(Effect.andThen(Effect.interrupt), handler)
 
 Effect.runFork(interruption)
 /*
@@ -238,7 +209,7 @@ const getMyResource = (): Promise<MyResource> =>
       new Promise((resolve) => {
         console.log("Resource released")
         resolve()
-      })
+      }),
   })
 
 // Define how the resource is acquired
@@ -248,7 +219,7 @@ const acquire = Effect.tryPromise({
       console.log("Resource acquired")
       return res
     }),
-  catch: () => new Error("getMyResourceError")
+  catch: () => new Error("getMyResourceError"),
 })
 
 // Define how the resource is released

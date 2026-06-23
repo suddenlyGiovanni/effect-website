@@ -17,7 +17,7 @@ import { Stream, Effect } from "effect"
 
 const s1 = Stream.make(1, 2, 3).pipe(
   Stream.concat(Stream.fail("Oh! Error!")),
-  Stream.concat(Stream.make(4, 5))
+  Stream.concat(Stream.make(4, 5)),
 )
 
 const s2 = Stream.make("a", "b", "c")
@@ -43,7 +43,7 @@ import { Stream, Effect } from "effect"
 
 const s1 = Stream.make(1, 2, 3).pipe(
   Stream.concat(Stream.fail("Oh! Error!")),
-  Stream.concat(Stream.make(4, 5))
+  Stream.concat(Stream.make(4, 5)),
 )
 
 const s2 = Stream.make("a", "b", "c")
@@ -94,24 +94,21 @@ import { Stream, Effect } from "effect"
 const s1 = Stream.make(1, 2, 3).pipe(
   Stream.concat(Stream.fail("Uh Oh!" as const)),
   Stream.concat(Stream.make(4, 5)),
-  Stream.concat(Stream.fail("Ouch" as const))
+  Stream.concat(Stream.fail("Ouch" as const)),
 )
 
 const s2 = Stream.make("a", "b", "c")
 
 const s3 = Stream.make(true, false, false)
 
-const stream = Stream.catchAll(
-  s1,
-  (error): Stream.Stream<string | boolean> => {
-    switch (error) {
-      case "Uh Oh!":
-        return s2
-      case "Ouch":
-        return s3
-    }
+const stream = Stream.catchAll(s1, (error): Stream.Stream<string | boolean> => {
+  switch (error) {
+    case "Uh Oh!":
+      return s2
+    case "Ouch":
+      return s3
   }
-)
+})
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
 /*
@@ -136,7 +133,7 @@ import { Stream, Effect } from "effect"
 
 const s1 = Stream.make(1, 2, 3).pipe(
   Stream.concat(Stream.dieMessage("Boom!")),
-  Stream.concat(Stream.make(4, 5))
+  Stream.concat(Stream.make(4, 5)),
 )
 
 const s2 = Stream.make("a", "b", "c")
@@ -166,7 +163,7 @@ import { Stream, Effect, Option } from "effect"
 
 const s1 = Stream.make(1, 2, 3).pipe(
   Stream.concat(Stream.fail("Oh! Error!")),
-  Stream.concat(Stream.make(4, 5))
+  Stream.concat(Stream.make(4, 5)),
 )
 
 const s2 = Stream.make("a", "b", "c")
@@ -195,7 +192,7 @@ import { Stream, Effect, Option, Cause } from "effect"
 
 const s1 = Stream.make(1, 2, 3).pipe(
   Stream.concat(Stream.dieMessage("Oh! Error!")),
-  Stream.concat(Stream.make(4, 5))
+  Stream.concat(Stream.make(4, 5)),
 )
 
 const s2 = Stream.make("a", "b", "c")
@@ -228,10 +225,8 @@ const stream = Stream.make(1, 2, 3).pipe(
   Stream.concat(Stream.dieMessage("Oh! Boom!")),
   Stream.concat(Stream.make(4, 5)),
   Stream.onError(() =>
-    Console.log(
-      "Stream application closed! We are doing some cleanup jobs."
-    ).pipe(Effect.orDie)
-  )
+    Console.log("Stream application closed! We are doing some cleanup jobs.").pipe(Effect.orDie),
+  ),
 )
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
@@ -262,9 +257,9 @@ const stream = Stream.make(1, 2, 3).pipe(
           return yield* Effect.fail("NaN")
         }
         return n
-      })
-    ).pipe(Stream.retry(Schedule.exponential("1 second")))
-  )
+      }),
+    ).pipe(Stream.retry(Schedule.exponential("1 second"))),
+  ),
 )
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
@@ -286,13 +281,13 @@ const readLine = (message: string): Effect.Effect<string> =>
       new Promise((resolve) => {
         const rl = NodeReadLine.createInterface({
           input: process.stdin,
-          output: process.stdout
+          output: process.stdout,
         })
         rl.question(message, (answer) => {
           rl.close()
           resolve(answer)
         })
-      })
+      }),
   )
 ```
 
@@ -330,9 +325,7 @@ The `Stream.timeout` operator allows you to set a timeout on a stream. If the st
 ```ts twoslash
 import { Stream, Effect } from "effect"
 
-const stream = Stream.fromEffect(Effect.never).pipe(
-  Stream.timeout("2 seconds")
-)
+const stream = Stream.fromEffect(Effect.never).pipe(Stream.timeout("2 seconds"))
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
 /*
@@ -351,7 +344,7 @@ The `Stream.timeoutFail` operator combines a timeout with a custom failure messa
 import { Stream, Effect } from "effect"
 
 const stream = Stream.fromEffect(Effect.never).pipe(
-  Stream.timeoutFail(() => "timeout", "2 seconds")
+  Stream.timeoutFail(() => "timeout", "2 seconds"),
 )
 
 Effect.runPromiseExit(Stream.runCollect(stream)).then(console.log)
@@ -373,7 +366,7 @@ Similar to `Stream.timeoutFail`, `Stream.timeoutFailCause` combines a timeout wi
 import { Stream, Effect, Cause } from "effect"
 
 const stream = Stream.fromEffect(Effect.never).pipe(
-  Stream.timeoutFailCause(() => Cause.die("timeout"), "2 seconds")
+  Stream.timeoutFailCause(() => Cause.die("timeout"), "2 seconds"),
 )
 
 Effect.runPromiseExit(Stream.runCollect(stream)).then(console.log)
@@ -395,7 +388,7 @@ The `Stream.timeoutTo` operator allows you to switch to another stream if the fi
 import { Stream, Effect } from "effect"
 
 const stream = Stream.fromEffect(Effect.never).pipe(
-  Stream.timeoutTo("2 seconds", Stream.make(1, 2, 3))
+  Stream.timeoutTo("2 seconds", Stream.make(1, 2, 3)),
 )
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)

@@ -180,7 +180,7 @@ export default function FrequentlyAskedQuestions() {
           >
             {question}
           </AccordionTrigger>
-          <AccordionContent className="px-5! pb-5! pt-0! text-[15px]! leading-relaxed! text-zinc-400!">
+          <AccordionContent className="px-5! pt-0! pb-5! text-[15px]! leading-relaxed! text-zinc-400!">
             {answer}
           </AccordionContent>
         </AccordionItem>

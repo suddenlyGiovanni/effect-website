@@ -18,7 +18,7 @@ import { Either, Schema, ParseResult } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 const decode = Schema.decodeUnknownEither(Person)
@@ -55,7 +55,7 @@ import { Either, Schema, ParseResult } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 }).annotations({ title: "Person" }) // Add a title annotation
 
 const result = Schema.decodeUnknownEither(Person)({})
@@ -80,7 +80,7 @@ import { Either, Schema, ParseResult } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 const decode = Schema.decodeUnknownEither(Person, { errors: "all" })
@@ -107,9 +107,7 @@ The `parseIssueTitle` annotation allows you to add dynamic context to error mess
 **Annotation Type**
 
 ```ts
-export type ParseIssueTitleAnnotation = (
-  issue: ParseIssue
-) => string | undefined
+export type ParseIssueTitleAnnotation = (issue: ParseIssue) => string | undefined
 ```
 
 **Return Value**:
@@ -137,10 +135,10 @@ const getOrderItemId = ({ actual }: ParseResult.ParseIssue) => {
 const OrderItem = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  price: Schema.Number
+  price: Schema.Number,
 }).annotations({
   identifier: "OrderItem",
-  parseIssueTitle: getOrderItemId
+  parseIssueTitle: getOrderItemId,
 })
 
 // Function to generate titles for Order issues
@@ -153,10 +151,10 @@ const getOrderId = ({ actual }: ParseResult.ParseIssue) => {
 const Order = Schema.Struct({
   id: Schema.Number,
   name: Schema.String,
-  items: Schema.Array(OrderItem)
+  items: Schema.Array(OrderItem),
 }).annotations({
   identifier: "Order",
-  parseIssueTitle: getOrderId
+  parseIssueTitle: getOrderId,
 })
 
 const decode = Schema.decodeUnknownSync(Order, { errors: "all" })
@@ -214,7 +212,7 @@ import { Either, Schema, ParseResult } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 const decode = Schema.decodeUnknownEither(Person)
@@ -247,7 +245,7 @@ import { Either, Schema, ParseResult } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.String,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 const decode = Schema.decodeUnknownEither(Person, { errors: "all" })

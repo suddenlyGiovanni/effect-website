@@ -270,15 +270,13 @@ const program = Effect.gen(function* () {
       console.log("Attempting to take 3 items from the queue...")
       const chunk = yield* Queue.takeN(queue, 3)
       console.log(`Successfully took 3 items: ${chunk}`)
-    })
+    }),
   )
 
   // Offer only 2 items initially
   yield* Queue.offer(queue, 1)
   yield* Queue.offer(queue, 2)
-  console.log(
-    "Offered 2 items. The fiber is now waiting for the 3rd item..."
-  )
+  console.log("Offered 2 items. The fiber is now waiting for the 3rd item...")
 
   // Simulate some delay
   yield* Effect.sleep("2 seconds")
@@ -375,9 +373,7 @@ const program = Effect.gen(function* () {
   const queue = yield* Queue.bounded<number>(3)
   // Forks a fiber to await queue shutdown and log a message
   const fiber = yield* Effect.fork(
-    Queue.awaitShutdown(queue).pipe(
-      Effect.andThen(Console.log("shutting down"))
-    )
+    Queue.awaitShutdown(queue).pipe(Effect.andThen(Console.log("shutting down"))),
   )
   // Shuts down the queue, triggering the await in the fiber
   yield* Queue.shutdown(queue)
@@ -405,7 +401,7 @@ const send = (offerOnlyQueue: Queue.Enqueue<number>, value: number) => {
   // This queue is restricted to offer operations only
 
   // Error: cannot use take on an offer-only queue
-// @errors: 2345
+  // @errors: 2345
   Queue.take(offerOnlyQueue)
 
   // Valid offer operation
@@ -426,7 +422,7 @@ const receive = (takeOnlyQueue: Queue.Dequeue<number>) => {
   // This queue is restricted to take operations only
 
   // Error: cannot use offer on a take-only queue
-// @errors: 2345
+  // @errors: 2345
   Queue.offer(takeOnlyQueue, 1)
 
   // Valid take operation
