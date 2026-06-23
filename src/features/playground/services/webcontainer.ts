@@ -55,10 +55,11 @@ export class WebContainer extends Context.Service<WebContainer>()("app/WebContai
      *
      * When the associated scope is closed, the process will be killed.
      */
-    const createShell = Effect.uninterruptible(
+    const createShell = (cwd: string) => Effect.uninterruptible(
       Effect.gen(function* () {
         const process = yield* Effect.promise(() =>
           container.spawn("jsh", [], {
+            cwd,
             env: {
               PATH: WEBCONTAINER_BIN_PATH,
               NODE_NO_WARNINGS: "1"

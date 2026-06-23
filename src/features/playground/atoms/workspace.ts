@@ -73,7 +73,7 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
         const terminalAtom = runtime.atom(
           Effect.fnUntraced(function* (get) {
             const el = yield* get.some(element)
-            const shell = yield* container.createShell
+            const shell = yield* container.createShell(workspace.name)
             const spawned = yield* terminal.spawn({
               theme: get.once(terminalThemeAtom)
             })
@@ -94,10 +94,6 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             })
             dataListener.dispose = () => disposable.dispose()
             get.addFinalizer(() => dataListener.dispose())
-            // Navigate to workspace directory
-            yield* Effect.promise(() =>
-              writer.write(`cd "${workspace.name}"\n`).catch(() => undefined)
-            )
             /**
              * Install dependencies
              */
@@ -119,16 +115,24 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
               Effect.forkScoped
             )
 
-            // Run type acquisition and formatters in background — don't block command
-            yield* setupWorkspaceTypeAcquisition(workspace).pipe(Effect.ignore, Effect.forkScoped)
-
-            yield* setupWorkspaceFormatters(workspace).pipe(Effect.ignore, Effect.forkScoped)
+            /**
+             * Wait for install, then fork type acquisition and formatters
+             * in background (don't block command).
+             */
+            yield* Fiber.join(fiber).pipe(
+              Effect.andThen(
+                Effect.all(
+                  [
+                    setupWorkspaceTypeAcquisition(workspace).pipe(Effect.ignore),
+                    setupWorkspaceFormatters(workspace).pipe(Effect.ignore)
+                  ],
+                  { discard: true }
+                )
+              ),
+              Effect.forkScoped
+            )
 
             if (command !== undefined) {
-              /**
-               * Wait for dependencies to be complete before running
-               * the workspace command
-               */
               yield* Fiber.join(fiber).pipe(
                 Effect.andThen(
                   Effect.promise(() => writer.write(`${command}\n`).catch(() => undefined))
@@ -252,8 +256,8 @@ function setupWorkspaceTypeAcquisition(workspace: Workspace) {
         )
 
         yield* Effect.forEach(directories, (directory) => {
-            // // Skip node_modules symlink inside .pnpm to avoid circular path
-            // if (directory === "node_modules") return Effect.void
+            // Skip node_modules symlink inside .pnpm to avoid circular path
+            if (directory === "node_modules") return Effect.void
             return acquireTypesAt(storePath, `${path}/${directory}`)
           }, {
           concurrency: directories.length,
