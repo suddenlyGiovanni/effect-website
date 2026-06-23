@@ -33,16 +33,10 @@ export class Loader extends Context.Service<Loader>()("app/Loader", {
       Effect.map((n) => n % Number.MAX_SAFE_INTEGER),
     )
 
-    function logStep(event: "started" | "completed" | "failed", id: number, message: string) {
-      return Effect.logInfo(`Loader step ${event}`).pipe(
-        Effect.annotateLogs({ service: "Loader", stepId: id, step: message }),
-      )
-    }
-
     function addStep(id: number, message: string) {
       return Effect.sync(() =>
         registry.update(loaderStepsAtom, Array.append(new Step({ id, message, done: false }))),
-      ).pipe(Effect.andThen(logStep("started", id, message)))
+      )
     }
 
     function withIndicator(message: string, minWaitTime: Duration.Input = 0) {
@@ -53,11 +47,8 @@ export class Loader extends Context.Service<Loader>()("app/Loader", {
             Effect.timed(self).pipe(
               Effect.tap(([duration]) => {
                 const delta = Duration.subtract(Duration.fromInputUnsafe(minWaitTime), duration)
-                return logStep("completed", id, message).pipe(
-                  Effect.andThen(Queue.offer(queue, [id, delta])),
-                )
+                return Queue.offer(queue, [id, delta])
               }),
-              Effect.tapCause(() => logStep("failed", id, message)),
               Effect.map(([, value]) => value),
             ),
           ),
@@ -67,10 +58,7 @@ export class Loader extends Context.Service<Loader>()("app/Loader", {
     const finish = nextId.pipe(
       Effect.tap((id) => addStep(id, "Starting playground")),
       Effect.flatMap((id) =>
-        logStep("completed", id, "Starting playground").pipe(
-          Effect.andThen(Queue.offer(queue, [id, 0] as const)),
-          Effect.andThen(Queue.offer(queue, null)),
-        ),
+        Queue.offer(queue, [id, 0] as const).pipe(Effect.andThen(Queue.offer(queue, null))),
       ),
     )
 
