@@ -356,7 +356,7 @@ function setupWorkspaceFormatters(workspace: Workspace) {
       lookup: (plugin: string) => loadPlugin(plugin)
     })
 
-    const LANGUAGE_REGEX = /^\/vendor\/dprint\/plugins\/([a-zA-Z0-9_-]+)-.*\.wasm$/
+    const LANGUAGE_REGEX = /\/([a-zA-Z0-9_-]+)-[^/]+\.wasm$/
 
     function extractLanguage(input: string) {
       const match = input.match(LANGUAGE_REGEX)
