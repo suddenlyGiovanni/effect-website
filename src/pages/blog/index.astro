@@ -91,7 +91,6 @@ const serializedPosts: SerializedPost[] = allPosts.map((post) => ({
 >
   <section class="relative overflow-hidden">
     <GridBackground />
-    <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-0"></div>
 
     <div class="relative mx-auto w-full max-w-295 px-4">
       <div class="pt-16 pb-8 md:pt-24 md:pb-12">
@@ -206,15 +205,3 @@ const serializedPosts: SerializedPost[] = allPosts.map((post) => ({
     </div>
   </section>
 </PageLayout>
-
-<style>
-  .hero-fade {
-    background: linear-gradient(
-      to bottom,
-      rgb(9 9 11) 0%,
-      transparent 30%,
-      transparent 50%,
-      rgb(9 9 11) 100%
-    );
-  }
-</style>

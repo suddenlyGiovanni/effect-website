@@ -37,7 +37,6 @@ const logoSymbol = {
     <main id={PAGE_TITLE_ID} class="relative z-10 pt-16">
       <section class="hero-section relative w-full pt-16 pb-12 md:pt-20 md:pb-16">
         <GridBackground />
-        <div class="hero-fade pointer-events-none absolute inset-0"></div>
         <div class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[400px]"></div>
 
         <div class="relative mx-auto w-full max-w-295 px-4">
@@ -425,20 +424,9 @@ const logoSymbol = {
 
 <style>
   .hero-section {
-    --hero-fade-gradient: linear-gradient(
-      to bottom,
-      rgb(9 9 11) 0%,
-      transparent 20%,
-      transparent 60%,
-      rgb(9 9 11) 100%
-    );
     --hero-glow-gradient:
       radial-gradient(ellipse 50% 80% at 70% -20%, rgb(255 255 255 / 0.08) 0%, transparent 50%),
       radial-gradient(ellipse 30% 50% at 80% 0%, rgb(255 255 255 / 0.05) 0%, transparent 40%);
-  }
-
-  .hero-fade {
-    background: var(--hero-fade-gradient);
   }
 
   .hero-glow {
