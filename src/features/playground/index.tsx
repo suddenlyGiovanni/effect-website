@@ -112,7 +112,7 @@ function WorkspaceShells() {
         return (
           <Fragment key={id}>
             {index > 0 && <ResizableHandle id={id} />}
-            <ResizablePanel id={id} defaultSize={defaultSize} onResize={onResize} order={index}>
+            <ResizablePanel id={id} defaultSize={defaultSize} onResize={onResize}>
               <Terminal shell={shell} />
             </ResizablePanel>
           </Fragment>
