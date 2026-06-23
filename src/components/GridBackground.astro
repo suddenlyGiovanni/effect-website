@@ -1,0 +1,22 @@
+---
+interface Props {
+  readonly class?: string | undefined
+}
+
+const { class: className } = Astro.props
+---
+
+<div
+  aria-hidden="true"
+  class:list={["grid-bg pointer-events-none absolute inset-0", className]}
+></div>
+
+<style>
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgb(24 24 27 / 0.8) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(24 24 27 / 0.8) 1px, transparent 1px);
+    background-size: calc(73.75rem / 6) 194px;
+    background-position: calc(50% + 73.75rem / 12) 0;
+  }
+</style>

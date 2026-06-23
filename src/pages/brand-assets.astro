@@ -4,6 +4,7 @@ import Navigation from "@/components/navigation/Navigation.astro"
 import Footer from "@/components/Footer.astro"
 import DitheredOverlay from "@/components/DitheredOverlay.astro"
 import GridRails from "@/components/GridRails.astro"
+import GridBackground from "@/components/GridBackground.astro"
 import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
 import { Download, CheckCircle, XCircle } from "@lucide/astro"
 import { Image } from "astro:assets"
@@ -34,8 +35,8 @@ const logoSymbol = {
     <Navigation transparent={false} />
 
     <main id={PAGE_TITLE_ID} class="relative z-10 pt-16">
-      <section class="relative w-full pt-16 pb-12 md:pt-20 md:pb-16">
-        <div class="hero-grid pointer-events-none absolute inset-0"></div>
+      <section class="hero-section relative w-full pt-16 pb-12 md:pt-20 md:pb-16">
+        <GridBackground />
         <div class="hero-fade pointer-events-none absolute inset-0"></div>
         <div class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[400px]"></div>
 
@@ -424,10 +425,6 @@ const logoSymbol = {
 
 <style>
   .hero-section {
-    --hero-grid-gradient-x: linear-gradient(to right, rgb(39 39 42 / 0.8) 1px, transparent 1px);
-    --hero-grid-gradient-y: linear-gradient(to bottom, rgb(39 39 42 / 0.8) 1px, transparent 1px);
-    --hero-grid-size: 196.6px 171px;
-    --hero-grid-position: calc(50% + 97px) 0;
     --hero-fade-gradient: linear-gradient(
       to bottom,
       rgb(9 9 11) 0%,
@@ -438,12 +435,6 @@ const logoSymbol = {
     --hero-glow-gradient:
       radial-gradient(ellipse 50% 80% at 70% -20%, rgb(255 255 255 / 0.08) 0%, transparent 50%),
       radial-gradient(ellipse 30% 50% at 80% 0%, rgb(255 255 255 / 0.05) 0%, transparent 40%);
-  }
-
-  .hero-grid {
-    background-image: var(--hero-grid-gradient-x), var(--hero-grid-gradient-y);
-    background-size: var(--hero-grid-size);
-    background-position: var(--hero-grid-position);
   }
 
   .hero-fade {

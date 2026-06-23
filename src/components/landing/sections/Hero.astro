@@ -1,13 +1,14 @@
 ---
 import { ArrowRight, PlayCircle } from "@lucide/astro"
 
+import GridBackground from "@/components/GridBackground.astro"
 import AgentCommand from "../blocks/AgentCommand.astro"
 import InstallCommand from "../blocks/InstallCommand.astro"
 ---
 
 <section class="hero-section relative w-full">
   <!-- Grid background -->
-  <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-0"></div>
+  <GridBackground />
   <!-- Glow -->
   <div aria-hidden="true" class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[600px]"></div>
 <div class="relative mx-auto w-full max-w-295 px-4 py-20 md:px-24">
@@ -50,19 +51,9 @@ import InstallCommand from "../blocks/InstallCommand.astro"
 
 <style>
   .hero-section {
-    --hero-grid-gradient-x: linear-gradient(to right, rgba(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-gradient-y: linear-gradient(to bottom, rgba(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-size: calc(73.75rem / 6) 194px;
-    --hero-grid-position: calc(50% + 73.75rem / 12) 0;
     --hero-glow-gradient:
       radial-gradient(ellipse 50% 80% at 70% -20%, rgba(255, 255, 255, 0.12) 0%, transparent 40%),
       radial-gradient(ellipse 30% 50% at 80% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 30%);
-  }
-
-  .hero-grid {
-    background-image: var(--hero-grid-gradient-x), var(--hero-grid-gradient-y);
-    background-size: var(--hero-grid-size);
-    background-position: var(--hero-grid-position);
   }
 
   @keyframes hero-glow-pulse {

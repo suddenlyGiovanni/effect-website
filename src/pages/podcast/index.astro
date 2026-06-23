@@ -7,6 +7,7 @@ import Link from "@/components/Link.astro"
 import SocialLink from "@/components/SocialLink.astro"
 import PodcastEpisodeCard from "@/features/podcast/components/PodcastEpisodeCard.astro"
 import { sortPodcastsByPublishDate } from "@/features/podcast/utils"
+import GridBackground from "@/components/GridBackground.astro"
 import PageLayout from "@/layouts/PageLayout.astro"
 
 const collection = await getCollection("podcasts")
@@ -22,10 +23,8 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
     id="hero"
     class="hero-section relative w-full pt-12 md:pt-24 pb-8 md:pb-24 overflow-hidden"
   >
-    <!-- Stripe-like grid background - full width, centered -->
-    <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-0"></div>
-    <!-- Fade out grid at top and bottom -->
-    <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-0"></div>
+    <!-- Grid background -->
+    <GridBackground />
 
     <div class="relative mx-auto max-w-295 px-4">
       <div class="flex flex-col lg:flex-row justify-between items-start gap-8 lg:gap-12">
@@ -164,27 +163,3 @@ const podcasts = sortPodcastsByPublishDate(collection.map(({ data }) => data))
   </section>
 </PageLayout>
 
-<style>
-  .hero-section {
-    --hero-grid-gradient-x: linear-gradient(to right, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-gradient-y: linear-gradient(to bottom, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-size: 196.6px 186px;
-    --hero-grid-position: calc(50% + 97px) 0;
-    --hero-fade-gradient: linear-gradient(
-      to bottom,
-      rgb(9 9 11) 0%,
-      transparent 20%,
-      transparent 60%,
-      rgb(9 9 11) 100%
-    );
-  }
-  .hero-grid {
-    background-image: var(--hero-grid-gradient-x), var(--hero-grid-gradient-y);
-    background-size: var(--hero-grid-size);
-    background-position: var(--hero-grid-position);
-  }
-
-  .hero-fade {
-    background: var(--hero-fade-gradient);
-  }
-</style>

@@ -1,6 +1,7 @@
 ---
 import { ArrowRight } from "@lucide/astro"
 
+import GridBackground from "@/components/GridBackground.astro"
 import AgentCommand from "../blocks/AgentCommand.astro"
 import EffectImport from "../blocks/EffectImport.astro"
 import InstallCommand from "../blocks/InstallCommand.astro"
@@ -8,7 +9,7 @@ import InstallCommand from "../blocks/InstallCommand.astro"
 
 <section class="relative w-full overflow-hidden py-36 md:py-24">
   <!-- Grid background -->
-  <div class="call-to-action-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
+  <GridBackground ySize="180px" />
 
   <div class="relative mx-auto w-full max-w-295 px-4">
     <div class="flex flex-col items-center text-center">
@@ -45,16 +46,4 @@ import InstallCommand from "../blocks/InstallCommand.astro"
   </div>
 </section>
 
-<style>
-  .call-to-action-grid {
-    --call-to-action-grid-image:
-      linear-gradient(to right, rgb(24 24 27 / 0.8) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(24 24 27 / 0.8) 1px, transparent 1px);
-    --call-to-action-grid-size: calc(73.75rem / 6) 180px;
-    --call-to-action-grid-position: calc(50% + 73.75rem / 12) 0;
 
-    background-image: var(--call-to-action-grid-image);
-    background-size: var(--call-to-action-grid-size);
-    background-position: var(--call-to-action-grid-position);
-  }
-</style>
