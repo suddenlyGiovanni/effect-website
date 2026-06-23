@@ -126,19 +126,19 @@ function WorkspaceShells() {
     [setSize]
   )
   return (
-    <Fragment>
+    <ResizablePanelGroup orientation="vertical" className="h-full">
       {shells.map((shell, index) => {
         const id = `shell-${index}`
         const defaultSize = 100 / shells.length
         return (
           <Fragment key={id}>
             {index > 0 && <ResizableHandle id={id} />}
-            <ResizablePanel id={id} defaultSize={defaultSize} onResize={onResize}>
+            <ResizablePanel id={id} defaultSize={defaultSize} onResize={onResize} order={index}>
               <Terminal shell={shell} />
             </ResizablePanel>
           </Fragment>
         )
       })}
-    </Fragment>
+    </ResizablePanelGroup>
   )
 }
