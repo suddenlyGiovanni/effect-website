@@ -24,31 +24,9 @@ const PM_ICONS: Record<
   pnpm: { icon: PnpmLogo, className: "h-3.5 w-auto" },
   yarn: { icon: YarnLogo, className: "h-3.5 w-auto" },
 }
-
-const AGENT_PROMPT = `Help me build an Effect app in TypeScript. Start by reading https://effect.website/docs/getting-started and follow it exactly: scaffold a fresh TypeScript project, install \`effect\`, create a \`main.ts\` with a simple \`Effect.gen\` program that logs "hello, world", and run it with \`bun run main.ts\` (or the npm/pnpm/yarn equivalent) so I see it execute. Confirm it runs before moving on.
-
-Then STOP and ASK ME what I want to build. From there, consult only the docs you need for what I asked for — don't march me through every guide.
-
-Guides — foundations, work through whichever parts I haven't touched:
-  https://effect.website/docs/getting-started/why-effect      Why Effect
-  https://effect.website/docs/error-management/two-error-types Error tracking
-  https://effect.website/docs/requirements-management/services Services & dependency injection
-  https://effect.website/docs/concurrency/fibers              Concurrency
-  https://effect.website/docs/observability/tracing           Observability
-
-For everything else (Schema, Platform, RPC, AI SDK, Cluster), fetch https://effect.website/llms.txt — it's the index of every doc on the site. Use it to look up the specific page you need instead of guessing URLs.
-
-Important:
-- Confirm with me before each install or deploy. Don't batch.
-- Use \`bun add effect\` (or the npm/pnpm/yarn equivalent).
-- Effect v4 is in beta — if I'm using v3, follow the v3 docs; if I'm starting fresh, use v4 from https://effect.website/blog/effect-v4-beta.
-- Effect uses \`Effect.gen\` with generators, not async/await — don't try to mix them.`
-
-const AGENT_PREVIEW = "Help me build an Effect app in TypeScript…"
 ---
 
-<effect-hero-command class="block rounded-md bg-zinc-900/50 p-1 ring-1 ring-inset ring-zinc-700">
-  <!-- Mode tabs -->
+<effect-hero-command class="relative block rounded-md bg-zinc-900/50 p-1 ring-1 ring-inset ring-zinc-700">
   <div role="tablist" aria-label="Command mode" class="flex border-b border-zinc-800">
     <button
       type="button"
@@ -76,14 +54,13 @@ const AGENT_PREVIEW = "Help me build an Effect app in TypeScript…"
     </button>
   </div>
 
-  <!-- Copy row -->
-  <button
-    type="button"
+  <div
     data-role="copy"
+    role="button"
+    tabindex="0"
     class="flex min-h-11 w-full cursor-pointer items-center gap-3 px-4 py-1 text-left font-mono text-sm text-zinc-300 transition-colors hover:bg-zinc-800/30"
     aria-label="Copy install command"
   >
-    <!-- PM dropdown (install mode only, hidden in prompt mode via JS) -->
     <div data-role="pm-dropdown" class="relative shrink-0">
       <button
         type="button"
@@ -93,7 +70,6 @@ const AGENT_PREVIEW = "Help me build an Effect app in TypeScript…"
         aria-label="Package manager: bun"
         class="flex items-center gap-1.5 rounded-sm border-r border-zinc-800 py-0.5 pr-3 pl-1 text-xs text-zinc-300 transition-colors hover:text-white cursor-pointer"
       >
-        <!-- All PM icons pre-rendered; JS shows the active one -->
         <span data-role="pm-icon-active" aria-hidden="true">
           {
             PACKAGE_MANAGERS.map((pm) => {
@@ -121,7 +97,6 @@ const AGENT_PREVIEW = "Help me build an Effect app in TypeScript…"
         </svg>
       </button>
 
-      <!-- Popover -->
       <ul
         data-role="pm-popover"
         role="listbox"
@@ -133,11 +108,13 @@ const AGENT_PREVIEW = "Help me build an Effect app in TypeScript…"
             const { icon: Icon, className: iconClass } = PM_ICONS[pm]
             const isDefault = pm === DEFAULT_PACKAGE_MANAGER
             return (
-              <li role="option" aria-selected={isDefault ? "true" : "false"}>
+              <li>
                 <button
                   type="button"
+                  role="option"
                   data-role="pm-option"
                   data-pm={pm}
+                  aria-selected={isDefault ? "true" : "false"}
                   class="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 cursor-pointer"
                   class:list={[isDefault ? "text-white" : "text-zinc-400"]}
                 >
@@ -161,7 +138,7 @@ const AGENT_PREVIEW = "Help me build an Effect app in TypeScript…"
 
     <Copy data-role="copy-icon-idle" class="shrink-0 text-zinc-400" size={16} aria-hidden="true" />
     <Check data-role="copy-icon-copied" class="hidden shrink-0 text-zinc-200" size={16} aria-hidden="true" />
-  </button>
+  </div>
 
   <p role="status" aria-live="polite" data-role="status" class="sr-only"></p>
 </effect-hero-command>
@@ -211,16 +188,16 @@ Important:
     #modeTabs = new Map<Mode, HTMLButtonElement>()
     #pmDropdown: HTMLElement | null = null
     #pmChip: HTMLButtonElement | null = null
-    #pmChevron: HTMLElement | null = null
+    #pmChevron: Element | null = null
     #pmPopover: HTMLElement | null = null
     #pmIconContainer: HTMLElement | null = null
     #pmLabel: HTMLElement | null = null
-    #pmOptions = new Map<PackageManager, HTMLElement>()
-    #copyButton: HTMLButtonElement | null = null
+    #pmOptions = new Map<PackageManager, HTMLButtonElement>()
+    #copyElement: HTMLElement | null = null
     #commandText: HTMLElement | null = null
     #statusElement: HTMLElement | null = null
-    #copyIdleIcon: HTMLElement | null = null
-    #copySuccessIcon: HTMLElement | null = null
+    #copyIdleIcon: Element | null = null
+    #copySuccessIcon: Element | null = null
     #copyResetTimeout: ReturnType<typeof setTimeout> | undefined = undefined
 
     #closePopover = () => {
@@ -246,7 +223,6 @@ Important:
     }
 
     connectedCallback() {
-      // Mode tabs
       const modeTabElements = this.querySelectorAll("[data-role='mode-tab']")
       modeTabElements.forEach((el) => {
         if (!(el instanceof HTMLButtonElement)) return
@@ -256,7 +232,6 @@ Important:
         el.addEventListener("click", this.#onModeTabClick)
       })
 
-      // PM dropdown elements
       this.#pmDropdown = this.querySelector("[data-role='pm-dropdown']")
       this.#pmChip = this.querySelector("[data-role='pm-chip']")
       this.#pmChevron = this.querySelector("[data-role='pm-chevron']")
@@ -266,7 +241,7 @@ Important:
 
       const pmOptionElements = this.querySelectorAll("[data-role='pm-option']")
       pmOptionElements.forEach((el) => {
-        if (!(el instanceof HTMLElement)) return
+        if (!(el instanceof HTMLButtonElement)) return
         const pm = el.dataset.pm
         if (pm === undefined || !isPackageManager(pm)) return
         this.#pmOptions.set(pm, el)
@@ -280,32 +255,30 @@ Important:
       document.addEventListener("mousedown", this.#onOutsideClick)
       document.addEventListener("keydown", this.#onEscape)
 
-      // Copy row
-      const copyButton = this.querySelector("[data-role='copy']")
+      const copyElement = this.querySelector("[data-role='copy']")
       const commandText = this.querySelector("[data-role='command-text']")
       const statusElement = this.querySelector("[data-role='status']")
       const copyIdleIcon = this.querySelector("[data-role='copy-icon-idle']")
       const copySuccessIcon = this.querySelector("[data-role='copy-icon-copied']")
 
       if (
-        !(copyButton instanceof HTMLButtonElement) ||
+        !(copyElement instanceof HTMLElement) ||
         !(commandText instanceof HTMLElement) ||
-        !(statusElement instanceof HTMLElement) ||
-        !(copyIdleIcon instanceof HTMLElement) ||
-        !(copySuccessIcon instanceof HTMLElement)
+        !(statusElement instanceof HTMLElement)
       ) {
         return
       }
 
-      this.#copyButton = copyButton
+      this.#copyElement = copyElement
       this.#commandText = commandText
       this.#statusElement = statusElement
-      this.#copyIdleIcon = copyIdleIcon
-      this.#copySuccessIcon = copySuccessIcon
+      // SVGs are SVGElement, not HTMLElement — instanceof HTMLElement fails
+      if (copyIdleIcon instanceof Element) this.#copyIdleIcon = copyIdleIcon
+      if (copySuccessIcon instanceof Element) this.#copySuccessIcon = copySuccessIcon
 
-      this.#copyButton.addEventListener("click", this.#onCopyClick)
+      this.#copyElement.addEventListener("click", this.#onCopyClick)
+      this.#copyElement.addEventListener("keydown", this.#onCopyKeyDown)
 
-      // Set initial state
       this.#setMode("install")
       this.#setActivePM(DEFAULT_PACKAGE_MANAGER)
     }
@@ -327,15 +300,16 @@ Important:
       document.removeEventListener("mousedown", this.#onOutsideClick)
       document.removeEventListener("keydown", this.#onEscape)
 
-      if (this.#copyButton) {
-        this.#copyButton.removeEventListener("click", this.#onCopyClick)
+      if (this.#copyElement) {
+        this.#copyElement.removeEventListener("click", this.#onCopyClick)
+        this.#copyElement.removeEventListener("keydown", this.#onCopyKeyDown)
       }
 
       if (this.#copyResetTimeout !== undefined) {
         clearTimeout(this.#copyResetTimeout)
       }
 
-      this.#copyButton = null
+      this.#copyElement = null
       this.#commandText = null
       this.#statusElement = null
       this.#copyIdleIcon = null
@@ -353,7 +327,6 @@ Important:
       this.#mode = mode
       const isInstall = mode === "install"
 
-      // Update tabs
       this.#modeTabs.forEach((tabEl, tabMode) => {
         const selected = tabMode === mode
         tabEl.setAttribute("aria-selected", selected ? "true" : "false")
@@ -363,27 +336,24 @@ Important:
         tabEl.classList.toggle("hover:text-zinc-300", !selected)
 
         const indicator = tabEl.querySelector("[data-role='mode-indicator']")
-        if (indicator instanceof HTMLElement) {
+        if (indicator instanceof Element) {
           indicator.classList.toggle("bg-white", selected)
           indicator.classList.toggle("bg-transparent", !selected)
         }
       })
 
-      // Show/hide PM dropdown
       if (this.#pmDropdown) {
         this.#pmDropdown.classList.toggle("hidden", !isInstall)
       }
 
-      // Update command text
       if (this.#commandText) {
         this.#commandText.textContent = isInstall
           ? getInstallCommand(this.#activePM)
           : AGENT_PREVIEW
       }
 
-      // Update aria-label on copy button
-      if (this.#copyButton) {
-        this.#copyButton.setAttribute(
+      if (this.#copyElement) {
+        this.#copyElement.setAttribute(
           "aria-label",
           isInstall ? "Copy install command" : "Copy prompt for AI agents"
         )
@@ -393,33 +363,28 @@ Important:
     #setActivePM = (pm: PackageManager) => {
       this.#activePM = pm
 
-      // Update command text if in install mode
       if (this.#mode === "install" && this.#commandText) {
         this.#commandText.textContent = getInstallCommand(pm)
       }
 
-      // Update PM chip icon
       if (this.#pmIconContainer) {
         const iconElements = this.#pmIconContainer.querySelectorAll("[data-pm-icon]")
         iconElements.forEach((iconEl) => {
-          if (iconEl instanceof HTMLElement) {
-            const isActive = iconEl.dataset.pmIcon === pm
+          if (iconEl instanceof Element) {
+            const isActive = iconEl.getAttribute("data-pm-icon") === pm
             iconEl.classList.toggle("hidden", !isActive)
           }
         })
       }
 
-      // Update PM chip label
       if (this.#pmLabel) {
         this.#pmLabel.textContent = pm
       }
 
-      // Update PM chip aria-label
       if (this.#pmChip) {
         this.#pmChip.setAttribute("aria-label", `Package manager: ${pm}`)
       }
 
-      // Update popover option states
       this.#pmOptions.forEach((optionEl, optionPm) => {
         const selected = optionPm === pm
         optionEl.setAttribute("aria-selected", selected ? "true" : "false")
@@ -427,7 +392,7 @@ Important:
         optionEl.classList.toggle("text-zinc-400", !selected)
 
         const check = optionEl.querySelector("[data-role='pm-check']")
-        if (check instanceof HTMLElement) {
+        if (check instanceof Element) {
           check.classList.toggle("hidden", !selected)
         }
       })
@@ -474,11 +439,18 @@ Important:
     #onPMSelect = (event: MouseEvent) => {
       event.stopPropagation()
       const target = event.currentTarget
-      if (!(target instanceof HTMLElement)) return
+      if (!(target instanceof HTMLButtonElement)) return
       const pm = target.dataset.pm
       if (pm === undefined || !isPackageManager(pm)) return
       this.#setActivePM(pm)
       this.#closePopover()
+    }
+
+    #onCopyKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault()
+        this.#onCopyClick()
+      }
     }
 
     #onCopyClick = async () => {
