@@ -2,6 +2,9 @@
 import type { ImageMetadata } from "astro"
 import type { SvgComponent } from "astro/types"
 import { Copy, Check } from "@lucide/astro"
+
+import agentPromptRaw from "@/data/agent-prompt.md?raw"
+
 import {
   DEFAULT_PACKAGE_MANAGER,
   getInstallCommand,
@@ -26,7 +29,11 @@ const PM_ICONS: Record<
 }
 ---
 
-<effect-hero-command class="relative block rounded-md bg-zinc-900/50 p-1 ring-1 ring-inset ring-zinc-700">
+<effect-hero-command
+  class="relative block rounded-md bg-zinc-900/50 p-1 ring-1 ring-inset ring-zinc-700"
+  data-agent-prompt={agentPromptRaw}
+  data-agent-preview="Help me build an Effect app in TypeScript…"
+>
   <div role="tablist" aria-label="Command mode" class="flex border-b border-zinc-800">
     <button
       type="button"
@@ -151,26 +158,6 @@ const PM_ICONS: Record<
     type PackageManager,
   } from "@/lib/install-command"
 
-  const AGENT_PROMPT = `Help me build an Effect app in TypeScript. Start by reading https://effect.website/docs/getting-started and follow it exactly: scaffold a fresh TypeScript project, install \`effect\`, create a \`main.ts\` with a simple \`Effect.gen\` program that logs "hello, world", and run it with \`bun run main.ts\` (or the npm/pnpm/yarn equivalent) so I see it execute. Confirm it runs before moving on.
-
-Then STOP and ASK ME what I want to build. From there, consult only the docs you need for what I asked for — don't march me through every guide.
-
-Guides — foundations, work through whichever parts I haven't touched:
-  https://effect.website/docs/getting-started/why-effect      Why Effect
-  https://effect.website/docs/error-management/two-error-types Error tracking
-  https://effect.website/docs/requirements-management/services Services & dependency injection
-  https://effect.website/docs/concurrency/fibers              Concurrency
-  https://effect.website/docs/observability/tracing           Observability
-
-For everything else (Schema, Platform, RPC, AI SDK, Cluster), fetch https://effect.website/llms.txt — it's the index of every doc on the site. Use it to look up the specific page you need instead of guessing URLs.
-
-Important:
-- Confirm with me before each install or deploy. Don't batch.
-- Use \`bun add effect\` (or the npm/pnpm/yarn equivalent).
-- Effect v4 is in beta — if I'm using v3, follow the v3 docs; if I'm starting fresh, use v4 from https://effect.website/blog/effect-v4-beta.
-- Effect uses \`Effect.gen\` with generators, not async/await — don't try to mix them.`
-
-  const AGENT_PREVIEW = "Help me build an Effect app in TypeScript…"
   const COPY_RESET_TIMEOUT_MS = 1500
   const PACKAGE_MANAGER_SET: ReadonlySet<string> = new Set(PACKAGE_MANAGERS)
 
@@ -349,7 +336,7 @@ Important:
       if (this.#commandText) {
         this.#commandText.textContent = isInstall
           ? getInstallCommand(this.#activePM)
-          : AGENT_PREVIEW
+          : this.dataset.agentPreview ?? ""
       }
 
       if (this.#copyElement) {
@@ -461,7 +448,7 @@ Important:
       }
       const text = this.#mode === "install"
         ? getInstallCommand(this.#activePM)
-        : AGENT_PROMPT
+        : this.dataset.agentPrompt ?? ""
       try {
         await clipboard.writeText(text)
         this.#setTemporaryCopyFeedback("copied")
