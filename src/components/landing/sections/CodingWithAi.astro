@@ -1,110 +1,191 @@
 ---
-import { Image } from "astro:assets"
 import { ArrowUpRight } from "@lucide/astro"
-import BenDavis from "@/assets/avatars/BenDavis.jpg"
-import Twitter from "@/assets/logos/twitter/Twitter.svg"
+import BenDavisThumbnail from "@/assets/images/ben-davis-thumbnail.png"
+import BenDavisVideo from "@/assets/videos/ben-davis-video.mp4"
 ---
 
-<section id="coding-with-ai" class="relative w-full py-24 md:pt-40 md:pb-24">
-  <!-- Subtle gradient background -->
-  <div
-    class="absolute inset-0 bg-linear-to-b from-primary-foreground/0 via-primary-foreground/0 to-card/50"
-    aria-hidden="true"
-  >
-  </div>
+<section id="coding-with-ai" class="relative w-full overflow-hidden py-24 md:pt-40 md:pb-24">
+  <!-- Fade at bottom -->
+  <div class="absolute inset-0 bg-linear-to-b from-zinc-950/0 via-zinc-950/0 to-zinc-900/50" aria-hidden="true"></div>
 
   <div class="relative mx-auto w-full max-w-295">
-    <div class="mb-6 md:mb-20 px-4 grid grid-cols-1 lg:grid-cols-2 lg:items-start md:gap-6">
+    <div class="mb-12 grid grid-cols-1 gap-8 px-4 lg:grid-cols-2 lg:items-center">
       <div>
-        <p
-          class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-muted-foreground"
-        >
+        <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
           // LLMs ❤️ Effect
         </p>
-        <h2 class="text-3xl leading-tight font-semibold text-white md:text-4xl">
-          Build Agentic Systems
+        <h2 class="max-w-2xl text-3xl leading-tight font-semibold text-white md:text-4xl">
+          Write Effect code with AI
         </h2>
-        <p class="max-w-2xl mt-4 text-xl text-muted-foreground">
-          Effect's declarative patterns and strong type system make it easier for LLMs to generate
-          correct, production-ready code.
-        </p>
-
-        <div class="flex gap-3 mt-4 lg:mt-8">
-          <a
-            href="https://www.effect.solutions/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-zinc-900/50 hover:bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:border-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-50 rounded-md no-underline group"
-          >
-            <span>Quick start LLM guide</span>
-            <ArrowUpRight class="size-4 transition-transform group-hover:translate-x-0.5" />
-          </a>
-        </div>
-      </div>
-
-      <div
-        class="relative mt-6 md:mt-0 p-5 bg-zinc-900 border border-zinc-700/70 hover:bg-zinc-900/60 hover:border-zinc-700/80 rounded-lg transition-colors cursor-pointer group"
-      >
-        <div class="mb-4 flex justify-between items-center">
-          <div class="flex items-center gap-3">
-            <Image class="h-10 w-10 rounded-full object-cover" src={BenDavis} alt="Ben Davis" />
-            <div>
-              <div class="text-sm text-white font-medium">Ben Davis</div>
-              <div class="text-xs text-muted-foreground">@davis7</div>
-            </div>
-          </div>
-          <Twitter class="size-4" fill="currentColor" />
-        </div>
-        <p class="text-sm text-zinc-300 leading-relaxed">
-          <span class="text-muted-foreground">@MichaelArnaldi</span> suggested cloning the effect repo
-          as a git subtree, giving it to Claude, then using that as docs. It sounds absurd, but it's actually
-          kind amazing...
+        <p class="mt-4 max-w-lg text-lg leading-snug text-zinc-400">
+          Effect's declarative patterns and strong type system make it easier for LLMs to generate correct, production-ready code.
         </p>
         <a
-          class="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground after:absolute after:content-[''] after:-inset-px after:z-1 no-underline"
-          href="https://x.com/davis7/status/1988847914538672262"
+          href="https://www.effect.solutions/"
           target="_blank"
           rel="noopener noreferrer"
+          class="mt-6 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:no-underline"
         >
-          Full post <ArrowUpRight class="size-3" />
+          Quick start LLM guide
+          <ArrowUpRight class="size-4" aria-hidden="true" />
         </a>
       </div>
+
+      <video-poster-overlay
+        data-src={BenDavisVideo}
+        data-poster={BenDavisThumbnail.src}
+        class="relative block aspect-video w-full overflow-hidden rounded-lg border border-zinc-800 bg-black"
+      >
+        <video
+          data-role="video"
+          playsinline
+          preload="metadata"
+          class="h-full w-full object-contain"
+        >
+          <track kind="captions" />
+        </video>
+
+        <img
+          data-role="poster"
+          src={BenDavisThumbnail.src}
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 h-full w-full bg-black object-contain transition-opacity duration-300 ease-out opacity-100"
+        />
+
+        <button
+          type="button"
+          data-role="play-button"
+          aria-label="Play video"
+          class="group absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-300 ease-out hover:bg-black/40 opacity-100 cursor-pointer"
+        >
+          <span class="flex h-16 w-16 items-center justify-center rounded-full bg-white/80 text-zinc-900 backdrop-blur-sm transition-transform group-hover:scale-105">
+            <svg class="ml-0.5 size-8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5.14v14l11-7-11-7z"/>
+            </svg>
+          </span>
+        </button>
+      </video-poster-overlay>
     </div>
 
+    <!-- Features grid -->
     <div class="px-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
         <div class="flex flex-col gap-2">
-          <span class="font-mono text-sm text-muted-foreground">01</span>
-          <p class="text-base text-muted-foreground leading-relaxed">
+          <span class="font-mono text-sm text-zinc-400">01</span>
+          <p class="text-base leading-relaxed text-zinc-400">
             <span class="font-medium text-white">Predictable structure: </span>
-            <span>every operation follows a declarative pattern, no guesswork for LLMs.</span>
+            every operation follows a declarative pattern, no guesswork for LLMs.
           </p>
         </div>
-
         <div class="flex flex-col gap-2">
-          <span class="font-mono text-sm text-muted-foreground">02</span>
-          <p class="text-base text-muted-foreground leading-relaxed">
+          <span class="font-mono text-sm text-zinc-400">02</span>
+          <p class="text-base leading-relaxed text-zinc-400">
             <span class="font-medium text-white">Typed feedback loop: </span>
-            <span>detailed error traces show what failed, enabling precise self-repair.</span>
+            detailed error traces show what failed, enabling precise self-repair.
           </p>
         </div>
-
         <div class="flex flex-col gap-2">
-          <span class="font-mono text-sm text-muted-foreground">03</span>
-          <p class="text-base text-muted-foreground leading-relaxed">
+          <span class="font-mono text-sm text-zinc-400">03</span>
+          <p class="text-base leading-relaxed text-zinc-400">
             <span class="font-medium text-white">Built-in reliability: </span>
-            <span>error handling, supervision, and recovery, production-ready by default.</span>
+            error handling, supervision, and recovery, production-ready by default.
           </p>
         </div>
-
         <div class="flex flex-col gap-2">
-          <span class="font-mono text-sm text-muted-foreground">04</span>
-          <p class="text-base text-muted-foreground leading-relaxed">
+          <span class="font-mono text-sm text-zinc-400">04</span>
+          <p class="text-base leading-relaxed text-zinc-400">
             <span class="font-medium text-white">Rich toolbox: </span>
-            <span>from schema validation to workflows, build in a language LLMs understand.</span>
+            from schema validation to workflows, build in a language LLMs understand.
           </p>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+  class VideoPosterOverlayElement extends HTMLElement {
+    #video: HTMLVideoElement | null = null
+    #poster: HTMLImageElement | null = null
+    #playButton: HTMLButtonElement | null = null
+
+    #showOverlay = () => {
+      if (this.#poster) {
+        this.#poster.classList.add("opacity-100")
+        this.#poster.classList.remove("opacity-0")
+      }
+      if (this.#playButton) {
+        this.#playButton.classList.add("opacity-100")
+        this.#playButton.classList.remove("pointer-events-none", "opacity-0")
+        this.#playButton.tabIndex = 0
+        this.#playButton.setAttribute("aria-hidden", "false")
+      }
+      if (this.#video) this.#video.removeAttribute("controls")
+    }
+
+    #hideOverlay = () => {
+      if (this.#poster) {
+        this.#poster.classList.remove("opacity-100")
+        this.#poster.classList.add("opacity-0")
+      }
+      if (this.#playButton) {
+        this.#playButton.classList.remove("opacity-100")
+        this.#playButton.classList.add("pointer-events-none", "opacity-0")
+        this.#playButton.tabIndex = -1
+        this.#playButton.setAttribute("aria-hidden", "true")
+      }
+      if (this.#video) this.#video.setAttribute("controls", "")
+    }
+
+    #onEnded = () => {
+      if (this.#video) this.#video.currentTime = 0
+      this.#showOverlay()
+    }
+
+    #startPlayback = () => {
+      if (!this.#video) return
+      this.#hideOverlay()
+      void this.#video.play()
+    }
+
+    connectedCallback() {
+      this.#video = this.querySelector("[data-role='video']")
+      this.#poster = this.querySelector("[data-role='poster']")
+      this.#playButton = this.querySelector("[data-role='play-button']")
+
+      if (!(this.#video instanceof HTMLVideoElement)) return
+
+      const src = this.dataset.src
+      const poster = this.dataset.poster
+      if (src) this.#video.src = src
+      if (poster) this.#video.poster = poster
+
+      this.#video.addEventListener("play", this.#hideOverlay)
+      this.#video.addEventListener("pause", this.#showOverlay)
+      this.#video.addEventListener("ended", this.#onEnded)
+
+      if (this.#playButton) {
+        this.#playButton.addEventListener("click", this.#startPlayback)
+      }
+    }
+
+    disconnectedCallback() {
+      if (this.#video) {
+        this.#video.removeEventListener("play", this.#hideOverlay)
+        this.#video.removeEventListener("pause", this.#showOverlay)
+        this.#video.removeEventListener("ended", this.#onEnded)
+      }
+      if (this.#playButton) {
+        this.#playButton.removeEventListener("click", this.#startPlayback)
+      }
+      this.#video = null
+      this.#poster = null
+      this.#playButton = null
+    }
+  }
+
+  if (!customElements.get("video-poster-overlay")) {
+    customElements.define("video-poster-overlay", VideoPosterOverlayElement)
+  }
+</script>
