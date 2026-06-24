@@ -1,126 +1,144 @@
 ---
 import type { ImageMetadata } from "astro"
 import { Image } from "astro:assets"
-import { ArrowUpRight, Play } from "@lucide/astro"
-import AdamRankinTestimonialThumbnail from "@/assets/images/testimonials/adam-rankin.webp"
-import AttilaVecerekTestimonialThumbnail from "@/assets/images/testimonials/attila-vecerek.webp"
-import LouisVichyTestimonialThumbnail from "@/assets/images/testimonials/louis-vichy.webp"
-import SamuelBrioleTestimonialThumbnail from "@/assets/images/testimonials/samuel-briole.webp"
+import { ArrowUpRight } from "@lucide/astro"
+import KitLangtonThumbnail from "@/assets/images/testimonials/kit-langton-banner-website.png"
+import DavidGolightlyThumbnail from "@/assets/images/testimonials/david-golightly-banner.webp"
+import LouisVichyThumbnail from "@/assets/images/testimonials/louis-vichy-banner_compressed.webp"
 
-type FeaturedEpisode = {
-  readonly slug: string
-  readonly company: string
-  readonly useCase: string
-  readonly guest: string
+type FeaturedCase = {
+  readonly headline: string
+  readonly description: string
+  readonly href: string
+  readonly alt: string
   readonly thumbnail: ImageMetadata
 }
 
-const FEATURED_PODCAST_EPISODES: ReadonlyArray<FeaturedEpisode> = [
+const FEATURED_CASES: ReadonlyArray<FeaturedCase> = [
   {
-    slug: "episode-7",
-    company: "Warp",
-    useCase: "HR Systems",
-    guest: "Adam Rankin",
-    thumbnail: AdamRankinTestimonialThumbnail,
+    headline: "OpenCode uses Effect",
+    description:
+      "Kit Langton shows what it takes to migrate a large TypeScript codebase to Effect.",
+    href: "https://www.youtube.com/watch?v=-mL7VVvkLGM",
+    alt: "opencode",
+    thumbnail: KitLangtonThumbnail,
   },
   {
-    slug: "episode-6",
-    company: "OpenRouter",
-    useCase: "Internal Tooling",
-    guest: "Louis Vichy",
-    thumbnail: LouisVichyTestimonialThumbnail,
+    headline: "MasterClass Cortex powered by Effect",
+    description:
+      "Building a real-time voice AI orchestration layer that powers personalized conversations with celebrity instructors like Gordon Ramsay and Mark Cuban.",
+    href: "https://www.youtube.com/watch?v=x2bUuOZ-htU&list=PLDf3uQLaK2B_jaZ5Fy7IPNq0FIViV_CQl&index=6",
+    alt: "MasterClass",
+    thumbnail: DavidGolightlyThumbnail,
   },
   {
-    slug: "episode-1",
-    company: "Zendesk",
-    useCase: "Enterprise Customer Support",
-    guest: "Attila Vecerek",
-    thumbnail: AttilaVecerekTestimonialThumbnail,
-  },
-  {
-    slug: "episode-5",
-    company: "Spiko",
-    useCase: "Fintech Infrastructure",
-    guest: "Samuel Briole",
-    thumbnail: SamuelBrioleTestimonialThumbnail,
+    headline: "OpenRouter uses Effect",
+    description:
+      "Louis Vichy on how OpenRouter built their internal tooling and infrastructure with Effect.",
+    href: "https://youtu.be/AVJIqQi11lM",
+    alt: "OpenRouter",
+    thumbnail: LouisVichyThumbnail,
   },
 ]
+
+const secondaryLinkClass =
+  "inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:no-underline"
 ---
 
 <section id="testimonials" class="relative w-full py-24 md:pt-40 md:pb-24">
-  <div class="relative mx-auto w-full max-w-295 px-4">
-    <div class="mb-8 md:mb-12">
-      <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
-        // Who uses Effect
-      </p>
-      <h2 class="text-3xl md:text-4xl text-white font-semibold">Real-world production systems</h2>
+  <div class="mx-auto mb-12 w-full max-w-295 px-4">
+    <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
+      // Effect in the real world
+    </p>
+    <h2 class="text-3xl font-semibold text-white md:text-4xl">
+      Real-world production systems
+    </h2>
 
-      <div class="mt-4 md:mt-8 flex flex-wrap items-center gap-4 md:gap-6">
-        <a
-          href="/podcast/"
-          class="inline-flex items-center gap-1 text-base font-medium text-zinc-300 no-underline transition-colors hover:text-white hover:no-underline"
-        >
-          Cause & Effect Podcast
-          <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
-        </a>
-        <a
-          href="https://www.youtube.com/watch?v=CfbR-1XRlTA&list=PLDf3uQLaK2B9a4tbMgGd9wFeEnMA50z4w"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-base font-medium text-zinc-300 no-underline transition-colors hover:text-white hover:no-underline"
-        >
-          Effect Days 2024
-          <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
-        </a>
-        <a
-          href="https://www.youtube.com/watch?v=0dIC1IwlaQc&list=PLDf3uQLaK2B9bEBZbwMv04e_zSbRNPKH6"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-base font-medium text-zinc-300 no-underline transition-colors hover:text-white hover:no-underline"
-        >
-          Effect Days 2025
-          <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
-        </a>
-      </div>
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <a
+        href="https://www.youtube.com/playlist?list=PLDf3uQLaK2lbPLQT6I6xkiV_W3NxnPXRE"
+        target="_blank"
+        rel="noopener noreferrer"
+        class={secondaryLinkClass}
+      >
+        Cause &amp; Effect Podcast
+        <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+      </a>
+      <a
+        href="https://www.youtube.com/playlist?list=PLDf3uQLaK2lY8cjMh4dmq3eFSGJVwPBPO"
+        target="_blank"
+        rel="noopener noreferrer"
+        class={secondaryLinkClass}
+      >
+        Effect Days 2024
+        <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+      </a>
+      <a
+        href="https://www.youtube.com/playlist?list=PLDf3uQLaK2lZoJQ7BVtIbKs2P8i-xVmhP"
+        target="_blank"
+        rel="noopener noreferrer"
+        class={secondaryLinkClass}
+      >
+        Effect Days 2025
+        <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+      </a>
     </div>
+  </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {
-        FEATURED_PODCAST_EPISODES.map((episode) => (
-          <a
-            href={`/podcast/episodes/${episode.slug}/`}
-            class="group relative flex flex-col overflow-hidden no-underline transition-all hover:border-zinc-500 hover:no-underline"
-          >
-            <div class="relative aspect-video w-full overflow-hidden rounded-md border border-zinc-800 bg-zinc-900">
-              <Image
-                src={episode.thumbnail}
-                alt={`${episode.company} podcast episode with ${episode.guest}`}
-                class="h-full w-full object-cover"
-              />
+  <div class="mx-auto flex w-full max-w-295 flex-col gap-12 px-4 md:gap-16">
+    {
+      FEATURED_CASES.map((item, index) => {
+        const imageOnRight = index % 2 === 1
+        return (
+          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center">
+            <div
+              class:list={[
+                "flex w-full flex-col gap-5 lg:mx-auto lg:max-w-[26rem]",
+                imageOnRight ? "lg:order-1" : "lg:order-2",
+              ]}
+            >
+              <h3 class="text-xl font-semibold text-white md:text-2xl">
+                {item.headline}
+              </h3>
+              <p class="max-w-md text-base leading-relaxed text-zinc-300">
+                {item.description}
+              </p>
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group inline-flex w-fit items-center gap-1.5 text-sm font-medium text-white no-underline hover:no-underline"
+              >
+                Watch the talk
+                <ArrowUpRight
+                  class="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
+              </a>
+            </div>
 
-              <div class="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/20">
-                <div class="flex h-12 w-12 scale-0 items-center justify-center rounded-full bg-white/90 transition-transform duration-300 group-hover:scale-100">
-                  <Play
-                    class="ml-0.5 h-5 w-5 text-zinc-900"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  />
-                </div>
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Watch ${item.headline}`}
+              class:list={[
+                "group relative",
+                imageOnRight ? "lg:order-2" : "lg:order-1",
+              ]}
+            >
+              <div class="relative aspect-video w-full overflow-hidden rounded-md border border-zinc-800 bg-zinc-900">
+                <Image
+                  src={item.thumbnail}
+                  alt={item.alt}
+                  class="h-full w-full object-cover"
+                />
+                <div class="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/20" />
               </div>
-            </div>
-
-            <div class="flex items-center justify-between px-0 py-2">
-              <span class="font-mono text-[13px] uppercase text-zinc-400 group-hover:text-zinc-200">
-                {episode.useCase}
-              </span>
-              <ArrowUpRight
-                class="h-4 w-4 text-zinc-500 transition-colors group-hover:text-zinc-200"
-                aria-hidden="true"
-              />
-            </div>
-          </a>
-        ))
-      }
-    </div>
+            </a>
+          </div>
+        )
+      })
+    }
   </div>
 </section>
