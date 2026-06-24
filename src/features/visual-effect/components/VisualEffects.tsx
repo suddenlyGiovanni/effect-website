@@ -1,16 +1,13 @@
 import { useAtomMount, useAtomSet } from "@effect/atom-react"
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
+import { useCallback, useState } from "react"
 import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type ExampleCategory, EXAMPLES_CATALOG } from "@/features/visual-effect/catalog"
 import {
   prefersReducedMotionAtom,
   resetExampleSilentlyAtom,
   stopAllSoundAtom,
 } from "@/features/visual-effect/state/atoms"
-import { cn } from "@/lib/utils"
 import { VisualEffect } from "./VisualEffect"
-import { VisualEffectSoundToggle } from "./VisualEffectSoundToggle"
 
 const ORDERED_CATEGORIES: ReadonlyArray<ExampleCategory> = [
   "concurrency",
@@ -24,10 +21,6 @@ export default function VisualEffects() {
   useAtomMount(prefersReducedMotionAtom)
 
   const [category, setCategory] = useState<ExampleCategory>(ORDERED_CATEGORIES[0]!)
-  const [indicatorRect, setIndicatorRect] = useState<IndicatorRect | undefined>(undefined)
-  const rootElementReference = useRef<HTMLElement | undefined>(undefined)
-  const resizeObserverReference = useRef<ResizeObserver | undefined>(undefined)
-  const frameReference = useRef<number | undefined>(undefined)
   const resetExampleSilently = useAtomSet(resetExampleSilentlyAtom)
   const stopAllSounds = useAtomSet(stopAllSoundAtom)
 
@@ -40,316 +33,83 @@ export default function VisualEffects() {
     stopAllSounds(void 0)
   }, [resetExampleSilently, stopAllSounds])
 
-  const updateIndicator = useCallback(() => {
-    const rootElement = rootElementReference.current
-
-    if (rootElement === undefined) {
-      setIndicatorRect(undefined)
-      return
-    }
-
-    const tabListElement = getTabListElement(rootElement)
-
-    if (tabListElement === undefined) {
-      setIndicatorRect(undefined)
-      return
-    }
-
-    const activeTriggerElement = getActiveTriggerElement(tabListElement)
-
-    if (activeTriggerElement === undefined) {
-      setIndicatorRect(undefined)
-      return
-    }
-
-    const tabListRect = tabListElement.getBoundingClientRect()
-    const activeTriggerRect = activeTriggerElement.getBoundingClientRect()
-    const nextRect: IndicatorRect = {
-      left: activeTriggerRect.left - tabListRect.left,
-      top: activeTriggerRect.top - tabListRect.top,
-      width: activeTriggerRect.width,
-      height: activeTriggerRect.height,
-    }
-
-    setIndicatorRect((currentRect) => {
-      if (rectMatches(nextRect, currentRect)) {
-        return currentRect
-      }
-
-      return nextRect
-    })
-  }, [])
-
-  const scheduleIndicatorUpdate = useCallback(() => {
-    const activeFrame = frameReference.current
-
-    if (activeFrame !== undefined) {
-      cancelAnimationFrame(activeFrame)
-    }
-
-    // Wait for next frame so aria-selected/data attrs are committed first.
-    frameReference.current = requestAnimationFrame(() => {
-      frameReference.current = undefined
-      updateIndicator()
-    })
-  }, [updateIndicator])
-
-  const rootReference = useCallback(
-    (node: HTMLDivElement | null) => {
-      resizeObserverReference.current?.disconnect()
-      resizeObserverReference.current = undefined
-
-      if (node === null) {
-        rootElementReference.current = undefined
-        setIndicatorRect(undefined)
-        return
-      }
-
-      rootElementReference.current = node
-      const tabListElement = getTabListElement(node)
-
-      if (tabListElement !== undefined) {
-        const resizeObserver = new ResizeObserver(() => {
-          scheduleIndicatorUpdate()
-        })
-
-        resizeObserver.observe(tabListElement)
-        resizeObserverReference.current = resizeObserver
-      }
-
-      scheduleIndicatorUpdate()
-    },
-    [scheduleIndicatorUpdate],
-  )
-
-  useEffect(() => {
-    scheduleIndicatorUpdate()
-  }, [category, scheduleIndicatorUpdate])
-
-  useEffect(() => {
-    const fontsApi = document.fonts
-
-    if (fontsApi === undefined) {
-      return
-    }
-
-    // Font loading can shift trigger widths without a resize event.
-    void fontsApi.ready.then(() => {
-      scheduleIndicatorUpdate()
-    })
-  }, [scheduleIndicatorUpdate])
-
-  useEffect(() => {
-    return () => {
-      reset()
-      resizeObserverReference.current?.disconnect()
-
-      const activeFrame = frameReference.current
-
-      if (activeFrame !== undefined) {
-        cancelAnimationFrame(activeFrame)
-      }
-    }
-  }, [reset])
-
   return (
-    <div
-      ref={rootReference}
-      className="border-t border-r border-zinc-800 shadow-2xl shadow-black/20"
-    >
-      <Tabs
-        value={category}
-        onValueChange={(nextCategory) => {
-          reset()
-          setCategory(nextCategory)
-        }}
-        className="gap-0"
-      >
-        <div className="flex items-center justify-end border-b border-zinc-800 bg-zinc-950/90 px-4 py-3">
-          <VisualEffectSoundToggle />
-        </div>
-
-        <TabsList
-          variant="line"
-          className={cn(
-            "relative isolate no-scrollbar w-full overflow-x-auto overflow-y-hidden p-0",
-            "group-data-[orientation=horizontal]/tabs:h-auto",
-            "border-b border-zinc-800 bg-zinc-950/90",
-            "snap-x snap-mandatory",
-            "justify-start md:justify-center",
-          )}
-        >
-          <TabsListContent indicatorRect={indicatorRect} />
-        </TabsList>
-
-        {ORDERED_CATEGORIES.map((category) => {
-          const entry = EXAMPLES_CATALOG[category]
+    <div className="border-r border-zinc-800 shadow-2xl shadow-black/20">
+      <div className="scrollbar-hide relative flex overflow-x-auto bg-zinc-950/90">
+        {ORDERED_CATEGORIES.map((cat) => {
+          const entry = EXAMPLES_CATALOG[cat]
+          const active = cat === category
           return (
-            <TabsContent key={category} value={category} className="mt-0">
-              <SubTabsContent examples={entry.examples} onTabChange={reset} />
-            </TabsContent>
+            <button
+              key={cat}
+              type="button"
+              onClick={() => {
+                reset()
+                setCategory(cat)
+              }}
+              className={`flex-1 shrink-0 cursor-pointer px-4 py-3 font-mono text-sm tracking-wide whitespace-nowrap uppercase transition-colors md:px-6 md:text-base ${
+                active
+                  ? "bg-zinc-900 font-medium text-white"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              {entry.label}
+            </button>
           )
         })}
-      </Tabs>
+      </div>
+
+      <div className="w-full">
+        <SubTabs examples={EXAMPLES_CATALOG[category].examples} onTabChange={reset} />
+      </div>
     </div>
   )
 }
 
-function TabsListContent({ indicatorRect }: { readonly indicatorRect: IndicatorRect | undefined }) {
-  let indicatorStyle: CSSProperties | undefined = undefined
-
-  if (indicatorRect !== undefined) {
-    indicatorStyle = {
-      left: `${indicatorRect.left}px`,
-      width: `${indicatorRect.width}px`,
-    }
-  }
-
-  return (
-    <>
-      {indicatorStyle && (
-        <div
-          style={indicatorStyle}
-          className={cn(
-            "pointer-events-none absolute bottom-0 z-0 h-px bg-zinc-100",
-            "transition-[left,width] duration-200 ease-out motion-reduce:transition-none",
-          )}
-          aria-hidden="true"
-        />
-      )}
-
-      {ORDERED_CATEGORIES.map((category) => {
-        const entry = EXAMPLES_CATALOG[category]
-
-        return (
-          <TabsTrigger
-            key={category}
-            value={category}
-            className={cn(
-              "relative z-10 text-zinc-400",
-              // Mobile: horizontal scrolling tabs. Desktop: equal-width tabs.
-              "h-auto min-w-40 flex-none md:min-w-0 md:flex-1 md:basis-0",
-              "px-4 py-5 md:px-6",
-              "font-mono text-sm tracking-wide whitespace-nowrap uppercase md:text-base",
-              "justify-center text-center",
-              "snap-start",
-              "cursor-pointer overscroll-none transition-colors",
-              "hover:text-zinc-200 data-active:text-white",
-              "data-active:font-medium",
-              "group-data-[variant=line]/tabs-list:data-active:after:opacity-0",
-            )}
-          >
-            {entry.label}
-          </TabsTrigger>
-        )
-      })}
-    </>
-  )
-}
-
-function SubTabsContent({
+function SubTabs({
   examples,
   onTabChange,
 }: {
   readonly examples: ReadonlyArray<ExampleDefinition>
   readonly onTabChange: () => void
 }) {
-  if (examples.length === 0) {
-    return null
-  }
+  const [activeKey, setActiveKey] = useState<string>(examples[0]?.key ?? "")
+
+  if (examples.length === 0) return null
+
+  const activeExample = examples.find((e) => e.key === activeKey) ?? examples[0]!
 
   return (
-    <Tabs
-      defaultValue={examples[0]}
-      onValueChange={() => {
-        onTabChange()
-      }}
-      className="gap-0"
-    >
-      <TabsList
-        variant="line"
-        className={cn(
-          "no-scrollbar w-full overflow-x-auto overflow-y-hidden",
-          "group-data-[orientation=horizontal]/tabs:h-auto",
-          "justify-start gap-1 border-b border-zinc-800 px-4 py-3",
-          "rounded-none bg-zinc-950",
-        )}
-      >
+    <div className="flex flex-col">
+      <div className="scrollbar-hide flex items-center border-y border-zinc-800 bg-zinc-950">
         {examples.map((example) => {
-          const title = example.title
-          const subtitle = example.subtitle
+          const isActive = example.key === activeKey
           return (
-            <TabsTrigger
+            <button
               key={example.key}
-              value={example}
-              className={cn(
-                "h-auto flex-none px-3 py-1.5",
-                "rounded-md font-mono text-sm whitespace-nowrap",
-                "text-zinc-400 hover:text-white",
-                "cursor-pointer transition-colors",
-                "data-active:bg-zinc-900! data-active:text-white!",
-                "group-data-[variant=line]/tabs-list:data-active:bg-zinc-900!",
-                "group-data-[variant=line]/tabs-list:data-active:text-white!",
-                "hover:bg-zinc-800/50",
-                "after:opacity-0 group-data-[variant=line]/tabs-list:data-active:after:opacity-0",
-              )}
+              type="button"
+              onClick={() => {
+                onTabChange()
+                setActiveKey(example.key)
+              }}
+              className={`flex-1 cursor-pointer px-3 py-2 font-mono text-sm whitespace-nowrap transition-colors ${
+                isActive
+                  ? "bg-zinc-900 text-white"
+                  : "text-zinc-400 hover:bg-zinc-800/50 hover:text-white"
+              }`}
             >
-              <span>{title}</span>
-              {subtitle && <span className="text-zinc-500">({subtitle})</span>}
-            </TabsTrigger>
+              <span>{example.title}</span>
+              {example.subtitle && (
+                <span className="ml-1 text-zinc-400">({example.subtitle})</span>
+              )}
+            </button>
           )
         })}
-      </TabsList>
+      </div>
 
-      {examples.map((example) => {
-        return (
-          <TabsContent key={example.key} value={example} className="mt-0 overflow-x-auto p-4">
-            <VisualEffect example={example} />
-          </TabsContent>
-        )
-      })}
-    </Tabs>
+      <div className="overflow-x-auto p-4">
+        <VisualEffect example={activeExample} />
+      </div>
+    </div>
   )
-}
-
-interface IndicatorRect {
-  readonly left: number
-  readonly top: number
-  readonly width: number
-  readonly height: number
-}
-
-const rectMatches = (nextRect: IndicatorRect, currentRect: IndicatorRect | undefined) => {
-  if (currentRect === undefined) {
-    return false
-  }
-
-  return (
-    nextRect.left === currentRect.left &&
-    nextRect.top === currentRect.top &&
-    nextRect.width === currentRect.width &&
-    nextRect.height === currentRect.height
-  )
-}
-
-const getTabListElement = (root: HTMLElement): HTMLDivElement | undefined => {
-  const tabListCandidate = root.querySelector('[data-slot="tabs-list"]')
-
-  if (tabListCandidate instanceof HTMLDivElement) {
-    return tabListCandidate
-  }
-
-  return undefined
-}
-
-const getActiveTriggerElement = (tabListElement: HTMLDivElement): HTMLButtonElement | undefined => {
-  const activeTriggerCandidate = tabListElement.querySelector(
-    '[data-slot="tabs-trigger"][aria-selected="true"]',
-  )
-
-  if (activeTriggerCandidate instanceof HTMLButtonElement) {
-    return activeTriggerCandidate
-  }
-
-  return undefined
 }
