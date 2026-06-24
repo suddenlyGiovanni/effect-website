@@ -140,7 +140,7 @@ const copies = [0, 1, 2] as const
             data-role="previous"
             aria-label="Scroll quotes left"
             disabled
-            class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-muted-foreground transition-colors cursor-pointer hover:border-zinc-600 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-400 transition-colors cursor-pointer hover:border-zinc-500 hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft class="h-4 w-4" aria-hidden="true" />
           </button>
@@ -149,7 +149,7 @@ const copies = [0, 1, 2] as const
             data-role="next"
             aria-label="Scroll quotes right"
             disabled
-            class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-muted-foreground transition-colors cursor-pointer hover:border-zinc-600 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-400 transition-colors cursor-pointer hover:border-zinc-500 hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronRight class="h-4 w-4" aria-hidden="true" />
           </button>
@@ -172,12 +172,12 @@ const copies = [0, 1, 2] as const
                 <article
                   data-role="card"
                   data-copy={copyIndex}
-                  class="quotes-card min-h-54 md:min-h-56 w-65 md:w-80 p-4 md:p-6 flex flex-col shrink-0 rounded-md border border-zinc-800 bg-zinc-900"
+                  class="quotes-card min-h-54 md:min-h-56 w-65 md:w-80 p-4 md:p-6 flex flex-col shrink-0 border border-zinc-700 bg-zinc-950"
                 >
-                  <p class="text-sm md:text-base text-zinc-300 leading-relaxed">"{quote.text}"</p>
+                  <p class="text-sm md:text-base text-zinc-400 leading-relaxed">"{quote.text}"</p>
 
                   <div class="mt-auto flex items-center gap-2.5 pt-3 md:gap-3 md:pt-8">
-                    <span class="shrink-0 font-mono text-sm font-medium text-zinc-100">
+                    <span class="shrink-0 font-mono text-sm font-medium text-zinc-200">
                       {quote.author}
                     </span>
 
@@ -201,7 +201,7 @@ const copies = [0, 1, 2] as const
 
       <div
         aria-hidden="true"
-        class="quotes-fade-left pointer-events-none absolute inset-y-0 left-0 w-10 md:w-16 bg-[linear-gradient(to_right,rgb(9_9_11),transparent)]"
+        class="quotes-fade-left pointer-events-none absolute inset-y-0 left-0 hidden w-16 md:block bg-[linear-gradient(to_right,rgb(9_9_11),transparent)]"
       >
       </div>
       <div
