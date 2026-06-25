@@ -10,8 +10,6 @@ import expressiveCode from "astro-expressive-code"
 import { defineConfig, fontProviders, svgoOptimizer } from "astro/config"
 import svgr from "vite-plugin-svgr"
 
-import { twieRedirectList } from "./src/generated/twie-redirects"
-
 const GoogleFontProvider = fontProviders.google()
 
 // https://astro.build/config
@@ -72,9 +70,5 @@ export default defineConfig({
     },
   ],
 
-  redirects: {
-    "/docs": "/docs/v4",
-    "/docs/v3": "/docs/v3/getting-started/introduction",
-    ...twieRedirectList,
-  },
+
 })
