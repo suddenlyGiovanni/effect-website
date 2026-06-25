@@ -18,7 +18,7 @@ export function FileInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const [fileName, setFileName] = useState(initialValue)
 
-  const paddingLeft = 16 + depth * 8
+  const paddingLeft = depth * 12 + 6
   const styles = { paddingLeft: `${paddingLeft}px` }
 
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
@@ -56,10 +56,13 @@ export function FileInput({
   }, [dispatch])
 
   return (
-    <div style={styles} className="grid h-7 w-full grid-cols-[16px_1fr] items-center gap-1 pr-1">
-      <div className="h-4 w-4">
-        {type === "File" ? <FileIcon size={16} /> : <FolderIcon size={16} />}
-      </div>
+    <div style={styles} className="grid h-7 w-full grid-cols-[14px_16px_auto] items-center gap-1.5 pr-1">
+      <span className="inline-block h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {type === "File" ? (
+        <FileIcon className="h-4 w-4 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+      ) : (
+        <FolderIcon className="h-4 w-4 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+      )}
       <div>
         <form onSubmit={handleSubmit}>
           <input

@@ -1,11 +1,12 @@
 import { useAtom } from "@effect/atom-react"
 import { Equal } from "effect"
 import {
+  ChevronDown,
+  ChevronRight,
   FileIcon,
   FilePenIcon,
   FilePlusIcon,
-  FolderClosedIcon,
-  FolderOpenIcon,
+  Folder,
   FolderPlusIcon,
   TrashIcon,
 } from "lucide-react"
@@ -113,8 +114,10 @@ function FileNodeRoot({
     <div
       data-selected={isSelected}
       className={cn(
-        "grid items-center transition-colors",
-        isSelected ? "group bg-blue-600 text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800",
+        "grid items-center rounded-md transition-colors",
+        isSelected
+          ? "group bg-zinc-200 font-semibold text-zinc-900 dark:bg-zinc-800 dark:text-white"
+          : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-white",
         className,
       )}
       onMouseEnter={onMouseEnter}
@@ -135,7 +138,7 @@ function FileNodeTrigger({
   readonly isSelected: boolean
   readonly onClick: React.MouseEventHandler<HTMLButtonElement>
 }>) {
-  const paddingLeft = 16 + depth * 8
+  const paddingLeft = depth * 12 + 6
   const styles = { paddingLeft: `${paddingLeft}px` }
 
   return (
@@ -143,8 +146,7 @@ function FileNodeTrigger({
       type="button"
       style={styles}
       className={cn(
-        "grid w-full cursor-pointer grid-cols-[16px_auto] items-center justify-start gap-2 bg-transparent py-1 [&_span]:truncate [&_svg]:mr-1",
-        isSelected && "text-white",
+        "grid w-full cursor-pointer grid-cols-[14px_16px_auto] items-center justify-start gap-1.5 bg-transparent py-1.5 [&_span]:truncate",
       )}
       onClick={onClick}
     >
@@ -156,12 +158,23 @@ function FileNodeTrigger({
 function FileNodeIcon(
   props: { readonly type: "file" } | { readonly type: "directory"; readonly isOpen: boolean },
 ) {
-  return props.type === "file" ? (
-    <FileIcon size={16} />
-  ) : props.isOpen ? (
-    <FolderOpenIcon size={16} />
-  ) : (
-    <FolderClosedIcon size={16} />
+  if (props.type === "file") {
+    return (
+      <>
+        <span className="inline-block h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <FileIcon className="h-4 w-4 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+      </>
+    )
+  }
+  return (
+    <>
+      {props.isOpen ? (
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+      ) : (
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+      )}
+      <Folder className="h-4 w-4 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+    </>
   )
 }
 
@@ -185,7 +198,7 @@ function FileNodeControls({
     (node._tag === "Directory" || node.userManaged) && (
       <div
         className={cn(
-          "flex h-full items-center [&_button]:rounded-none [&_button]:px-1",
+          "flex h-full items-center gap-0.5 pr-1",
           className,
         )}
       >
@@ -193,7 +206,7 @@ function FileNodeControls({
           <button
             type="button"
             title="Rename"
-            className="h-full cursor-pointer bg-transparent p-0 hover:bg-zinc-200 group-data-[selected=true]:hover:bg-blue-700 dark:hover:bg-zinc-700"
+            className="cursor-pointer rounded p-1.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 group-data-[selected=true]:text-zinc-500 group-data-[selected=true]:hover:bg-zinc-300 group-data-[selected=true]:hover:text-zinc-800 dark:text-zinc-500 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200 dark:group-data-[selected=true]:text-zinc-300 dark:group-data-[selected=true]:hover:bg-zinc-600/60 dark:group-data-[selected=true]:hover:text-white"
             onClick={() => dispatch(State.Editing({ node }))}
           >
             <FilePenIcon size={16} />
@@ -204,7 +217,7 @@ function FileNodeControls({
             <button
               type="button"
               title="New File"
-              className="h-full cursor-pointer bg-transparent p-0 hover:bg-zinc-200 group-data-[selected=true]:hover:bg-blue-700 dark:hover:bg-zinc-700"
+              className="cursor-pointer rounded p-1.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 group-data-[selected=true]:text-zinc-500 group-data-[selected=true]:hover:bg-zinc-300 group-data-[selected=true]:hover:text-zinc-800 dark:text-zinc-500 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200 dark:group-data-[selected=true]:text-zinc-300 dark:group-data-[selected=true]:hover:bg-zinc-600/60 dark:group-data-[selected=true]:hover:text-white"
               onClick={() => dispatch(State.Creating({ parent: node, type: "File" }))}
             >
               <FilePlusIcon size={16} />
@@ -212,7 +225,7 @@ function FileNodeControls({
             <button
               type="button"
               title="New Folder"
-              className="h-full cursor-pointer bg-transparent p-0 hover:bg-zinc-200 group-data-[selected=true]:hover:bg-blue-700 dark:hover:bg-zinc-700"
+              className="cursor-pointer rounded p-1.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 group-data-[selected=true]:text-zinc-500 group-data-[selected=true]:hover:bg-zinc-300 group-data-[selected=true]:hover:text-zinc-800 dark:text-zinc-500 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200 dark:group-data-[selected=true]:text-zinc-300 dark:group-data-[selected=true]:hover:bg-zinc-600/60 dark:group-data-[selected=true]:hover:text-white"
               onClick={() => dispatch(State.Creating({ parent: node, type: "Directory" }))}
             >
               <FolderPlusIcon size={16} />
@@ -224,7 +237,7 @@ function FileNodeControls({
             <div className="flex items-center gap-1 px-1">
               <button
                 type="button"
-                className="cursor-pointer rounded bg-red-600 px-1 text-xs text-white"
+                className="cursor-pointer rounded px-1.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
                 onClick={() => {
                   remove(node)
                   setConfirmDelete(false)
@@ -234,7 +247,7 @@ function FileNodeControls({
               </button>
               <button
                 type="button"
-                className="cursor-pointer rounded bg-zinc-300 px-1 text-xs dark:bg-zinc-600"
+                className="cursor-pointer rounded px-1.5 py-1 text-xs font-medium text-zinc-500 transition-colors hover:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-700/60"
                 onClick={() => setConfirmDelete(false)}
               >
                 No
@@ -244,7 +257,7 @@ function FileNodeControls({
             <button
               type="button"
               title="Delete"
-              className="h-full cursor-pointer bg-transparent p-0 hover:bg-zinc-200 group-data-[selected=true]:hover:bg-blue-700 dark:hover:bg-zinc-700"
+              className="cursor-pointer rounded p-1.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 group-data-[selected=true]:text-zinc-500 group-data-[selected=true]:hover:bg-zinc-300 group-data-[selected=true]:hover:text-zinc-800 dark:text-zinc-500 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200 dark:group-data-[selected=true]:text-zinc-300 dark:group-data-[selected=true]:hover:bg-zinc-600/60 dark:group-data-[selected=true]:hover:text-white"
               onClick={() => setConfirmDelete(true)}
             >
               <TrashIcon size={16} />
