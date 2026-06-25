@@ -1,5 +1,6 @@
 ---
 import PageLayout from "@/layouts/PageLayout.astro"
+import GridBackground from "@/components/GridBackground.astro"
 
 type Visual =
   | { kind: "stat"; value: string; label: string; sublabel?: string; striken?: boolean; chips?: string[] }
@@ -177,8 +178,7 @@ const ROTATIONS = [-2, 3, -1, 2, -3, 1, -2]
 >
   {/* Hero */}
   <section class="hero-section relative overflow-hidden pb-20 md:pb-28">
-    <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
-    <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-x-0 top-0 h-[520px]"></div>
+    <GridBackground />
     <div aria-hidden="true" class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[400px]"></div>
 
     <div class="relative z-10 mx-auto w-full max-w-295 px-4">
@@ -468,27 +468,6 @@ const ROTATIONS = [-2, 3, -1, 2, -3, 1, -2]
 </PageLayout>
 
 <style>
-  .hero-section {
-    --hero-grid-gradient-x: linear-gradient(to right, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-gradient-y: linear-gradient(to bottom, rgb(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-size: 196.6px 194px;
-    --hero-grid-position: calc(50% + 97px) 0;
-    --hero-fade-gradient: linear-gradient(
-      to bottom,
-      rgb(9 9 11) 0%,
-      transparent 20%,
-      transparent 60%,
-      rgb(9 9 11) 100%
-    );
-  }
-  .hero-grid {
-    background-image: var(--hero-grid-gradient-x), var(--hero-grid-gradient-y);
-    background-size: var(--hero-grid-size);
-    background-position: var(--hero-grid-position);
-  }
-  .hero-fade {
-    background: var(--hero-fade-gradient);
-  }
   .hero-glow {
     background: radial-gradient(ellipse 50% 80% at 50% -20%, rgba(255, 255, 255, 0.10) 0%, transparent 50%);
   }

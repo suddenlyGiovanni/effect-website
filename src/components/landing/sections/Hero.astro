@@ -1,17 +1,65 @@
 ---
+import type { ImageMetadata } from "astro"
+import { Image } from "astro:assets"
 import { ArrowRight, PlayCircle } from "@lucide/astro"
 
-import AgentCommand from "../blocks/AgentCommand.astro"
-import InstallCommand from "../blocks/InstallCommand.astro"
+import GridBackground from "@/components/GridBackground.astro"
+import HeroCommandPanel from "../blocks/HeroCommandPanel.astro"
+import CloudflareLogo from "@/assets/company-logos/Cloudflare_logo_horizontal_wht 1.png"
+import OpencodeLogo from "@/assets/company-logos/opencode-wordmark-dark.svg"
+import MasterclassLogo from "@/assets/company-logos/masterclass-noM.svg"
+import T3ChatLogo from "@/assets/company-logos/t3-chat.png"
+import XLogo from "@/assets/company-logos/x-logo.svg"
 
-import heroNoise from "@/assets/images/hero-noise-texture.png?url"
+const SOCIAL_PROOF_LOGOS: ReadonlyArray<{
+  readonly name: string
+  readonly src: ImageMetadata
+  readonly alt: string
+  readonly className: string
+  readonly style?: string
+  readonly invert?: boolean
+}> = [
+  {
+    name: "Cloudflare",
+    src: CloudflareLogo,
+    alt: "Cloudflare",
+    className: "w-auto",
+    style: "height:20px",
+  },
+  {
+    name: "opencode",
+    src: OpencodeLogo,
+    alt: "opencode",
+    className: "w-auto",
+    style: "height:18px;transform:translateY(2px)",
+  },
+  {
+    name: "MasterClass",
+    src: MasterclassLogo,
+    alt: "MasterClass",
+    className: "w-auto",
+    style: "height:14px",
+  },
+  {
+    name: "T3 Chat",
+    src: T3ChatLogo,
+    alt: "T3 Chat",
+    className: "w-auto",
+    style: "height:15px;filter:brightness(0) invert(1)",
+  },
+  {
+    name: "X",
+    src: XLogo,
+    alt: "X",
+    className: "w-auto",
+    style: "height:22px;transform:translateY(2px)",
+  },
+]
 ---
 
-<section class="hero-section relative w-full bg-cover bg-center-top" style={`background-image: url("${heroNoise}");`}>
+<section class="hero-section relative w-full">
   <!-- Grid background -->
-  <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-0"></div>
-  <!-- Fade -->
-  <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-0"></div>
+  <GridBackground />
   <!-- Glow -->
   <div aria-hidden="true" class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[600px]"></div>
 <div class="relative mx-auto w-full max-w-295 px-4 py-20 md:px-24">
@@ -31,22 +79,32 @@ import heroNoise from "@/assets/images/hero-noise-texture.png?url"
       </h1>
 
       <p class="mt-6 text-lg text-zinc-400 max-w-3xl leading-snug md:mx-auto">
-        Build production-ready systems with the structure, safety, and observability developers need — and AI agents can work with.
+        Build production-ready systems your team can ship, customers can depend on — and AI agents can work with.
       </p>
 
-      <div class="mt-8 grid gap-4 md:mx-auto md:max-w-4xl md:grid-cols-2">
-        <InstallCommand />
-        <AgentCommand />
+      <div class="mx-auto mt-8 max-w-xl">
+        <HeroCommandPanel />
       </div>
-    </div>
-  </div>
 
-  <!-- Video -->
-  <div class="relative z-10 mx-auto mt-12 w-full max-w-295 px-4 pb-20 md:pb-24">
-    <div class="mx-auto max-w-5xl aspect-video rounded-lg border border-zinc-800 bg-zinc-900 flex items-center justify-center">
-      <div class="flex flex-col items-center gap-3 text-zinc-400">
-        <PlayCircle class="h-12 w-12" aria-hidden="true" />
-        <span class="text-sm font-medium">Video coming soon</span>
+      <!-- Social proof -->
+      <div class="mt-14 flex flex-col items-center gap-5">
+        <p class="font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">
+          // In production at
+        </p>
+        <ul class="flex flex-wrap items-end justify-center gap-x-8 gap-y-5">
+          {
+            SOCIAL_PROOF_LOGOS.map((logo) => (
+              <li class="flex items-end">
+                <Image
+                  src={logo.src}
+                  alt={logo.alt}
+                  class={logo.className}
+                  style={logo.style}
+                />
+              </li>
+            ))
+          }
+        </ul>
       </div>
     </div>
   </div>
@@ -54,23 +112,9 @@ import heroNoise from "@/assets/images/hero-noise-texture.png?url"
 
 <style>
   .hero-section {
-    --hero-grid-gradient-x: linear-gradient(to right, rgba(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-gradient-y: linear-gradient(to bottom, rgba(24, 24, 27, 0.8) 1px, transparent 1px);
-    --hero-grid-size: 196.6px 194px;
-    --hero-grid-position: calc(50% + 97px) 0;
     --hero-glow-gradient:
-      radial-gradient(ellipse 50% 80% at 70% -20%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
-      radial-gradient(ellipse 30% 50% at 80% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 40%);
-  }
-
-  .hero-grid {
-    background-image: var(--hero-grid-gradient-x), var(--hero-grid-gradient-y);
-    background-size: var(--hero-grid-size);
-    background-position: var(--hero-grid-position);
-  }
-
-  .hero-fade {
-    background: linear-gradient(to bottom, #09090b 0%, transparent 20%, transparent 60%, #09090b 100%);
+      radial-gradient(ellipse 50% 80% at 70% -20%, rgba(255, 255, 255, 0.12) 0%, transparent 40%),
+      radial-gradient(ellipse 30% 50% at 80% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 30%);
   }
 
   @keyframes hero-glow-pulse {

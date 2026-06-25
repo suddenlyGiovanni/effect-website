@@ -4,34 +4,30 @@ import FrequentlyAskedQuestions from "../blocks/FrequentlyAskedQuestions"
 ---
 
 <section id="faq" class="relative w-full py-24 md:pt-40 md:pb-24">
-  <div class="mx-auto w-full max-w-295 px-4">
-    <div class="mb-5">
-      <p class="mb-3 font-mono text-sm text-muted-foreground font-medium uppercase tracking-wider">
-        // FAQ
-      </p>
-      <h2 class="max-w-lg text-3xl md:text-4xl font-semibold text-white leading-tight">
-        Questions we get asked a lot
-      </h2>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2">
-      <div>
-        <p class="max-w-lg text-xl text-muted-foreground leading-relaxed">
-          Can&apos;t find what you&apos;re looking for&quest; Our community is always happy to
-          help&excl;
+  <div class="mx-auto w-full max-w-295">
+    <div class="flex flex-col lg:flex-row">
+      <div class="w-full px-4 lg:w-1/2">
+        <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
+          // FAQ
+        </p>
+        <h2 class="text-2xl font-semibold text-white md:text-3xl">
+          Questions we get asked a lot
+        </h2>
+        <p class="mt-5 max-w-lg text-lg leading-relaxed text-zinc-400">
+          Can't find what you're looking for? Our community is always happy to help.
         </p>
         <a
-          class="inline-flex justify-center items-center gap-4 mt-5 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:border-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-50 rounded-md no-underline group"
           href="https://discord.gg/effect-ts"
           target="_blank"
           rel="noopener noreferrer"
+          class="mt-6 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:no-underline"
         >
           <DiscordLogo class="size-4" fill="currentColor" />
-          <span>Ask us on Discord</span>
+          <span>Ask on Discord</span>
         </a>
       </div>
 
-      <div class="mt-8 md:mt-0 md:ml-4">
+      <div class="mt-8 w-full px-4 lg:mt-0 lg:w-1/2 lg:pt-28 lg:pr-4 lg:pl-3">
         <FrequentlyAskedQuestions client:visible />
       </div>
     </div>

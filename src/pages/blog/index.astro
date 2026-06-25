@@ -6,6 +6,7 @@ import { getCollection, getEntries, type CollectionEntry } from "astro:content"
 import BlogControls from "@/components/blog/BlogControls"
 import type { SerializedPost, SerializedTag } from "@/components/blog/PostCard"
 import { TWIEScrollRail } from "@/components/blog/TWIEScrollRail"
+import GridBackground from "@/components/GridBackground.astro"
 import PageLayout from "@/layouts/PageLayout.astro"
 
 const [blogCollection, tagCollection] = await Promise.all([
@@ -89,8 +90,7 @@ const serializedPosts: SerializedPost[] = allPosts.map((post) => ({
   activeSlug="blog"
 >
   <section class="relative overflow-hidden">
-    <div aria-hidden="true" class="hero-grid pointer-events-none absolute inset-0"></div>
-    <div aria-hidden="true" class="hero-fade pointer-events-none absolute inset-0"></div>
+    <GridBackground />
 
     <div class="relative mx-auto w-full max-w-295 px-4">
       <div class="pt-16 pb-8 md:pt-24 md:pb-12">
@@ -205,22 +205,3 @@ const serializedPosts: SerializedPost[] = allPosts.map((post) => ({
     </div>
   </section>
 </PageLayout>
-
-<style>
-  .hero-grid {
-    background-image:
-      linear-gradient(to right, rgb(24 24 27 / 0.8) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(24 24 27 / 0.8) 1px, transparent 1px);
-    background-size: 196.6px 194px;
-    background-position: calc(50% + 97px) 0;
-  }
-  .hero-fade {
-    background: linear-gradient(
-      to bottom,
-      rgb(9 9 11) 0%,
-      transparent 30%,
-      transparent 50%,
-      rgb(9 9 11) 100%
-    );
-  }
-</style>

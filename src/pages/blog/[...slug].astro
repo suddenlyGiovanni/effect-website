@@ -5,6 +5,7 @@ import { ArrowRightIcon, ArrowUpRightIcon, ChevronLeftIcon, ChevronRightIcon } f
 import LinkedInLogo from "@/assets/logos/linkedin/LinkedIn.svg"
 import TwitterLogo from "@/assets/logos/twitter/TwitterWhite.svg"
 import CopyLinkButton from "@/components/blog/CopyLinkButton"
+import GridBackground from "@/components/GridBackground.astro"
 import TableOfContents from "@/components/blog/TableOfContents"
 import PageLayout from "@/layouts/PageLayout.astro"
 
@@ -56,8 +57,7 @@ const shareShellClass =
 <PageLayout title={`${post.data.title} | Effect Blog`} description={post.data.excerpt} activeSlug="blog">
   <section class="relative">
     <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
-      <div class="hero-grid absolute inset-0"></div>
-      <div class="hero-fade absolute inset-0"></div>
+      <GridBackground />
     </div>
 
     <div class="relative z-10 mx-auto w-full max-w-295 px-4">
@@ -330,21 +330,4 @@ const shareShellClass =
   </section>
 </PageLayout>
 
-<style>
-  .hero-grid {
-    background-image:
-      linear-gradient(to right, rgb(24 24 27 / 0.8) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(24 24 27 / 0.8) 1px, transparent 1px);
-    background-size: 196.6px 194px;
-    background-position: calc(50% + 97px) 0;
-  }
-  .hero-fade {
-    background: linear-gradient(
-      to bottom,
-      rgb(9 9 11) 0%,
-      transparent 30%,
-      transparent 50%,
-      rgb(9 9 11) 100%
-    );
-  }
-</style>
+
