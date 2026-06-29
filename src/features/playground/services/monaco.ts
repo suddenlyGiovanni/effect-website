@@ -424,7 +424,7 @@ function setupTwoslashIntegration(monaco: MonacoApi) {
         const inlineQueryRegex = /^[^\S\r\n]*(?<start>\S).*\/\/\s*(?<end>=>)/gm
         const results: Array<monaco.languages.InlayHint> = []
 
-        const worker = yieldTypeScriptLikeWorker(monaco, model)
+        const worker = await yieldTypeScriptLikeWorker(monaco, model)
 
         if (!worker) {
           return {
