@@ -3,7 +3,8 @@ import { Layer } from "effect"
 import * as HttpRouter from "effect/unstable/http/HttpRouter"
 import * as RpcSerialization from "effect/unstable/rpc/RpcSerialization"
 import * as RpcServer from "effect/unstable/rpc/RpcServer"
-import { ShortenLayer, ShortenRpcs } from "@/services/shorten/rpc"
+import { ShortenRpcs } from "@/services/shorten/rpc"
+import { ShortenLayer } from "@/services/shorten/rpc-server"
 
 export const prerender = false
 
