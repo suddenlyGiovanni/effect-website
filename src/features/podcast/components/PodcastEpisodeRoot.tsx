@@ -41,6 +41,9 @@ export function PodcastEpisodeRoot({
     [transcript],
   )
 
+  const episodeDuration = Duration.seconds(podcast.duration)
+  const episodePublishedOn = DateTime.makeUnsafe(podcast.date)
+
   const podcastEpisode = {
     id: podcastEpisodeId,
     number: podcast.episodeNumber,
@@ -51,14 +54,10 @@ export function PodcastEpisodeRoot({
     transcript: podcastTranscript,
     links: podcast.links,
     youtube: { id: podcast.youtubeId },
-    duration: Duration.seconds(podcast.duration),
-    publishedOn: DateTime.makeUnsafe(podcast.date),
-    get formattedDuration() {
-      return formatPodcastDuration(this.duration)
-    },
-    get formattedPublicationDate() {
-      return formatPodcastPublicationDate(this.publishedOn)
-    },
+    duration: episodeDuration,
+    publishedOn: episodePublishedOn,
+    formattedDuration: formatPodcastDuration(episodeDuration),
+    formattedPublicationDate: formatPodcastPublicationDate(episodePublishedOn),
   } as unknown as PodcastEpisode
 
   return (
