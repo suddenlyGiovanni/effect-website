@@ -18,13 +18,17 @@ export default defineConfig({
 
   adapter: vercel(),
 
+  compressHTML: true,
+
   experimental: {
     svgOptimizer: svgoOptimizer(),
-    rustCompiler: true,
   },
 
   vite: {
-    plugins: [tailwindcss(), svgr()],
+    plugins: [
+      tailwindcss(),
+      svgr()
+    ],
     resolve: {
       alias: {
         "@/": fileURLToPath(new URL("./src/", import.meta.url)),
@@ -35,7 +39,7 @@ export default defineConfig({
     },
     server: {
       watch: {
-        ignored: [".astro/**", "**/.direnv/**", "repos/**", ".vercel/**"],
+        ignored: ["**/.astro/**", "**/.direnv/**", "**/repos/**", "**/.vercel/**"],
       },
     },
   },
