@@ -87,7 +87,6 @@ export function FileNode({ depth, node, path, className, onClick, ...props }: Fi
     >
       <FileNodeTrigger
         depth={depth}
-        isSelected={isSelected}
         onClick={(event) => handleClick(event, node)}
       >
         <FileNodeIcon {...props} />
@@ -131,11 +130,9 @@ function FileNodeRoot({
 function FileNodeTrigger({
   children,
   depth,
-  isSelected,
   onClick,
 }: React.PropsWithChildren<{
   readonly depth: number
-  readonly isSelected: boolean
   readonly onClick: React.MouseEventHandler<HTMLButtonElement>
 }>) {
   const paddingLeft = depth * 12 + 6
