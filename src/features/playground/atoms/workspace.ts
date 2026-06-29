@@ -9,6 +9,7 @@ import * as Option from "effect/Option"
 import * as Result from "effect/Result"
 import * as Sink from "effect/Sink"
 import * as Stream from "effect/Stream"
+import * as Tuple from "effect/Tuple"
 import * as Atom from "effect/unstable/reactivity/Atom"
 import {
   Directory,
@@ -150,6 +151,38 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
         (ctx, _: void) => ctx.setSelf(size++),
       ).pipe(Atom.debounce("250 millis"))
 
+      const resetContent = Atom.fn<void>()(
+        Effect.fnUntraced(function* (_, get) {
+          const files = Array.filterMap(
+            [...defaultWorkspace.filePaths],
+            ([file, path]) =>
+              file._tag === "File"
+                ? Result.succeed(Tuple.make(file, path))
+                : Result.failVoid,
+          )
+          yield* Effect.forEach(
+            files,
+            ([file, path]) =>
+              Effect.gen(function* () {
+                const fullPath = defaultWorkspace.relativePath(path)
+                const parts = fullPath.split("/")
+                if (parts.length > 1) {
+                  const parentDir = parts.slice(0, -1).join("/")
+                  yield* container.makeDirectory(parentDir).pipe(Effect.ignore)
+                }
+                yield* container.writeFile(
+                  fullPath,
+                  file.initialContent,
+                  file.language ?? "typescript",
+                )
+              }).pipe(Effect.ignore),
+            { concurrency: "unbounded", discard: true },
+          )
+          get.set(handle.workspace, defaultWorkspace)
+          get.set(selectedFile, defaultWorkspace.initialFile)
+        }),
+      )
+
       return {
         selectedFile,
         createTerminal,
@@ -189,6 +222,7 @@ export const workspaceHandleAtom = Atom.family((workspace: Workspace) =>
             }
           }),
         ),
+        resetContent,
       } as const
     }),
   ),
@@ -498,5 +532,5 @@ export const defaultWorkspace = Workspace.new({
 })
 
 export function makeDefaultWorkspace() {
-  return defaultWorkspace.withName(`playground-${Date.now()}`)
+  return defaultWorkspace
 }
