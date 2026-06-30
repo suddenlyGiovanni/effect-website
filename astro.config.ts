@@ -9,6 +9,7 @@ import tailwindcss from "@tailwindcss/vite"
 import expressiveCode from "astro-expressive-code"
 import { defineConfig, fontProviders, svgoOptimizer } from "astro/config"
 import svgr from "vite-plugin-svgr"
+import { twieRedirectList } from "./src/generated/twie-redirects"
 
 const GoogleFontProvider = fontProviders.google()
 
@@ -17,6 +18,8 @@ export default defineConfig({
   site: "https://effect.website",
 
   adapter: vercel(),
+
+  trailingSlash: "never",
 
   compressHTML: true,
 
@@ -75,13 +78,14 @@ export default defineConfig({
   ],
 
   redirects: {
+    ...twieRedirectList,
     "/docs": {
       status: 301,
-      destination: "/docs/v4"
+      destination: "/docs/v4",
     },
     "/docs/v3": {
       status: 301,
-      destination: "/docs/v3/getting-started/introduction"
+      destination: "/docs/v3/getting-started/introduction",
     },
-  }
+  },
 })
