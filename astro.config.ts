@@ -74,5 +74,14 @@ export default defineConfig({
     },
   ],
 
-
+  redirects: {
+    "/docs": {
+      status: 301,
+      destination: "/docs/v4"
+    },
+    "/docs/v3": {
+      status: 301,
+      destination: "/docs/v3/getting-started/introduction"
+    },
+  }
 })
