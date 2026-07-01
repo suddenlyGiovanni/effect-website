@@ -19,7 +19,7 @@ export default defineConfig({
 
   adapter: vercel(),
 
-  trailingSlash: "never",
+  trailingSlash: "ignore",
 
   compressHTML: true,
 
