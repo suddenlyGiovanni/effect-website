@@ -60,6 +60,14 @@ export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
     const logoDataUri = svgToDataUri(logoSvg)
     const dashDataUri = svgToDataUri(dashSvg)
 
+    const docsBgPngPath = path.resolve("src/pages/og/_assets/docs/base.png")
+    const docsBgPng = yield* Effect.orDie(fs.readFile(docsBgPngPath))
+    const docsBgDataUri = pngToDataUri(docsBgPng)
+
+    const podcastBgPngPath = path.resolve("src/pages/og/_assets/podcast/base.png")
+    const podcastBgPng = yield* Effect.orDie(fs.readFile(podcastBgPngPath))
+    const podcastBgDataUri = pngToDataUri(podcastBgPng)
+
     const renderSvg = (template: Parameters<typeof satori>[0]) =>
       Effect.promise(() =>
         satori(template, {
@@ -88,9 +96,36 @@ export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
         renderPng,
       )
 
+    const forDocs = (props: OgTemplateProps) =>
+      Effect.map(
+        renderSvg(createDocsTemplate(prepareContentProps(props), docsBgDataUri)),
+        renderPng,
+      )
+
+    const forPodcast = (props: OgTemplateProps) =>
+      Effect.map(
+        renderSvg(createPodcastTemplate(prepareContentProps(props), podcastBgDataUri)),
+        renderPng,
+      )
+
+    const forStatic = (slug: string) =>
+      Effect.gen(function* () {
+        const safe = slug.replace(/[^a-zA-Z0-9_-]/g, "")
+        if (safe.length === 0) {
+          return null
+        }
+        const staticPath = path.resolve(`src/pages/og/_assets/${safe}.png`)
+        return yield* fs.readFile(staticPath).pipe(
+          Effect.orElseSucceed(() => null as Uint8Array | null),
+        )
+      })
+
     return {
       forHomepage,
       forContent,
+      forDocs,
+      forPodcast,
+      forStatic,
     } as const
   }),
 }) {
@@ -117,6 +152,11 @@ interface OgNode {
 const toArrayBuffer = (data: Uint8Array): ArrayBuffer => {
   const bytes = Uint8Array.from(data)
   return bytes.buffer
+}
+
+const pngToDataUri = (data: Uint8Array): string => {
+  const base64 = Encoding.encodeBase64(data)
+  return `data:image/png;base64,${base64}`
 }
 
 const svgToDataUri = (svg: string | Uint8Array): string => {
@@ -430,6 +470,228 @@ const createContentOgTemplate = ({
         ],
       }),
     ],
+  })
+}
+
+const createDocsOgTemplate = ({
+  title,
+  description,
+  subtitle,
+  bgDataUri,
+}: OgTemplateProps & { readonly bgDataUri: string }): OgNode => {
+  const titleFontSize = getTitleFontSize(title)
+  const titleMaxWidth = getTitleMaxWidth(title)
+  const titleLineHeight = title.length > 64 ? 1.14 : 1.08
+
+  const textChildren: Array<OgNode> = []
+
+  if (subtitle !== undefined) {
+    textChildren.push(
+      createNode("div", {
+        style: {
+          fontSize: "19px",
+          color: "#7a7a84",
+          fontWeight: 400,
+          marginBottom: "16px",
+          letterSpacing: "-0.01em",
+          display: "flex",
+        },
+        children: subtitle,
+      }),
+    )
+  }
+
+  textChildren.push(
+    createNode("div", {
+      style: {
+        fontSize: titleFontSize,
+        fontWeight: 700,
+        color: "#ffffff",
+        lineHeight: titleLineHeight,
+        maxWidth: titleMaxWidth,
+        letterSpacing: "-0.02em",
+        display: "flex",
+      },
+      children: title,
+    }),
+  )
+
+  if (description !== undefined) {
+    textChildren.push(
+      createNode("div", {
+        style: {
+          fontSize: "19px",
+          color: "#a1a1aa",
+          lineHeight: 1.45,
+          marginTop: "24px",
+          maxWidth: "900px",
+          fontWeight: 400,
+          letterSpacing: "-0.005em",
+          display: "flex",
+        },
+        children: description,
+      }),
+    )
+  }
+
+  return createNode("div", {
+    style: {
+      width: "1200px",
+      height: "630px",
+      display: "flex",
+      position: "relative",
+      fontFamily: "Inter",
+    },
+    children: [
+      createNode("img", {
+        src: bgDataUri,
+        width: OPENGRAPH_IMAGE_WIDTH,
+        height: OPENGRAPH_IMAGE_HEIGHT,
+      }),
+      createNode("div", {
+        style: {
+          position: "absolute",
+          top: "0",
+          left: "0",
+          right: "0",
+          bottom: "0",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "80px",
+        },
+        children: [
+          createNode("div", {
+            style: {
+              display: "flex",
+              flexDirection: "column",
+              maxWidth: "900px",
+            },
+            children: textChildren,
+          }),
+        ],
+      }),
+    ],
+  })
+}
+
+const createPodcastOgTemplate = ({
+  title,
+  description,
+  subtitle,
+  bgDataUri,
+}: OgTemplateProps & { readonly bgDataUri: string }): OgNode => {
+  const titleFontSize = getTitleFontSize(title)
+  const titleMaxWidth = getTitleMaxWidth(title)
+  const titleLineHeight = title.length > 64 ? 1.14 : 1.08
+
+  const textChildren: Array<OgNode> = []
+
+  if (subtitle !== undefined) {
+    textChildren.push(
+      createNode("div", {
+        style: {
+          fontSize: "19px",
+          color: "#7a7a84",
+          fontWeight: 400,
+          marginBottom: "16px",
+          letterSpacing: "-0.01em",
+          display: "flex",
+        },
+        children: subtitle,
+      }),
+    )
+  }
+
+  textChildren.push(
+    createNode("div", {
+      style: {
+        fontSize: titleFontSize,
+        fontWeight: 700,
+        color: "#ffffff",
+        lineHeight: titleLineHeight,
+        maxWidth: titleMaxWidth,
+        letterSpacing: "-0.02em",
+        display: "flex",
+      },
+      children: title,
+    }),
+  )
+
+  if (description !== undefined) {
+    textChildren.push(
+      createNode("div", {
+        style: {
+          fontSize: "19px",
+          color: "#a1a1aa",
+          lineHeight: 1.45,
+          marginTop: "24px",
+          maxWidth: "900px",
+          fontWeight: 400,
+          letterSpacing: "-0.005em",
+          display: "flex",
+        },
+        children: description,
+      }),
+    )
+  }
+
+  return createNode("div", {
+    style: {
+      width: "1200px",
+      height: "630px",
+      display: "flex",
+      position: "relative",
+      fontFamily: "Inter",
+    },
+    children: [
+      createNode("img", {
+        src: bgDataUri,
+        width: OPENGRAPH_IMAGE_WIDTH,
+        height: OPENGRAPH_IMAGE_HEIGHT,
+      }),
+      createNode("div", {
+        style: {
+          position: "absolute",
+          top: "0",
+          left: "0",
+          right: "0",
+          bottom: "0",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "80px",
+        },
+        children: [
+          createNode("div", {
+            style: {
+              display: "flex",
+              flexDirection: "column",
+              maxWidth: "900px",
+            },
+            children: textChildren,
+          }),
+        ],
+      }),
+    ],
+  })
+}
+
+const createDocsTemplate = (props: OgTemplateProps, docsBgDataUri: string): OgNode => {
+  return createDocsOgTemplate({
+    title: props.title,
+    description: props.description,
+    subtitle: props.subtitle,
+    bgDataUri: docsBgDataUri,
+  })
+}
+
+const createPodcastTemplate = (props: OgTemplateProps, podcastBgDataUri: string): OgNode => {
+  return createPodcastOgTemplate({
+    title: props.title,
+    description: props.description,
+    subtitle: props.subtitle,
+    bgDataUri: podcastBgDataUri,
   })
 }
 

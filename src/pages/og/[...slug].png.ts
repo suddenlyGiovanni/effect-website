@@ -1,103 +1,91 @@
-import type { APIContext, APIRoute, GetStaticPaths } from "astro"
+import type { APIRoute } from "astro"
 import * as NodeServices from "@effect/platform-node/NodeServices"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
-import { OpenGraph } from "@/services/OpenGraph"
+import { getCollection } from "astro:content"
+import { OpenGraph, type OgTemplateProps } from "@/services/OpenGraph"
+import { slugifyPodcast } from "@/features/podcast/utils"
 
-interface OgPageDefinition {
-  readonly slug: string
-  readonly title: string
-  readonly description?: string
-  readonly subtitle?: string
-}
-
-const staticPages: ReadonlyArray<OgPageDefinition> = [
-  {
-    slug: "index",
-    title: "Effect - Build production-grade software in TypeScript",
-    description:
-      "The TypeScript library for building production-grade software. One package, everything you need.",
-  },
-  {
-    slug: "podcast",
-    title: "Cause & Effect Podcast",
-    description:
-      "A podcast exploring how engineers are using Effect to build reliable, production-grade software in TypeScript",
-  },
-  // {
-  // 	slug: "brand-assets",
-  // 	title: "Logo Guidelines - Effect",
-  // 	description: "Official Effect brand assets and logo usage guidelines",
-  // },
-  // {
-  // 	slug: "merch",
-  // 	title: "Merch - Effect",
-  // 	description: "Effect-branded merchandise for the community",
-  // },
-  // {
-  // 	slug: "events",
-  // 	title: "Events - Effect",
-  // 	description: "Effect community events and conferences",
-  // },
-  // {
-  // 	slug: "events/effect-days",
-  // 	title: "Effect Days - Conference for TypeScript Engineers",
-  // 	description: "The conference for TypeScript engineers building with Effect",
-  // },
-  // {
-  // 	slug: "events/code-of-conduct",
-  // 	title: "Code of Conduct - Effect Days",
-  // 	description: "Effect Days code of conduct",
-  // },
-  // {
-  // 	slug: "llms",
-  // 	title: "Effect for LLMs",
-  // 	description: "The missing standard library for TypeScript applications",
-  // },
-  // // Podcast episodes
-  // ...EPISODES.map((episode) => ({
-  // 	slug: `podcast/episodes/episode-${episode.number}`,
-  // 	title: episode.title,
-  // 	description: episode.description,
-  // 	subtitle: `Cause & Effect — with ${episode.guest} (${episode.company})`,
-  // })),
-]
-
-const OpenGraphLayer = OpenGraph.layer.pipe(Layer.provide(NodeServices.layer))
+const OpenGraphLayer = OpenGraph.layer.pipe(
+  Layer.provide(NodeServices.layer),
+)
 
 const runtime = ManagedRuntime.make(OpenGraphLayer)
 
-const handler = Effect.fnUntraced(function* ({
-  params: { slug },
-  props,
-}: APIContext<OgPageDefinition, Pick<OgPageDefinition, "slug">>) {
-  const opengraph = yield* OpenGraph
+async function findDoc(slug: string): Promise<OgTemplateProps | null> {
+  const entryId = slug.slice("docs/".length)
+  const entries = await getCollection("docs")
+  const entry = entries.find(
+    (e) =>
+      e.id === entryId ||
+      e.id === `${entryId}.mdx` ||
+      e.id === `${entryId}/index.mdx`,
+  )
+  if (entry === undefined) {
+    return null
+  }
+  return {
+    title: entry.data.title,
+    description: entry.data.description,
+  }
+}
 
-  const png = slug === "index" ? yield* opengraph.forHomepage : yield* opengraph.forContent(props)
+async function findPodcast(slug: string): Promise<OgTemplateProps | null> {
+  const episodeSlug = slug.slice("podcast/episodes/".length)
+  const entries = await getCollection("podcasts")
+  const entry = entries.find(
+    (e) => slugifyPodcast(e.data) === episodeSlug,
+  )
+  if (entry === undefined) {
+    return null
+  }
+  return {
+    title: entry.data.title,
+    description: entry.data.description,
+    subtitle: `Episode ${String(entry.data.episodeNumber).padStart(2, "0")} — with ${entry.data.guest}`,
+  }
+}
 
-  return new Response(new Uint8Array(png), {
+const pngResponse = (png: Uint8Array): Response =>
+  new Response(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",
       "Cache-Control": "public, max-age=31536000, immutable",
     },
   })
+
+const handler = Effect.fnUntraced(function* ({
+  params: { slug },
+}: {
+  params: { slug: string }
+}) {
+  const opengraph = yield* OpenGraph
+
+  if (!slug.includes("/") && !slug.includes("..")) {
+    const staticPng = yield* opengraph.forStatic(slug)
+    if (staticPng !== null) {
+      return pngResponse(staticPng)
+    }
+  }
+
+  if (slug.startsWith("docs/")) {
+    const doc = yield* Effect.promise(() => findDoc(slug))
+    if (doc !== null) {
+      const png = yield* opengraph.forDocs(doc)
+      return pngResponse(png)
+    }
+  }
+
+  if (slug.startsWith("podcast/episodes/")) {
+    const ep = yield* Effect.promise(() => findPodcast(slug))
+    if (ep !== null) {
+      const png = yield* opengraph.forPodcast(ep)
+      return pngResponse(png)
+    }
+  }
+
+  return new Response("Not Found", { status: 404 })
 })
 
-export const prerender = true
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  // TODO content collection pages
-  const pages = [...staticPages]
-
-  return pages.map((page) => {
-    const { slug, ...props } = page
-    return {
-      params: { slug },
-      props,
-    }
-  })
-}
-
-export const GET: APIRoute<OgPageDefinition, Pick<OgPageDefinition, "slug">> = (ctx) =>
-  runtime.runPromise(handler(ctx))
+export const GET: APIRoute = (ctx) => runtime.runPromise(handler(ctx))
