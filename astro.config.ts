@@ -10,6 +10,7 @@ import expressiveCode from "astro-expressive-code"
 import { defineConfig, fontProviders, svgoOptimizer } from "astro/config"
 import svgr from "vite-plugin-svgr"
 import { twieRedirectList } from "./src/generated/twie-redirects"
+import { docsLegacyRedirectList } from "./src/generated/docs-legacy-redirects"
 
 const GoogleFontProvider = fontProviders.google()
 
@@ -79,12 +80,13 @@ export default defineConfig({
 
   redirects: {
     ...twieRedirectList,
+    ...docsLegacyRedirectList,
     "/docs": {
-      status: 301,
-      destination: "/docs/v4",
+      status: 307,
+      destination: "/docs/v3/getting-started/introduction",
     },
     "/docs/v3": {
-      status: 301,
+      status: 307,
       destination: "/docs/v3/getting-started/introduction",
     },
   },

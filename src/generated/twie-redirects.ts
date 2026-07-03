@@ -1,4 +1,6 @@
-export const twieRedirectList = {
+import type { RedirectConfig } from "astro"
+
+export const twieRedirectList: Record<string, RedirectConfig> = {
   "/blog/this-week-in-effect/2024/2/2": "/blog/this-week-in-effect/1/",
   "/blog/this-week-in-effect/2024/2/9": "/blog/this-week-in-effect/2/",
   "/blog/this-week-in-effect/2024/2/16": "/blog/this-week-in-effect/3/",
@@ -118,5 +120,5 @@ export const twieRedirectList = {
   "/blog/this-week-in-effect/2026/5/8": "/blog/this-week-in-effect/117/",
   "/blog/this-week-in-effect/2026/5/15": "/blog/this-week-in-effect/118/",
   "/blog/this-week-in-effect/2026/5/22": "/blog/this-week-in-effect/119/",
-  "/blog/this-week-in-effect/2026/5/29": "/blog/this-week-in-effect/120/"
+  "/blog/this-week-in-effect/2026/5/29": "/blog/this-week-in-effect/120/",
 }
