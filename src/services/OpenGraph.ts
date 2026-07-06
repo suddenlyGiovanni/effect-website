@@ -61,12 +61,7 @@ export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
     const dashDataUri = svgToDataUri(dashSvg)
 
     const docsBgPngPath = path.resolve("src/pages/og/_assets/docs/base.png")
-    const docsBgPng = yield* Effect.orDie(fs.readFile(docsBgPngPath))
-    const docsBgDataUri = pngToDataUri(docsBgPng)
-
     const podcastBgPngPath = path.resolve("src/pages/og/_assets/podcast/base.png")
-    const podcastBgPng = yield* Effect.orDie(fs.readFile(podcastBgPngPath))
-    const podcastBgDataUri = pngToDataUri(podcastBgPng)
 
     const renderSvg = (template: Parameters<typeof satori>[0]) =>
       Effect.promise(() =>
@@ -97,27 +92,51 @@ export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
       )
 
     const forDocs = (props: OgTemplateProps) =>
-      Effect.map(
-        renderSvg(createDocsTemplate(prepareContentProps(props), docsBgDataUri)),
-        renderPng,
-      )
+      Effect.gen(function* () {
+        const docsBgPng = yield* Effect.orDie(fs.readFile(docsBgPngPath))
+        const docsBgDataUri = pngToDataUri(docsBgPng)
+        const svg = yield* renderSvg(
+          createDocsTemplate(prepareContentProps(props), docsBgDataUri),
+        )
+        return renderPng(svg)
+      })
 
     const forPodcast = (props: OgTemplateProps) =>
-      Effect.map(
-        renderSvg(createPodcastTemplate(prepareContentProps(props), podcastBgDataUri)),
-        renderPng,
-      )
+      Effect.gen(function* () {
+        const podcastBgPng = yield* Effect.orDie(fs.readFile(podcastBgPngPath))
+        const podcastBgDataUri = pngToDataUri(podcastBgPng)
+        const svg = yield* renderSvg(
+          createPodcastTemplate(prepareContentProps(props), podcastBgDataUri),
+        )
+        return renderPng(svg)
+      })
 
     const forStatic = (slug: string) =>
       Effect.gen(function* () {
-        const safe = slug.replace(/[^a-zA-Z0-9_-]/g, "")
+        // Sanitize each path segment independently so nested slugs
+        // (e.g. "podcast/episodes/some-slug") resolve to a nested file.
+        // Dots are stripped, neutralizing ".." traversal.
+        const segments = slug
+          .split("/")
+          .map((s) => s.replace(/[^a-zA-Z0-9_-]/g, ""))
+          .filter((s) => s.length > 0)
+        const safe = segments.join("/")
         if (safe.length === 0) {
           return null
         }
-        const staticPath = path.resolve(`src/pages/og/_assets/${safe}.png`)
-        return yield* fs.readFile(staticPath).pipe(
-          Effect.orElseSucceed(() => null as Uint8Array | null),
-        )
+        const candidates = [
+          path.resolve(`src/pages/og/_assets/${safe}.png`),
+          path.resolve(`src/pages/og/_assets/${safe}/index.png`),
+        ]
+        for (const candidate of candidates) {
+          const data = yield* fs
+            .readFile(candidate)
+            .pipe(Effect.orElseSucceed(() => null as Uint8Array | null))
+          if (data !== null) {
+            return data
+          }
+        }
+        return null
       })
 
     return {

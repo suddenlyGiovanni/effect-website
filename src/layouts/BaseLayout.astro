@@ -21,7 +21,7 @@ const getOgImagePath = () => {
 }
 
 const ogImagePath = getOgImagePath()
-const ogImageUrl = new URL(ogImagePath, Astro.site)
+const ogImageUrl = new URL(ogImagePath, Astro.url.origin)
 
 const pagePathname = Astro.url.pathname.replace(/\/$/, "")
 const canonicalUrl = new URL(pagePathname, Astro.site)
