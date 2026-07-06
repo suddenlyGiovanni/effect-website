@@ -63,10 +63,6 @@ const handler = Effect.fnUntraced(function* ({
     if (staticPng !== null) {
       return pngResponse(staticPng)
     }
-    // No pre-rendered homepage PNG: synthesize it on the fly.
-    if (slug === "index") {
-      return pngResponse(yield* opengraph.forHomepage)
-    }
   }
 
   // Docs pages render on the fly via satori (needs _assets/docs/base.png).
