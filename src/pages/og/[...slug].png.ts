@@ -29,9 +29,13 @@ async function findDoc(slug: string): Promise<OgTemplateProps | null> {
   if (entry === undefined) {
     return null
   }
+  const cleanEntryId = entryId.replace(/\.mdx?$/, "")
+  const parts = cleanEntryId.split("/")
+  const category =
+    parts.length >= 3 ? parts[1].replace(/-/g, " ").toUpperCase() : undefined
   return {
     title: entry.data.title,
-    description: entry.data.description,
+    subtitle: category,
   }
 }
 

@@ -37,6 +37,13 @@ export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
     const fontInterBoldPath = path.resolve("src/assets/fonts/Inter-Bold.ttf")
     const fontInterBoldData = yield* Effect.orDie(fs.readFile(fontInterBoldPath))
 
+    const fontJetBrainsMonoRegularPath = path.resolve(
+      "src/assets/fonts/JetBrainsMono-Regular.ttf",
+    )
+    const fontJetBrainsMonoRegularData = yield* Effect.orDie(
+      fs.readFile(fontJetBrainsMonoRegularPath),
+    )
+
     const fonts: Array<SatoriFont> = [
       {
         name: "Inter",
@@ -49,6 +56,12 @@ export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
         style: "normal",
         data: toArrayBuffer(fontInterBoldData),
         weight: 700,
+      },
+      {
+        name: "JetBrains Mono",
+        style: "normal",
+        data: toArrayBuffer(fontJetBrainsMonoRegularData),
+        weight: 400,
       },
     ]
 
@@ -494,7 +507,6 @@ const createContentOgTemplate = ({
 
 const createDocsOgTemplate = ({
   title,
-  description,
   subtitle,
   bgDataUri,
 }: OgTemplateProps & { readonly bgDataUri: string }): OgNode => {
@@ -513,6 +525,8 @@ const createDocsOgTemplate = ({
           fontWeight: 400,
           marginBottom: "16px",
           letterSpacing: "-0.01em",
+          fontFamily: "JetBrains Mono",
+          textTransform: "uppercase",
           display: "flex",
         },
         children: subtitle,
@@ -535,24 +549,6 @@ const createDocsOgTemplate = ({
     }),
   )
 
-  if (description !== undefined) {
-    textChildren.push(
-      createNode("div", {
-        style: {
-          fontSize: "19px",
-          color: "#a1a1aa",
-          lineHeight: 1.45,
-          marginTop: "24px",
-          maxWidth: "900px",
-          fontWeight: 400,
-          letterSpacing: "-0.005em",
-          display: "flex",
-        },
-        children: description,
-      }),
-    )
-  }
-
   return createNode("div", {
     style: {
       width: "1200px",
@@ -570,25 +566,14 @@ const createDocsOgTemplate = ({
       createNode("div", {
         style: {
           position: "absolute",
-          top: "0",
-          left: "0",
-          right: "0",
-          bottom: "0",
+          left: "80px",
+          right: "80px",
+          bottom: "126px",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          padding: "80px",
+          maxWidth: "900px",
         },
-        children: [
-          createNode("div", {
-            style: {
-              display: "flex",
-              flexDirection: "column",
-              maxWidth: "900px",
-            },
-            children: textChildren,
-          }),
-        ],
+        children: textChildren,
       }),
     ],
   })
