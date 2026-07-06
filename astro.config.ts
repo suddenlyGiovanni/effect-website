@@ -1,3 +1,4 @@
+import { readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
 import mdx from "@astrojs/mdx"
@@ -14,11 +15,22 @@ import { docsLegacyRedirectList } from "./src/generated/docs-legacy-redirects"
 
 const GoogleFontProvider = fontProviders.google()
 
+const ogAssetPngs = (readdirSync("src/pages/og/_assets", { recursive: true }) as string[])
+  .filter((f) => f.endsWith(".png"))
+  .map((f) => `./src/pages/og/_assets/${f}`)
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://effect.website",
 
-  adapter: vercel(),
+  adapter: vercel({
+    includeFiles: [
+      "./src/assets/fonts/Inter-Regular.ttf",
+      "./src/assets/fonts/Inter-Bold.ttf",
+      "./src/assets/fonts/JetBrainsMono-Regular.ttf",
+      ...ogAssetPngs,
+    ],
+  }),
 
   trailingSlash: "ignore",
 

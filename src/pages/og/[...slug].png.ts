@@ -1,21 +1,12 @@
+import { readFile } from "node:fs/promises"
 import type { APIRoute } from "astro"
-import * as NodeServices from "@effect/platform-node/NodeServices"
-import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-import * as ManagedRuntime from "effect/ManagedRuntime"
 import { getCollection } from "astro:content"
-import { OpenGraph, type OgTemplateProps } from "@/services/OpenGraph"
+import { loadAssets, renderDocsOg, type OgTemplateProps } from "@/services/OpenGraph"
 
 // On-demand server endpoint: slugs derive from arbitrary page pathnames
 // (see BaseLayout.getOgImagePath), so the route cannot be enumerated at build
 // time. Run it as a Vercel serverless function instead of a static asset.
 export const prerender = false
-
-const OpenGraphLayer = OpenGraph.layer.pipe(
-  Layer.provide(NodeServices.layer),
-)
-
-const runtime = ManagedRuntime.make(OpenGraphLayer)
 
 async function findDoc(slug: string): Promise<OgTemplateProps | null> {
   const entryId = slug.slice("docs/".length)
@@ -47,40 +38,42 @@ const pngResponse = (png: Uint8Array): Response =>
     },
   })
 
-const handler = Effect.fnUntraced(function* ({
-  params: { slug },
-}: {
-  params: { slug: string }
-}) {
-  const opengraph = yield* OpenGraph
-
-  // Static PNGs are served for any slug (including nested paths like
-  // "podcast/episodes/<slug>") from src/pages/og/_assets/, either as
-  // _assets/<slug>.png or _assets/<slug>/index.png. `forStatic` sanitizes
-  // segments and neutralizes ".." traversal.
-  if (!slug.includes("..")) {
-    const staticPng = yield* opengraph.forStatic(slug)
-    if (staticPng !== null) {
-      return pngResponse(staticPng)
+async function readStaticPng(slug: string): Promise<Uint8Array | null> {
+  if (slug.includes("..")) {
+    return null
+  }
+  const base = "src/pages/og/_assets"
+  for (const candidate of [`${base}/${slug}.png`, `${base}/${slug}/index.png`]) {
+    try {
+      return await readFile(candidate)
+    } catch {
+      // file not present, try next candidate
     }
   }
+  return null
+}
 
-  // Docs pages render on the fly via satori (needs _assets/docs/base.png).
+export const GET: APIRoute = async (ctx) => {
+  const slug = ctx.params.slug
+  if (slug === undefined) {
+    return new Response("Not Found", { status: 404 })
+  }
+
+  // Static PNGs — read from disk, no rendering needed.
+  const staticPng = await readStaticPng(slug)
+  if (staticPng !== null) {
+    return pngResponse(staticPng)
+  }
+
+  // Docs pages render on the fly via satori.
   if (slug.startsWith("docs/")) {
-    const doc = yield* Effect.promise(() => findDoc(slug))
+    const doc = await findDoc(slug)
     if (doc !== null) {
-      const png = yield* opengraph.forDocs(doc)
+      const assets = await loadAssets()
+      const png = await renderDocsOg(doc, assets)
       return pngResponse(png)
     }
   }
 
   return new Response("Not Found", { status: 404 })
-})
-
-export const GET: APIRoute = (ctx) => {
-  const slug = ctx.params.slug
-  if (slug === undefined) {
-    return new Response("Not Found", { status: 404 })
-  }
-  return runtime.runPromise(handler({ params: { slug } }))
 }

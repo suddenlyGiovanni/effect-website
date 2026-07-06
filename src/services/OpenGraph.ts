@@ -1,168 +1,93 @@
+import { readFile } from "node:fs/promises"
 import type { CSSProperties } from "react"
 import { Resvg } from "@resvg/resvg-js"
-import * as Effect from "effect/Effect"
-import * as Encoding from "effect/Encoding"
-import * as FileSystem from "effect/FileSystem"
-import * as Layer from "effect/Layer"
-import * as Path from "effect/Path"
-import * as Context from "effect/Context"
 import satori, { type SatoriOptions } from "satori"
 import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/open-graph"
 
 export interface OgTemplateProps {
   readonly title: string
-  readonly description?: string | undefined
   readonly subtitle?: string | undefined
 }
 
-interface OgTemplateAssets {
-  readonly logoDataUri: string
-  readonly dashDataUri: string
-}
-
 type SatoriFont = NonNullable<SatoriOptions["fonts"]>[number]
-export type OgFonts = readonly [SatoriFont, ...SatoriFont[]]
 
-const dashSvg =
-  "<svg xmlns='http://www.w3.org/2000/svg' width='1' height='4'><rect x='0' y='0' width='1' height='2' fill='rgba(63,63,70,0.7)'/></svg>"
-
-export class OpenGraph extends Context.Service<OpenGraph>()("OpenGraph", {
-  make: Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem
-    const path = yield* Path.Path
-
-    const fontInterRegularPath = path.resolve("src/assets/fonts/Inter-Regular.ttf")
-    const fontInterRegularData = yield* Effect.orDie(fs.readFile(fontInterRegularPath))
-
-    const fontInterBoldPath = path.resolve("src/assets/fonts/Inter-Bold.ttf")
-    const fontInterBoldData = yield* Effect.orDie(fs.readFile(fontInterBoldPath))
-
-    const fontJetBrainsMonoRegularPath = path.resolve(
-      "src/assets/fonts/JetBrainsMono-Regular.ttf",
-    )
-    const fontJetBrainsMonoRegularData = yield* Effect.orDie(
-      fs.readFile(fontJetBrainsMonoRegularPath),
-    )
-
-    const fonts: Array<SatoriFont> = [
-      {
-        name: "Inter",
-        style: "normal",
-        data: toArrayBuffer(fontInterRegularData),
-        weight: 400,
-      },
-      {
-        name: "Inter",
-        style: "normal",
-        data: toArrayBuffer(fontInterBoldData),
-        weight: 700,
-      },
-      {
-        name: "JetBrains Mono",
-        style: "normal",
-        data: toArrayBuffer(fontJetBrainsMonoRegularData),
-        weight: 400,
-      },
-    ]
-
-    const logoSvgPath = path.resolve(
-      "src/assets/logos/effect/combination-mark/svg/effect-logo-white.svg",
-    )
-    const logoSvg = yield* Effect.orDie(fs.readFile(logoSvgPath))
-
-    const logoDataUri = svgToDataUri(logoSvg)
-    const dashDataUri = svgToDataUri(dashSvg)
-
-    const docsBgPngPath = path.resolve("src/pages/og/_assets/docs/base.png")
-    const podcastBgPngPath = path.resolve("src/pages/og/_assets/podcast/base.png")
-
-    const renderSvg = (template: Parameters<typeof satori>[0]) =>
-      Effect.promise(() =>
-        satori(template, {
-          width: OPENGRAPH_IMAGE_WIDTH,
-          height: OPENGRAPH_IMAGE_HEIGHT,
-          fonts,
-        }),
-      )
-
-    const renderPng = (svg: string): Uint8Array => {
-      const resvg = new Resvg(svg, { fitTo: { mode: "width", value: OPENGRAPH_IMAGE_WIDTH } })
-      return new Uint8Array(resvg.render().asPng())
-    }
-
-    const templateAssets: OgTemplateAssets = {
-      logoDataUri,
-      dashDataUri,
-    }
-
-    const homepageTemplate = createHomepageTemplate(templateAssets)
-    const forHomepage = Effect.map(renderSvg(homepageTemplate), renderPng)
-
-    const forContent = (props: OgTemplateProps) =>
-      Effect.map(
-        renderSvg(createContentTemplate(prepareContentProps(props), templateAssets)),
-        renderPng,
-      )
-
-    const forDocs = (props: OgTemplateProps) =>
-      Effect.gen(function* () {
-        const docsBgPng = yield* Effect.orDie(fs.readFile(docsBgPngPath))
-        const docsBgDataUri = pngToDataUri(docsBgPng)
-        const svg = yield* renderSvg(
-          createDocsTemplate(prepareContentProps(props), docsBgDataUri),
-        )
-        return renderPng(svg)
-      })
-
-    const forPodcast = (props: OgTemplateProps) =>
-      Effect.gen(function* () {
-        const podcastBgPng = yield* Effect.orDie(fs.readFile(podcastBgPngPath))
-        const podcastBgDataUri = pngToDataUri(podcastBgPng)
-        const svg = yield* renderSvg(
-          createPodcastTemplate(prepareContentProps(props), podcastBgDataUri),
-        )
-        return renderPng(svg)
-      })
-
-    const forStatic = (slug: string) =>
-      Effect.gen(function* () {
-        // Sanitize each path segment independently so nested slugs
-        // (e.g. "podcast/episodes/some-slug") resolve to a nested file.
-        // Dots are stripped, neutralizing ".." traversal.
-        const segments = slug
-          .split("/")
-          .map((s) => s.replace(/[^a-zA-Z0-9_-]/g, ""))
-          .filter((s) => s.length > 0)
-        const safe = segments.join("/")
-        if (safe.length === 0) {
-          return null
-        }
-        const candidates = [
-          path.resolve(`src/pages/og/_assets/${safe}.png`),
-          path.resolve(`src/pages/og/_assets/${safe}/index.png`),
-        ]
-        for (const candidate of candidates) {
-          const data = yield* fs
-            .readFile(candidate)
-            .pipe(Effect.orElseSucceed(() => null as Uint8Array | null))
-          if (data !== null) {
-            return data
-          }
-        }
-        return null
-      })
-
-    return {
-      forHomepage,
-      forContent,
-      forDocs,
-      forPodcast,
-      forStatic,
-    } as const
-  }),
-}) {
-  static layer = Layer.effect(this, this.make)
+export interface OgAssets {
+  readonly fonts: ReadonlyArray<SatoriFont>
+  readonly docsBgDataUri: string
 }
+
+// ---------------------------------------------------------------------------
+// Asset loading — read once, cached for the lifetime of the function.
+// Paths are relative to process.cwd() (project root in dev; function root on
+// Vercel, where these files are bundled via adapter `includeFiles`).
+// ---------------------------------------------------------------------------
+
+let _assets: OgAssets | null = null
+
+export async function loadAssets(): Promise<OgAssets> {
+  if (_assets !== null) {
+    return _assets
+  }
+  const [interRegular, interBold, jetbrainsMono, docsBase] = await Promise.all([
+    readFile("src/assets/fonts/Inter-Regular.ttf"),
+    readFile("src/assets/fonts/Inter-Bold.ttf"),
+    readFile("src/assets/fonts/JetBrainsMono-Regular.ttf"),
+    readFile("src/pages/og/_assets/docs/base.png"),
+  ])
+  const fonts: Array<SatoriFont> = [
+    {
+      name: "Inter",
+      style: "normal",
+      data: toArrayBuffer(interRegular),
+      weight: 400,
+    },
+    {
+      name: "Inter",
+      style: "normal",
+      data: toArrayBuffer(interBold),
+      weight: 700,
+    },
+    {
+      name: "JetBrains Mono",
+      style: "normal",
+      data: toArrayBuffer(jetbrainsMono),
+      weight: 400,
+    },
+  ]
+  _assets = {
+    fonts,
+    docsBgDataUri: pngToDataUri(docsBase),
+  }
+  return _assets
+}
+
+// ---------------------------------------------------------------------------
+// Render — stateless functions that take pre-loaded assets.
+// ---------------------------------------------------------------------------
+
+const renderPng = (svg: string): Uint8Array => {
+  const resvg = new Resvg(svg, { fitTo: { mode: "width", value: OPENGRAPH_IMAGE_WIDTH } })
+  return new Uint8Array(resvg.render().asPng())
+}
+
+export async function renderDocsOg(
+  props: OgTemplateProps,
+  assets: OgAssets,
+): Promise<Uint8Array> {
+  const svg = await satori(
+    createDocsTemplate(prepareContentProps(props), assets.docsBgDataUri),
+    {
+      width: OPENGRAPH_IMAGE_WIDTH,
+      height: OPENGRAPH_IMAGE_HEIGHT,
+      fonts: assets.fonts as SatoriOptions["fonts"],
+    },
+  )
+  return renderPng(svg)
+}
+
+// ---------------------------------------------------------------------------
+// OgNode (plain JS objects consumed by Satori — no React needed)
+// ---------------------------------------------------------------------------
 
 type OgChild = OgNode | string | number | null
 type OgChildren = OgChild | ReadonlyArray<OgChild>
@@ -187,25 +112,8 @@ const toArrayBuffer = (data: Uint8Array): ArrayBuffer => {
 }
 
 const pngToDataUri = (data: Uint8Array): string => {
-  const base64 = Encoding.encodeBase64(data)
+  const base64 = Buffer.from(data).toString("base64")
   return `data:image/png;base64,${base64}`
-}
-
-const svgToDataUri = (svg: string | Uint8Array): string => {
-  const base64 = Encoding.encodeBase64(svg)
-  return `data:image/svg+xml;base64,${base64}`
-}
-
-const truncateDescription = (description: string | undefined): string | undefined => {
-  if (description === undefined) {
-    return description
-  }
-
-  if (description.length <= 160) {
-    return description
-  }
-
-  return `${description.slice(0, 160).trimEnd()} ...`
 }
 
 const safeText = (text: string): string => {
@@ -225,17 +133,12 @@ const sanitizeOptionalText = (text: string | undefined): string | undefined => {
 const sanitizeTemplateProps = (props: OgTemplateProps): OgTemplateProps => {
   return {
     title: safeText(props.title),
-    description: sanitizeOptionalText(props.description),
     subtitle: sanitizeOptionalText(props.subtitle),
   }
 }
 
 const prepareContentProps = (props: OgTemplateProps): OgTemplateProps => {
-  const sanitized = sanitizeTemplateProps(props)
-  return {
-    ...sanitized,
-    description: truncateDescription(sanitized.description),
-  }
+  return sanitizeTemplateProps(props)
 }
 
 const getTitleFontSize = (title: string): string => {
@@ -266,243 +169,6 @@ const createNode = (type: string, props: OgNodeProps): OgNode => {
     key: null,
     props,
   }
-}
-
-const createBackground = (dashDataUri: string): ReadonlyArray<OgNode> => {
-  return [
-    createNode("div", {
-      style: {
-        position: "absolute",
-        top: "0",
-        left: "0",
-        right: "0",
-        bottom: "0",
-        display: "flex",
-        background:
-          "radial-gradient(ellipse 900px 500px at 50% 45%, rgba(63, 63, 70, 0.55) 0%, transparent 100%)",
-      },
-    }),
-    createNode("div", {
-      style: {
-        position: "absolute",
-        left: "60px",
-        top: "0",
-        bottom: "0",
-        width: "1px",
-        display: "flex",
-        backgroundColor: "#3f3f46",
-      },
-    }),
-    createNode("div", {
-      style: {
-        position: "absolute",
-        right: "60px",
-        top: "0",
-        bottom: "0",
-        width: "1px",
-        display: "flex",
-        backgroundColor: "#3f3f46",
-      },
-    }),
-    createNode("div", {
-      style: {
-        position: "absolute",
-        left: "600px",
-        top: "0",
-        bottom: "0",
-        width: "1px",
-        display: "flex",
-        backgroundImage: `url(${dashDataUri})`,
-        backgroundSize: "1px 4px",
-      },
-    }),
-  ]
-}
-
-const createHomepageOgTemplate = ({ logoDataUri, dashDataUri }: OgTemplateAssets): OgNode => {
-  const gapTop = 255
-  const gapBottom = 375
-
-  return createNode("div", {
-    style: {
-      width: "1200px",
-      height: "630px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#000000",
-      fontFamily: "Inter",
-      position: "relative",
-      overflow: "hidden",
-    },
-    children: [
-      createNode("div", {
-        style: {
-          position: "absolute",
-          top: "0",
-          left: "0",
-          right: "0",
-          bottom: "0",
-          display: "flex",
-          background:
-            "radial-gradient(ellipse 900px 500px at 50% 45%, rgba(63, 63, 70, 0.55) 0%, transparent 100%)",
-        },
-      }),
-      createNode("div", {
-        style: {
-          position: "absolute",
-          left: "48px",
-          top: "0",
-          bottom: "0",
-          width: "1px",
-          display: "flex",
-          backgroundColor: "#3f3f46",
-        },
-      }),
-      createNode("div", {
-        style: {
-          position: "absolute",
-          right: "48px",
-          top: "0",
-          bottom: "0",
-          width: "1px",
-          display: "flex",
-          backgroundColor: "#3f3f46",
-        },
-      }),
-      createNode("div", {
-        style: {
-          position: "absolute",
-          left: "600px",
-          top: "0",
-          height: `${gapTop}px`,
-          width: "1px",
-          display: "flex",
-          backgroundImage: `url(${dashDataUri})`,
-          backgroundSize: "1px 4px",
-        },
-      }),
-      createNode("div", {
-        style: {
-          position: "absolute",
-          left: "600px",
-          top: `${gapBottom}px`,
-          bottom: "0",
-          width: "1px",
-          display: "flex",
-          backgroundImage: `url(${dashDataUri})`,
-          backgroundSize: "1px 4px",
-        },
-      }),
-      createNode("img", {
-        src: logoDataUri,
-        width: 360,
-        height: 99,
-      }),
-    ],
-  })
-}
-
-const createContentOgTemplate = ({
-  title,
-  description,
-  subtitle,
-  logoDataUri,
-  dashDataUri,
-}: OgTemplateProps & OgTemplateAssets): OgNode => {
-  const titleFontSize = getTitleFontSize(title)
-  const titleMaxWidth = getTitleMaxWidth(title)
-  const titleLineHeight = title.length > 64 ? 1.14 : 1.08
-
-  const textChildren: Array<OgNode> = []
-
-  if (subtitle !== undefined) {
-    textChildren.push(
-      createNode("div", {
-        style: {
-          fontSize: "19px",
-          color: "#7a7a84",
-          fontWeight: 400,
-          marginBottom: "16px",
-          letterSpacing: "-0.01em",
-          display: "flex",
-        },
-        children: subtitle,
-      }),
-    )
-  }
-
-  textChildren.push(
-    createNode("div", {
-      style: {
-        fontSize: titleFontSize,
-        fontWeight: 700,
-        color: "#ffffff",
-        lineHeight: titleLineHeight,
-        maxWidth: titleMaxWidth,
-        letterSpacing: "-0.02em",
-        display: "flex",
-      },
-      children: title,
-    }),
-  )
-
-  if (description !== undefined) {
-    textChildren.push(
-      createNode("div", {
-        style: {
-          fontSize: "19px",
-          color: "#a1a1aa",
-          lineHeight: 1.45,
-          marginTop: "24px",
-          maxWidth: "900px",
-          fontWeight: 400,
-          letterSpacing: "-0.005em",
-          display: "flex",
-        },
-        children: description,
-      }),
-    )
-  }
-
-  return createNode("div", {
-    style: {
-      width: "1200px",
-      height: "630px",
-      display: "flex",
-      flexDirection: "column",
-      backgroundColor: "#000000",
-      fontFamily: "Inter",
-      padding: "68px 80px 64px 80px",
-      position: "relative",
-      overflow: "hidden",
-    },
-    children: [
-      ...createBackground(dashDataUri),
-      createNode("div", {
-        style: {
-          display: "flex",
-          flexDirection: "column",
-          flex: "1",
-        },
-        children: [
-          createNode("img", {
-            src: logoDataUri,
-            width: 188,
-            height: 52,
-          }),
-          createNode("div", {
-            style: {
-              display: "flex",
-              flexDirection: "column",
-              marginTop: "132px",
-            },
-            children: textChildren,
-          }),
-        ],
-      }),
-    ],
-  })
 }
 
 const createDocsOgTemplate = ({
@@ -579,136 +245,10 @@ const createDocsOgTemplate = ({
   })
 }
 
-const createPodcastOgTemplate = ({
-  title,
-  description,
-  subtitle,
-  bgDataUri,
-}: OgTemplateProps & { readonly bgDataUri: string }): OgNode => {
-  const titleFontSize = getTitleFontSize(title)
-  const titleMaxWidth = getTitleMaxWidth(title)
-  const titleLineHeight = title.length > 64 ? 1.14 : 1.08
-
-  const textChildren: Array<OgNode> = []
-
-  if (subtitle !== undefined) {
-    textChildren.push(
-      createNode("div", {
-        style: {
-          fontSize: "19px",
-          color: "#7a7a84",
-          fontWeight: 400,
-          marginBottom: "16px",
-          letterSpacing: "-0.01em",
-          display: "flex",
-        },
-        children: subtitle,
-      }),
-    )
-  }
-
-  textChildren.push(
-    createNode("div", {
-      style: {
-        fontSize: titleFontSize,
-        fontWeight: 700,
-        color: "#ffffff",
-        lineHeight: titleLineHeight,
-        maxWidth: titleMaxWidth,
-        letterSpacing: "-0.02em",
-        display: "flex",
-      },
-      children: title,
-    }),
-  )
-
-  if (description !== undefined) {
-    textChildren.push(
-      createNode("div", {
-        style: {
-          fontSize: "19px",
-          color: "#a1a1aa",
-          lineHeight: 1.45,
-          marginTop: "24px",
-          maxWidth: "900px",
-          fontWeight: 400,
-          letterSpacing: "-0.005em",
-          display: "flex",
-        },
-        children: description,
-      }),
-    )
-  }
-
-  return createNode("div", {
-    style: {
-      width: "1200px",
-      height: "630px",
-      display: "flex",
-      position: "relative",
-      fontFamily: "Inter",
-    },
-    children: [
-      createNode("img", {
-        src: bgDataUri,
-        width: OPENGRAPH_IMAGE_WIDTH,
-        height: OPENGRAPH_IMAGE_HEIGHT,
-      }),
-      createNode("div", {
-        style: {
-          position: "absolute",
-          top: "0",
-          left: "0",
-          right: "0",
-          bottom: "0",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "80px",
-        },
-        children: [
-          createNode("div", {
-            style: {
-              display: "flex",
-              flexDirection: "column",
-              maxWidth: "900px",
-            },
-            children: textChildren,
-          }),
-        ],
-      }),
-    ],
-  })
-}
-
 const createDocsTemplate = (props: OgTemplateProps, docsBgDataUri: string): OgNode => {
   return createDocsOgTemplate({
     title: props.title,
-    description: props.description,
     subtitle: props.subtitle,
     bgDataUri: docsBgDataUri,
-  })
-}
-
-const createPodcastTemplate = (props: OgTemplateProps, podcastBgDataUri: string): OgNode => {
-  return createPodcastOgTemplate({
-    title: props.title,
-    description: props.description,
-    subtitle: props.subtitle,
-    bgDataUri: podcastBgDataUri,
-  })
-}
-
-const createHomepageTemplate = (assets: OgTemplateAssets): OgNode => {
-  return createHomepageOgTemplate(assets)
-}
-
-const createContentTemplate = (props: OgTemplateProps, assets: OgTemplateAssets): OgNode => {
-  return createContentOgTemplate({
-    title: props.title,
-    description: props.description,
-    subtitle: props.subtitle,
-    logoDataUri: assets.logoDataUri,
-    dashDataUri: assets.dashDataUri,
   })
 }
