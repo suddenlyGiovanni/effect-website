@@ -1,6 +1,14 @@
 import { Search, X } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
-import { getNavigationLinks, NAVIGATION_EVENTS } from "@/lib/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useAtom, useAtomValue } from "@effect/atom-react"
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
+import type { SearchResult, SearchResultChunk } from "@/services/search/domain"
+import { NAVIGATION_EVENTS } from "@/lib/navigation"
+import {
+  searchQueryAtom,
+  debouncedQueryAtom,
+  searchResultsAtom,
+} from "./search-atoms"
 
 type SearchDialogState = { readonly tag: "closed" } | { readonly tag: "open" }
 
@@ -20,39 +28,27 @@ const syncSearchScrollLock = (open: boolean) => {
 
 export default function SearchDialogIsland() {
   const [state, setState] = useState<SearchDialogState>({ tag: "closed" })
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useAtom(searchQueryAtom)
+  const debouncedQuery = useAtomValue(debouncedQueryAtom)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const resultsRef = useRef<HTMLDivElement | null>(null)
+  const selectedIndexRef = useRef(-1)
 
-  const links = useMemo(() => {
-    const allPrimaryLinks = getNavigationLinks("desktop", "primary")
-    if (query.trim().length === 0) {
-      return allPrimaryLinks
-    }
-
-    const normalizedQuery = query.trim().toLowerCase()
-    return allPrimaryLinks.filter((link) => {
-      return link.label.toLowerCase().includes(normalizedQuery)
-    })
-  }, [query])
+  const searchResult = useAtomValue(searchResultsAtom)
 
   const isOpen = state.tag === "open"
 
-  const openDialog = () => {
+  const openDialog = useCallback(() => {
     setState({ tag: "open" })
-  }
+  }, [])
 
-  const closeDialog = () => {
+  const closeDialog = useCallback(() => {
     setState({ tag: "closed" })
-  }
+  }, [])
 
   useEffect(() => {
-    const onOpen = () => {
-      openDialog()
-    }
-
-    const onClose = () => {
-      closeDialog()
-    }
+    const onOpen = () => openDialog()
+    const onClose = () => closeDialog()
 
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -76,7 +72,7 @@ export default function SearchDialogIsland() {
       window.removeEventListener(NAVIGATION_EVENTS.MOBILE_MENU_OPEN, onClose)
       window.removeEventListener("keydown", onKeyDown)
     }
-  }, [])
+  }, [openDialog, closeDialog])
 
   useEffect(() => {
     if (!isOpen) {
@@ -88,7 +84,118 @@ export default function SearchDialogIsland() {
     setQuery("")
     inputRef.current?.focus()
     window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPENED))
-  }, [isOpen])
+  }, [isOpen, setQuery])
+
+  useEffect(() => {
+    selectedIndexRef.current = -1
+  }, [searchResult])
+
+  const getResultLinks = useCallback((): HTMLAnchorElement[] => {
+    if (!resultsRef.current) return []
+    return Array.from(
+      resultsRef.current.querySelectorAll<HTMLAnchorElement>(
+        "[data-search-result-link]",
+      ),
+    )
+  }, [])
+
+  const handleDialogKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      const links = getResultLinks()
+      if (links.length === 0) return
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault()
+        selectedIndexRef.current = Math.min(
+          selectedIndexRef.current + 1,
+          links.length - 1,
+        )
+        links[selectedIndexRef.current]?.focus()
+        return
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault()
+        if (selectedIndexRef.current > 0) {
+          selectedIndexRef.current--
+          links[selectedIndexRef.current]?.focus()
+        }
+        return
+      }
+
+      if (event.key === "Enter") {
+        const active = document.activeElement
+        if (
+          active instanceof HTMLAnchorElement &&
+          active.dataset.searchResultLink === "true"
+        ) {
+          event.preventDefault()
+          closeDialog()
+        }
+      }
+    },
+    [getResultLinks, closeDialog],
+  )
+
+  const handleInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setQuery(event.target.value)
+    },
+    [setQuery],
+  )
+
+  const resultsContent = useMemo(() => {
+    if (debouncedQuery.trim().length === 0) {
+      return (
+        <div className="px-4 py-12 text-center text-sm text-zinc-500">
+          Type to search documentation
+        </div>
+      )
+    }
+
+    if (AsyncResult.isWaiting(searchResult) || AsyncResult.isInitial(searchResult)) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center text-zinc-500">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300" />
+          <span>Searching...</span>
+        </div>
+      )
+    }
+
+    if (AsyncResult.isFailure(searchResult)) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center text-sm text-red-400">
+          Search failed. Please try again.
+        </div>
+      )
+    }
+
+    if (AsyncResult.isSuccess(searchResult)) {
+      const results = searchResult.value ?? []
+      if (results.length === 0) {
+        return (
+          <div className="px-4 py-12 text-center text-sm text-zinc-500">
+            No results found for &ldquo;{debouncedQuery}&rdquo;
+          </div>
+        )
+      }
+
+      return (
+        <ul className="space-y-4">
+          {results.map((result) => (
+            <SearchResultItem key={result.id} result={result} />
+          ))}
+        </ul>
+      )
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center text-zinc-500">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300" />
+        <span>Searching...</span>
+      </div>
+    )
+  }, [searchResult, debouncedQuery])
 
   if (!isOpen) {
     return null
@@ -103,18 +210,23 @@ export default function SearchDialogIsland() {
         aria-label="Close search"
       />
 
-      <div className="relative mx-auto mt-24 w-[min(42rem,calc(100%-2rem))] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl">
+      <div
+        className="relative mx-auto mt-24 w-[min(40rem,calc(100%-2rem))] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl"
+        onKeyDown={handleDialogKeyDown}
+      >
         <div className="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
-          <Search className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+          <Search className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden="true" />
           <input
             ref={inputRef}
             value={query}
-            onChange={(event) => {
-              setQuery(event.target.value)
-            }}
+            onChange={handleInputChange}
             className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
-            placeholder="THIS IS A PLACEHOLDER COMPONENT"
-            aria-label="Search navigation"
+            placeholder="Search documentation..."
+            aria-label="Search documentation"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
           />
           <button
             type="button"
@@ -126,36 +238,70 @@ export default function SearchDialogIsland() {
           </button>
         </div>
 
-        <div className="max-h-80 overflow-y-auto p-3">
-          {links.length === 0 ? (
-            <p className="rounded-md px-3 py-2 text-sm text-zinc-400">No matches</p>
-          ) : (
-            <ul className="space-y-1">
-              {links.map((link) => (
-                <li key={link.id}>
-                  {link.kind === "external" ? (
-                    <a
-                      href={link.href}
-                      target={link.target}
-                      rel={link.rel}
-                      className="flex items-center rounded-md px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <a
-                      href={link.href}
-                      className="flex items-center rounded-md px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-                    >
-                      {link.label}
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+        <div ref={resultsRef} className="max-h-96 overflow-y-auto p-3">
+          {resultsContent}
         </div>
       </div>
     </div>
+  )
+}
+
+function SearchResultItem({ result }: { readonly result: SearchResult }) {
+  return (
+    <li>
+      <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
+        <a
+          href={result.href}
+          data-search-result-link="true"
+          className="block px-4 py-3 text-sm transition-colors hover:bg-zinc-800/50 focus:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-zinc-600"
+        >
+          <div className="font-medium text-white">{result.title}</div>
+          {result.description ? (
+            <div className="mt-0.5 text-xs text-zinc-400">{result.description}</div>
+          ) : null}
+        </a>
+
+        {result.chunks.length > 0 ? (
+          <ul className="divide-y divide-zinc-800 border-t border-zinc-800">
+            {result.chunks.map((chunk) => (
+              <SearchResultChunkItem
+                key={chunk.id}
+                href={result.href}
+                chunk={chunk}
+              />
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    </li>
+  )
+}
+
+function SearchResultChunkItem({
+  href,
+  chunk,
+}: {
+  readonly href: string
+  readonly chunk: SearchResultChunk
+}) {
+  const chunkHref = `${href}#${chunk.anchorId}`
+
+  return (
+    <li>
+      <a
+        href={chunkHref}
+        data-search-result-link="true"
+        className="block px-4 py-2.5 pl-10 text-sm transition-colors hover:bg-zinc-800/50 focus:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-zinc-600"
+      >
+        <div className="truncate text-xs font-medium text-zinc-300">
+          {chunk.title}
+        </div>
+        {chunk.snippet ? (
+          <div className="mt-0.5 truncate text-xs text-zinc-500">
+            {chunk.snippet}
+          </div>
+        ) : null}
+      </a>
+    </li>
   )
 }
