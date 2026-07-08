@@ -9,6 +9,7 @@ import {
   debouncedQueryAtom,
   searchResultsAtom,
 } from "./search-atoms"
+import MixedbreadLogo from "./MixedbreadLogo.svg?react"
 
 type SearchDialogState = { readonly tag: "closed" } | { readonly tag: "open" }
 
@@ -33,10 +34,16 @@ export default function SearchDialogIsland() {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const resultsRef = useRef<HTMLDivElement | null>(null)
   const selectedIndexRef = useRef(-1)
+  const [isMac, setIsMac] = useState(false)
 
   const searchResult = useAtomValue(searchResultsAtom)
 
   const isOpen = state.tag === "open"
+
+  useEffect(() => {
+    const platform = navigator.userAgent || ""
+    setIsMac(platform.toLowerCase().includes("mac") || platform.toLowerCase().includes("darwin"))
+  }, [])
 
   const openDialog = useCallback(() => {
     setState({ tag: "open" })
@@ -119,6 +126,9 @@ export default function SearchDialogIsland() {
         if (selectedIndexRef.current > 0) {
           selectedIndexRef.current--
           links[selectedIndexRef.current]?.focus()
+        } else if (selectedIndexRef.current === 0) {
+          selectedIndexRef.current = -1
+          inputRef.current?.focus()
         }
         return
       }
@@ -201,13 +211,29 @@ export default function SearchDialogIsland() {
     return null
   }
 
+  const modKey = isMac ? "⌘" : "Ctrl"
+
   return (
-    <div className="fixed inset-0 z-250">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="search-dialog-label"
+      className="fixed inset-0 z-250"
+    >
+      <span id="search-dialog-label" className="sr-only">
+        Search documentation
+      </span>
+      <span id="search-instructions" className="sr-only">
+        Type to search. Use arrow keys to navigate results. Press Enter to select. Press Escape to
+        close.
+      </span>
+
       <button
         type="button"
         onClick={closeDialog}
         className="absolute inset-0 bg-zinc-950/70 backdrop-blur-sm"
         aria-label="Close search"
+        tabIndex={-1}
       />
 
       <div
@@ -223,6 +249,13 @@ export default function SearchDialogIsland() {
             className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
             placeholder="Search documentation..."
             aria-label="Search documentation"
+            aria-describedby="search-instructions"
+            aria-controls="search-results"
+            aria-expanded={
+              AsyncResult.isSuccess(searchResult) &&
+              Array.isArray(searchResult.value) &&
+              searchResult.value.length > 0
+            }
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
@@ -238,8 +271,66 @@ export default function SearchDialogIsland() {
           </button>
         </div>
 
-        <div ref={resultsRef} className="max-h-96 overflow-y-auto p-3">
+        <div
+          id="search-results"
+          ref={resultsRef}
+          role="region"
+          aria-label="Search results"
+          aria-live="polite"
+          aria-atomic="false"
+          className="max-h-96 overflow-y-auto p-3"
+        >
           {resultsContent}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2.5">
+          <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+            <MixedbreadLogo className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              Search powered by{" "}
+              <a
+                href="https://mixedbread.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-400 transition-colors hover:text-zinc-100"
+              >
+                Mixedbread
+              </a>
+            </span>
+          </div>
+
+          <div
+            aria-hidden="true"
+            className="hidden items-center gap-3 text-xs text-zinc-500 sm:flex"
+          >
+            <span className="flex items-center gap-1">
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-sans text-[10px] text-zinc-300">
+                ↑
+              </kbd>
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-sans text-[10px] text-zinc-300">
+                ↓
+              </kbd>
+              <span>navigate</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-sans text-[10px] text-zinc-300">
+                ↵
+              </kbd>
+              <span>select</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-sans text-[10px] text-zinc-300">
+                {modKey}K
+              </kbd>
+              <span>open</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-sans text-[10px] text-zinc-300">
+                esc
+              </kbd>
+              <span>close</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
