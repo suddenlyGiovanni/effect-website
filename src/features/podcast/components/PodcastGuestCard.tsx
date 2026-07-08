@@ -1,6 +1,7 @@
 import _14AiLogo from "@/assets/logos/14ai/14ai.svg?react"
 import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
 import MasterclassLogo from "@/assets/logos/masterclass/Masterclass.svg?react"
+import OpenCodeLogo from "@/assets/logos/opencode/opencode.svg?react"
 import OpenRouterLogo from "@/assets/logos/openrouter/OpenRouter.svg?react"
 import SpikoLogo from "@/assets/logos/spiko/Spiko.svg?react"
 import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg?react"
@@ -90,6 +91,8 @@ function CompanyLogo({ company }: { readonly company: string }) {
       return <_14AiLogo className="h-4 w-auto" />
     case "masterclass":
       return <MasterclassLogo className="h-3 w-auto" />
+    case "opencode":
+      return <OpenCodeLogo className="h-4 w-auto" />
     case "openrouter":
       return <OpenRouterLogo className="h-4 w-auto" />
     case "spiko":
