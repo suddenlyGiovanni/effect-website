@@ -54,7 +54,7 @@ function ShareContent() {
   const isFailed = AsyncResult.isFailure(result)
 
   return (
-    <div className="absolute top-full right-0 z-50 mt-2 w-[400px] rounded-lg border border-zinc-300 bg-zinc-100 p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+    <div className="absolute top-full right-0 z-50 mt-2 w-[400px] animate-[dialogIn_0.25s_ease-out] rounded-lg border border-zinc-300 bg-zinc-100 p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
       <div className="flex flex-col space-y-2">
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Share</h3>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
