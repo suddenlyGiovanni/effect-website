@@ -390,7 +390,7 @@ export const defaultWorkspace = Workspace.new({
     "@types/node": "latest",
     effect: "latest",
     "tsc-watch": "latest",
-    typescript: "latest",
+    typescript: "6.0.2",
   },
   shells: [new WorkspaceShell({ command: "../run src/main.ts" })],
   initialFilePath: "src/main.ts",
