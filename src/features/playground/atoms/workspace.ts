@@ -14,10 +14,8 @@ import * as Atom from "effect/unstable/reactivity/Atom"
 import {
   Directory,
   File,
-  makeDirectory,
-  makeFile,
+  defaultWorkspace,
   Workspace,
-  WorkspaceShell,
   WorkspaceTerminal,
 } from "../domain/workspace"
 import { DevToolsLayer } from "../services/devtools"
@@ -482,55 +480,4 @@ function setupWorkspaceFormatters(workspace: Workspace) {
       Effect.forkScoped,
     )
   })
-}
-
-export const main = makeFile(
-  "main.ts",
-  `import { NodeRuntime } from "@effect/platform-node"
-import { Effect } from "effect"
-import { DevToolsLive } from "./DevTools"
-
-const program = Effect.gen(function*() {
-  yield* Effect.log("Welcome to the Effect Playground!")
-}).pipe(Effect.withSpan("program", {
-  attributes: { source: "Playground" }
-}))
-
-program.pipe(
-  Effect.provide(DevToolsLive),
-  NodeRuntime.runMain
-)
-`,
-)
-
-const devTools = makeFile(
-  "DevTools.ts",
-  `import { DevTools } from "@effect/experimental"
-import { NodeSocket } from "@effect/platform-node"
-import { Layer } from "effect"
-
-export const DevToolsLive = DevTools.layerSocket.pipe(
-  Layer.provide(NodeSocket.layerNet({ port: 34437 }))
-)
-`,
-)
-
-export const defaultWorkspace = Workspace.new({
-  name: "playground",
-  dependencies: {
-    "@effect/experimental": "latest",
-    "@effect/platform": "latest",
-    "@effect/platform-node": "latest",
-    "@types/node": "latest",
-    effect: "latest",
-    "tsc-watch": "latest",
-    typescript: "6.0.2",
-  },
-  shells: [new WorkspaceShell({ command: "../run src/main.ts" })],
-  initialFilePath: "src/main.ts",
-  tree: [makeDirectory("src", [main, devTools])],
-})
-
-export function makeDefaultWorkspace() {
-  return defaultWorkspace
 }

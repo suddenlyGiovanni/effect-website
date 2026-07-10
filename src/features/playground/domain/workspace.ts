@@ -398,9 +398,5 @@ export const defaultWorkspace = Workspace.new({
 })
 
 export function makeDefaultWorkspace() {
-  const suffix =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : String(Date.now())
-  return defaultWorkspace.withName(`playground-${suffix}`)
+  return defaultWorkspace
 }
