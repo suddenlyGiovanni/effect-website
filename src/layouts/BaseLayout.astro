@@ -54,6 +54,7 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
           return
         }
         var stored = localStorage.getItem("theme")
+        if (stored) { try { stored = JSON.parse(stored) } catch (_) {} }
         var isDark
         if (stored === "light") {
           isDark = false
