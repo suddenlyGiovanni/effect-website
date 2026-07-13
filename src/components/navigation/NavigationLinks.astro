@@ -13,7 +13,7 @@ const links = getNavigationLinks("desktop", "primary")
 const plainLinks = links.filter((link) => link.cta === "none")
 const ctaLinks = links.filter((link) => link.cta === "solid")
 
-const plainClass = `border-b border-transparent text-sm font-medium no-underline transition-colors hover:border-current ${transparent ? "text-white hover:text-white/80" : "text-zinc-400 hover:text-white"}`
+const plainClass = `border-b border-transparent text-sm font-medium no-underline transition-colors hover:border-current ${transparent ? "text-white hover:text-white/80" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`
 ---
 
 <>
@@ -23,7 +23,7 @@ const plainClass = `border-b border-transparent text-sm font-medium no-underline
         link={link}
         class={plainClass}
         active={link.id === activeSlug}
-        activeClass="border-white text-white"
+        activeClass="border-zinc-900 text-zinc-900 dark:border-white dark:text-white"
       />
     ))
   }

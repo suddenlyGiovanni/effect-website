@@ -9,9 +9,10 @@ import { OPENGRAPH_IMAGE_HEIGHT, OPENGRAPH_IMAGE_WIDTH } from "@/lib/open-graph"
 interface Props {
   readonly title?: string | undefined
   readonly description?: string | undefined
+  readonly forceDark?: boolean | undefined
 }
 
-const { title = "Effect | Production Grade TypeScript", description } = Astro.props
+const { title = "Effect | Production Grade TypeScript", description, forceDark = false } = Astro.props
 
 const getOgImagePath = () => {
   const pathname = Astro.url.pathname
@@ -28,7 +29,7 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class:list={[{ dark: forceDark }]} {...forceDark ? { "data-force-dark": "" } : {}}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -46,9 +47,23 @@ const canonicalUrl = new URL(pagePathname, Astro.site)
     <!-- Theme: prevent flash of wrong theme, sync data-theme for Starlight CSS -->
     <script is:inline>
       ;(function () {
+        var force = document.documentElement.hasAttribute("data-force-dark")
+        if (force) {
+          document.documentElement.classList.add("dark")
+          document.documentElement.dataset.theme = "dark"
+          return
+        }
         var stored = localStorage.getItem("theme")
-        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-        var isDark = stored === "dark" || (stored !== "light" && prefersDark)
+        var isDark
+        if (stored === "light") {
+          isDark = false
+        } else if (stored === "dark") {
+          isDark = true
+        } else if (stored === "system") {
+          isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+        } else {
+          isDark = true
+        }
         document.documentElement.classList.toggle("dark", isDark)
         document.documentElement.dataset.theme = isDark ? "dark" : "light"
         new MutationObserver(function () {

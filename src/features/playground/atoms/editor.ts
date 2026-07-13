@@ -13,7 +13,7 @@ import { Toaster } from "../services/toaster"
 import { themeAtom } from "./theme"
 
 export const editorThemeAtom = themeAtom.pipe(
-  Atom.map((theme) => (theme === "dark" ? "dracula" : "vs")),
+  Atom.map((theme) => (theme === "dark" ? "dracula" : "chrome-devtools")),
 )
 
 const runtime = Atom.runtime(Layer.mergeAll(Loader.layer, Monaco.layer, Toaster.layer)).pipe(

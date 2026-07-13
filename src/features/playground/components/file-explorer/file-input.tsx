@@ -68,7 +68,7 @@ export function FileInput({
           <input
             ref={inputRef}
             type="text"
-            className="w-full rounded-sm border border-zinc-600 bg-zinc-900 p-0 px-1 text-sm text-white outline-none"
+            className="w-full rounded-sm border border-zinc-300 bg-white p-0 px-1 text-sm text-zinc-900 outline-none dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
             value={fileName}
             onChange={handleChange}
             onFocus={(e) => e.target.select()}
