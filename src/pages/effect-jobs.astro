@@ -7,6 +7,12 @@ import GridBackground from "@/components/GridBackground.astro"
 const jobs = (await getCollection("effectJobs")).map((e) => e.data)
 const logos = (await getCollection("effectJobsLogos")).map((e) => e.data)
 
+const lgRemainder = jobs.length % 3
+const ctaSpan = [
+  jobs.length % 2 === 0 ? "sm:col-span-2" : "sm:col-span-1",
+  lgRemainder === 0 ? "lg:col-span-3" : lgRemainder === 1 ? "lg:col-span-2" : "lg:col-span-1",
+].join(" ")
+
 const companyLogoUrls = import.meta.glob<string>(
   "/src/assets/company-logos/**/*",
   { query: "?url", import: "default", eager: true },
@@ -131,7 +137,7 @@ function linkDisplay(url: string): string {
           ))}
 
           {/* CTA card */}
-          <li class="bg-zinc-950 sm:col-span-2 lg:col-span-2">
+          <li class={`bg-zinc-950 ${ctaSpan}`}>
             <a
               href="https://github.com/effect-ts/website-v2/issues/new?template=post-a-job.yml"
               target="_blank"
