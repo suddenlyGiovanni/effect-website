@@ -30,10 +30,7 @@ export default function BlogControls({
   const gridRef = useRef<HTMLDivElement>(null)
   const catRef = useRef<HTMLDivElement>(null)
 
-  const activeTagName = useMemo(
-    () => tags.find((t) => t.id === tag)?.name ?? "All",
-    [tags, tag],
-  )
+  const activeTagName = useMemo(() => tags.find((t) => t.id === tag)?.name ?? "All", [tags, tag])
 
   const sortedTags = useMemo(
     () =>
@@ -203,7 +200,9 @@ export default function BlogControls({
                         }`}
                       >
                         <span>{cat.name}</span>
-                        <span className={`tabular-nums ${isActive ? "text-white" : "text-zinc-500"}`}>
+                        <span
+                          className={`tabular-nums ${isActive ? "text-white" : "text-zinc-500"}`}
+                        >
                           {String(cat.count).padStart(3, "0")}
                         </span>
                         <span
@@ -277,7 +276,10 @@ export default function BlogControls({
 
                 {pageItems.map((item, idx) =>
                   item === "ellipsis" ? (
-                    <span key={`ellipsis-${idx}`} className="px-1.5 font-mono text-xs text-zinc-500">
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="px-1.5 font-mono text-xs text-zinc-500"
+                    >
                       ⋯
                     </span>
                   ) : (
@@ -295,7 +297,9 @@ export default function BlogControls({
                       </span>
                       <span
                         className={`pointer-events-none absolute right-2 -bottom-0.5 left-2 h-px origin-left bg-white transition-transform duration-300 ease-out ${
-                          item === safePage ? "scale-x-100" : "scale-x-0 group-hover/page:scale-x-[0.2]"
+                          item === safePage
+                            ? "scale-x-100"
+                            : "scale-x-0 group-hover/page:scale-x-[0.2]"
                         }`}
                       />
                     </button>

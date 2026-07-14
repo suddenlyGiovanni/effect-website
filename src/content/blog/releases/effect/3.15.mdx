@@ -47,7 +47,7 @@ effect.pipe(
   Effect.catchTag("ErrorA", "ErrorB", (error: ErrorA | ErrorB) => {
     // Handle ErrorA and ErrorB with the same logic
     return Effect.void
-  })
+  }),
 )
 ```
 
@@ -64,7 +64,7 @@ effect.pipe(
   Effect.filterOrElse(Predicate.isString, (value: number) => {
     // The `value` type is now narrowed to `number` here
     return Effect.succeed(`Value is not a string: ${value}`)
-  })
+  }),
 )
 ```
 
@@ -77,10 +77,7 @@ It returns an `Option` containing the first matching key-value pair, or `None` i
 import { Record, Option } from "effect"
 
 const record = { a: 1, b: 2, c: 3 }
-const result = Record.findFirst(
-  record,
-  (value, key) => value > 1 && key !== "b"
-)
+const result = Record.findFirst(record, (value, key) => value > 1 && key !== "b")
 assert.deepStrictEqual(result, Option.some(["c", 3]))
 ```
 
@@ -112,7 +109,7 @@ import { Either, Option, pipe } from "effect"
 //          ▼
 const noneResult = pipe(
   Option.none(),
-  Either.transposeMapOption(() => Either.right(42)) // will not be executed
+  Either.transposeMapOption(() => Either.right(42)), // will not be executed
 )
 console.log(noneResult)
 // Output: { _id: 'Either', _tag: 'Right', right: { _id: 'Option', _tag: 'None' } }
@@ -121,7 +118,7 @@ console.log(noneResult)
 //          ▼
 const someRightResult = pipe(
   Option.some(42),
-  Either.transposeMapOption((value) => Either.right(value * 2))
+  Either.transposeMapOption((value) => Either.right(value * 2)),
 )
 console.log(someRightResult)
 // Output: { _id: 'Either', _tag: 'Right', right: { _id: 'Option', _tag: 'Some', value: 84 } }
@@ -140,8 +137,8 @@ declare const myCustomRandom: Random.Random
 Effect.void.pipe(
   Effect.provide(
     // You can now use `Layer.setRandom` to set a custom random generator
-    Layer.setRandom(myCustomRandom)
-  )
+    Layer.setRandom(myCustomRandom),
+  ),
 )
 ```
 

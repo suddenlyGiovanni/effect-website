@@ -48,16 +48,13 @@ Effect.gen(function* () {
   const map = yield* RcMap.make({
     lookup: (key: string) =>
       Effect.acquireRelease(Effect.succeed(`acquired ${key}`), () =>
-        Effect.log(`releasing ${key}`)
-      )
+        Effect.log(`releasing ${key}`),
+      ),
   })
 
   // Get "foo" from the map twice, which will only acquire it once
   // It will then be released once the scope closes.
-  yield* RcMap.get(map, "foo").pipe(
-    Effect.andThen(RcMap.get(map, "foo")),
-    Effect.scoped
-  )
+  yield* RcMap.get(map, "foo").pipe(Effect.andThen(RcMap.get(map, "foo")), Effect.scoped)
 })
 ```
 
@@ -85,14 +82,11 @@ Effect.gen(function* () {
   const messages = [1, 2, 3, 4, 5]
   const pubsub = yield* PubSub.bounded<number>({
     capacity: 16,
-    replay: 3
+    replay: 3,
   })
   yield* PubSub.publishAll(pubsub, messages)
   const sub = yield* PubSub.subscribe(pubsub)
-  assert.deepStrictEqual(
-    Chunk.toReadonlyArray(yield* Queue.takeAll(sub)),
-    [3, 4, 5]
-  )
+  assert.deepStrictEqual(Chunk.toReadonlyArray(yield* Queue.takeAll(sub)), [3, 4, 5])
 })
 ```
 
@@ -107,7 +101,7 @@ import { Stream, Schedule, Console, Effect } from "effect"
 const stream = Stream.raceAll(
   Stream.fromSchedule(Schedule.spaced("1 millis")),
   Stream.fromSchedule(Schedule.spaced("2 millis")),
-  Stream.fromSchedule(Schedule.spaced("4 millis"))
+  Stream.fromSchedule(Schedule.spaced("4 millis")),
 ).pipe(Stream.take(6), Stream.tap(Console.log))
 
 Effect.runPromise(Stream.runDrain(stream))
@@ -137,7 +131,7 @@ Stream.async(
   (emit) => {
     // ...
   },
-  { bufferSize: 16, strategy: "dropping" }
+  { bufferSize: 16, strategy: "dropping" },
 )
 ```
 
@@ -156,16 +150,16 @@ import { Schedule, Stream } from "effect"
 Stream.fromSchedule(Schedule.spaced(1000)).pipe(
   Stream.toPubSub({
     capacity: 16, // or "unbounded"
-    strategy: "dropping" // or "sliding" / "suspend"
-  })
+    strategy: "dropping", // or "sliding" / "suspend"
+  }),
 )
 
 // also for the broadcast apis
 Stream.fromSchedule(Schedule.spaced(1000)).pipe(
   Stream.broadcastDynamic({
     capacity: 16,
-    strategy: "dropping"
-  })
+    strategy: "dropping",
+  }),
 )
 ```
 

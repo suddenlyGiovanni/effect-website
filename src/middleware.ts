@@ -13,10 +13,15 @@ export const onRequest = defineMiddleware((context, next) => {
    * middleware returns a 307, and Astro emits a redirect stub instead of real
    * page content — causing an infinite self-redirect loop on Vercel.
    */
-  if (!import.meta.env.DEV) return next()
+  if (!import.meta.env.DEV) {
+    return next()
+  }
 
   const { pathname, search, hash } = context.url
-  if (pathname !== "/" && pathname.endsWith("/")) {
+  // POST requests (e.g. RPC) get through unredirected: trailingSlash "ignore"
+  // means Astro serves API routes at both /path and /path/ — Vercel edge strips
+  // the trailing slash in prod, so this parity gap only matters in dev.
+  if (context.request.method !== "POST" && pathname !== "/" && pathname.endsWith("/")) {
     return context.redirect(pathname.slice(0, -1) + search + hash, 307)
   }
   return next()

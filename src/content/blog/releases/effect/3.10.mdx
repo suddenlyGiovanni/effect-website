@@ -26,15 +26,7 @@ Here is where the various schema modules can now be found:
 Before
 
 ```ts
-import {
-  Arbitrary,
-  AST,
-  FastCheck,
-  JSONSchema,
-  ParseResult,
-  Pretty,
-  Schema
-} from "@effect/schema"
+import { Arbitrary, AST, FastCheck, JSONSchema, ParseResult, Pretty, Schema } from "@effect/schema"
 ```
 
 After
@@ -47,7 +39,7 @@ import {
   JSONSchema,
   ParseResult,
   Pretty,
-  Schema
+  Schema,
 } from "effect"
 ```
 
@@ -146,8 +138,8 @@ Output:
 Effect.gen(function* () {
   yield* Effect.log(
     Headers.fromInput({
-      authorization: "Some secret key"
-    })
+      authorization: "Some secret key",
+    }),
   )
 }).pipe(NodeRuntime.runMain)
 ```

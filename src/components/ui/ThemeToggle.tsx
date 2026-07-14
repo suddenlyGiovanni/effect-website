@@ -1,84 +1,91 @@
-import { useCallback, useEffect, useState } from "react";
-import { Sun, Monitor, Moon, type LucideIcon } from "lucide-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react"
+import { Check, Monitor, Moon, Sun } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { isDarkAtom, selectThemeAtom, themeAtom, type Theme } from "@/components/ui/atoms/theme"
 
-type Theme = "light" | "dark" | "system";
+const options: { value: Theme; icon: typeof Sun; label: string }[] = [
+  { value: "dark", icon: Moon, label: "Dark" },
+  { value: "light", icon: Sun, label: "Light" },
+  { value: "system", icon: Monitor, label: "System" },
+]
 
-function applyTheme(theme: Theme) {
-	if (theme === "dark") {
-		document.documentElement.classList.add("dark");
-	} else if (theme === "light") {
-		document.documentElement.classList.remove("dark");
-	} else {
-		// system
-		const prefersDark = window.matchMedia(
-			"(prefers-color-scheme: dark)",
-		).matches;
-		if (prefersDark) {
-			document.documentElement.classList.add("dark");
-		} else {
-			document.documentElement.classList.remove("dark");
-		}
-	}
-}
+export default function ThemeToggle({ className = "" }: { className?: string }) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-export function ThemeToggle() {
-	const [theme, setTheme] = useState<Theme>("system");
+  const theme = useAtomValue(themeAtom)
+  const isDark = useAtomValue(isDarkAtom)
+  const selectTheme = useAtomSet(selectThemeAtom)
 
-	// Read stored preference on mount
-	useEffect(() => {
-		const stored = localStorage.getItem("theme") as Theme | null;
-		if (stored === "light" || stored === "dark") {
-			setTheme(stored);
-		} else {
-			setTheme("system");
-		}
-	}, []);
+  // Close menu on outside click or Escape
+  useEffect(() => {
+    if (!open) return
+    const handlePointer = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("mousedown", handlePointer)
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("mousedown", handlePointer)
+      document.removeEventListener("keydown", handleKey)
+    }
+  }, [open])
 
-	// Listen for system preference changes when in system mode
-	useEffect(() => {
-		const mq = window.matchMedia("(prefers-color-scheme: dark)");
-		const handler = () => {
-			if (theme === "system") {
-				applyTheme("system");
-			}
-		};
-		mq.addEventListener("change", handler);
-		return () => mq.removeEventListener("change", handler);
-	}, [theme]);
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Change theme"
+        className={`flex items-center justify-center transition-colors ${className}`}
+      >
+        {isDark ? <Moon size={20} aria-hidden="true" /> : <Sun size={20} aria-hidden="true" />}
+      </button>
 
-	const setAndApply = useCallback((next: Theme) => {
-		setTheme(next);
-		applyTheme(next);
-		if (next === "system") {
-			localStorage.removeItem("theme");
-		} else {
-			localStorage.setItem("theme", next);
-		}
-	}, []);
-
-	const options: { value: Theme; Icon: LucideIcon; label: string }[] = [
-		{ value: "light", Icon: Sun, label: "Light" },
-		{ value: "system", Icon: Monitor, label: "System" },
-		{ value: "dark", Icon: Moon, label: "Dark" },
-	];
-
-	return (
-		<div className="inline-flex items-center rounded-lg border border-zinc-200 bg-zinc-100 p-0.5 dark:border-zinc-800 dark:bg-zinc-900">
-			{options.map((opt) => (
-				<button
-					key={opt.value}
-					type="button"
-					onClick={() => setAndApply(opt.value)}
-					aria-label={opt.label}
-					className={`flex items-center justify-center rounded-md px-2 py-1.5 text-sm transition-all duration-150 ${
-						theme === opt.value
-							? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white"
-							: "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-					}`}
-				>
-					<opt.Icon size={14} />
-				</button>
-			))}
-		</div>
-	);
+      {open && (
+        <div
+          role="menu"
+          aria-label="Theme"
+          className="absolute top-full right-0 z-50 mt-2 w-36 overflow-hidden rounded-md border border-zinc-300 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+        >
+          {options.map((opt) => {
+            const Icon = opt.icon
+            const isActive = theme === opt.value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="menuitemradio"
+                aria-checked={isActive}
+                onClick={() => {
+                  selectTheme(opt.value)
+                  setOpen(false)
+                }}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
+                  isActive ? "text-zinc-900 dark:text-white" : "text-zinc-600 dark:text-zinc-400"
+                }`}
+              >
+                <Icon size={15} aria-hidden="true" />
+                <span className="flex-1">{opt.label}</span>
+                {isActive && (
+                  <Check
+                    size={14}
+                    className="text-zinc-500 dark:text-zinc-400"
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }

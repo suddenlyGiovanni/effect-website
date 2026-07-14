@@ -24,9 +24,7 @@ attaches the location where the function was called to any error traces, helping
 ```ts
 import { Effect } from "effect"
 
-const logExample = Effect.fn("example")(function* <N extends number>(
-  n: N
-) {
+const logExample = Effect.fn("example")(function* <N extends number>(n: N) {
   yield* Effect.annotateCurrentSpan("n", n)
   yield* Effect.logInfo(`got: ${n}`)
   yield* Effect.fail(new Error())
@@ -42,27 +40,20 @@ In the output below, you can see the location where the function was called.
 ```ts {16} ":16:17"
 import { Effect } from "effect"
 import { NodeSdk } from "@effect/opentelemetry"
-import {
-  ConsoleSpanExporter,
-  BatchSpanProcessor
-} from "@opentelemetry/sdk-trace-base"
+import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 
-const logExample = Effect.fn("example")(function* <N extends number>(
-  n: N
-) {
+const logExample = Effect.fn("example")(function* <N extends number>(n: N) {
   yield* Effect.annotateCurrentSpan("n", n)
   yield* Effect.logInfo(`got: ${n}`)
   yield* Effect.fail(new Error())
 })
 
-const program = logExample(100).pipe(
-  Effect.catchAllCause(Effect.logError)
-)
+const program = logExample(100).pipe(Effect.catchAllCause(Effect.logError))
 
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "example" },
   // Export span data to the console
-  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
 }))
 
 Effect.runFork(program.pipe(Effect.provide(NodeSdkLive)))
@@ -134,7 +125,7 @@ const logExample = Effect.fn("example")(
     yield* Effect.fail(new Error())
   },
   // Add a delay to the effect
-  Effect.delay("1 second")
+  Effect.delay("1 second"),
 )
 ```
 
@@ -150,10 +141,9 @@ The default value is automatically used when the service is accessed.
 ```ts
 import { Context, Effect } from "effect"
 
-class SpecialNumber extends Context.Reference<SpecialNumber>()(
-  "SpecialNumber",
-  { defaultValue: () => 2048 }
-) {}
+class SpecialNumber extends Context.Reference<SpecialNumber>()("SpecialNumber", {
+  defaultValue: () => 2048,
+}) {}
 
 //      ┌─── Effect<void, never, never>
 //      ▼
@@ -174,10 +164,9 @@ In this example, the default value is overridden by providing a different implem
 ```ts
 import { Context, Effect } from "effect"
 
-class SpecialNumber extends Context.Reference<SpecialNumber>()(
-  "SpecialNumber",
-  { defaultValue: () => 2048 }
-) {}
+class SpecialNumber extends Context.Reference<SpecialNumber>()("SpecialNumber", {
+  defaultValue: () => 2048,
+}) {}
 
 const program = Effect.gen(function* () {
   const specialNumber = yield* SpecialNumber
@@ -197,9 +186,7 @@ import { Effect, Scope } from "effect"
 
 //      ┌─── Effect<void, never, never>
 //      ▼
-const program = Effect.scopedWith((scope) =>
-  Scope.addFinalizer(scope, Effect.log("finalized"))
-)
+const program = Effect.scopedWith((scope) => Scope.addFinalizer(scope, Effect.log("finalized")))
 ```
 
 ## Time zone support in Cron
@@ -248,9 +235,7 @@ type MicroExit<A, E> = MicroExit.Success<A, E> | MicroExit.Failure<A, E>
 import { Micro } from "effect"
 
 const fib = (n: number): Micro.Micro<number> =>
-  n < 2
-    ? Micro.succeed(n)
-    : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
+  n < 2 ? Micro.succeed(n) : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
 
 const fib10Fiber = Micro.fork(fib(10))
 
@@ -274,9 +259,7 @@ Micro.runPromise(program)
 import { Micro } from "effect"
 
 const fib = (n: number): Micro.Micro<number> =>
-  n < 2
-    ? Micro.succeed(n)
-    : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
+  n < 2 ? Micro.succeed(n) : Micro.zipWith(fib(n - 1), fib(n - 2), (a, b) => a + b)
 
 const fib10Fiber = Micro.fork(fib(10))
 
@@ -308,9 +291,7 @@ import { Micro } from "effect"
 
 const program = Micro.gen(function* () {
   const fiber = yield* Micro.fork(
-    Micro.forever(
-      Micro.sync(() => console.log("Hi!")).pipe(Micro.delay(10))
-    )
+    Micro.forever(Micro.sync(() => console.log("Hi!")).pipe(Micro.delay(10))),
   )
   yield* Micro.sleep(30)
   // Interrupt the fiber

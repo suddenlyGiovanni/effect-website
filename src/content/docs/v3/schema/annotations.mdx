@@ -27,8 +27,8 @@ const Password = Schema.String
     // Restrict the string length to 10 characters or fewer
     // with a custom error message for exceeding length
     Schema.maxLength(10, {
-      message: (issue) => `${issue.actual} is too long`
-    })
+      message: (issue) => `${issue.actual} is too long`,
+    }),
   )
   .annotations({
     // Add a unique identifier for the schema
@@ -36,12 +36,11 @@ const Password = Schema.String
     // Provide a title for the schema
     title: "password",
     // Include a description explaining what this schema represents
-    description:
-      "A password is a secret string used to authenticate a user",
+    description: "A password is a secret string used to authenticate a user",
     // Add examples for better clarity
     examples: ["1Ki77y", "jelly22fi$h"],
     // Include any additional documentation
-    documentation: `...technical information on Password schema...`
+    documentation: `...technical information on Password schema...`,
   })
 ```
 
@@ -102,15 +101,11 @@ const item = (id: number, duration: Duration.DurationInput) =>
         yield* Effect.sleep(duration)
         console.log(`Task ${id} done`)
         return true
-      })
-    )
+      }),
+    ),
   )
 
-const Sequential = Schema.Tuple(
-  item(1, "30 millis"),
-  item(2, "10 millis"),
-  item(3, "20 millis")
-)
+const Sequential = Schema.Tuple(item(1, "30 millis"), item(2, "10 millis"), item(3, "20 millis"))
 
 Effect.runPromise(Schema.decode(Sequential)(["a", "b", "c"]))
 /*
@@ -138,14 +133,14 @@ const item = (id: number, duration: Duration.DurationInput) =>
         yield* Effect.sleep(duration)
         console.log(`Task ${id} done`)
         return true
-      })
-    )
+      }),
+    ),
   )
 
 const Concurrent = Schema.Tuple(
   item(1, "30 millis"),
   item(2, "10 millis"),
-  item(3, "20 millis")
+  item(3, "20 millis"),
 ).annotations({ concurrency: "unbounded" })
 
 Effect.runPromise(Schema.decode(Concurrent)(["a", "b", "c"]))
@@ -162,9 +157,7 @@ Task 1 done
 The `DecodingFallbackAnnotation` allows you to handle decoding errors by providing a custom fallback logic.
 
 ```ts showLineNumbers=false
-type DecodingFallbackAnnotation<A> = (
-  issue: ParseIssue
-) => Effect<A, ParseIssue>
+type DecodingFallbackAnnotation<A> = (issue: ParseIssue) => Effect<A, ParseIssue>
 ```
 
 This annotation enables you to specify fallback behavior when decoding fails, making it possible to recover gracefully from errors.
@@ -179,7 +172,7 @@ import { Either } from "effect"
 
 // Schema with a fallback value
 const schema = Schema.String.annotations({
-  decodingFallback: () => Either.right("<fallback>")
+  decodingFallback: () => Either.right("<fallback>"),
 })
 
 console.log(Schema.decodeUnknownSync(schema)("valid input"))
@@ -208,13 +201,11 @@ const schemaWithLog = Schema.String.annotations({
       yield* Effect.sleep(10)
       // Return a fallback value
       return yield* Effect.succeed("<fallback>")
-    })
+    }),
 })
 
 // Run the effectful fallback logic
-Effect.runPromise(Schema.decodeUnknown(schemaWithLog)(null)).then(
-  console.log
-)
+Effect.runPromise(Schema.decodeUnknown(schemaWithLog)(null)).then(console.log)
 /*
 Output:
 timestamp=2024-07-25T13:22:37.706Z level=INFO fiber=#0 message=Type
@@ -232,9 +223,7 @@ In addition to built-in annotations, you can define custom annotations to meet s
 import { Schema } from "effect"
 
 // Define a unique identifier for your custom annotation
-const DeprecatedId = Symbol.for(
-  "some/unique/identifier/for/your/custom/annotation"
-)
+const DeprecatedId = Symbol.for("some/unique/identifier/for/your/custom/annotation")
 
 // Apply the custom annotation to the schema
 const MyString = Schema.String.annotations({ [DeprecatedId]: true })
@@ -263,9 +252,7 @@ To make your new custom annotation type-safe, you can use a module augmentation.
 ```ts twoslash
 import { Schema } from "effect"
 
-const DeprecatedId = Symbol.for(
-  "some/unique/identifier/for/your/custom/annotation"
-)
+const DeprecatedId = Symbol.for("some/unique/identifier/for/your/custom/annotation")
 
 // Module augmentation
 declare module "effect/Schema" {
@@ -277,8 +264,8 @@ declare module "effect/Schema" {
 }
 
 const MyString = Schema.String.annotations({
-// @errors: 2418
-  [DeprecatedId]: "bad value"
+  // @errors: 2418
+  [DeprecatedId]: "bad value",
 })
 ```
 
@@ -290,9 +277,7 @@ You can retrieve custom annotations using the `SchemaAST.getAnnotation` helper f
 import { SchemaAST, Schema } from "effect"
 import { Option } from "effect"
 
-const DeprecatedId = Symbol.for(
-  "some/unique/identifier/for/your/custom/annotation"
-)
+const DeprecatedId = Symbol.for("some/unique/identifier/for/your/custom/annotation")
 
 declare module "effect/Schema" {
   namespace Annotations {
@@ -306,9 +291,7 @@ const MyString = Schema.String.annotations({ [DeprecatedId]: true })
 
 // Helper function to check if a schema is marked as deprecated
 const isDeprecated = <A, I, R>(schema: Schema.Schema<A, I, R>): boolean =>
-  SchemaAST.getAnnotation<boolean>(DeprecatedId)(schema.ast).pipe(
-    Option.getOrElse(() => false)
-  )
+  SchemaAST.getAnnotation<boolean>(DeprecatedId)(schema.ast).pipe(Option.getOrElse(() => false))
 
 console.log(isDeprecated(Schema.String))
 // Output: false

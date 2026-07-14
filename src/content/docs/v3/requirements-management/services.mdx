@@ -180,9 +180,7 @@ class Random extends Context.Tag("MyRandomService")<
 //      ▼
 const program = Random.pipe(
   Effect.andThen((random) => random.next),
-  Effect.andThen((randomNumber) =>
-    Console.log(`random number: ${randomNumber}`)
-  )
+  Effect.andThen((randomNumber) => Console.log(`random number: ${randomNumber}`)),
 )
 ```
 
@@ -256,7 +254,7 @@ const program = Effect.gen(function* () {
 //      ┌─── Effect<void, never, never>
 //      ▼
 const runnable = Effect.provideService(program, Random, {
-  next: Effect.sync(() => Math.random())
+  next: Effect.sync(() => Math.random()),
 })
 
 // Run successfully
@@ -379,11 +377,11 @@ const program = Effect.gen(function* () {
 // Provide service implementations for 'Random' and 'Logger'
 const runnable = program.pipe(
   Effect.provideService(Random, {
-    next: Effect.sync(() => Math.random())
+    next: Effect.sync(() => Math.random()),
   }),
   Effect.provideService(Logger, {
-    log: (message) => Effect.sync(() => console.log(message))
-  })
+    log: (message) => Effect.sync(() => console.log(message)),
+  }),
 )
 ```
 
@@ -421,8 +419,8 @@ const program = Effect.gen(function* () {
 const context = Context.empty().pipe(
   Context.add(Random, { next: Effect.sync(() => Math.random()) }),
   Context.add(Logger, {
-    log: (message) => Effect.sync(() => console.log(message))
-  })
+    log: (message) => Effect.sync(() => console.log(message)),
+  }),
 )
 
 // Provide the entire context
@@ -477,8 +475,8 @@ However, if we provide the `Random` service implementation:
 ```ts showLineNumbers=false
 Effect.runPromise(
   Effect.provideService(program, Random, {
-    next: Effect.sync(() => Math.random())
-  })
+    next: Effect.sync(() => Math.random()),
+  }),
 ).then(console.log)
 // Example Output: 0.9957979486841035
 ```
@@ -512,8 +510,7 @@ class Logger extends Context.Tag("MyLoggerService")<
 To handle these dependencies in a structured way and prevent them from leaking into the service interfaces, you can use the `Layer` abstraction. For more details on managing dependencies with layers, refer to the [Managing Layers](/docs/requirements-management/layers/) page.
 
 <Aside type="tip" title="Use Layers for Dependencies">
-  When a service has its own requirements, it's best to separate
-  implementation details into layers. Layers act as **constructors for
-  creating the service**, allowing us to handle dependencies at the
+  When a service has its own requirements, it's best to separate implementation details into layers.
+  Layers act as **constructors for creating the service**, allowing us to handle dependencies at the
   construction level rather than the service level.
 </Aside>

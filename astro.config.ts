@@ -12,6 +12,7 @@ import { defineConfig, fontProviders, svgoOptimizer } from "astro/config"
 import svgr from "vite-plugin-svgr"
 import { twieRedirectList } from "./src/generated/twie-redirects"
 import { docsLegacyRedirectList } from "./src/generated/docs-legacy-redirects"
+import { monacoEditorPlugin } from "./src/features/playground/plugins/monaco-editor"
 
 const GoogleFontProvider = fontProviders.google()
 
@@ -43,7 +44,11 @@ export default defineConfig({
   vite: {
     plugins: [
       tailwindcss(),
-      svgr()
+      svgr(),
+      monacoEditorPlugin({
+        languages: ["typescript", "javascript", "json", "css", "html"],
+        features: "all"
+      })
     ],
     resolve: {
       alias: {

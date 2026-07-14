@@ -22,10 +22,10 @@ const program = pipe(
   Effect.andThen(Console.log("Application started!")),
   Effect.andThen(
     Effect.repeat(Console.log("still alive..."), {
-      schedule: Schedule.spaced("1 second")
-    })
+      schedule: Schedule.spaced("1 second"),
+    }),
   ),
-  Effect.scoped
+  Effect.scoped,
 )
 
 // No graceful teardown on CTRL+C
@@ -48,9 +48,8 @@ Application is about to exit!
 The `runMain` function handles finding and interrupting all fibers. Internally, it observes the fiber and listens for `sigint` signals, ensuring a graceful shutdown of the application when interrupted (e.g., using CTRL+C).
 
 <Aside type="tip" title="Graceful Teardown">
-  Ensure the teardown logic is placed in the main effect. If the fiber
-  running the application or server is interrupted, `runMain` ensures that
-  all resources are properly released.
+  Ensure the teardown logic is placed in the main effect. If the fiber running the application or
+  server is interrupted, `runMain` ensures that all resources are properly released.
 </Aside>
 
 ### Versions for Different Platforms

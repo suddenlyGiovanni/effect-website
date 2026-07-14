@@ -70,9 +70,7 @@ A new `Effect.fn.Return` type utility has been added to allow typing returns on 
 ```typescript
 import { Effect } from "effect"
 
-const myfn = Effect.fn("myfn")(function* (
-  n: number
-): Effect.fn.Return<string> {
+const myfn = Effect.fn("myfn")(function* (n: number): Effect.fn.Return<string> {
   return `Number is ${n}`
 })
 ```

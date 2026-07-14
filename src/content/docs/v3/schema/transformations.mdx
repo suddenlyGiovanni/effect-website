@@ -59,8 +59,8 @@ const BooleanFromString = Schema.transform(
     // target schema (boolean)
     decode: (literal) => literal === "on", // Always succeeds here
     // Reverse transformation
-    encode: (bool) => (bool ? "on" : "off")
-  }
+    encode: (bool) => (bool ? "on" : "off"),
+  },
 )
 
 //     ┌─── "on" | "off"
@@ -83,15 +83,11 @@ The `decode` function above never fails by itself. However, the full decoding pr
 import { Schema } from "effect"
 
 // Convert "on"/"off" to boolean and back
-const BooleanFromString = Schema.transform(
-  Schema.Literal("on", "off"),
-  Schema.Boolean,
-  {
-    strict: true,
-    decode: (s) => s === "on",
-    encode: (bool) => (bool ? "on" : "off")
-  }
-)
+const BooleanFromString = Schema.transform(Schema.Literal("on", "off"), Schema.Boolean, {
+  strict: true,
+  decode: (s) => s === "on",
+  encode: (bool) => (bool ? "on" : "off"),
+})
 
 // Providing input not allowed by the source schema
 Schema.decodeUnknownSync(BooleanFromString)("wrong")
@@ -125,15 +121,11 @@ By composing these transformations, we get a schema that decodes a string into a
 import { Schema } from "effect"
 
 // Convert "on"/"off" to boolean and back
-const BooleanFromString = Schema.transform(
-  Schema.Literal("on", "off"),
-  Schema.Boolean,
-  {
-    strict: true,
-    decode: (s) => s === "on",
-    encode: (bool) => (bool ? "on" : "off")
-  }
-)
+const BooleanFromString = Schema.transform(Schema.Literal("on", "off"), Schema.Boolean, {
+  strict: true,
+  decode: (s) => s === "on",
+  encode: (bool) => (bool ? "on" : "off"),
+})
 
 const BooleanFromNumericString = Schema.transform(
   // Source schema: Convert string -> number
@@ -145,8 +137,8 @@ const BooleanFromNumericString = Schema.transform(
     // If number is positive, use "on", otherwise "off"
     decode: (n) => (n > 0 ? "on" : "off"),
     // If boolean is "on", use 1, otherwise -1
-    encode: (bool) => (bool === "on" ? 1 : -1)
-  }
+    encode: (bool) => (bool === "on" ? 1 : -1),
+  },
 )
 
 //     ┌─── string
@@ -171,7 +163,7 @@ import { Schema } from "effect"
 // This function builds a schema that converts between a readonly array
 // and a readonly set of items
 const ReadonlySetFromArray = <A, I, R>(
-  itemSchema: Schema.Schema<A, I, R>
+  itemSchema: Schema.Schema<A, I, R>,
 ): Schema.Schema<ReadonlySet<A>, ReadonlyArray<I>, R> =>
   Schema.transform(
     // Source schema: array of items
@@ -183,8 +175,8 @@ const ReadonlySetFromArray = <A, I, R>(
     {
       strict: true,
       decode: (items) => new Set(items),
-      encode: (set) => Array.from(set.values())
-    }
+      encode: (set) => Array.from(set.values()),
+    },
   )
 
 const schema = ReadonlySetFromArray(Schema.String)
@@ -206,9 +198,9 @@ console.log(Schema.encodeSync(schema)(new Set(["a", "b", "c"])))
 
 <Aside type="note" title="Why Schema.typeSchema is used">
   Please note that to define the target schema, we used
-  [Schema.typeSchema](/docs/schema/projections/#typeschema). This is
-  because the decoding/encoding of the elements is already handled by the
-  `from` schema: `Schema.Array(itemSchema)`, avoiding double decoding.
+  [Schema.typeSchema](/docs/schema/projections/#typeschema). This is because the decoding/encoding
+  of the elements is already handled by the `from` schema: `Schema.Array(itemSchema)`, avoiding
+  double decoding.
 </Aside>
 
 ### Non-strict option
@@ -231,15 +223,15 @@ const clamp =
       // Target schema: filter based on min/max range
       self.pipe(
         Schema.typeSchema,
-        Schema.filter((a) => a <= minimum || a >= maximum)
+        Schema.filter((a) => a <= minimum || a >= maximum),
       ),
-// @errors: 2345
+      // @errors: 2345
       {
         strict: true,
         // Clamp the number within the specified range
         decode: (a) => Number.clamp(a, { minimum, maximum }),
-        encode: (a) => a
-      }
+        encode: (a) => a,
+      },
     )
 ```
 
@@ -267,13 +259,13 @@ There are two ways to resolve this issue:
          self,
          self.pipe(
            Schema.typeSchema,
-           Schema.filter((a) => a >= minimum && a <= maximum)
+           Schema.filter((a) => a >= minimum && a <= maximum),
          ),
          {
            strict: false,
            decode: (a) => Number.clamp(a, { minimum, maximum }),
-           encode: (a) => a
-         }
+           encode: (a) => a,
+         },
        )
    ```
 
@@ -337,14 +329,14 @@ export const NumberFromString = Schema.transformOrFail(
             // Include the problematic input
             input,
             // Optional custom error message
-            "Failed to convert string to number"
-          )
+            "Failed to convert string to number",
+          ),
         )
       }
       return ParseResult.succeed(parsed)
     },
-    encode: (input, options, ast) => ParseResult.succeed(input.toString())
-  }
+    encode: (input, options, ast) => ParseResult.succeed(input.toString()),
+  },
 )
 
 //     ┌─── string
@@ -390,29 +382,25 @@ const get = (url: string): Effect.Effect<unknown, Error> =>
         }
         throw new Error(String(res.status))
       }),
-    catch: (e) => new Error(String(e))
+    catch: (e) => new Error(String(e)),
   })
 
 // Create a branded schema for a person's ID
 const PeopleId = Schema.String.pipe(Schema.brand("PeopleId"))
 
 // Define a schema with async transformation
-const PeopleIdFromString = Schema.transformOrFail(
-  Schema.String,
-  PeopleId,
-  {
-    strict: true,
-    decode: (s, _, ast) =>
-      // Make an API call to validate the ID
-      Effect.mapBoth(get(`https://swapi.dev/api/people/${s}`), {
-        // Error handling for failed API call
-        onFailure: (e) => new ParseResult.Type(ast, s, e.message),
-        // Return the ID if the API call succeeds
-        onSuccess: () => s
-      }),
-    encode: ParseResult.succeed
-  }
-)
+const PeopleIdFromString = Schema.transformOrFail(Schema.String, PeopleId, {
+  strict: true,
+  decode: (s, _, ast) =>
+    // Make an API call to validate the ID
+    Effect.mapBoth(get(`https://swapi.dev/api/people/${s}`), {
+      // Error handling for failed API call
+      onFailure: (e) => new ParseResult.Type(ast, s, e.message),
+      // Return the ID if the API call succeeds
+      onSuccess: () => s,
+    }),
+  encode: ParseResult.succeed,
+})
 
 //     ┌─── string
 //     ▼
@@ -427,18 +415,14 @@ type Type = typeof PeopleIdFromString.Type
 type Context = typeof PeopleIdFromString.Context
 
 // Run a successful decode operation
-Effect.runPromiseExit(Schema.decodeUnknown(PeopleIdFromString)("1")).then(
-  console.log
-)
+Effect.runPromiseExit(Schema.decodeUnknown(PeopleIdFromString)("1")).then(console.log)
 /*
 Output:
 { _id: 'Exit', _tag: 'Success', value: '1' }
 */
 
 // Run a decode operation that will fail
-Effect.runPromiseExit(
-  Schema.decodeUnknown(PeopleIdFromString)("fail")
-).then(console.log)
+Effect.runPromiseExit(Schema.decodeUnknown(PeopleIdFromString)("fail")).then(console.log)
 /*
 Output:
 {
@@ -484,25 +468,19 @@ const PeopleId = Schema.String.pipe(Schema.brand("PeopleId"))
 
 // Transform a string into a validated PeopleId,
 // using an external validation service
-const PeopleIdFromString = Schema.transformOrFail(
-  Schema.String,
-  PeopleId,
-  {
-    strict: true,
-    decode: (s, _, ast) =>
-      // Asynchronously validate the ID using the injected service
-      Effect.gen(function* () {
-        // Access the validation service
-        const validator = yield* Validation
-        // Use service to validate ID
-        yield* validator.validatePeopleid(s)
-        return s
-      }).pipe(
-        Effect.mapError((e) => new ParseResult.Type(ast, s, e.message))
-      ),
-    encode: ParseResult.succeed // Encode by simply returning the string
-  }
-)
+const PeopleIdFromString = Schema.transformOrFail(Schema.String, PeopleId, {
+  strict: true,
+  decode: (s, _, ast) =>
+    // Asynchronously validate the ID using the injected service
+    Effect.gen(function* () {
+      // Access the validation service
+      const validator = yield* Validation
+      // Use service to validate ID
+      yield* validator.validatePeopleid(s)
+      return s
+    }).pipe(Effect.mapError((e) => new ParseResult.Type(ast, s, e.message))),
+  encode: ParseResult.succeed, // Encode by simply returning the string
+})
 
 //     ┌─── string
 //     ▼
@@ -518,14 +496,12 @@ type Context = typeof PeopleIdFromString.Context
 
 // Layer to provide a successful validation service
 const SuccessTest = Layer.succeed(Validation, {
-  validatePeopleid: (_) => Effect.void
+  validatePeopleid: (_) => Effect.void,
 })
 
 // Run a successful decode operation
 Effect.runPromiseExit(
-  Schema.decodeUnknown(PeopleIdFromString)("1").pipe(
-    Effect.provide(SuccessTest)
-  )
+  Schema.decodeUnknown(PeopleIdFromString)("1").pipe(Effect.provide(SuccessTest)),
 ).then(console.log)
 /*
 Output:
@@ -534,14 +510,12 @@ Output:
 
 // Layer to provide a failing validation service
 const FailureTest = Layer.succeed(Validation, {
-  validatePeopleid: (_) => Effect.fail(new Error("404"))
+  validatePeopleid: (_) => Effect.fail(new Error("404")),
 })
 
 // Run a decode operation that will fail
 Effect.runPromiseExit(
-  Schema.decodeUnknown(PeopleIdFromString)("fail").pipe(
-    Effect.provide(FailureTest)
-  )
+  Schema.decodeUnknown(PeopleIdFromString)("fail").pipe(Effect.provide(FailureTest)),
 ).then(console.log)
 /*
 Output:
@@ -578,12 +552,12 @@ import { createHash } from "node:crypto"
 // with a minimum length requirement
 const PlainPassword = Schema.String.pipe(
   Schema.minLength(6),
-  Schema.brand("PlainPassword", { identifier: "PlainPassword" })
+  Schema.brand("PlainPassword", { identifier: "PlainPassword" }),
 )
 
 // Define a schema for hashed passwords as a separate branded type
 const HashedPassword = Schema.String.pipe(
-  Schema.brand("HashedPassword", { identifier: "HashedPassword" })
+  Schema.brand("HashedPassword", { identifier: "HashedPassword" }),
 )
 
 // Define a one-way transformation from plain passwords to hashed passwords
@@ -595,9 +569,7 @@ export const PasswordHashing = Schema.transformOrFail(
     strict: true,
     // Decode: Transform a plain password into a hashed password
     decode: (plainPassword) => {
-      const hash = createHash("sha256")
-        .update(plainPassword)
-        .digest("hex")
+      const hash = createHash("sha256").update(plainPassword).digest("hex")
       // Wrap the hash in Redacted
       return ParseResult.succeed(Redacted.make(hash))
     },
@@ -607,10 +579,10 @@ export const PasswordHashing = Schema.transformOrFail(
         new ParseResult.Forbidden(
           ast,
           hashedPassword,
-          "Encoding hashed passwords back to plain text is forbidden."
-        )
-      )
-  }
+          "Encoding hashed passwords back to plain text is forbidden.",
+        ),
+      ),
+  },
 )
 
 //     ┌─── string
@@ -622,15 +594,11 @@ type Encoded = typeof PasswordHashing.Encoded
 type Type = typeof PasswordHashing.Type
 
 // Example: Decoding a plain password into a hashed password
-console.log(
-  Schema.decodeUnknownSync(PasswordHashing)("myPlainPassword123")
-)
+console.log(Schema.decodeUnknownSync(PasswordHashing)("myPlainPassword123"))
 // Output: <redacted>
 
 // Example: Attempting to encode a hashed password back to plain text
-console.log(
-  Schema.encodeUnknownSync(PasswordHashing)(Redacted.make("2ef2b7..."))
-)
+console.log(Schema.encodeUnknownSync(PasswordHashing)(Redacted.make("2ef2b7...")))
 /*
 throws:
 ParseError: (PlainPassword <-> Redacted(<redacted>))
@@ -681,17 +649,15 @@ import { Schema } from "effect"
 // Without the `strict: false` option,
 // this composition raises a TypeScript error
 Schema.compose(
-// @errors: 2769
+  // @errors: 2769
   Schema.Union(Schema.Null, Schema.Literal("0")),
-  Schema.NumberFromString
+  Schema.NumberFromString,
 )
 
 // Use `strict: false` to allow type flexibility
-Schema.compose(
-  Schema.Union(Schema.Null, Schema.Literal("0")),
-  Schema.NumberFromString,
-  { strict: false }
-)
+Schema.compose(Schema.Union(Schema.Null, Schema.Literal("0")), Schema.NumberFromString, {
+  strict: false,
+})
 ```
 
 ## Effectful Filters
@@ -714,16 +680,12 @@ const ValidUsername = Schema.String.pipe(
     Effect.promise(() =>
       // Validate the username asynchronously,
       // returning an error message if invalid
-      validateUsername(username).then(
-        (valid) => valid || "Invalid username"
-      )
-    )
-  )
+      validateUsername(username).then((valid) => valid || "Invalid username"),
+    ),
+  ),
 ).annotations({ identifier: "ValidUsername" })
 
-Effect.runPromise(Schema.decodeUnknown(ValidUsername)("xxx")).then(
-  console.log
-)
+Effect.runPromise(Schema.decodeUnknown(ValidUsername)("xxx")).then(console.log)
 /*
 ParseError: ValidUsername
 └─ Transformation process failure
@@ -770,8 +732,8 @@ console.log(decode(" a ")) // "a"
 ```
 
 <Aside type="tip" title="Trimmed Check">
-  If you were looking for a combinator to check if a string is trimmed,
-  check out the `Schema.trimmed` filter.
+  If you were looking for a combinator to check if a string is trimmed, check out the
+  `Schema.trimmed` filter.
 </Aside>
 
 ### Lowercase
@@ -792,9 +754,8 @@ console.log(decode(" ABc ")) // " abc "
 ```
 
 <Aside type="tip" title="Lowercase And Lowercased">
-  If you were looking for a combinator to check if a string is lowercased,
-  check out the `Schema.Lowercased` schema or the `Schema.lowercased`
-  filter.
+  If you were looking for a combinator to check if a string is lowercased, check out the
+  `Schema.Lowercased` schema or the `Schema.lowercased` filter.
 </Aside>
 
 ### Uppercase
@@ -815,9 +776,8 @@ console.log(decode(" abC ")) // " ABC "
 ```
 
 <Aside type="tip" title="Uppercase And Uppercased">
-  If you were looking for a combinator to check if a string is uppercased,
-  check out the `Schema.Uppercased` schema or the `Schema.uppercased`
-  filter.
+  If you were looking for a combinator to check if a string is uppercased, check out the
+  `Schema.Uppercased` schema or the `Schema.uppercased` filter.
 </Aside>
 
 ### Capitalize
@@ -838,9 +798,8 @@ console.log(decode(" abC ")) // " abC "
 ```
 
 <Aside type="tip" title="Capitalize And Capitalized">
-  If you were looking for a combinator to check if a string is
-  capitalized, check out the `Schema.Capitalized` schema or the
-  `Schema.capitalized` filter.
+  If you were looking for a combinator to check if a string is capitalized, check out the
+  `Schema.Capitalized` schema or the `Schema.capitalized` filter.
 </Aside>
 
 ### Uncapitalize
@@ -861,9 +820,8 @@ console.log(decode(" AbC ")) // " AbC "
 ```
 
 <Aside type="tip" title="Uncapitalize And Uncapitalized">
-  If you were looking for a combinator to check if a string is
-  uncapitalized, check out the `Schema.Uncapitalized` schema or the
-  `Schema.uncapitalized` filter.
+  If you were looking for a combinator to check if a string is uncapitalized, check out the
+  `Schema.Uncapitalized` schema or the `Schema.uncapitalized` filter.
 </Aside>
 
 ### parseJson
@@ -969,13 +927,10 @@ import { Schema } from "effect"
 
 const PaginationSchema = Schema.Struct({
   maxItemPerPage: Schema.Number,
-  page: Schema.Number
+  page: Schema.Number,
 })
 
-const UrlSchema = Schema.compose(
-  Schema.StringFromUriComponent,
-  Schema.parseJson(PaginationSchema)
-)
+const UrlSchema = Schema.compose(Schema.StringFromUriComponent, Schema.parseJson(PaginationSchema))
 
 console.log(Schema.encodeSync(UrlSchema)({ maxItemPerPage: 10, page: 1 }))
 // Output: %7B%22maxItemPerPage%22%3A10%2C%22page%22%3A1%7D
@@ -1248,8 +1203,8 @@ console.log(decode(".124"))
 Converts a number to a `BigDecimal`.
 
 <Aside type="caution" title="Invalid Range">
-  When encoding, this Schema will produce incorrect results if the
-  BigDecimal exceeds the 64-bit range of a number.
+  When encoding, this Schema will produce incorrect results if the BigDecimal exceeds the 64-bit
+  range of a number.
 </Aside>
 
 **Example** (Parsing BigDecimal from Number)
@@ -1274,10 +1229,7 @@ import { Schema } from "effect"
 import { BigDecimal } from "effect"
 
 const schema = Schema.BigDecimal.pipe(
-  Schema.clampBigDecimal(
-    BigDecimal.fromNumber(-1),
-    BigDecimal.fromNumber(1)
-  )
+  Schema.clampBigDecimal(BigDecimal.fromNumber(-1), BigDecimal.fromNumber(1)),
 )
 
 const decode = Schema.decodeUnknownSync(schema)

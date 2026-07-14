@@ -16,10 +16,9 @@ Layer.merge(Layer.provide(L2, L1), Layer.provide(L3, L1))
 then the `L1` layer will be allocated only once.
 
 <Aside type="caution" title="Avoid Duplicate Layer Creation">
-  Layers are memoized using **reference equality**. Therefore, if you have
-  a layer that is created by calling a function like `f()`, you should
-  _only_ call that `f` once and re-use the resulting layer so that you are
-  always using the same instance.
+  Layers are memoized using **reference equality**. Therefore, if you have a layer that is created
+  by calling a function like `f()`, you should _only_ call that `f` once and re-use the resulting
+  layer so that you are always using the same instance.
 </Aside>
 
 ## Memoization When Providing Globally
@@ -41,9 +40,7 @@ class C extends Context.Tag("C")<C, { readonly c: boolean }>() {}
 
 const ALive = Layer.effect(
   A,
-  Effect.succeed({ a: 5 }).pipe(
-    Effect.tap(() => Effect.log("initialized"))
-  )
+  Effect.succeed({ a: 5 }).pipe(Effect.tap(() => Effect.log("initialized"))),
 )
 
 const BLive = Layer.effect(
@@ -51,7 +48,7 @@ const BLive = Layer.effect(
   Effect.gen(function* () {
     const { a } = yield* A
     return { b: String(a) }
-  })
+  }),
 )
 
 const CLive = Layer.effect(
@@ -59,7 +56,7 @@ const CLive = Layer.effect(
   Effect.gen(function* () {
     const { a } = yield* A
     return { c: a > 0 }
-  })
+  }),
 )
 
 const program = Effect.gen(function* () {
@@ -69,7 +66,7 @@ const program = Effect.gen(function* () {
 
 const runnable = Effect.provide(
   program,
-  Layer.merge(Layer.provide(BLive, ALive), Layer.provide(CLive, ALive))
+  Layer.merge(Layer.provide(BLive, ALive), Layer.provide(CLive, ALive)),
 )
 
 Effect.runPromise(runnable)
@@ -98,9 +95,7 @@ class C extends Context.Tag("C")<C, { readonly c: boolean }>() {}
 
 const ALive = Layer.effect(
   A,
-  Effect.succeed({ a: 5 }).pipe(
-    Effect.tap(() => Effect.log("initialized"))
-  )
+  Effect.succeed({ a: 5 }).pipe(Effect.tap(() => Effect.log("initialized"))),
 )
 
 const BLive = Layer.effect(
@@ -108,7 +103,7 @@ const BLive = Layer.effect(
   Effect.gen(function* () {
     const { a } = yield* A
     return { b: String(a) }
-  })
+  }),
 )
 
 const CLive = Layer.effect(
@@ -116,7 +111,7 @@ const CLive = Layer.effect(
   Effect.gen(function* () {
     const { a } = yield* A
     return { c: a > 0 }
-  })
+  }),
 )
 
 const program = Effect.gen(function* () {
@@ -126,10 +121,7 @@ const program = Effect.gen(function* () {
 
 const runnable = Effect.provide(
   program,
-  Layer.merge(
-    Layer.provide(BLive, Layer.fresh(ALive)),
-    Layer.provide(CLive, Layer.fresh(ALive))
-  )
+  Layer.merge(Layer.provide(BLive, Layer.fresh(ALive)), Layer.provide(CLive, Layer.fresh(ALive))),
 )
 
 Effect.runPromise(runnable)
@@ -156,9 +148,7 @@ class A extends Context.Tag("A")<A, { readonly a: number }>() {}
 
 const ALive = Layer.effect(
   A,
-  Effect.succeed({ a: 5 }).pipe(
-    Effect.tap(() => Effect.log("initialized"))
-  )
+  Effect.succeed({ a: 5 }).pipe(Effect.tap(() => Effect.log("initialized"))),
 )
 
 const program = Effect.gen(function* () {
@@ -188,9 +178,7 @@ class A extends Context.Tag("A")<A, { readonly a: number }>() {}
 
 const ALive = Layer.effect(
   A,
-  Effect.succeed({ a: 5 }).pipe(
-    Effect.tap(() => Effect.log("initialized"))
-  )
+  Effect.succeed({ a: 5 }).pipe(Effect.tap(() => Effect.log("initialized"))),
 )
 
 const program = Effect.scoped(
@@ -199,9 +187,9 @@ const program = Effect.scoped(
       Effect.gen(function* () {
         yield* Effect.provide(A, memoized)
         yield* Effect.provide(A, memoized)
-      })
-    )
-  )
+      }),
+    ),
+  ),
 )
 
 Effect.runPromise(program)

@@ -28,9 +28,9 @@ const test = Effect.gen(function* () {
     Effect.timeoutTo({
       duration: "1 minute",
       onSuccess: Option.some,
-      onTimeout: () => Option.none<void>()
+      onTimeout: () => Option.none<void>(),
     }),
-    Effect.fork
+    Effect.fork,
   )
 
   // Adjust the TestClock by 1 minute to simulate the passage of time
@@ -49,9 +49,8 @@ Effect.runPromise(test)
 A key point is forking the fiber where `Effect.sleep` is invoked. Calls to `Effect.sleep` and related methods wait until the clock time matches or exceeds the scheduled time for their execution. By forking the fiber, we retain control over the clock time adjustments.
 
 <Aside type="tip" title="Best Practices">
-  A recommended pattern when using the `TestClock` is to fork the effect
-  being tested, adjust the clock time as needed, and then verify that the
-  expected outcomes have occurred.
+  A recommended pattern when using the `TestClock` is to fork the effect being tested, adjust the
+  clock time as needed, and then verify that the expected outcomes have occurred.
 </Aside>
 
 ## Testing Recurring Effects
@@ -77,7 +76,7 @@ const test = Effect.gen(function* () {
     // Delay the effect for 60 minutes and repeat it forever
     Effect.delay("60 minutes"),
     Effect.forever,
-    Effect.fork
+    Effect.fork,
   )
 
   // Check if no effect is performed before the recurrence period
@@ -152,10 +151,9 @@ const test = Effect.gen(function* () {
 
   // Run two effects concurrently: sleep for 10 seconds and succeed
   // the deferred with a value of 1
-  yield* Effect.all(
-    [Effect.sleep("10 seconds"), Deferred.succeed(deferred, 1)],
-    { concurrency: "unbounded" }
-  ).pipe(Effect.fork)
+  yield* Effect.all([Effect.sleep("10 seconds"), Deferred.succeed(deferred, 1)], {
+    concurrency: "unbounded",
+  }).pipe(Effect.fork)
 
   // Adjust the TestClock by 10 seconds
   yield* TestClock.adjust("10 seconds")

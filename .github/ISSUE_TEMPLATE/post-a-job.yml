@@ -7,8 +7,6 @@ body:
   - type: input
     id: company
     attributes:
-      label: Company name
-      placeholder: "Acme Inc."
       label: Company website
       placeholder: "https://companywebsite.com"
     validations:

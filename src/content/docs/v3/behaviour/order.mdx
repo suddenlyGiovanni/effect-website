@@ -100,10 +100,7 @@ interface Person {
 //
 //      ┌─── Order<Person>
 //      ▼
-const byName = Order.mapInput(
-  Order.string,
-  (person: Person) => person.name
-)
+const byName = Order.mapInput(Order.string, (person: Person) => person.name)
 ```
 
 The `Order.mapInput` function takes two arguments:
@@ -125,15 +122,12 @@ interface Person {
 }
 
 // Create a custom order to sort Person objects by name in ascending order
-const byName = Order.mapInput(
-  Order.string,
-  (person: Person) => person.name
-)
+const byName = Order.mapInput(Order.string, (person: Person) => person.name)
 
 const persons: ReadonlyArray<Person> = [
   { name: "Charlie", age: 22 },
   { name: "Alice", age: 25 },
-  { name: "Bob", age: 30 }
+  { name: "Bob", age: 30 },
 ]
 
 // Sort persons array using the custom order
@@ -168,10 +162,7 @@ interface Person {
 }
 
 // Create an Order to sort people by their names in ascending order
-const byName = Order.mapInput(
-  Order.string,
-  (person: Person) => person.name
-)
+const byName = Order.mapInput(Order.string, (person: Person) => person.name)
 
 // Create an Order to sort people by their ages in ascending order
 const byAge = Order.mapInput(Order.number, (person: Person) => person.age)
@@ -183,9 +174,9 @@ const result = Array.sort(
   [
     { name: "Bob", age: 20 },
     { name: "Alice", age: 18 },
-    { name: "Bob", age: 18 }
+    { name: "Bob", age: 18 },
   ],
-  byNameAge
+  byNameAge,
 )
 
 console.log(result)
@@ -279,7 +270,7 @@ import { Order } from "effect"
 // Define a function to clamp numbers between 20 and 30
 const clampNumbers = Order.clamp(Order.number)({
   minimum: 20,
-  maximum: 30
+  maximum: 30,
 })
 
 // Value 26 is within the range [20, 30], so it remains unchanged
@@ -307,7 +298,7 @@ import { Order } from "effect"
 // Create a function to check if numbers are between 20 and 30
 const betweenNumbers = Order.between(Order.number)({
   minimum: 20,
-  maximum: 30
+  maximum: 30,
 })
 
 // Value 26 falls within the range [20, 30], so it returns true

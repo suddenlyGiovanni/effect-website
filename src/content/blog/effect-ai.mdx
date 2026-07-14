@@ -1,7 +1,7 @@
 ---
 pagefind: false
 title: Developing AI Applications with Effect
-excerpt: A post highlighting the new Effect AI integration packages 
+excerpt: A post highlighting the new Effect AI integration packages
 date: 2025-04-01
 authors:
   - maxwell_brown
@@ -11,9 +11,9 @@ tags:
 
 Integrating with large language models (LLMs) has become essential for developing modern applications. Whether you're generating content, analyzing data, or building conversational interfaces, adding AI-powered features to your application has the potential to enhance your product's capabilities and improve user experience.
 
-However, successfully integrating LLM-powered interactions into an application can be quite challenging. Developers must navigate a complex landscape of potential failures: network errors, provider outages, rate limits, and more, all while keeping the underlying application stable and responsive for the end user. In addition, the differences between LLM provider APIs can force developers to write brittle "glue code" which can become a significant source of technical debt. 
+However, successfully integrating LLM-powered interactions into an application can be quite challenging. Developers must navigate a complex landscape of potential failures: network errors, provider outages, rate limits, and more, all while keeping the underlying application stable and responsive for the end user. In addition, the differences between LLM provider APIs can force developers to write brittle "glue code" which can become a significant source of technical debt.
 
-Today, we are going to discuss [Effect's AI integration packages](/docs/ai/introduction/) — a set of libraries designed to make working with LLMs simple, flexible, and provider-agnostic. 
+Today, we are going to discuss [Effect's AI integration packages](/docs/ai/introduction/) — a set of libraries designed to make working with LLMs simple, flexible, and provider-agnostic.
 
 ## Why Effect for AI?
 
@@ -22,7 +22,7 @@ Effect's AI packages provide simple, composable building blocks to model LLM int
 🔌 **Write Provider-Agnostic Business Logic**
 
 Define your LLM interactions once and plug in the specific provider you need later. Switch between any supported provider without changing your business logic.
-  
+
 🧪 **Test LLM Interactions**
 
 Test your LLM interactions by simply providing mock service implementations during testing to ensure your AI-dependent business logic is executed in the way that you expect.
@@ -40,7 +40,6 @@ Instrument your LLM interactions with Effect's built-in tracing, logging, and me
 Effect's AI ecosystem consists of several focused packages, each with a specific purpose:
 
 - **`@effect/ai`**: The core package that defines provider-agnostic services and abstractions for interacting with LLMs
-  
 - **`@effect/ai-openai`**: Concrete implementations of AI services backed by the OpenAI's Responses API
 
 - **`@effect/ai-anthropic`**: Concrete implementations of AI services backed by the Anthropic's Messages API
@@ -49,13 +48,13 @@ Effect's AI ecosystem consists of several focused packages, each with a specific
 
 - **`@effect/ai-google`**: Concrete implementations of AI services backed by Google's Gemini API
 
-This architecture allows you to describe your LLM interactions with provider-agnostic services, and the provide a concrete implementation once you are ready to run your program. 
+This architecture allows you to describe your LLM interactions with provider-agnostic services, and the provide a concrete implementation once you are ready to run your program.
 
 ## Core Concepts
 
 ### Provider-Agnostic Programming
 
-The central philosophy behind Effect's AI integrations is **provider-agnostic programming**. 
+The central philosophy behind Effect's AI integrations is **provider-agnostic programming**.
 
 Instead of hardcoding calls to a specific LLM provider's API, you describe your interaction using generic services provided by the base `@effect/ai` package.
 
@@ -67,29 +66,29 @@ import { Effect } from "effect"
 
 // Define a provider-agnostic AI interaction
 const generateDadJoke = LanguageModel.generateText({
-  prompt: "Generate a dad joke"
+  prompt: "Generate a dad joke",
 })
 ```
 
-Notice that this code doesn't specify which model provider to use - it simply describes *what* we want to do (generate a dad joke), not *how* or *where* to do it. 
+Notice that this code doesn't specify which model provider to use - it simply describes _what_ we want to do (generate a dad joke), not _how_ or _where_ to do it.
 
 This separation of concerns is at the heart of Effect's approach to describing interactions with large language models.
 
 ### The `Model` Abstraction
 
-To bridge the gap between provider-agnostic business logic and concrete LLM providers, Effect introduces the `Model` abstraction. 
+To bridge the gap between provider-agnostic business logic and concrete LLM providers, Effect introduces the `Model` abstraction.
 
 An `Model` represents a specific LLM from a provider that can be used to satisfy service requirements, such as `LanguageModel` or `EmbeddingsModel`.
 
 Here is an example of how you can create and use an `Model` designed to satisfy the `LanguageModel` service using OpenAI:
 
-```ts twoslash 
+```ts twoslash
 import { LanguageModel } from "@effect/ai"
 import { OpenAiLanguageModel } from "@effect/ai-openai"
 import { Console, Effect } from "effect"
 
 const generateDadJoke = LanguageModel.generateText({
-  prompt: "Generate a dad joke"
+  prompt: "Generate a dad joke",
 })
 
 // Create an AiModel for OpenAI's GPT-4o
@@ -99,7 +98,7 @@ const main = generateDadJoke.pipe(
   // Log out the generated text
   Effect.flatMap((response) => Console.log(response.text)),
   // Provide the concrete model to the program
-  Effect.provide(Gpt4o)
+  Effect.provide(Gpt4o),
 )
 ```
 
@@ -121,7 +120,7 @@ import { Config, Console, Effect, Layer } from "effect"
 
 // 1. Define our provider-agnostic AI interaction
 const generateDadJoke = LanguageModel.generateText({
-  prompt: "Generate a dad joke"
+  prompt: "Generate a dad joke",
 })
 
 // 2. Create an AiModel for a specific provider and model
@@ -130,29 +129,26 @@ const Gpt4o = OpenAiLanguageModel.model("gpt-4o")
 // 3. Create a program that uses the model
 const main = generateDadJoke.pipe(
   Effect.flatMap((response) => Console.log(response.text)),
-  Effect.provide(Gpt4o)
+  Effect.provide(Gpt4o),
 )
 
 // 4. Create a Layer that provides the OpenAI client
 const OpenAi = OpenAiClient.layerConfig({
-  apiKey: Config.redacted("OPENAI_API_KEY")
+  apiKey: Config.redacted("OPENAI_API_KEY"),
 })
 
 // 5. Provide an HTTP client implementation
 const OpenAiWithHttp = Layer.provide(OpenAi, NodeHttpClient.layerUndici)
 
 // 6. Run the program with the provided dependencies
-main.pipe(
-  Effect.provide(OpenAiWithHttp),
-  Effect.runPromise
-)
+main.pipe(Effect.provide(OpenAiWithHttp), Effect.runPromise)
 ```
 
 ## Advanced Features
 
 ### Error Handling
 
-One of Effect's greatest strengths is its robust error handling, which is particularly valuable for LLM interactions where failure scenarios can be complex and varied. With Effect, these errors are typed and can be handled explicitly. 
+One of Effect's greatest strengths is its robust error handling, which is particularly valuable for LLM interactions where failure scenarios can be complex and varied. With Effect, these errors are typed and can be handled explicitly.
 
 For example, if our `generateDadJoke` program were re-written to possibly fail with a `RateLimitError` or an `InvalidInputError`, we could write logic to handle those errors:
 
@@ -177,32 +173,34 @@ const withErrorHandling = generateDadJoke.pipe(
     RateLimitError: (error) =>
       Effect.logError("Rate limited, retrying in a moment").pipe(
         Effect.delay("1 seconds"),
-        Effect.andThen(generateDadJoke)
+        Effect.andThen(generateDadJoke),
       ),
     InvalidInputError: (error) =>
-      Effect.succeed(new LanguageModel.GenerateTextResponse([
-        Response.makePart("text", {
-          text: "I could not generate a dad joke right now!"
-        })
-      ]))
-  })
+      Effect.succeed(
+        new LanguageModel.GenerateTextResponse([
+          Response.makePart("text", {
+            text: "I could not generate a dad joke right now!",
+          }),
+        ]),
+      ),
+  }),
 )
 ```
 
-### Structured Execution Plans 
+### Structured Execution Plans
 
-For more complex scenarios where you need reliability across multiple providers, Effect offers the powerful [`ExecutionPlan` abstraction](/docs/ai/planning-llm-interactions/). 
+For more complex scenarios where you need reliability across multiple providers, Effect offers the powerful [`ExecutionPlan` abstraction](/docs/ai/planning-llm-interactions/).
 
 `ExecutionPlan` lets you create a structured execution plan for your Effect programs with built-in retry logic, fallback strategies, and error handling:
 
-```ts twoslash 
+```ts twoslash
 import { AiError, LanguageModel } from "@effect/ai"
 import { AnthropicLanguageModel } from "@effect/ai-anthropic"
 import { OpenAiLanguageModel } from "@effect/ai-openai"
 import { Console, Data, Effect, ExecutionPlan, Schedule } from "effect"
 
 const generateDadJoke = LanguageModel.generateText({
-  prompt: "Generate a dad joke"
+  prompt: "Generate a dad joke",
 })
 
 // Define domain-specific error types
@@ -215,19 +213,22 @@ class ProviderOutage extends Data.TaggedError("ProviderOutage") {}
 // - Waits with an exponential backoff between attempts
 // - Only attempts the call to OpenAI if the error is a `NetworkError`
 // - Falls back to using Anthropic otherwise
-const DadJokePlan = ExecutionPlan.make({
-  provide: OpenAiLanguageModel.model("gpt-4o"),
-  attempts: 3,
-  schedule: Schedule.exponential("100 millis"),
-  while: (error: AiError.AiError | NetworkError | ProviderOutage) => 
-    error._tag === "NetworkError"
-}, {
-  provide: AnthropicLanguageModel.model("claude-3-7-sonnet-latest")
-})
+const DadJokePlan = ExecutionPlan.make(
+  {
+    provide: OpenAiLanguageModel.model("gpt-4o"),
+    attempts: 3,
+    schedule: Schedule.exponential("100 millis"),
+    while: (error: AiError.AiError | NetworkError | ProviderOutage) =>
+      error._tag === "NetworkError",
+  },
+  {
+    provide: AnthropicLanguageModel.model("claude-3-7-sonnet-latest"),
+  },
+)
 
 const program = generateDadJoke.pipe(
   Effect.flatMap((response) => Console.log(response.text)),
-  Effect.withExecutionPlan(DadJokePlan)
+  Effect.withExecutionPlan(DadJokePlan),
 )
 ```
 
@@ -248,39 +249,38 @@ import { LanguageModel } from "@effect/ai"
 import { Effect } from "effect"
 
 const generateDadJoke = LanguageModel.generateText({
-  prompt: "Generate a dad joke"
+  prompt: "Generate a dad joke",
 })
 
 // Generate multiple jokes concurrently
-const concurrentDadJokes = Effect.all([
-  generateDadJoke,
-  generateDadJoke,
-  generateDadJoke
-], { concurrency: 2 }) // Limit to 2 concurrent requests
+const concurrentDadJokes = Effect.all([generateDadJoke, generateDadJoke, generateDadJoke], {
+  concurrency: 2,
+}) // Limit to 2 concurrent requests
 ```
 
 ### Streaming Responses
 
-Effect's AI integrations support streaming responses via Effect's [`Stream` type](/docs/stream/introduction/): 
+Effect's AI integrations support streaming responses via Effect's [`Stream` type](/docs/stream/introduction/):
 
 ```ts twoslash
 import { LanguageModel } from "@effect/ai"
 import { Effect, Stream } from "effect"
 
 // Use `LanguageModel.streamText` to stream parts of a response from a large
-// language model provider 
+// language model provider
 const streamingJoke = LanguageModel.streamText({
-  prompt: "Tell me a long dad joke"
+  prompt: "Tell me a long dad joke",
 }).pipe(
   Stream.runForEach((part) =>
     Effect.sync(() => {
       if (part.type === "text-delta") {
         process.stdout.write(part.delta)
       }
-    })
-  )
+    }),
+  ),
 )
 ```
+
 ## Conclusion
 
 Whether you're building an intelligent agent, an interactive chat application, or a system that leverages LLMs for background tasks, Effect's AI packages provide all the tools you need and more. Our provider-agnostic approach will ensure your code remains adaptable as the AI landscape continues to evolve.

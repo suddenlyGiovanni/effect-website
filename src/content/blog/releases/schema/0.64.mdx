@@ -105,12 +105,11 @@ Now let's see an example with a combinator that, given an input schema for a cer
 import * as S from "@effect/schema/Schema"
 
 // API interface
-export interface pair<S extends S.Schema.Any>
-  extends S.Schema<
-    readonly [S.Schema.Type<S>, S.Schema.Type<S>],
-    readonly [S.Schema.Encoded<S>, S.Schema.Encoded<S>],
-    S.Schema.Context<S>
-  > {}
+export interface pair<S extends S.Schema.Any> extends S.Schema<
+  readonly [S.Schema.Type<S>, S.Schema.Type<S>],
+  readonly [S.Schema.Encoded<S>, S.Schema.Encoded<S>],
+  S.Schema.Context<S>
+> {}
 
 // API
 export const pair = <S extends S.Schema.Any>(schema: S): pair<S> =>
@@ -162,7 +161,7 @@ const Person: S.struct<{
 */
 const Person = S.struct({
   name: S.string,
-  age: S.number
+  age: S.number,
 })
 ```
 
@@ -226,7 +225,7 @@ const Person: S.struct<{
 */
 const Person = S.struct({
   name: S.string,
-  age: S.number
+  age: S.number,
 })
 
 /*
@@ -259,7 +258,7 @@ import * as S from "@effect/schema/Schema"
 
 const Person = S.struct({
   name: S.string,
-  age: S.number
+  age: S.number,
 })
 
 /*
@@ -271,7 +270,7 @@ const PersonWithId: S.struct<{
 */
 const PersonWithId = S.struct({
   ...Person.fields,
-  id: S.number
+  id: S.number,
 })
 ```
 
@@ -400,9 +399,9 @@ const opaque: S.typeLiteral<{
 */
 const opaque = S.struct(
   {
-    a: S.number
+    a: S.number,
   },
-  { key: S.string, value: S.number }
+  { key: S.string, value: S.number },
 )
 
 /*
@@ -429,9 +428,9 @@ const opaque: S.typeLiteral<{
 */
 const opaque = S.struct(
   {
-    a: S.number
+    a: S.number,
   },
-  S.record(S.string, S.number)
+  S.record(S.string, S.number),
 )
 
 /*
@@ -498,11 +497,7 @@ and optionally other elements that follow the rest:
 import * as S from "@effect/schema/Schema"
 
 // const opaque: S.tupleType<readonly [S.$string, S.OptionalElement<S.$number>], [S.$boolean, S.$string]>
-const opaque = S.tuple(
-  [S.string, S.optionalElement(S.number)],
-  S.boolean,
-  S.string
-)
+const opaque = S.tuple([S.string, S.optionalElement(S.number)], S.boolean, S.string)
 
 // const nonOpaque: S.Schema<readonly [string, number | undefined, ...boolean[], string], readonly [string, number | undefined, ...boolean[], string], never>
 const nonOpaque = S.asSchema(opaque)
@@ -540,22 +535,15 @@ const Person: S.struct<{
 const Person = S.struct({
   name: S.string,
   age: S.propertySignature(S.NumberFromString, {
-    annotations: { identifier: "Age" }
-  })
+    annotations: { identifier: "Age" },
+  }),
 })
 ```
 
 Let's delve into the details of all the information contained in the type of a `PropertySignature`:
 
 ```ts
-age: PropertySignature<
-  ToToken,
-  ToType,
-  FromKey,
-  FromToken,
-  FromType,
-  Context
->
+age: PropertySignature<ToToken, ToType, FromKey, FromToken, FromType, Context>
 ```
 
 - `age`: is the key of the "To" field
@@ -600,7 +588,7 @@ const Person: S.struct<{
 */
 const Person = S.struct({
   name: S.string,
-  age: S.propertySignature(S.NumberFromString).pipe(S.fromKey("AGE"))
+  age: S.propertySignature(S.NumberFromString).pipe(S.fromKey("AGE")),
 })
 ```
 
@@ -644,10 +632,10 @@ const Name = S.NonEmpty.pipe(
       const service = yield* Effect.serviceOption(Messages)
       return Option.match(service, {
         onNone: () => "Invalid string",
-        onSome: (messages) => messages.NonEmpty
+        onSome: (messages) => messages.NonEmpty,
       })
-    })
-  )
+    }),
+  ),
 )
 
 S.decodeUnknownSync(Name)("") // => throws "Invalid string"
@@ -656,11 +644,11 @@ const result = S.decodeUnknownEither(Name)("").pipe(
   Either.mapLeft((error) =>
     TreeFormatter.formatErrorEffect(error).pipe(
       Effect.provideService(Messages, {
-        NonEmpty: "should be non empty"
+        NonEmpty: "should be non empty",
       }),
-      Effect.runSync
-    )
-  )
+      Effect.runSync,
+    ),
+  ),
 )
 
 console.log(result) // => { _id: 'Either', _tag: 'Left', left: 'should be non empty' }
@@ -738,10 +726,7 @@ console.log(result) // => { _id: 'Either', _tag: 'Left', left: 'should be non em
 
   const schema1 = S.tuple().pipe(S.rest(S.number), S.element(S.boolean))
 
-  const schema2 = S.tuple(S.string).pipe(
-    S.rest(S.number),
-    S.element(S.boolean)
-  )
+  const schema2 = S.tuple(S.string).pipe(S.rest(S.number), S.element(S.boolean))
   ```
 
   Now
@@ -781,13 +766,11 @@ console.log(result) // => { _id: 'Either', _tag: 'Left', left: 'should be non em
   Before
 
   ```ts
-  S.string.pipe(
-    S.propertySignatureAnnotations({ description: "description" })
-  )
+  S.string.pipe(S.propertySignatureAnnotations({ description: "description" }))
 
   S.optional(S.string, {
     exact: true,
-    annotations: { description: "description" }
+    annotations: { description: "description" },
   })
   ```
 
@@ -795,11 +778,11 @@ console.log(result) // => { _id: 'Either', _tag: 'Left', left: 'should be non em
 
   ```ts
   S.propertySignatureDeclaration(S.string).annotations({
-    description: "description"
+    description: "description",
   })
 
   S.optional(S.string, { exact: true }).annotations({
-    description: "description"
+    description: "description",
   })
   ```
 
@@ -813,10 +796,7 @@ console.log(result) // => { _id: 'Either', _tag: 'Left', left: 'should be non em
 
 - enhance the `struct` API to allow records:
   ```ts
-  const schema1 = S.struct(
-    { a: S.number },
-    { key: S.string, value: S.number }
-  )
+  const schema1 = S.struct({ a: S.number }, { key: S.string, value: S.number })
   // or
   const schema2 = S.struct({ a: S.number }, S.record(S.string, S.number))
   ```
@@ -849,9 +829,9 @@ console.log(result) // => { _id: 'Either', _tag: 'Left', left: 'should be non em
 
   class A extends S.Class<A>()(
     {
-      a: S.string
+      a: S.string,
     },
-    { description: "some description..." } // <= annotations
+    { description: "some description..." }, // <= annotations
   ) {}
 
   console.log(AST.getDescriptionAnnotation((A.ast as AST.Transform).to))

@@ -19,9 +19,7 @@ To declare a schema for a primitive data type, such as `File`, you can use the `
 import { Schema } from "effect"
 
 // Declare a schema for the File type using a type guard
-const FileFromSelf = Schema.declare(
-  (input: unknown): input is File => input instanceof File
-)
+const FileFromSelf = Schema.declare((input: unknown): input is File => input instanceof File)
 
 const decode = Schema.decodeUnknownSync(FileFromSelf)
 
@@ -41,8 +39,8 @@ ParseError: Expected <declaration schema>, actual null
 ```
 
 <Aside type="tip" title="Adding Annotations">
-  Annotations like `identifier` and `description` are useful for improving
-  error messages and making schemas self-documenting.
+  Annotations like `identifier` and `description` are useful for improving error messages and making
+  schemas self-documenting.
 </Aside>
 
 To enhance the default error message, you can add annotations, particularly the `identifier`, `title`, and `description` annotations (none of these annotations are required, but they are encouraged for good practice and can make your schema "self-documenting"). These annotations will be utilized by the messaging system to return more meaningful messages.
@@ -57,15 +55,12 @@ To enhance the default error message, you can add annotations, particularly the 
 import { Schema } from "effect"
 
 // Declare a schema for the File type with additional annotations
-const FileFromSelf = Schema.declare(
-  (input: unknown): input is File => input instanceof File,
-  {
-    // A unique identifier for the schema
-    identifier: "FileFromSelf",
-    // Detailed description of the schema
-    description: "The `File` type in JavaScript"
-  }
-)
+const FileFromSelf = Schema.declare((input: unknown): input is File => input instanceof File, {
+  // A unique identifier for the schema
+  identifier: "FileFromSelf",
+  // Detailed description of the schema
+  description: "The `File` type in JavaScript",
+})
 
 const decode = Schema.decodeUnknownSync(FileFromSelf)
 
@@ -95,7 +90,7 @@ import { ParseResult, Schema } from "effect"
 
 export const MyReadonlySet = <A, I, R>(
   // Schema for the elements of the Set
-  item: Schema.Schema<A, I, R>
+  item: Schema.Schema<A, I, R>,
 ): Schema.Schema<ReadonlySet<A>, ReadonlySet<I>, R> =>
   Schema.declare(
     // Store the schema for the Set's elements
@@ -107,13 +102,10 @@ export const MyReadonlySet = <A, I, R>(
           // Decode each element in the Set
           const elements = ParseResult.decodeUnknown(Schema.Array(item))(
             Array.from(input.values()),
-            parseOptions
+            parseOptions,
           )
           // Return a ReadonlySet containing the decoded elements
-          return ParseResult.map(
-            elements,
-            (as): ReadonlySet<A> => new Set(as)
-          )
+          return ParseResult.map(elements, (as): ReadonlySet<A> => new Set(as))
         }
         // Handle invalid input
         return ParseResult.fail(new ParseResult.Type(ast, input))
@@ -124,21 +116,18 @@ export const MyReadonlySet = <A, I, R>(
           // Encode each element in the Set
           const elements = ParseResult.encodeUnknown(Schema.Array(item))(
             Array.from(input.values()),
-            parseOptions
+            parseOptions,
           )
           // Return a ReadonlySet containing the encoded elements
-          return ParseResult.map(
-            elements,
-            (is): ReadonlySet<I> => new Set(is)
-          )
+          return ParseResult.map(elements, (is): ReadonlySet<I> => new Set(is))
         }
         // Handle invalid input
         return ParseResult.fail(new ParseResult.Type(ast, input))
-      }
+      },
     },
     {
-      description: `ReadonlySet<${Schema.format(item)}>`
-    }
+      description: `ReadonlySet<${Schema.format(item)}>`,
+    },
   )
 
 // Define a schema for a ReadonlySet of numbers
@@ -168,10 +157,9 @@ ParseError: ReadonlyArray<NumberFromString>
 ```
 
 <Aside type="caution" title="Decoding/Encoding Limitations">
-  The decoding and encoding functions cannot rely on context (the
-  `Requirements` type parameter) and cannot handle asynchronous effects.
-  This means that only synchronous operations are supported within these
-  functions.
+  The decoding and encoding functions cannot rely on context (the `Requirements` type parameter) and
+  cannot handle asynchronous effects. This means that only synchronous operations are supported
+  within these functions.
 </Aside>
 
 ### Adding Compilers Annotations
@@ -185,12 +173,9 @@ This can result in an error, as the compiler may lack the necessary information 
 import { Arbitrary, Schema } from "effect"
 
 // Define a schema for the File type
-const FileFromSelf = Schema.declare(
-  (input: unknown): input is File => input instanceof File,
-  {
-    identifier: "FileFromSelf"
-  }
-)
+const FileFromSelf = Schema.declare((input: unknown): input is File => input instanceof File, {
+  identifier: "FileFromSelf",
+})
 
 // Try creating an Arbitrary instance for the schema
 const arb = Arbitrary.make(FileFromSelf)
@@ -209,17 +194,12 @@ In the above example, attempting to generate arbitrary values for the `FileFromS
 ```ts twoslash
 import { Arbitrary, FastCheck, Pretty, Schema } from "effect"
 
-const FileFromSelf = Schema.declare(
-  (input: unknown): input is File => input instanceof File,
-  {
-    identifier: "FileFromSelf",
-    // Provide a function to generate random File instances
-    arbitrary: () => (fc) =>
-      fc
-        .tuple(fc.string(), fc.string())
-        .map(([content, path]) => new File([content], path))
-  }
-)
+const FileFromSelf = Schema.declare((input: unknown): input is File => input instanceof File, {
+  identifier: "FileFromSelf",
+  // Provide a function to generate random File instances
+  arbitrary: () => (fc) =>
+    fc.tuple(fc.string(), fc.string()).map(([content, path]) => new File([content], path)),
+})
 
 // Create an Arbitrary instance for the schema
 const arb = Arbitrary.make(FileFromSelf)
@@ -360,23 +340,15 @@ import { Schema } from "effect"
 const Person = Schema.Struct({
   name: Schema.String,
   age: Schema.propertySignature(Schema.NumberFromString).annotations({
-    title: "Age" // Annotation to label the age field
-  })
+    title: "Age", // Annotation to label the age field
+  }),
 })
 ```
 
 A `PropertySignature` type contains several parameters, each providing details about the transformation between the source field (From) and the target field (To). Let's take a look at what each of these parameters represents:
 
 ```ts showLineNumbers=false
-age: PropertySignature<
-  ToToken,
-  ToType,
-  FromKey,
-  FromToken,
-  FromType,
-  HasDefault,
-  Context
->
+age: PropertySignature<ToToken, ToType, FromKey, FromToken, FromType, HasDefault, Context>
 ```
 
 | Parameter    | Description                                                                                                         |
@@ -417,8 +389,8 @@ import { Schema } from "effect"
 const Person = Schema.Struct({
   name: Schema.String,
   age: Schema.propertySignature(Schema.NumberFromString).pipe(
-    Schema.fromKey("AGE") // Maps from "AGE" to "age"
-  )
+    Schema.fromKey("AGE"), // Maps from "AGE" to "age"
+  ),
 })
 
 console.log(Schema.decodeUnknownSync(Person)({ name: "name", AGE: "18" }))
@@ -466,7 +438,7 @@ creates an optional property within a schema, allowing fields to be omitted or s
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optional(Schema.NumberFromString)
+  quantity: Schema.optional(Schema.NumberFromString),
 })
 
 //     ┌─── { readonly quantity?: string | undefined; }
@@ -506,7 +478,7 @@ You can access the original schema type (before it was marked as optional) using
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optional(Schema.NumberFromString)
+  quantity: Schema.optional(Schema.NumberFromString),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -548,8 +520,8 @@ import { Schema } from "effect"
 
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //     ┌─── { readonly quantity?: string | null | undefined; }
@@ -592,8 +564,8 @@ import { Schema } from "effect"
 
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -632,7 +604,7 @@ creates an optional property while enforcing strict typing. This means that only
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optionalWith(Schema.NumberFromString, { exact: true })
+  quantity: Schema.optionalWith(Schema.NumberFromString, { exact: true }),
 })
 
 //     ┌─── { readonly quantity?: string; }
@@ -677,7 +649,7 @@ You can access the original schema type (before it was marked as optional) using
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optionalWith(Schema.NumberFromString, { exact: true })
+  quantity: Schema.optionalWith(Schema.NumberFromString, { exact: true }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -719,8 +691,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     exact: true,
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //     ┌─── { readonly quantity?: string | null; }
@@ -773,8 +745,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     exact: true,
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -803,7 +775,7 @@ When this feature is turned off, you can employ the `Schema.optional` function. 
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optional(Schema.Never)
+  quantity: Schema.optional(Schema.Never),
 })
 
 //     ┌─── { readonly quantity?: undefined; }
@@ -824,7 +796,7 @@ It ensures stricter enforcement of the field's absence.
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optionalWith(Schema.Never, { exact: true })
+  quantity: Schema.optionalWith(Schema.Never, { exact: true }),
 })
 
 //     ┌─── { readonly quantity?: never; }
@@ -865,8 +837,8 @@ import { Schema } from "effect"
 
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
-    default: () => 1 // Default value for quantity
-  })
+    default: () => 1, // Default value for quantity
+  }),
 })
 
 //     ┌─── { readonly quantity?: string | undefined; }
@@ -908,8 +880,8 @@ import { Schema } from "effect"
 
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
-    default: () => 1 // Default value for quantity
-  })
+    default: () => 1, // Default value for quantity
+  }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -943,8 +915,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     default: () => 1, // Default value for quantity
-    exact: true // Only apply default if quantity is not provided
-  })
+    exact: true, // Only apply default if quantity is not provided
+  }),
 })
 
 //     ┌─── { readonly quantity?: string; }
@@ -1000,8 +972,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     default: () => 1, // Default value for quantity
-    nullable: true // Apply default if quantity is null
-  })
+    nullable: true, // Apply default if quantity is null
+  }),
 })
 
 //     ┌─── { readonly quantity?: string | null | undefined; }
@@ -1053,8 +1025,8 @@ const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     default: () => 1, // Default value for quantity
     exact: true, // Only apply default if quantity is not provided
-    nullable: true // Apply default if quantity is null
-  })
+    nullable: true, // Apply default if quantity is null
+  }),
 })
 
 //     ┌─── { readonly quantity?: string | null; }
@@ -1122,7 +1094,7 @@ optionalWith(schema: Schema<A, I, R>, { as: "Option" })
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optionalWith(Schema.NumberFromString, { as: "Option" })
+  quantity: Schema.optionalWith(Schema.NumberFromString, { as: "Option" }),
 })
 
 //     ┌─── { readonly quantity?: string | undefined; }
@@ -1153,7 +1125,7 @@ You can access the original schema type (before it was marked as optional) using
 import { Schema } from "effect"
 
 const Product = Schema.Struct({
-  quantity: Schema.optionalWith(Schema.NumberFromString, { as: "Option" })
+  quantity: Schema.optionalWith(Schema.NumberFromString, { as: "Option" }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -1197,8 +1169,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     as: "Option",
-    exact: true
-  })
+    exact: true,
+  }),
 })
 
 //     ┌─── { readonly quantity?: string; }
@@ -1240,8 +1212,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     as: "Option",
-    exact: true
-  })
+    exact: true,
+  }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -1286,8 +1258,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     as: "Option",
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //     ┌─── { readonly quantity?: string | null | undefined; }
@@ -1323,8 +1295,8 @@ import { Schema } from "effect"
 const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     as: "Option",
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -1371,8 +1343,8 @@ const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     as: "Option",
     exact: true,
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //     ┌─── { readonly quantity?: string | null; }
@@ -1418,8 +1390,8 @@ const Product = Schema.Struct({
   quantity: Schema.optionalWith(Schema.NumberFromString, {
     as: "Option",
     exact: true,
-    nullable: true
-  })
+    nullable: true,
+  }),
 })
 
 //      ┌─── typeof Schema.NumberFromString
@@ -1488,8 +1460,8 @@ const schema = Schema.Struct({
     //
     //         ┌─── Option<string>
     //         ▼
-    encode: (maybeString) => maybeString
-  })
+    encode: (maybeString) => maybeString,
+  }),
 })
 
 // Decoding examples
@@ -1525,8 +1497,8 @@ import { identity, Option, Schema } from "effect"
 const schema = Schema.Struct({
   nonEmpty: Schema.optionalToOptional(Schema.String, Schema.String, {
     decode: Option.filter((s) => s !== ""),
-    encode: identity
-  })
+    encode: identity,
+  }),
 })
 ```
 
@@ -1589,9 +1561,9 @@ const schema = Schema.Struct({
           ? // Omit the field by returning `None`
             Option.none()
           : // Include the field by returning `Some`
-            Option.some(stringOrNull)
-    }
-  )
+            Option.some(stringOrNull),
+    },
+  ),
 })
 
 // Decoding examples
@@ -1621,14 +1593,10 @@ You can streamline the decoding and encoding logic using `Option.getOrElse` and 
 import { Option, Schema } from "effect"
 
 const schema = Schema.Struct({
-  nullable: Schema.optionalToRequired(
-    Schema.String,
-    Schema.NullOr(Schema.String),
-    {
-      decode: Option.getOrElse(() => null),
-      encode: Option.liftPredicate((value) => value !== null)
-    }
-  )
+  nullable: Schema.optionalToRequired(Schema.String, Schema.NullOr(Schema.String), {
+    decode: Option.getOrElse(() => null),
+    encode: Option.liftPredicate((value) => value !== null),
+  }),
 })
 ```
 
@@ -1684,8 +1652,8 @@ const schema = Schema.Struct({
       }
       // Otherwise, return the string as is
       return maybeString.value
-    }
-  })
+    },
+  }),
 })
 
 // Decoding examples
@@ -1717,8 +1685,8 @@ import { Option, Schema } from "effect"
 const schema = Schema.Struct({
   name: Schema.requiredToOptional(Schema.String, Schema.String, {
     decode: Option.liftPredicate((s) => s !== ""),
-    encode: Option.getOrElse(() => "")
-  })
+    encode: Option.getOrElse(() => ""),
+  }),
 })
 ```
 
@@ -1729,9 +1697,8 @@ Schemas in `effect` can be extended in multiple ways, allowing you to combine or
 For more complex cases, such as extending a struct with a union, you may want to use the `Schema.extend` function, which offers flexibility in scenarios where direct field spreading may not be sufficient.
 
 <Aside type="tip" title="Retaining Struct Type with Field Spreading">
-  By using field spreading with `...Struct.fields`, you maintain the
-  schema's `Struct` type, which allows continued access to the `fields`
-  property for further modifications.
+  By using field spreading with `...Struct.fields`, you maintain the schema's `Struct` type, which
+  allows continued access to the `fields` property for further modifications.
 </Aside>
 
 ### Spreading Struct fields
@@ -1745,14 +1712,14 @@ import { Schema } from "effect"
 
 const Original = Schema.Struct({
   a: Schema.String,
-  b: Schema.String
+  b: Schema.String,
 })
 
 const Extended = Schema.Struct({
   ...Original.fields,
   // Adding new fields
   c: Schema.String,
-  d: Schema.String
+  d: Schema.String,
 })
 
 //     ┌─── {
@@ -1772,13 +1739,13 @@ import { Schema } from "effect"
 
 const Original = Schema.Struct({
   a: Schema.String,
-  b: Schema.String
+  b: Schema.String,
 })
 
 const Extended = Schema.Struct(
   Original.fields,
   // Adding an index signature
-  Schema.Record({ key: Schema.String, value: Schema.String })
+  Schema.Record({ key: Schema.String, value: Schema.String }),
 )
 
 //     ┌─── {
@@ -1797,17 +1764,17 @@ import { Schema } from "effect"
 
 const Struct1 = Schema.Struct({
   a: Schema.String,
-  b: Schema.String
+  b: Schema.String,
 })
 
 const Struct2 = Schema.Struct({
   c: Schema.String,
-  d: Schema.String
+  d: Schema.String,
 })
 
 const Extended = Schema.Struct({
   ...Struct1.fields,
-  ...Struct2.fields
+  ...Struct2.fields,
 })
 
 //     ┌─── {
@@ -1825,8 +1792,8 @@ type Type = typeof Extended.Type
 The `Schema.extend` function provides a structured method to expand schemas, especially useful when direct [field spreading](#spreading-struct-fields) isn't sufficient—such as when you need to extend a struct with a union of other structs.
 
 <Aside type="caution" title="Extension Support Limitations">
-  Not all extensions are supported, and compatibility depends on the type
-  of schemas involved in the extension.
+  Not all extensions are supported, and compatibility depends on the type of schemas involved in the
+  extension.
 </Aside>
 
 Supported extensions include:
@@ -1847,12 +1814,12 @@ Supported extensions include:
 import { Schema } from "effect"
 
 const Struct = Schema.Struct({
-  a: Schema.String
+  a: Schema.String,
 })
 
 const UnionOfStructs = Schema.Union(
   Schema.Struct({ b: Schema.String }),
-  Schema.Struct({ c: Schema.String })
+  Schema.Struct({ c: Schema.String }),
 )
 
 const Extended = Schema.extend(Struct, UnionOfStructs)
@@ -1876,12 +1843,12 @@ This example demonstrates an attempt to extend a struct with another struct that
 import { Schema } from "effect"
 
 const Struct = Schema.Struct({
-  a: Schema.String
+  a: Schema.String,
 })
 
 const OverlappingUnion = Schema.Union(
   Schema.Struct({ a: Schema.Number }), // conflicting type for key "a"
-  Schema.Struct({ d: Schema.String })
+  Schema.Struct({ d: Schema.String }),
 )
 
 const Extended = Schema.extend(Struct, OverlappingUnion)
@@ -1939,7 +1906,7 @@ import { Schema } from "effect"
 
 const schema = Schema.Struct({
   a: Schema.propertySignature(Schema.String).pipe(Schema.fromKey("c")),
-  b: Schema.Number
+  b: Schema.Number,
 })
 
 //     ┌─── { readonly c: string; readonly b: number; }
@@ -1961,7 +1928,7 @@ import { Schema } from "effect"
 
 const schema = Schema.Struct({
   a: Schema.optional(Schema.String).pipe(Schema.fromKey("c")),
-  b: Schema.Number
+  b: Schema.Number,
 })
 
 //     ┌─── { readonly b: number; readonly c?: string | undefined; }
@@ -1992,7 +1959,7 @@ import { Schema } from "effect"
 
 const Original = Schema.Struct({
   c: Schema.String,
-  b: Schema.Number
+  b: Schema.Number,
 })
 
 // Renaming the "c" property to "a"
@@ -2017,12 +1984,12 @@ import { Schema } from "effect"
 const Original = Schema.Union(
   Schema.Struct({
     c: Schema.String,
-    b: Schema.Number
+    b: Schema.Number,
   }),
   Schema.Struct({
     c: Schema.String,
-    d: Schema.Boolean
-  })
+    d: Schema.Boolean,
+  }),
 )
 
 // Renaming the "c" property to "a" for all members
@@ -2062,17 +2029,14 @@ interface Category {
 
 const Category = Schema.Struct({
   name: Schema.String,
-  subcategories: Schema.Array(
-    Schema.suspend((): Schema.Schema<Category> => Category)
-  )
+  subcategories: Schema.Array(Schema.suspend((): Schema.Schema<Category> => Category)),
 })
 ```
 
 <Aside type="note" title="Correct Inference">
-  It is necessary to define the `Category` type and add an explicit type
-  annotation because otherwise TypeScript would struggle to infer types
-  correctly. Without this annotation, you might encounter the error
-  message:
+  It is necessary to define the `Category` type and add an explicit type annotation because
+  otherwise TypeScript would struggle to infer types correctly. Without this annotation, you might
+  encounter the error message:
 </Aside>
 
 **Example** (Type Inference Error)
@@ -2083,8 +2047,8 @@ import { Schema } from "effect"
 // @errors: 7022
 const Category = Schema.Struct({
   name: Schema.String,
-// @errors: 7022 7024
-  subcategories: Schema.Array(Schema.suspend(() => Category))
+  // @errors: 7022 7024
+  subcategories: Schema.Array(Schema.suspend(() => Category)),
 })
 ```
 
@@ -2099,7 +2063,7 @@ One pattern to mitigate this is to **separate the field responsible for recursio
 import { Schema } from "effect"
 
 const fields = {
-  name: Schema.String
+  name: Schema.String,
   // ...other fields as needed
 }
 
@@ -2114,8 +2078,8 @@ const Category = Schema.Struct({
   ...fields, // Spread in the base fields
   subcategories: Schema.Array(
     // Define `subcategories` using recursion
-    Schema.suspend((): Schema.Schema<Category> => Category)
-  )
+    Schema.suspend((): Schema.Schema<Category> => Category),
+  ),
 })
 ```
 
@@ -2144,15 +2108,15 @@ const Expression = Schema.Struct({
   type: Schema.Literal("expression"),
   value: Schema.Union(
     Schema.Number,
-    Schema.suspend((): Schema.Schema<Operation> => Operation)
-  )
+    Schema.suspend((): Schema.Schema<Operation> => Operation),
+  ),
 })
 
 const Operation = Schema.Struct({
   type: Schema.Literal("operation"),
   operator: Schema.Literal("+", "-"),
   left: Expression,
-  right: Expression
+  right: Expression,
 })
 ```
 
@@ -2171,7 +2135,7 @@ import { Schema } from "effect"
 
 const fields = {
   id: Schema.NumberFromString,
-  name: Schema.String
+  name: Schema.String,
 }
 
 interface Category extends Schema.Struct.Type<typeof fields> {
@@ -2181,9 +2145,9 @@ interface Category extends Schema.Struct.Type<typeof fields> {
 const Category = Schema.Struct({
   ...fields,
   subcategories: Schema.Array(
-// @errors: 2322
-    Schema.suspend((): Schema.Schema<Category> => Category)
-  )
+    // @errors: 2322
+    Schema.suspend((): Schema.Schema<Category> => Category),
+  ),
 })
 ```
 
@@ -2194,7 +2158,7 @@ import { Schema } from "effect"
 
 const fields = {
   id: Schema.NumberFromString,
-  name: Schema.String
+  name: Schema.String,
 }
 
 interface Category extends Schema.Struct.Type<typeof fields> {
@@ -2208,9 +2172,7 @@ interface CategoryEncoded extends Schema.Struct.Encoded<typeof fields> {
 const Category = Schema.Struct({
   ...fields,
   subcategories: Schema.Array(
-    Schema.suspend(
-      (): Schema.Schema<Category, CategoryEncoded> => Category
-    )
-  )
+    Schema.suspend((): Schema.Schema<Category, CategoryEncoded> => Category),
+  ),
 })
 ```

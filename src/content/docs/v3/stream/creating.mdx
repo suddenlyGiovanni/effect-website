@@ -72,9 +72,7 @@ import { Stream, Effect } from "effect"
 // Creating a stream of incrementing numbers
 const stream = Stream.iterate(1, (n) => n + 1) // Produces 1, 2, 3, ...
 
-Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(
-  console.log
-)
+Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(console.log)
 // { _id: 'Chunk', values: [ 1, 2, 3, 4, 5 ] }
 ```
 
@@ -90,8 +88,8 @@ const stream = Stream.scoped(
   Effect.acquireUseRelease(
     Console.log("acquire"),
     () => Console.log("use"),
-    () => Console.log("release")
-  )
+    () => Console.log("release"),
+  ),
 )
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
@@ -112,8 +110,7 @@ Much like the `Effect` data type, you can generate a `Stream` using the `fail` a
 import { Stream, Effect } from "effect"
 
 // Creating a stream that can emit errors
-const streamWithError: Stream.Stream<never, string> =
-  Stream.fail("Uh oh!")
+const streamWithError: Stream.Stream<never, string> = Stream.fail("Uh oh!")
 
 Effect.runPromise(Stream.runCollect(streamWithError))
 // throws Error: Uh oh!
@@ -177,21 +174,19 @@ import { Stream, Effect, Chunk, Option, StreamEmit } from "effect"
 
 const events = [1, 2, 3, 4]
 
-const stream = Stream.async(
-  (emit: StreamEmit.Emit<never, never, number, void>) => {
-    events.forEach((n) => {
-      setTimeout(() => {
-        if (n === 3) {
-          // Terminate the stream
-          emit(Effect.fail(Option.none()))
-        } else {
-          // Add the current item to the stream
-          emit(Effect.succeed(Chunk.of(n)))
-        }
-      }, 100 * n)
-    })
-  }
-)
+const stream = Stream.async((emit: StreamEmit.Emit<never, never, number, void>) => {
+  events.forEach((n) => {
+    setTimeout(() => {
+      if (n === 3) {
+        // Terminate the stream
+        emit(Effect.fail(Option.none()))
+      } else {
+        // Add the current item to the stream
+        emit(Effect.succeed(Chunk.of(n)))
+      }
+    }, 100 * n)
+  })
+})
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
 // { _id: 'Chunk', values: [ 1, 2 ] }
@@ -246,10 +241,10 @@ Effect.runPromise(
   Stream.runCollect(
     stream.pipe(
       Stream.provideService(Database, {
-        getUsers: Effect.succeed(["user1", "user2"])
-      })
-    )
-  )
+        getUsers: Effect.succeed(["user1", "user2"]),
+      }),
+    ),
+  ),
 ).then(console.log)
 // { _id: 'Chunk', values: [ 'user1', 'user2' ] }
 ```
@@ -270,7 +265,7 @@ const myAsyncIterable = async function* () {
 
 const stream = Stream.fromAsyncIterable(
   myAsyncIterable(),
-  (e) => new Error(String(e)) // Error Handling
+  (e) => new Error(String(e)), // Error Handling
 )
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
@@ -290,9 +285,7 @@ import { Stream, Effect } from "effect"
 
 const stream = Stream.repeatValue(0)
 
-Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(
-  console.log
-)
+Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(console.log)
 // { _id: 'Chunk', values: [ 0, 0, 0, 0, 0 ] }
 ```
 
@@ -306,9 +299,7 @@ import { Stream, Effect, Schedule } from "effect"
 // Creating a stream that repeats a value indefinitely
 const stream = Stream.repeat(Stream.succeed(1), Schedule.forever)
 
-Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(
-  console.log
-)
+Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(console.log)
 // { _id: 'Chunk', values: [ 1, 1, 1, 1, 1 ] }
 ```
 
@@ -323,9 +314,7 @@ import { Stream, Effect, Random } from "effect"
 
 const stream = Stream.repeatEffect(Random.nextInt)
 
-Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(
-  console.log
-)
+Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(console.log)
 /*
 Example Output:
 {
@@ -352,8 +341,8 @@ const drainIterator = <A>(it: Iterator<A>): Stream.Stream<A> =>
           return Effect.fail(Option.none())
         }
         return Effect.succeed(res.value)
-      })
-    )
+      }),
+    ),
   )
 ```
 
@@ -366,9 +355,7 @@ import { Stream, Effect } from "effect"
 
 const stream = Stream.tick("100 millis")
 
-Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(
-  console.log
-)
+Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(console.log)
 /*
 Output:
 {
@@ -395,7 +382,7 @@ The Stream module includes an `unfold` function defined as follows:
 ```ts showLineNumbers=false
 declare const unfold: <S, A>(
   initialState: S,
-  step: (s: S) => Option.Option<readonly [A, S]>
+  step: (s: S) => Option.Option<readonly [A, S]>,
 ) => Stream<A>
 ```
 
@@ -411,9 +398,7 @@ import { Stream, Effect, Option } from "effect"
 
 const stream = Stream.unfold(1, (n) => Option.some([n, n + 1]))
 
-Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(
-  console.log
-)
+Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(console.log)
 // { _id: 'Chunk', values: [ 1, 2, 3, 4, 5 ] }
 ```
 
@@ -427,14 +412,10 @@ Here's an example of creating an infinite stream of random `1` and `-1` values u
 import { Stream, Effect, Option, Random } from "effect"
 
 const stream = Stream.unfoldEffect(1, (n) =>
-  Random.nextBoolean.pipe(
-    Effect.map((b) => (b ? Option.some([n, -n]) : Option.some([n, n])))
-  )
+  Random.nextBoolean.pipe(Effect.map((b) => (b ? Option.some([n, -n]) : Option.some([n, n])))),
 )
 
-Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(
-  console.log
-)
+Effect.runPromise(Stream.runCollect(stream.pipe(Stream.take(5)))).then(console.log)
 // Example Output: { _id: 'Chunk', values: [ 1, 1, 1, 1, -1 ] }
 ```
 
@@ -453,10 +434,7 @@ For example, the following stream emits `0, 1, 2, 3` elements:
 ```ts twoslash
 import { Stream, Effect, Option } from "effect"
 
-const stream = Stream.paginate(0, (n) => [
-  n,
-  n < 3 ? Option.some(n + 1) : Option.none()
-])
+const stream = Stream.paginate(0, (n) => [n, n < 3 ? Option.some(n + 1) : Option.none()])
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
 // { _id: 'Chunk', values: [ 0, 1, 2, 3 ] }
@@ -485,23 +463,18 @@ type RawData = string
 class PageResult {
   constructor(
     readonly results: Chunk.Chunk<RawData>,
-    readonly isLast: boolean
+    readonly isLast: boolean,
   ) {}
 }
 
 const pageSize = 2
 
-const listPaginated = (
-  pageNumber: number
-): Effect.Effect<PageResult, Error> => {
+const listPaginated = (pageNumber: number): Effect.Effect<PageResult, Error> => {
   return Effect.succeed(
     new PageResult(
-      Chunk.map(
-        Chunk.range(1, pageSize),
-        (index) => `Result ${pageNumber}-${index}`
-      ),
-      pageNumber === 2 // Return 3 pages
-    )
+      Chunk.map(Chunk.range(1, pageSize), (index) => `Result ${pageNumber}-${index}`),
+      pageNumber === 2, // Return 3 pages
+    ),
   )
 }
 ```
@@ -516,23 +489,18 @@ type RawData = string
 class PageResult {
   constructor(
     readonly results: Chunk.Chunk<RawData>,
-    readonly isLast: boolean
+    readonly isLast: boolean,
   ) {}
 }
 
 const pageSize = 2
 
-const listPaginated = (
-  pageNumber: number
-): Effect.Effect<PageResult, Error> => {
+const listPaginated = (pageNumber: number): Effect.Effect<PageResult, Error> => {
   return Effect.succeed(
     new PageResult(
-      Chunk.map(
-        Chunk.range(1, pageSize),
-        (index) => `Result ${pageNumber}-${index}`
-      ),
-      pageNumber === 2 // Return 3 pages
-    )
+      Chunk.map(Chunk.range(1, pageSize), (index) => `Result ${pageNumber}-${index}`),
+      pageNumber === 2, // Return 3 pages
+    ),
   )
 }
 
@@ -543,8 +511,8 @@ const firstAttempt = Stream.unfoldChunkEffect(0, (pageNumber) =>
         return Option.none()
       }
       return Option.some([page.results, pageNumber + 1] as const)
-    })
-  )
+    }),
+  ),
 )
 
 Effect.runPromise(Stream.runCollect(firstAttempt)).then(console.log)
@@ -567,43 +535,33 @@ type RawData = string
 class PageResult {
   constructor(
     readonly results: Chunk.Chunk<RawData>,
-    readonly isLast: boolean
+    readonly isLast: boolean,
   ) {}
 }
 
 const pageSize = 2
 
-const listPaginated = (
-  pageNumber: number
-): Effect.Effect<PageResult, Error> => {
+const listPaginated = (pageNumber: number): Effect.Effect<PageResult, Error> => {
   return Effect.succeed(
     new PageResult(
-      Chunk.map(
-        Chunk.range(1, pageSize),
-        (index) => `Result ${pageNumber}-${index}`
-      ),
-      pageNumber === 2 // Return 3 pages
-    )
+      Chunk.map(Chunk.range(1, pageSize), (index) => `Result ${pageNumber}-${index}`),
+      pageNumber === 2, // Return 3 pages
+    ),
   )
 }
 
-const secondAttempt = Stream.unfoldChunkEffect(
-  Option.some(0),
-  (pageNumber) =>
-    Option.match(pageNumber, {
-      // We already hit the last page
-      onNone: () => Effect.succeed(Option.none()),
-      // We did not hit the last page yet
-      onSome: (pageNumber) =>
-        listPaginated(pageNumber).pipe(
-          Effect.map((page) =>
-            Option.some([
-              page.results,
-              page.isLast ? Option.none() : Option.some(pageNumber + 1)
-            ])
-          )
-        )
-    })
+const secondAttempt = Stream.unfoldChunkEffect(Option.some(0), (pageNumber) =>
+  Option.match(pageNumber, {
+    // We already hit the last page
+    onNone: () => Effect.succeed(Option.none()),
+    // We did not hit the last page yet
+    onSome: (pageNumber) =>
+      listPaginated(pageNumber).pipe(
+        Effect.map((page) =>
+          Option.some([page.results, page.isLast ? Option.none() : Option.some(pageNumber + 1)]),
+        ),
+      ),
+  }),
 )
 
 Effect.runPromise(Stream.runCollect(secondAttempt)).then(console.log)
@@ -635,35 +593,27 @@ type RawData = string
 class PageResult {
   constructor(
     readonly results: Chunk.Chunk<RawData>,
-    readonly isLast: boolean
+    readonly isLast: boolean,
   ) {}
 }
 
 const pageSize = 2
 
-const listPaginated = (
-  pageNumber: number
-): Effect.Effect<PageResult, Error> => {
+const listPaginated = (pageNumber: number): Effect.Effect<PageResult, Error> => {
   return Effect.succeed(
     new PageResult(
-      Chunk.map(
-        Chunk.range(1, pageSize),
-        (index) => `Result ${pageNumber}-${index}`
-      ),
-      pageNumber === 2 // Return 3 pages
-    )
+      Chunk.map(Chunk.range(1, pageSize), (index) => `Result ${pageNumber}-${index}`),
+      pageNumber === 2, // Return 3 pages
+    ),
   )
 }
 
 const finalAttempt = Stream.paginateChunkEffect(0, (pageNumber) =>
   listPaginated(pageNumber).pipe(
     Effect.andThen((page) => {
-      return [
-        page.results,
-        page.isLast ? Option.none<number>() : Option.some(pageNumber + 1)
-      ]
-    })
-  )
+      return [page.results, page.isLast ? Option.none<number>() : Option.some(pageNumber + 1)]
+    }),
+  ),
 )
 
 Effect.runPromise(Stream.runCollect(finalAttempt)).then(console.log)
@@ -695,9 +645,7 @@ We can create a stream from a `Schedule` that does not require any further input
 import { Effect, Stream, Schedule } from "effect"
 
 // Emits values every 1 second for a total of 10 emissions
-const schedule = Schedule.spaced("1 second").pipe(
-  Schedule.compose(Schedule.recurs(10))
-)
+const schedule = Schedule.spaced("1 second").pipe(Schedule.compose(Schedule.recurs(10)))
 
 const stream = Stream.fromSchedule(schedule)
 

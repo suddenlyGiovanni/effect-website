@@ -22,14 +22,13 @@ const open = (filename: string) =>
     yield* Console.log(`Opening ${filename}`)
     return {
       getLines: Effect.succeed(["Line 1", "Line 2", "Line 3"]),
-      close: Console.log(`Closing ${filename}`)
+      close: Console.log(`Closing ${filename}`),
     }
   })
 
-const stream = Stream.acquireRelease(
-  open("file.txt"),
-  (file) => file.close
-).pipe(Stream.flatMap((file) => file.getLines))
+const stream = Stream.acquireRelease(open("file.txt"), (file) => file.close).pipe(
+  Stream.flatMap((file) => file.getLines),
+)
 
 Effect.runPromise(Stream.runCollect(stream)).then(console.log)
 /*
@@ -63,11 +62,9 @@ const deleteDir = (dir: string) => Console.log(`Deleting dir: ${dir}`)
 const program = application.pipe(
   Stream.concat(
     Stream.finalizer(
-      deleteDir("tmp").pipe(
-        Effect.andThen(Console.log("Temporary directory was deleted."))
-      )
-    )
-  )
+      deleteDir("tmp").pipe(Effect.andThen(Console.log("Temporary directory was deleted."))),
+    ),
+  ),
 )
 
 Effect.runPromise(Stream.runCollect(program)).then(console.log)
@@ -96,9 +93,7 @@ import { Stream, Console, Effect } from "effect"
 
 const program = Stream.fromEffect(Console.log("Application Logic.")).pipe(
   Stream.concat(Stream.finalizer(Console.log("Finalizing the stream"))),
-  Stream.ensuring(
-    Console.log("Doing some other works after stream's finalization")
-  )
+  Stream.ensuring(Console.log("Doing some other works after stream's finalization")),
 )
 
 Effect.runPromise(Stream.runCollect(program)).then(console.log)

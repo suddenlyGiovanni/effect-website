@@ -28,20 +28,18 @@ const success: Effect.Effect<number, Error> = Effect.succeed(42)
 
 const program1 = Effect.match(success, {
   onFailure: (error) => `failure: ${error.message}`,
-  onSuccess: (value) => `success: ${value}`
+  onSuccess: (value) => `success: ${value}`,
 })
 
 // Run and log the result of the successful effect
 Effect.runPromise(program1).then(console.log)
 // Output: "success: 42"
 
-const failure: Effect.Effect<number, Error> = Effect.fail(
-  new Error("Uh oh!")
-)
+const failure: Effect.Effect<number, Error> = Effect.fail(new Error("Uh oh!"))
 
 const program2 = Effect.match(failure, {
   onFailure: (error) => `failure: ${error.message}`,
-  onSuccess: (value) => `success: ${value}`
+  onSuccess: (value) => `success: ${value}`,
 })
 
 // Run and log the result of the failed effect
@@ -86,17 +84,11 @@ fails.
 import { Effect } from "effect"
 
 const success: Effect.Effect<number, Error> = Effect.succeed(42)
-const failure: Effect.Effect<number, Error> = Effect.fail(
-  new Error("Uh oh!")
-)
+const failure: Effect.Effect<number, Error> = Effect.fail(new Error("Uh oh!"))
 
 const program1 = Effect.matchEffect(success, {
-  onFailure: (error) =>
-    Effect.succeed(`failure: ${error.message}`).pipe(
-      Effect.tap(Effect.log)
-    ),
-  onSuccess: (value) =>
-    Effect.succeed(`success: ${value}`).pipe(Effect.tap(Effect.log))
+  onFailure: (error) => Effect.succeed(`failure: ${error.message}`).pipe(Effect.tap(Effect.log)),
+  onSuccess: (value) => Effect.succeed(`success: ${value}`).pipe(Effect.tap(Effect.log)),
 })
 
 console.log(Effect.runSync(program1))
@@ -107,12 +99,8 @@ success: 42
 */
 
 const program2 = Effect.matchEffect(failure, {
-  onFailure: (error) =>
-    Effect.succeed(`failure: ${error.message}`).pipe(
-      Effect.tap(Effect.log)
-    ),
-  onSuccess: (value) =>
-    Effect.succeed(`success: ${value}`).pipe(Effect.tap(Effect.log))
+  onFailure: (error) => Effect.succeed(`failure: ${error.message}`).pipe(Effect.tap(Effect.log)),
+  onSuccess: (value) => Effect.succeed(`success: ${value}`).pipe(Effect.tap(Effect.log)),
 })
 
 console.log(Effect.runSync(program2))
@@ -157,7 +145,7 @@ const program = Effect.matchCause(task, {
   },
   onSuccess: (value) =>
     // task completes successfully
-    `succeeded with ${value} value`
+    `succeeded with ${value} value`,
 })
 
 Effect.runPromise(program).then(console.log)
@@ -200,7 +188,7 @@ const program = Effect.matchCauseEffect(task, {
   },
   onSuccess: (value) =>
     // Log success if the task completes successfully
-    Console.log(`succeeded with ${value} value`)
+    Console.log(`succeeded with ${value} value`),
 })
 
 Effect.runPromise(program)

@@ -67,7 +67,7 @@ interface User {
 // Create an equivalence that compares User objects based only on the id
 const equivalence = Equivalence.mapInput(
   Equivalence.number, // Base equivalence for comparing numbers
-  (user: User) => user.id // Function to extract the id from a User
+  (user: User) => user.id, // Function to extract the id from a User
 )
 
 // Compare two User objects: they are equivalent if their ids are the same

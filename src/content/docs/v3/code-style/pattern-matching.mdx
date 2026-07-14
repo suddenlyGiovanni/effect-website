@@ -29,7 +29,7 @@ const result = Match.value(input).pipe(
   // Match if the value is a string
   Match.when(Match.string, (s) => `string: ${s}`),
   // Ensure all possible cases are covered
-  Match.exhaustive
+  Match.exhaustive,
 )
 
 console.log(result)
@@ -75,7 +75,7 @@ const match = Match.type<string | number>().pipe(
   // Match when the value is a string
   Match.when(Match.string, (s) => `string: ${s}`),
   // Ensure all possible cases are handled
-  Match.exhaustive
+  Match.exhaustive,
 )
 
 console.log(match(0))
@@ -99,12 +99,9 @@ const input = { name: "John", age: 30 }
 // Create a matcher for the specific object
 const result = Match.value(input).pipe(
   // Match when the 'name' property is "John"
-  Match.when(
-    { name: "John" },
-    (user) => `${user.name} is ${user.age} years old`
-  ),
+  Match.when({ name: "John" }, (user) => `${user.name} is ${user.age} years old`),
   // Provide a fallback if no match is found
-  Match.orElse(() => "Oh, not John")
+  Match.orElse(() => "Oh, not John"),
 )
 
 console.log(result)
@@ -126,11 +123,11 @@ const match = Match.type<{ a: number } | { b: string }>().pipe(
   // Ensure all branches return a string
   Match.withReturnType<string>(),
   // ❌ Type error: returns a number
-// @errors: 2322
+  // @errors: 2322
   Match.when({ a: Match.number }, (_) => _.a),
   // ✅ Correct: returns a string
   Match.when({ b: Match.string }, (_) => _.b),
-  Match.exhaustive
+  Match.exhaustive,
 )
 ```
 
@@ -157,7 +154,7 @@ const match = Match.type<{ age: number }>().pipe(
   // Match when age is exactly 18
   Match.when({ age: 18 }, () => "You can vote"),
   // Fallback case for all other ages
-  Match.orElse((user) => `${user.age} is too young`)
+  Match.orElse((user) => `${user.age} is too young`),
 )
 
 console.log(match({ age: 20 }))
@@ -184,7 +181,7 @@ const match = Match.type<string | number>().pipe(
   // Match any value except "hi", returning "ok"
   Match.not("hi", () => "ok"),
   // Fallback case for when the value is "hi"
-  Match.orElse(() => "fallback")
+  Match.orElse(() => "fallback"),
 )
 
 console.log(match("hello"))
@@ -217,7 +214,7 @@ const match = Match.type<Event>().pipe(
   Match.tag("error", (event) => `Error: ${event.error.message}`),
   // Match "cancel"
   Match.tag("cancel", () => "Cancelled"),
-  Match.exhaustive
+  Match.exhaustive,
 )
 
 console.log(match({ _tag: "success", data: "Hello" }))
@@ -228,9 +225,8 @@ console.log(match({ _tag: "error", error: new Error("Oops!") }))
 ```
 
 <Aside type="caution" title="Tag Field Naming Convention">
-  The `Match.tag` function relies on the convention within the Effect
-  ecosystem of naming the tag field as `"_tag"`. Ensure that your
-  discriminated unions follow this naming convention for proper
+  The `Match.tag` function relies on the convention within the Effect ecosystem of naming the tag
+  field as `"_tag"`. Ensure that your discriminated unions follow this naming convention for proper
   functionality.
 </Aside>
 
@@ -251,7 +247,7 @@ const matchPropertyKey = Match.type<PropertyKey>().pipe(
   // Match when the value is a symbol
   Match.when(Match.symbol, (s) => `Key is a symbol: ${String(s)}`),
   // Ensure all possible cases are handled
-  Match.exhaustive
+  Match.exhaustive,
 )
 
 console.log(matchPropertyKey(42))
@@ -298,8 +294,8 @@ const match = Match.type<string | number>().pipe(
   Match.when(Match.number, (n) => `number: ${n}`),
   // Mark the match as exhaustive, ensuring all cases are handled
   // TypeScript will throw an error if any case is missing
-// @errors: 2345
-  Match.exhaustive
+  // @errors: 2345
+  Match.exhaustive,
 )
 ```
 
@@ -317,7 +313,7 @@ const match = Match.type<string | number>().pipe(
   // Match when the value is "a"
   Match.when("a", () => "ok"),
   // Fallback when no patterns match
-  Match.orElse(() => "fallback")
+  Match.orElse(() => "fallback"),
 )
 
 console.log(match("a"))
@@ -342,7 +338,7 @@ type User = { readonly role: "admin" | "editor" | "viewer" }
 const getRole = Match.type<User>().pipe(
   Match.when({ role: "admin" }, () => "Has full access"),
   Match.when({ role: "editor" }, () => "Can edit content"),
-  Match.option // Wrap the result in an Option
+  Match.option, // Wrap the result in an Option
 )
 
 console.log(getRole({ role: "admin" }))
@@ -367,7 +363,7 @@ type User = { readonly role: "admin" | "editor" | "viewer" }
 const getRole = Match.type<User>().pipe(
   Match.when({ role: "admin" }, () => "Has full access"),
   Match.when({ role: "editor" }, () => "Can edit content"),
-  Match.either // Wrap the result in an Either
+  Match.either, // Wrap the result in an Either
 )
 
 console.log(getRole({ role: "admin" }))

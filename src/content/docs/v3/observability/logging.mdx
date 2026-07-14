@@ -52,9 +52,8 @@ The default logger in Effect adds several useful details to each log entry:
 | `span`      | (Optional) The duration of a span in milliseconds, providing insight into the timing of operations. |
 
 <Aside type="tip" title="Customizing Loggers">
-  For information on how to tailor the logging setup to meet specific
-  needs, such as integrating a custom logging framework or adjusting log
-  formats, please consult the section on [Custom
+  For information on how to tailor the logging setup to meet specific needs, such as integrating a
+  custom logging framework or adjusting log formats, please consult the section on [Custom
   Loggers](#custom-loggers).
 </Aside>
 
@@ -82,12 +81,7 @@ which provide detailed error information under an additional `cause` annotation:
 ```ts twoslash "cause"
 import { Effect, Cause } from "effect"
 
-const program = Effect.log(
-  "message1",
-  "message2",
-  Cause.die("Oh no!"),
-  Cause.die("Oh uh!")
-)
+const program = Effect.log("message1", "message2", Cause.die("Oh no!"), Cause.die("Oh uh!"))
 
 Effect.runFork(program)
 /*
@@ -135,9 +129,8 @@ timestamp=... level=INFO message=done <-- 1 second later
 ```
 
 <Aside type="tip" title="Controlling Log Levels Per Effect">
-  By using `Logger.withMinimumLogLevel(effect, level)`, you can enable
-  different log levels for specific parts of your program, providing
-  fine-grained control over logging behavior.
+  By using `Logger.withMinimumLogLevel(effect, level)`, you can enable different log levels for
+  specific parts of your program, providing fine-grained control over logging behavior.
 </Aside>
 
 ### logInfo
@@ -267,7 +260,7 @@ const program = Effect.gen(function* () {
   yield* Effect.log("message2")
 }).pipe(
   // Annotation as key/value pair
-  Effect.annotateLogs("key", "value")
+  Effect.annotateLogs("key", "value"),
 )
 
 Effect.runFork(program)
@@ -281,9 +274,8 @@ timestamp=... level=INFO fiber=#0 message=message2 key=value
 In this example, all logs generated within the `program` will include the annotation `key=value`.
 
 <Aside type="tip" title="Scope of Annotations">
-  Annotations applied with `Effect.annotateLogs` are automatically added
-  to all logs generated within the annotated effect's scope, including
-  logs from nested effects.
+  Annotations applied with `Effect.annotateLogs` are automatically added to all logs generated
+  within the annotated effect's scope, including logs from nested effects.
 </Aside>
 
 ### Annotations with Nested Effects
@@ -309,7 +301,7 @@ const program = Effect.gen(function* () {
   yield* anotherProgram // Call the nested program
 }).pipe(
   // Attach an annotation to all logs in the scope
-  Effect.annotateLogs("key", "value")
+  Effect.annotateLogs("key", "value"),
 )
 
 Effect.runFork(program)
@@ -335,7 +327,7 @@ const program = Effect.gen(function* () {
   yield* Effect.log("message2")
 }).pipe(
   // Add multiple annotations
-  Effect.annotateLogs({ key1: "value1", key2: "value2" })
+  Effect.annotateLogs({ key1: "value1", key2: "value2" }),
 )
 
 Effect.runFork(program)
@@ -365,7 +357,7 @@ const program = Effect.gen(function* () {
 }).pipe(
   Effect.scoped,
   // Outside scope, no annotations
-  Effect.andThen(Effect.log("no annotations again"))
+  Effect.andThen(Effect.log("no annotations again")),
 )
 
 Effect.runFork(program)
@@ -395,7 +387,7 @@ const program = Effect.gen(function* () {
 }).pipe(
   // Apply a log span labeled "myspan" to measure
   // the duration of this operation
-  Effect.withLogSpan("myspan")
+  Effect.withLogSpan("myspan"),
 )
 
 Effect.runFork(program)
@@ -476,9 +468,7 @@ const program = Effect.gen(function* () {
 })
 
 // Create a custom runtime that disables logging
-const customRuntime = ManagedRuntime.make(
-  Logger.minimumLogLevel(LogLevel.None)
-)
+const customRuntime = ManagedRuntime.make(Logger.minimumLogLevel(LogLevel.None))
 
 // Run the program using the custom runtime
 customRuntime.runFork(program)
@@ -495,14 +485,7 @@ To dynamically load the log level from a [configuration](/docs/configuration/) a
 **Example** (Loading Log Level from Configuration)
 
 ```ts twoslash
-import {
-  Effect,
-  Config,
-  Logger,
-  Layer,
-  ConfigProvider,
-  LogLevel
-} from "effect"
+import { Effect, Config, Logger, Layer, ConfigProvider, LogLevel } from "effect"
 
 // Simulate a program with logs
 const program = Effect.gen(function* () {
@@ -516,9 +499,9 @@ const program = Effect.gen(function* () {
 const LogLevelLive = Config.logLevel("LOG_LEVEL").pipe(
   Effect.andThen((level) =>
     // Set the minimum log level
-    Logger.minimumLogLevel(level)
+    Logger.minimumLogLevel(level),
   ),
-  Layer.unwrapEffect // Convert the effect into a layer
+  Layer.unwrapEffect, // Convert the effect into a layer
 )
 
 // Provide the loaded log level to the program
@@ -527,11 +510,7 @@ const configured = Effect.provide(program, LogLevelLive)
 // Test the program using a mock configuration provider
 const test = Effect.provide(
   configured,
-  Layer.setConfigProvider(
-    ConfigProvider.fromMap(
-      new Map([["LOG_LEVEL", LogLevel.Warning.label]])
-    )
-  )
+  Layer.setConfigProvider(ConfigProvider.fromMap(new Map([["LOG_LEVEL", LogLevel.Warning.label]]))),
 )
 
 Effect.runFork(test)
@@ -543,11 +522,10 @@ Output:
 ```
 
 <Aside type="tip" title="Using ConfigProvider for Testing">
-  The `ConfigProvider.fromMap` function is useful for testing by
-  simulating configuration values. You can also refer to [Mocking
-  Configurations in
-  Tests](/docs/configuration/#mocking-configurations-in-tests) for more
-  details on using mock configuration during tests.
+  The `ConfigProvider.fromMap` function is useful for testing by simulating configuration values.
+  You can also refer to [Mocking Configurations in
+  Tests](/docs/configuration/#mocking-configurations-in-tests) for more details on using mock
+  configuration during tests.
 </Aside>
 
 ## Custom loggers
@@ -633,12 +611,7 @@ const program = Effect.gen(function* () {
 // Replace the default logger with the custom logger
 const layer = Logger.replace(Logger.defaultLogger, logger)
 
-Effect.runFork(
-  program.pipe(
-    Logger.withMinimumLogLevel(LogLevel.Debug),
-    Effect.provide(layer)
-  )
-)
+Effect.runFork(program.pipe(Logger.withMinimumLogLevel(LogLevel.Debug), Effect.provide(layer)))
 ```
 
 When you run the above program, the following log messages are printed to the console:
@@ -668,7 +641,7 @@ import { Effect } from "effect"
 const program = Effect.log("msg1", "msg2", ["msg3", "msg4"]).pipe(
   Effect.delay("100 millis"),
   Effect.annotateLogs({ key1: "value1", key2: "value2" }),
-  Effect.withLogSpan("myspan")
+  Effect.withLogSpan("myspan"),
 )
 
 Effect.runFork(program)
@@ -693,7 +666,7 @@ import { Effect, Logger } from "effect"
 const program = Effect.log("msg1", "msg2", ["msg3", "msg4"]).pipe(
   Effect.delay("100 millis"),
   Effect.annotateLogs({ key1: "value1", key2: "value2" }),
-  Effect.withLogSpan("myspan")
+  Effect.withLogSpan("myspan"),
 )
 
 Effect.runFork(program.pipe(Effect.provide(Logger.logFmt)))
@@ -715,7 +688,7 @@ import { Effect, Logger } from "effect"
 const program = Effect.log("msg1", "msg2", ["msg3", "msg4"]).pipe(
   Effect.delay("100 millis"),
   Effect.annotateLogs({ key1: "value1", key2: "value2" }),
-  Effect.withLogSpan("myspan")
+  Effect.withLogSpan("myspan"),
 )
 
 Effect.runFork(program.pipe(Effect.provide(Logger.pretty)))
@@ -741,7 +714,7 @@ import { Effect, Logger } from "effect"
 const program = Effect.log("msg1", "msg2", ["msg3", "msg4"]).pipe(
   Effect.delay("100 millis"),
   Effect.annotateLogs({ key1: "value1", key2: "value2" }),
-  Effect.withLogSpan("myspan")
+  Effect.withLogSpan("myspan"),
 )
 
 Effect.runFork(program.pipe(Effect.provide(Logger.structured)))
@@ -782,7 +755,7 @@ import { Effect, Logger } from "effect"
 const program = Effect.log("msg1", "msg2", ["msg3", "msg4"]).pipe(
   Effect.delay("100 millis"),
   Effect.annotateLogs({ key1: "value1", key2: "value2" }),
-  Effect.withLogSpan("myspan")
+  Effect.withLogSpan("myspan"),
 )
 
 Effect.runFork(program.pipe(Effect.provide(Logger.json)))
@@ -821,8 +794,8 @@ const program = Effect.log("something")
 Effect.runFork(
   program.pipe(
     // Replace the default logger with the combined logger
-    Effect.provide(Logger.replace(Logger.defaultLogger, combined))
-  )
+    Effect.provide(Logger.replace(Logger.defaultLogger, combined)),
+  ),
 )
 /*
 Output:

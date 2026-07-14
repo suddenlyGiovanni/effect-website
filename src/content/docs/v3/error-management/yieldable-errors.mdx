@@ -60,14 +60,14 @@ const program = Effect.gen(function* () {
   return n > 0.5
     ? "yay!"
     : n < 0.2
-    ? yield* new FooError({ message: "Oh no!" })
-    : yield* new BarError({ randomNumber: n })
+      ? yield* new FooError({ message: "Oh no!" })
+      : yield* new BarError({ randomNumber: n })
 }).pipe(
   // Handle different tagged errors using catchTags
   Effect.catchTags({
     Foo: (error) => Effect.succeed(`Foo error: ${error.message}`),
-    Bar: (error) => Effect.succeed(`Bar error: ${error.randomNumber}`)
-  })
+    Bar: (error) => Effect.succeed(`Bar error: ${error.randomNumber}`),
+  }),
 )
 
 Effect.runPromise(program).then(console.log, console.error)

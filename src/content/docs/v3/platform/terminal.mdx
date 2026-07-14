@@ -98,26 +98,23 @@ const prompt = Effect.gen(function* () {
 })
 
 // Get the user's guess, validating it as an integer between 1 and 100
-const answer: Effect.Effect<
-  number,
-  Terminal.QuitException | PlatformError,
-  Terminal.Terminal
-> = Effect.gen(function* () {
-  const input = yield* prompt
-  const guess = parseGuess(input)
-  if (Option.isNone(guess)) {
-    yield* display("You must enter an integer from 1 to 100")
-    return yield* answer
-  }
-  return guess.value
-})
+const answer: Effect.Effect<number, Terminal.QuitException | PlatformError, Terminal.Terminal> =
+  Effect.gen(function* () {
+    const input = yield* prompt
+    const guess = parseGuess(input)
+    if (Option.isNone(guess)) {
+      yield* display("You must enter an integer from 1 to 100")
+      return yield* answer
+    }
+    return guess.value
+  })
 
 // Check if the guess is too high, too low, or correct
 const check = <A, E, R>(
   secret: number,
   guess: number,
   ok: Effect.Effect<A, E, R>,
-  ko: Effect.Effect<A, E, R>
+  ko: Effect.Effect<A, E, R>,
 ) =>
   Effect.gen(function* () {
     if (guess > secret) {
@@ -136,19 +133,15 @@ const end = display("You guessed it!")
 
 // Main game loop
 const loop = (
-  secret: number
-): Effect.Effect<
-  void,
-  Terminal.QuitException | PlatformError,
-  Terminal.Terminal
-> =>
+  secret: number,
+): Effect.Effect<void, Terminal.QuitException | PlatformError, Terminal.Terminal> =>
   Effect.gen(function* () {
     const guess = yield* answer
     return yield* check(
       secret,
       guess,
       end,
-      Effect.suspend(() => loop(secret))
+      Effect.suspend(() => loop(secret)),
     )
   })
 
@@ -157,7 +150,7 @@ const game = Effect.gen(function* () {
   yield* display(
     `We have selected a random number between 1 and 100.
 See if you can guess it in 10 turns or fewer.
-We'll tell you if your guess was too high or too low.`
+We'll tell you if your guess was too high or too low.`,
   )
   yield* loop(yield* secret)
 })

@@ -14,6 +14,8 @@ interface Props {
 
 const { transparent = false, activeSlug, wide = false } = Astro.props
 
+const showThemeToggle = activeSlug === "playground"
+
 const mobilePrimaryLinks = getNavigationLinks("mobile", "primary")
 const mobileSocialLinks = getNavigationLinks("mobile", "social")
 ---
@@ -21,11 +23,11 @@ const mobileSocialLinks = getNavigationLinks("mobile", "social")
 <div
   class:list={[
     "fixed top-0 right-0 left-0 z-100 w-full will-change-transform backdrop-blur-sm",
-    transparent ? "" : "border-b border-zinc-800 bg-zinc-950/85",
+    transparent ? "" : "border-b border-zinc-200 bg-zinc-50/85 dark:border-zinc-800 dark:bg-zinc-950/85",
   ]}
 >
   <div class="w-full">
-    <header class:list={["relative mx-auto w-full px-4", wide ? "max-w-352" : "max-w-295"]}>
+    <header class:list={["relative mx-auto w-full", wide ? "max-w-352" : "px-4 max-w-295"]}>
       <nav class="flex h-16 items-center">
         <NavigationLogo />
 
@@ -41,7 +43,7 @@ const mobileSocialLinks = getNavigationLinks("mobile", "social")
         />
 
         <div class="ml-auto hidden items-center gap-4.5 md:flex">
-          <NavigationDesktopActions transparent={transparent} />
+          <NavigationDesktopActions transparent={transparent} showThemeToggle={showThemeToggle} />
         </div>
       </nav>
     </header>

@@ -36,15 +36,15 @@ const result = Effect.Do.pipe(
   Effect.bindAll(
     ({ x }) => ({
       a: Effect.succeed(x + 1),
-      b: Effect.succeed("foo")
+      b: Effect.succeed("foo"),
     }),
-    { concurrency: 2 }
-  )
+    { concurrency: 2 },
+  ),
 )
 assert.deepStrictEqual(Effect.runSync(result), {
   x: 2,
   a: 3,
-  b: "foo"
+  b: "foo",
 })
 ```
 
@@ -59,7 +59,7 @@ import { Stream, Schedule, Console, Effect } from "effect"
 const stream = Stream.fromSchedule(Schedule.spaced("2 millis")).pipe(
   Stream.race(Stream.fromSchedule(Schedule.spaced("1 millis"))),
   Stream.take(6),
-  Stream.tap((n) => Console.log(n))
+  Stream.tap((n) => Console.log(n)),
 )
 
 Effect.runPromise(Stream.runDrain(stream))
@@ -91,7 +91,7 @@ Effect.gen(function* () {
 
   // run a fiber and propagate interrupts
   yield* FiberHandle.run(handle, Effect.interrupt, {
-    propagateInterruption: true
+    propagateInterruption: true,
   })
 
   // this will now receive the interrupt
@@ -128,7 +128,7 @@ import { Effect } from "effect"
 
 Effect.forEach([1, 2, 3], (n) => Effect.succeed(n), {
   concurrency: "unbounded",
-  concurrentFinalizers: true
+  concurrentFinalizers: true,
 })
 ```
 

@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets"
+import EffectLogoBlack from "@/assets/logos/effect/combination-mark/svg/effect-logo-black.svg"
 import EffectLogoWhite from "@/assets/logos/effect/combination-mark/svg/effect-logo-white.svg"
 
 interface Props {
@@ -10,5 +10,19 @@ const { href = "/" } = Astro.props
 ---
 
 <a href={href} class="flex items-center" aria-label="Effect homepage">
-  <Image src={EffectLogoWhite} alt="Effect Logo" class="h-7 w-auto" />
+  <img
+    src={EffectLogoBlack.src}
+    alt="Effect Logo"
+    class="h-7 w-auto dark:hidden"
+    width={EffectLogoBlack.width}
+    height={EffectLogoBlack.height}
+  />
+  <img
+    src={EffectLogoWhite.src}
+    alt=""
+    aria-hidden="true"
+    class="hidden h-7 w-auto dark:block"
+    width={EffectLogoWhite.width}
+    height={EffectLogoWhite.height}
+  />
 </a>

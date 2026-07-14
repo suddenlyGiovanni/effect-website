@@ -35,7 +35,7 @@ export class Cache extends Effect.Service<Cache>()("app/Cache", {
     return { lookup } as const
   }),
   // provide dependencies
-  dependencies: [NodeFileSystem.layer]
+  dependencies: [NodeFileSystem.layer],
 }) {}
 
 // Layer for use in the application
@@ -100,7 +100,7 @@ const result = pipe(
   Tuple.map((el) => {
     //   ^? "a" | 1 | false
     return el.toString().toUpperCase()
-  })
+  }),
 )
 assert.deepStrictEqual(result, ["A", "1", "FALSE"])
 ```

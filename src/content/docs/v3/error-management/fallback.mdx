@@ -128,8 +128,8 @@ will be executed in sequence, and the first one that succeeds will determine
 the outcome of the resulting `Effect` value.
 
 <Aside type="caution" title="Empty Collection Error">
-  If the collection provided to the `Effect.firstSuccessOf` function is
-  empty, it will throw an `IllegalArgumentException` error.
+  If the collection provided to the `Effect.firstSuccessOf` function is empty, it will throw an
+  `IllegalArgumentException` error.
 </Aside>
 
 **Example** (Finding Configuration with Fallbacks)
@@ -149,7 +149,7 @@ interface Config {
 const makeConfig = (name: string): Config => ({
   host: `${name}.example.com`,
   port: 8080,
-  apiKey: "12345-abcde"
+  apiKey: "12345-abcde",
 })
 
 // Simulate retrieving configuration from a remote node

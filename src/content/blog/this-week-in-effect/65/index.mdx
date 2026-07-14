@@ -28,7 +28,7 @@ To get started, below you’ll find links to our documentation as well as our gu
 
 Recent major updates:
 
-- New [Effect Days 2025 talks](https://www.youtube.com/playlist?list=PLDf3uQLaK2B9bEBZbwMv04e_zSbRNPKH6) every week on YouTube! 
+- New [Effect Days 2025 talks](https://www.youtube.com/playlist?list=PLDf3uQLaK2B9bEBZbwMv04e_zSbRNPKH6) every week on YouTube!
 - The [Effect community](https://discord.gg/effect-ts) on Discord reached 4180+ members!
 - Effect featured in the [Thoughtworks Technology Radar](https://www.thoughtworks.com/radar/languages-and-frameworks/effect).
 
@@ -39,42 +39,48 @@ Recent major updates:
 Here are all the technical changes from this week.
 
 ### Effect Core
+
 - [Fix Layer.discard jsdoc](https://github.com/Effect-TS/effect/pull/4822) (Documentation Update)
 - [SONSchema: respect annotations on declarations](https://github.com/Effect-TS/effect/pull/4832) (Bug Fix)
-- [Improve Effect.filter* types to exclude candidates in fallback functions](https://github.com/Effect-TS/effect/pull/4814) (Improvement, next-minor)
+- [Improve Effect.filter\* types to exclude candidates in fallback functions](https://github.com/Effect-TS/effect/pull/4814) (Improvement, next-minor)
 - [Add Either.transposeMapOption](https://github.com/Effect-TS/effect/pull/4741) (Feature, next-minor)
 - [Fix Mailbox.fromStream](https://github.com/Effect-TS/effect/pull/4837) ((Bug Fix))
 - [Schema: TaggedError no longer crashes when the message field is explicitly defined](https://github.com/Effect-TS/effect/pull/4847) (Bug Fix)
 - [Expose isTimeoutException](https://github.com/Effect-TS/effect/pull/4846) (Feature, Bug Fix, next-minor)
 
 ### Effect Cluster
+
 - [Fix sqlite SqlMessageStorage.repliesFor](https://github.com/Effect-TS/effect/pull/4823) (Bug Fix)
 - [Ensure clientOnly mode without storage falls back to network messaging](https://github.com/Effect-TS/effect/pull/4825) (Bug Fix)
 - [Sending persisted messages without MessageStorage is now a defect](https://github.com/Effect-TS/effect/pull/4829) (Improvement)
 
 ### Effect Platform
+
 - [Fix causeResponse to always return internalServerError for defects](https://github.com/Effect-TS/effect/pull/4821) (Bug Fix)
 - [Fix StreamAdapter error forwarding](https://github.com/Effect-TS/effect/pull/4827) (Bug Fix)
 - [Allow overriding http span names](https://github.com/Effect-TS/effect/pull/4842) (Feature)
 
 ### Effect SQL
-- [Update sql-drizzle](https://github.com/Effect-TS/effect/pull/4840) (Improvement, next-minor)
 
+- [Update sql-drizzle](https://github.com/Effect-TS/effect/pull/4840) (Improvement, next-minor)
 
 &nbsp;
 
 ## Effect Days 2025 Updates
 
 This week, we published Elliot Dauber's **Building LLM Systems with Effect at Markprompt** talk, where he shares how they use Effect to build a type-safe, composable agent framework for complex customer support use cases at [Markprompt](https://www.markprompt.com/). Elliot introduces the concepts of actions, subagents, and workflows, showing how to combine deterministic and non-deterministic behaviors in LLM-powered applications.
+
 <YouTube
   id="https://www.youtube.com/embed/SBaUIeL2XEs?si=eoz_MQWtuP1Fn4To"
   title="Building LLM Systems with Effect at Markprompt | Elliot Dauber (Effect Days 2025)"
 />
 
 In his post-conference interview, Elliot shared further insights on his experience with Effect.
-  <Tweet id="1920437711078396291" />
+
+<Tweet id="1920437711078396291" />
 
 We also published Edouard Penin's **Testing the easy and hard stuff with Effect** talk, where he demonstrates effective testing strategies using Effect, aimed at making real-world testing scenarios with Effect easier and more reliable.
+
 <YouTube
   id="https://www.youtube.com/embed/pIXX1QAegCE?si=sMwUfDXKyNqvaniJ"
   title="Testing the easy and hard stuff with Effect | Edouard Penin (Effect Days 2025)"
@@ -85,17 +91,20 @@ We also published Edouard Penin's **Testing the easy and hard stuff with Effect*
 ## Community Highlights
 
 - [Lucas Barake](https://www.youtube.com/@lucas-barake) published a new video about **RPC for Workers in TypeScript**.
+
   <YouTube
-  id="https://www.youtube.com/embed/1BMYYkQe9tI?si=tAMsVYjq_dOq7igo"
-  title="RPC for Workers in TypeScript...?"
+    id="https://www.youtube.com/embed/1BMYYkQe9tI?si=tAMsVYjq_dOq7igo"
+    title="RPC for Workers in TypeScript...?"
   />
 
 - [Rhys Sullivan](https://x.com/RhysSullivan) shared how Effect is used to write tests at [Vercel](https://vercel.com).
+
   <Tweet id="1918387180063605052" />
 
 - [Inalegwu Ikwue](https://github.com/Inalegwu) released [Vision](https://github.com/Inalegwu/Vision), an Electron-based desktop app for reading comic books that leverages Effect to improve performance.
 
 - A reminder that the 5th edition of the [Effect Paris Meetup](https://www.meetup.com/fr-FR/effect-paris/events/307558421) is coming on May 20th, hosted by [Spiko](https://www.spiko.io/) and sponsored by [Evryg](https://www.evryg.com/en). The meetup will be in French.
+
   <Tweet id="1917474538104754182" />
 
 - Dillon Mulroy livestreamed four episodes of his series **Building a tool to sync Splitwise and YNAB with EffectTS 🚀** on his Twitch channel.
@@ -103,13 +112,13 @@ We also published Edouard Penin's **Testing the easy and hard stuff with Effect*
   <TwitchPlayerNonInteractive video="2450902562" />
 
 &nbsp;
+
 ## Effect Content Update
 
 - Mattia Manzati was live on Twitch and X(Twitter) with a new episode of **Building an Effect Warehouse App**.
   <Tweet id="1920765407843283185" />
 
 &nbsp;
-
 
 ## Cause & Effect Podcast
 

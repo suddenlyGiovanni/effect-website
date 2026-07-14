@@ -84,7 +84,7 @@ const foo = Either.right(42)
 
 const message = Either.match(foo, {
   onLeft: (left) => `The left value is: ${left}`,
-  onRight: (right) => `The Right value is: ${right}`
+  onRight: (right) => `The Right value is: ${right}`,
 })
 
 console.log(message)
@@ -137,10 +137,7 @@ Output:
 */
 
 // Transform the Left value by appending "!"
-const leftResult = Either.mapLeft(
-  Either.left("not a number"),
-  (s) => s + "!"
-)
+const leftResult = Either.mapLeft(Either.left("not a number"), (s) => s + "!")
 console.log(leftResult)
 /*
 Output:
@@ -159,7 +156,7 @@ import { Either } from "effect"
 
 const transformedRight = Either.mapBoth(Either.right(1), {
   onLeft: (s) => s + "!",
-  onRight: (n) => n + 1
+  onRight: (n) => n + 1,
 })
 console.log(transformedRight)
 /*
@@ -169,7 +166,7 @@ Output:
 
 const transformedLeft = Either.mapBoth(Either.left("not a number"), {
   onLeft: (s) => s + "!",
-  onRight: (n) => n + 1
+  onRight: (n) => n + 1,
 })
 console.log(transformedLeft)
 /*
@@ -201,9 +198,7 @@ const head = <A>(array: ReadonlyArray<A>): Either.Either<A, string> =>
 // Simulated fetch function that returns Effect
 const fetchData = (): Effect.Effect<string, string> => {
   const success = Math.random() > 0.5
-  return success
-    ? Effect.succeed("some data")
-    : Effect.fail("Failed to fetch data")
+  return success ? Effect.succeed("some data") : Effect.fail("Failed to fetch data")
 }
 
 // Mixing Either and Effect
@@ -233,7 +228,7 @@ const maybeAge: Either.Either<number, string> = Either.right(25)
 // Combine the name and age into a person object
 const person = Either.zipWith(maybeName, maybeAge, (name, age) => ({
   name: name.toUpperCase(),
-  age
+  age,
 }))
 
 console.log(person)
@@ -256,7 +251,7 @@ const maybeAge: Either.Either<number, string> = Either.left("Oh no!")
 // Since maybeAge is a Left, the result will also be Left
 const person = Either.zipWith(maybeName, maybeAge, (name, age) => ({
   name: name.toUpperCase(),
-  age
+  age,
 }))
 
 console.log(person)
@@ -308,10 +303,8 @@ If one or more `Either` values are `Left`, the first `Left` encountered is retur
 ```ts
 import { Either } from "effect"
 
-const maybeName: Either.Either<string, string> =
-  Either.left("name not found")
-const maybeAge: Either.Either<number, string> =
-  Either.left("age not found")
+const maybeName: Either.Either<string, string> = Either.left("name not found")
+const maybeAge: Either.Either<number, string> = Either.left("age not found")
 
 // The first Left value will be returned
 console.log(Either.all([maybeName, maybeAge]))

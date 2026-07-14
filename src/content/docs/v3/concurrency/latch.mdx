@@ -48,7 +48,7 @@ const program = Effect.gen(function* () {
   // Fork a fiber that logs "open sesame" only when the latch is open
   const fiber = yield* Console.log("open sesame").pipe(
     latch.whenOpen, // Waits for the latch to open
-    Effect.fork // Fork the effect into a new fiber
+    Effect.fork, // Fork the effect into a new fiber
   )
 
   // Wait for 1 second

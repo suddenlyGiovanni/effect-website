@@ -49,7 +49,7 @@ const die = Effect.dieMessage("Boom!")
 
 // Run both effects concurrently
 const program = Effect.all([fail, die], {
-  concurrency: "unbounded"
+  concurrency: "unbounded",
 }).pipe(Effect.asVoid)
 
 Effect.runPromiseExit(program).then(console.log)
@@ -85,7 +85,7 @@ const die = Effect.dieMessage("Boom!")
 
 // Run all effects concurrently and capture all errors
 const program = Effect.all([fail1, fail2, die], {
-  concurrency: "unbounded"
+  concurrency: "unbounded",
 }).pipe(Effect.asVoid, Effect.parallelErrors)
 
 Effect.runPromiseExit(program).then(console.log)
@@ -100,8 +100,7 @@ Output:
 ```
 
 <Aside type="note" title="Applicability">
-  Note that `Effect.parallelErrors` is only for failures, not defects or
-  interruptions.
+  Note that `Effect.parallelErrors` is only for failures, not defects or interruptions.
 </Aside>
 
 ## Sequential Errors

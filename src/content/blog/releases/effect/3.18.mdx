@@ -20,7 +20,7 @@ An experimental Graph module has been added, with comprehensive graph data struc
 The Graph module provides:
 
 - Directed and undirected graph support
-- Immutable and mutable graph variants  
+- Immutable and mutable graph variants
 - Type-safe node and edge operations
 - Graph algorithms: DFS, BFS, shortest paths, cycle detection, etc.
 
@@ -45,10 +45,9 @@ The `ReadonlyTag` type is the covariant side of a `Context.Tag`, that can be use
 import type { Context } from "effect"
 import { Effect } from "effect"
 
-export class MyRequirement extends Effect.Service<MyRequirement>()(
-  "MyRequirement",
-  { succeed: () => 42 }
-) {}
+export class MyRequirement extends Effect.Service<MyRequirement>()("MyRequirement", {
+  succeed: () => 42,
+}) {}
 
 export class MyUseCase extends Effect.Service<MyUseCase>()("MyUseCase", {
   dependencies: [MyRequirement.Default],
@@ -57,11 +56,11 @@ export class MyUseCase extends Effect.Service<MyUseCase>()("MyUseCase", {
     return Effect.fn("MyUseCase.execute")(function* () {
       return requirement()
     })
-  })
+  }),
 }) {}
 
 export function effectHandler<I, Args extends Array<any>, A, E, R>(
-  service: Context.ReadonlyTag<I, (...args: Args) => Effect.Effect<A, E, R>>
+  service: Context.ReadonlyTag<I, (...args: Args) => Effect.Effect<A, E, R>>,
 ) {
   return Effect.fn("effectHandler")(function* (...args: Args) {
     const execute = yield* service

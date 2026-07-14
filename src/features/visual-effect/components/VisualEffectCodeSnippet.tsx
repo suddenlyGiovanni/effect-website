@@ -100,7 +100,7 @@ export function VisualEffectCodeSnippet({
 
 function SnippetTokens({ tokens }: { readonly tokens: ReadonlyArray<ReadonlyArray<ThemedToken>> }) {
   return (
-    <pre className="m-0 font-mono text-sm leading-[1.6] whitespace-pre text-zinc-300 [tab-size:2]">
+    <pre className="m-0 font-mono text-sm leading-[1.6] whitespace-pre [tab-size:2] text-zinc-300">
       {tokens.map((lineTokens, lineIndex) => (
         <div key={`snippet-line-${lineIndex.toString()}`} className="block min-h-[1.6em]">
           {lineTokens.length === 0 ? (
@@ -129,7 +129,7 @@ function SnippetTokens({ tokens }: { readonly tokens: ReadonlyArray<ReadonlyArra
 
 function SnippetFallback({ source }: { readonly source: string }) {
   return (
-    <pre className="m-0 font-mono text-sm leading-[1.6] whitespace-pre text-zinc-300 [tab-size:2]">
+    <pre className="m-0 font-mono text-sm leading-[1.6] whitespace-pre [tab-size:2] text-zinc-300">
       {source}
     </pre>
   )

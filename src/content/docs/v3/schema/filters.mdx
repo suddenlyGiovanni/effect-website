@@ -23,8 +23,8 @@ import { Schema } from "effect"
 const LongString = Schema.String.pipe(
   Schema.filter(
     // Custom error message for strings shorter than 10 characters
-    (s) => s.length >= 10 || "a string at least 10 characters long"
-  )
+    (s) => s.length >= 10 || "a string at least 10 characters long",
+  ),
 )
 
 //     ┌─── string
@@ -60,11 +60,7 @@ Filters add additional validation constraints without modifying the schema's und
 The predicate function in a filter follows this structure:
 
 ```ts
-type Predicate = (
-  a: A,
-  options: ParseOptions,
-  self: AST.Refinement
-) => FilterReturnType
+type Predicate = (a: A, options: ParseOptions, self: AST.Refinement) => FilterReturnType
 ```
 
 where
@@ -75,12 +71,7 @@ interface FilterIssue {
   readonly issue: string | ParseResult.ParseIssue
 }
 
-type FilterOutput =
-  | undefined
-  | boolean
-  | string
-  | ParseResult.ParseIssue
-  | FilterIssue
+type FilterOutput = undefined | boolean | string | ParseResult.ParseIssue | FilterIssue
 
 type FilterReturnType = FilterOutput | ReadonlyArray<FilterOutput>
 ```
@@ -97,9 +88,8 @@ The filter's predicate can return several types of values, each affecting valida
 | `ReadonlyArray<FilterOutput>` | An array of issues can be returned if multiple validation errors need to be reported.            |
 
 <Aside type="tip" title="Effectful Filters">
-  Normal filters only handle synchronous, non-effectful validations. If
-  you need filters that involve asynchronous logic or side effects,
-  consider using
+  Normal filters only handle synchronous, non-effectful validations. If you need filters that
+  involve asynchronous logic or side effects, consider using
   [Schema.filterEffect](/docs/schema/transformations/#effectful-filters).
 </Aside>
 
@@ -113,15 +103,11 @@ Embedding metadata within the schema, such as identifiers, JSON schema specifica
 import { Schema, JSONSchema } from "effect"
 
 const LongString = Schema.String.pipe(
-  Schema.filter(
-    (s) =>
-      s.length >= 10 ? undefined : "a string at least 10 characters long",
-    {
-      identifier: "LongString",
-      jsonSchema: { minLength: 10 },
-      description: "Lorem ipsum dolor sit amet, ..."
-    }
-  )
+  Schema.filter((s) => (s.length >= 10 ? undefined : "a string at least 10 characters long"), {
+    identifier: "LongString",
+    jsonSchema: { minLength: 10 },
+    description: "Lorem ipsum dolor sit amet, ...",
+  }),
 )
 
 console.log(Schema.decodeUnknownSync(LongString)("a"))
@@ -162,7 +148,7 @@ const Password = Schema.Trim.pipe(Schema.minLength(2))
 
 const MyForm = Schema.Struct({
   password: Password,
-  confirm_password: Password
+  confirm_password: Password,
 }).pipe(
   // Add a filter to ensure that passwords match
   Schema.filter((input) => {
@@ -171,25 +157,21 @@ const MyForm = Schema.Struct({
       // with the "confirm_password" field
       return {
         path: ["confirm_password"],
-        message: "Passwords do not match"
+        message: "Passwords do not match",
       }
     }
-  })
+  }),
 )
 
 console.log(
   JSON.stringify(
     Schema.decodeUnknownEither(MyForm)({
       password: "abc",
-      confirm_password: "abd" // Confirm password does not match
-    }).pipe(
-      Either.mapLeft((error) =>
-        ParseResult.ArrayFormatter.formatErrorSync(error)
-      )
-    ),
+      confirm_password: "abd", // Confirm password does not match
+    }).pipe(Either.mapLeft((error) => ParseResult.ArrayFormatter.formatErrorSync(error))),
     null,
-    2
-  )
+    2,
+  ),
 )
 /*
   "_id": "Either",
@@ -212,10 +194,9 @@ In this example, we define a `MyForm` schema with two password fields (`password
 The error is formatted in a structured way using `ArrayFormatter`, allowing for easier post-processing and integration with form libraries.
 
 <Aside type="tip" title="Using ArrayFormatter for Structured Errors">
-  The `ArrayFormatter` provides a detailed and structured error format
-  rather than a simple error string. This is especially useful when
-  handling complex forms or structured data. For more information, see
-  [ArrayFormatter](/docs/schema/error-formatters/#arrayformatter).
+  The `ArrayFormatter` provides a detailed and structured error format rather than a simple error
+  string. This is especially useful when handling complex forms or structured data. For more
+  information, see [ArrayFormatter](/docs/schema/error-formatters/#arrayformatter).
 </Aside>
 
 ## Multiple Error Reporting
@@ -234,7 +215,7 @@ const MyForm = Schema.Struct({
   password: Password,
   confirm_password: Password,
   name: OptionalString,
-  surname: OptionalString
+  surname: OptionalString,
 }).pipe(
   Schema.filter((input) => {
     const issues: Array<Schema.FilterIssue> = []
@@ -243,7 +224,7 @@ const MyForm = Schema.Struct({
     if (input.password !== input.confirm_password) {
       issues.push({
         path: ["confirm_password"],
-        message: "Passwords do not match"
+        message: "Passwords do not match",
       })
     }
 
@@ -251,26 +232,22 @@ const MyForm = Schema.Struct({
     if (!input.name && !input.surname) {
       issues.push({
         path: ["surname"],
-        message: "Surname must be present if name is not present"
+        message: "Surname must be present if name is not present",
       })
     }
     return issues
-  })
+  }),
 )
 
 console.log(
   JSON.stringify(
     Schema.decodeUnknownEither(MyForm)({
       password: "abc",
-      confirm_password: "abd" // Confirm password does not match
-    }).pipe(
-      Either.mapLeft((error) =>
-        ParseResult.ArrayFormatter.formatErrorSync(error)
-      )
-    ),
+      confirm_password: "abd", // Confirm password does not match
+    }).pipe(Either.mapLeft((error) => ParseResult.ArrayFormatter.formatErrorSync(error))),
     null,
-    2
-  )
+    2,
+  ),
 )
 /*
 {
@@ -299,10 +276,9 @@ console.log(
 In this example, we define a `MyForm` schema with fields for password validation and optional name/surname fields. The `Schema.filter` function checks if the passwords match and ensures that either a name or surname is provided. If either validation fails, the corresponding error message is associated with the relevant field and both errors are returned in a structured format.
 
 <Aside type="tip" title="Using ArrayFormatter for Structured Errors">
-  The `ArrayFormatter` provides a detailed and structured error format
-  rather than a simple error string. This is especially useful when
-  handling complex forms or structured data. For more information, see
-  [ArrayFormatter](/docs/schema/error-formatters/#arrayformatter).
+  The `ArrayFormatter` provides a detailed and structured error format rather than a simple error
+  string. This is especially useful when handling complex forms or structured data. For more
+  information, see [ArrayFormatter](/docs/schema/error-formatters/#arrayformatter).
 </Aside>
 
 ## Exposed Values
@@ -312,9 +288,7 @@ For schemas with filters, you can access the base schema (the schema before the 
 ```ts twoslash
 import { Schema } from "effect"
 
-const LongString = Schema.String.pipe(
-  Schema.filter((s) => s.length >= 10)
-)
+const LongString = Schema.String.pipe(Schema.filter((s) => s.length >= 10))
 
 // Access the base schema, which is the string schema
 // before the filter was applied
@@ -379,9 +353,9 @@ Schema.String.pipe(Schema.uncapitalized())
 ```
 
 <Aside type="tip" title="Trim vs Trimmed">
-  The `trimmed` combinator does not make any transformations, it only
-  validates. If what you were looking for was a combinator to trim
-  strings, then check out the `trim` combinator or the `Trim` schema.
+  The `trimmed` combinator does not make any transformations, it only validates. If what you were
+  looking for was a combinator to trim strings, then check out the `trim` combinator or the `Trim`
+  schema.
 </Aside>
 
 ### Number Filters
@@ -546,30 +520,19 @@ Here is a list of useful `BigDecimal` filters provided by the Schema module:
 import { Schema, BigDecimal } from "effect"
 
 // Specifies a BigDecimal greater than 5
-Schema.BigDecimal.pipe(
-  Schema.greaterThanBigDecimal(BigDecimal.unsafeFromNumber(5))
-)
+Schema.BigDecimal.pipe(Schema.greaterThanBigDecimal(BigDecimal.unsafeFromNumber(5)))
 
 // Specifies a BigDecimal greater than or equal to 5
-Schema.BigDecimal.pipe(
-  Schema.greaterThanOrEqualToBigDecimal(BigDecimal.unsafeFromNumber(5))
-)
+Schema.BigDecimal.pipe(Schema.greaterThanOrEqualToBigDecimal(BigDecimal.unsafeFromNumber(5)))
 // Specifies a BigDecimal less than 5
-Schema.BigDecimal.pipe(
-  Schema.lessThanBigDecimal(BigDecimal.unsafeFromNumber(5))
-)
+Schema.BigDecimal.pipe(Schema.lessThanBigDecimal(BigDecimal.unsafeFromNumber(5)))
 
 // Specifies a BigDecimal less than or equal to 5
-Schema.BigDecimal.pipe(
-  Schema.lessThanOrEqualToBigDecimal(BigDecimal.unsafeFromNumber(5))
-)
+Schema.BigDecimal.pipe(Schema.lessThanOrEqualToBigDecimal(BigDecimal.unsafeFromNumber(5)))
 
 // Specifies a BigDecimal between -2 and 2, inclusive
 Schema.BigDecimal.pipe(
-  Schema.betweenBigDecimal(
-    BigDecimal.unsafeFromNumber(-2),
-    BigDecimal.unsafeFromNumber(2)
-  )
+  Schema.betweenBigDecimal(BigDecimal.unsafeFromNumber(-2), BigDecimal.unsafeFromNumber(2)),
 )
 
 // Specifies a positive BigDecimal (> 0)

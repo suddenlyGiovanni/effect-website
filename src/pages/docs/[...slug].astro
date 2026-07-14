@@ -75,7 +75,10 @@ for (const e of entries.filter((e) => e.id.startsWith(`${currentVersion}/`))) {
 
 const groups: SidebarGroup[] = [...groupMap.entries()].map(([dir, es]) => ({
   dir,
-  label: dir.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" "),
+  label: dir
+    .split("-")
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(" "),
   entries: sortByOrderLabel(es, entryOrder, entryLabel),
   isOpen: es.some((e) => e.id === currentId),
 }))
@@ -131,7 +134,10 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
                       <details open={item.group.isOpen || undefined}>
                         <summary class="flex cursor-pointer select-none list-none items-center justify-between rounded py-2.5 font-mono text-sm font-medium tracking-wider text-zinc-700 uppercase transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
                           <span>{item.group.label}</span>
-                          <ChevronDown class="h-4 w-4 transition-transform details-chevron" aria-hidden="true" />
+                          <ChevronDown
+                            class="h-4 w-4 transition-transform details-chevron"
+                            aria-hidden="true"
+                          />
                         </summary>
                         <ul class="flex flex-col gap-0.5 pb-4">
                           {item.group.entries.map((e) => (
@@ -153,7 +159,7 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
                         </ul>
                       </details>
                     </li>
-                  )
+                  ),
                 )
               }
             </ul>
@@ -219,7 +225,6 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3)
 <script>
   const links = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")
   if (links.length > 0) {
-
     function setActive(id: string | null) {
       for (const link of links) {
         const isActive = link.dataset.tocLink === id

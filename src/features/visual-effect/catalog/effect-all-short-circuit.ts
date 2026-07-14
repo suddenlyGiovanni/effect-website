@@ -1,6 +1,6 @@
+import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Random from "effect/Random"
-import * as Context from "effect/Context"
 import * as String from "effect/String"
 import { defineExample } from "../model/define-example"
 import { Notifications } from "../model/example-definition"

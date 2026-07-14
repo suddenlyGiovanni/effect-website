@@ -41,8 +41,7 @@ In the following example, a "server" continually updates a shared value, while m
 import { Ref, Effect } from "effect"
 
 // Server function that increments a shared value forever
-const server = (ref: Ref.Ref<number>) =>
-  Ref.update(ref, (n) => n + 1).pipe(Effect.forever)
+const server = (ref: Ref.Ref<number>) => Ref.update(ref, (n) => n + 1).pipe(Effect.forever)
 ```
 
 The `server` function operates on a regular `Ref` and continuously updates the value. It doesn't need to know about `SubscriptionRef` directly.
@@ -53,8 +52,7 @@ Next, let's define a `client` that subscribes to changes and collects a specifie
 import { Ref, Effect, Stream, Random } from "effect"
 
 // Server function that increments a shared value forever
-const server = (ref: Ref.Ref<number>) =>
-  Ref.update(ref, (n) => n + 1).pipe(Effect.forever)
+const server = (ref: Ref.Ref<number>) => Ref.update(ref, (n) => n + 1).pipe(Effect.forever)
 
 // Client function that observes the stream of changes
 const client = (changes: Stream.Stream<number>) =>
@@ -70,18 +68,10 @@ Similarly, the `client` function only works with a `Stream` of values and doesn'
 To tie everything together, we start the server, launch multiple client instances in parallel, and then shut down the server when we're finished. We also create the `SubscriptionRef` in this process.
 
 ```ts twoslash
-import {
-  Ref,
-  Effect,
-  Stream,
-  Random,
-  SubscriptionRef,
-  Fiber
-} from "effect"
+import { Ref, Effect, Stream, Random, SubscriptionRef, Fiber } from "effect"
 
 // Server function that increments a shared value forever
-const server = (ref: Ref.Ref<number>) =>
-  Ref.update(ref, (n) => n + 1).pipe(Effect.forever)
+const server = (ref: Ref.Ref<number>) => Ref.update(ref, (n) => n + 1).pipe(Effect.forever)
 
 // Client function that observes the stream of changes
 const client = (changes: Stream.Stream<number>) =>

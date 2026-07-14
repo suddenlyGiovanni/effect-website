@@ -26,7 +26,7 @@ const getJson = (url: string) =>
       }
       console.log("ok")
       return res.json() as unknown
-    })
+    }),
   )
 
 // Program that retries the API call twice, times out after 4 seconds,
@@ -35,7 +35,7 @@ const program = (url: string) =>
   getJson(url).pipe(
     Effect.retry({ times: 2 }),
     Effect.timeout("4 seconds"),
-    Effect.catchAll(Console.error)
+    Effect.catchAll(Console.error),
   )
 
 // Test case: successful API response
@@ -89,20 +89,18 @@ const getJson = (url: string) =>
         }
         return res.json() as unknown
       }),
-    catch: (e) => e as Err
+    catch: (e) => e as Err,
   })
 
 // Program that retries only when the error status is 401 (Unauthorized)
 const program = (url: string) =>
   getJson(url).pipe(
     Effect.retry({ while: (err) => err.status === 401 }),
-    Effect.catchAll(Console.error)
+    Effect.catchAll(Console.error),
   )
 
 // Test case: API returns 401 (triggers multiple retries)
-Effect.runFork(
-  program("https://dummyjson.com/auth/products/1?delay=1000")
-)
+Effect.runFork(program("https://dummyjson.com/auth/products/1?delay=1000"))
 /*
 Output:
 401
@@ -133,9 +131,9 @@ This approach ensures that the retry delay adapts dynamically to the server's re
 import { Duration, Effect, Schedule, Data } from "effect"
 
 // Custom error class representing a "Too Many Requests" response
-class TooManyRequestsError extends Data.TaggedError(
-  "TooManyRequestsError"
-)<{ readonly retryAfter: number }> {}
+class TooManyRequestsError extends Data.TaggedError("TooManyRequestsError")<{
+  readonly retryAfter: number
+}> {}
 
 let n = 1
 const request = Effect.gen(function* () {
@@ -156,10 +154,10 @@ const policy = Schedule.identity<TooManyRequestsError>().pipe(
     error._tag === "TooManyRequestsError"
       ? // Wait for the specified retry-after duration
         Duration.millis(error.retryAfter)
-      : Duration.zero
+      : Duration.zero,
   ),
   // Limit retries to 5 attempts
-  Schedule.intersect(Schedule.recurs(5))
+  Schedule.intersect(Schedule.recurs(5)),
 )
 
 const program = request.pipe(Effect.retry(policy))
@@ -184,9 +182,7 @@ import { Effect, Console, Schedule } from "effect"
 
 // Define a long-running effect
 // (e.g., a task that takes 5 seconds to complete)
-const longRunningEffect = Console.log("done").pipe(
-  Effect.delay("5 seconds")
-)
+const longRunningEffect = Console.log("done").pipe(Effect.delay("5 seconds"))
 
 // Define an action to run periodically
 const action = Console.log("action...")
@@ -195,10 +191,7 @@ const action = Console.log("action...")
 const schedule = Schedule.fixed("1.5 seconds")
 
 // Run the action repeatedly until the long-running task completes
-const program = Effect.race(
-  Effect.repeat(action, schedule),
-  longRunningEffect
-)
+const program = Effect.race(Effect.repeat(action, schedule), longRunningEffect)
 
 Effect.runPromise(program)
 /*

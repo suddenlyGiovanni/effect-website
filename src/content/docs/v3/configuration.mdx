@@ -103,10 +103,7 @@ You can define and decode configuration values using a schema.
 import { Effect, Schema } from "effect"
 
 // Define a config that expects a string with at least 4 characters
-const myConfig = Schema.Config(
-  "Foo",
-  Schema.String.pipe(Schema.minLength(4))
-)
+const myConfig = Schema.Config("Foo", Schema.String.pipe(Schema.minLength(4)))
 ```
 
 For more information, see the [Schema.Config](/docs/schema/effect-data-types/#config) documentation.
@@ -311,8 +308,8 @@ const program = Effect.gen(function* () {
   const config = yield* Config.string("NAME").pipe(
     Config.validate({
       message: "Expected a string at least 4 characters long",
-      validation: (s) => s.length >= 4
-    })
+      validation: (s) => s.length >= 4,
+    }),
   )
   console.log(config)
 })
@@ -391,9 +388,8 @@ A: A, B: B
 ```
 
 <Aside type="tip">
-  In this example, we use `ConfigProvider.fromMap` to create a
-  configuration provider from a simple JavaScript `Map`. This is
-  particularly useful for testing, as described in the [Mocking
+  In this example, we use `ConfigProvider.fromMap` to create a configuration provider from a simple
+  JavaScript `Map`. This is particularly useful for testing, as described in the [Mocking
   Configurations in Tests](#mocking-configurations-in-tests) section.
 </Aside>
 
@@ -405,7 +401,10 @@ For example, let's create a `HostPort` class, which has two fields: `host` and `
 
 ```ts twoslash
 class HostPort {
-  constructor(readonly host: string, readonly port: number) {}
+  constructor(
+    readonly host: string,
+    readonly port: number,
+  ) {}
   get url() {
     return `${this.host}:${this.port}`
   }
@@ -420,7 +419,10 @@ To define a configuration for this custom type, we can combine primitive configs
 import { Config } from "effect"
 
 class HostPort {
-  constructor(readonly host: string, readonly port: number) {}
+  constructor(
+    readonly host: string,
+    readonly port: number,
+  ) {}
   get url() {
     return `${this.host}:${this.port}`
   }
@@ -430,10 +432,7 @@ class HostPort {
 const both = Config.all([Config.string("HOST"), Config.number("PORT")])
 
 // Map the configuration values into a HostPort instance
-const config = Config.map(
-  both,
-  ([host, port]) => new HostPort(host, port)
-)
+const config = Config.map(both, ([host, port]) => new HostPort(host, port))
 ```
 
 In this example, `Config.all(configs)` combines two primitive configurations, `Config<string>` and `Config<number>`, into a `Config<[string, number]>`. The `Config.map` operator is then used to transform these values into an instance of the `HostPort` class.
@@ -444,7 +443,10 @@ In this example, `Config.all(configs)` combines two primitive configurations, `C
 import { Effect, Config } from "effect"
 
 class HostPort {
-  constructor(readonly host: string, readonly port: number) {}
+  constructor(
+    readonly host: string,
+    readonly port: number,
+  ) {}
   get url() {
     return `${this.host}:${this.port}`
   }
@@ -454,10 +456,7 @@ class HostPort {
 const both = Config.all([Config.string("HOST"), Config.number("PORT")])
 
 // Map the configuration values into a HostPort instance
-const config = Config.map(
-  both,
-  ([host, port]) => new HostPort(host, port)
-)
+const config = Config.map(both, ([host, port]) => new HostPort(host, port))
 
 // Main program that reads configuration and starts the application
 const program = Effect.gen(function* () {
@@ -491,7 +490,7 @@ class ServiceConfig {
   constructor(
     readonly host: string,
     readonly port: number,
-    readonly timeout: number
+    readonly timeout: number,
   ) {}
   get url() {
     return `${this.host}:${this.port}`
@@ -510,26 +509,23 @@ class ServiceConfig {
   constructor(
     readonly host: string,
     readonly port: number,
-    readonly timeout: number
+    readonly timeout: number,
   ) {}
   get url() {
     return `${this.host}:${this.port}`
   }
 }
 
-const serverConfig = Config.all([
-  Config.string("HOST"),
-  Config.number("PORT")
-])
+const serverConfig = Config.all([Config.string("HOST"), Config.number("PORT")])
 
 const serviceConfig = Config.map(
   Config.all([
     // Read 'HOST' and 'PORT' from 'SERVER' namespace
     Config.nested(serverConfig, "SERVER"),
     // Read 'TIMEOUT' from the root namespace
-    Config.number("TIMEOUT")
+    Config.number("TIMEOUT"),
   ]),
-  ([[host, port], timeout]) => new ServiceConfig(host, port, timeout)
+  ([[host, port], timeout]) => new ServiceConfig(host, port, timeout),
 )
 ```
 
@@ -555,7 +551,10 @@ You can then use this mock provider in place of the default one by calling `Effe
 import { Config, ConfigProvider, Effect } from "effect"
 
 class HostPort {
-  constructor(readonly host: string, readonly port: number) {}
+  constructor(
+    readonly host: string,
+    readonly port: number,
+  ) {}
   get url() {
     return `${this.host}:${this.port}`
   }
@@ -563,7 +562,7 @@ class HostPort {
 
 const config = Config.map(
   Config.all([Config.string("HOST"), Config.number("PORT")]),
-  ([host, port]) => new HostPort(host, port)
+  ([host, port]) => new HostPort(host, port),
 )
 
 const program = Effect.gen(function* () {
@@ -575,8 +574,8 @@ const program = Effect.gen(function* () {
 const mockConfigProvider = ConfigProvider.fromMap(
   new Map([
     ["HOST", "localhost"],
-    ["PORT", "8080"]
-  ])
+    ["PORT", "8080"],
+  ]),
 )
 
 // Run the program using the mock config provider
@@ -603,9 +602,7 @@ const program = Effect.gen(function* () {
 })
 
 // Mock configuration using '.' as the separator for nested keys
-const mockConfigProvider = ConfigProvider.fromMap(
-  new Map([["SERVER.PORT", "8080"]])
-)
+const mockConfigProvider = ConfigProvider.fromMap(new Map([["SERVER.PORT", "8080"]]))
 
 Effect.runPromise(Effect.withConfigProvider(program, mockConfigProvider))
 // Output: Server is running on port 8080
@@ -628,10 +625,9 @@ const program = Effect.gen(function* () {
 })
 
 // Mock configuration using '_' as the separator
-const mockConfigProvider = ConfigProvider.fromMap(
-  new Map([["SERVER_PORT", "8080"]]),
-  { pathDelim: "_" }
-)
+const mockConfigProvider = ConfigProvider.fromMap(new Map([["SERVER_PORT", "8080"]]), {
+  pathDelim: "_",
+})
 
 Effect.runPromise(Effect.withConfigProvider(program, mockConfigProvider))
 // Output: Server is running on port 8080
@@ -666,8 +662,8 @@ Effect.runPromise(
   Effect.withConfigProvider(
     program,
     // Custom delimiters
-    ConfigProvider.fromEnv({ pathDelim: "__", seqDelim: "|" })
-  )
+    ConfigProvider.fromEnv({ pathDelim: "__", seqDelim: "|" }),
+  ),
 )
 ```
 
@@ -702,10 +698,8 @@ const program = Effect.gen(function* () {
 Effect.runPromise(
   Effect.withConfigProvider(
     program,
-    ConfigProvider.fromJson(
-      JSON.parse(`{"SERVER":{"PORT":8080,"HOST":"localhost"}}`)
-    )
-  )
+    ConfigProvider.fromJson(JSON.parse(`{"SERVER":{"PORT":8080,"HOST":"localhost"}}`)),
+  ),
 )
 // Output: Application started: localhost:8080
 ```
@@ -731,9 +725,9 @@ Effect.runPromise(
     program,
     ConfigProvider.fromEnv().pipe(
       // Uses SERVER as a namespace
-      ConfigProvider.nested("SERVER")
-    )
-  )
+      ConfigProvider.nested("SERVER"),
+    ),
+  ),
 )
 ```
 
@@ -769,8 +763,8 @@ Effect.runPromise(
   Effect.withConfigProvider(
     program,
     // Convert keys to constant case
-    ConfigProvider.fromEnv().pipe(ConfigProvider.constantCase)
-  )
+    ConfigProvider.fromEnv().pipe(ConfigProvider.constantCase),
+  ),
 )
 ```
 

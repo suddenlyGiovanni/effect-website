@@ -54,7 +54,7 @@ Struct schemas allow you to define objects with specific fields and constraints.
 import { Schema } from "effect"
 
 const Struct = Schema.Struct({
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 })
 
 // Successful creation
@@ -80,7 +80,7 @@ In some cases, you might need to bypass validation. While not recommended in mos
 import { Schema } from "effect"
 
 const Struct = Schema.Struct({
-  name: Schema.NonEmptyString
+  name: Schema.NonEmptyString,
 })
 
 // Bypass validation during instantiation
@@ -101,7 +101,7 @@ import { Schema } from "effect"
 
 const Record = Schema.Record({
   key: Schema.String,
-  value: Schema.NonEmptyString
+  value: Schema.NonEmptyString,
 })
 
 // Successful creation
@@ -158,10 +158,7 @@ Branded schemas add metadata to a value to give it a more specific type, while s
 ```ts twoslash
 import { Schema } from "effect"
 
-const BrandedNumberSchema = Schema.Number.pipe(
-  Schema.between(1, 10),
-  Schema.brand("MyNumber")
-)
+const BrandedNumberSchema = Schema.Number.pipe(Schema.between(1, 10), Schema.brand("MyNumber"))
 
 // Successful creation
 const n = BrandedNumberSchema.make(5)
@@ -247,7 +244,7 @@ import { Schema } from "effect"
 
 const Person = Schema.Struct({
   name: Schema.NonEmptyString,
-  age: Schema.Number
+  age: Schema.Number,
 })
 
 // Both name and age must be provided
@@ -268,8 +265,8 @@ const Person = Schema.Struct({
   name: Schema.NonEmptyString,
   age: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => 0)
-  )
+    Schema.withConstructorDefault(() => 0),
+  ),
 })
 
 // The age field is optional and defaults to 0
@@ -300,10 +297,10 @@ const Config = Schema.Struct({
   web: Schema.Struct({
     application_url: Schema.String.pipe(
       Schema.propertySignature,
-      Schema.withConstructorDefault(() => "http://localhost")
+      Schema.withConstructorDefault(() => "http://localhost"),
     ),
-    application_port: Schema.Number
-  })
+    application_port: Schema.Number,
+  }),
 })
 
 // This will cause a type error because `application_url`
@@ -325,10 +322,10 @@ const Config = Schema.Struct({
   web: Schema.Struct({
     application_url: Schema.String.pipe(
       Schema.propertySignature,
-      Schema.withConstructorDefault(() => "http://localhost")
+      Schema.withConstructorDefault(() => "http://localhost"),
     ),
-    application_port: Schema.Number
-  })
+    application_port: Schema.Number,
+  }),
 })
 
 // Extract the nested struct constructor
@@ -362,12 +359,12 @@ const Person = Schema.Struct({
   name: Schema.NonEmptyString,
   age: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => 0)
+    Schema.withConstructorDefault(() => 0),
   ),
   timestamp: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => new Date().getTime())
-  )
+    Schema.withConstructorDefault(() => new Date().getTime()),
+  ),
 })
 
 console.log(Person.make({ name: "name1" }))
@@ -396,17 +393,17 @@ const Person = Schema.Struct({
   name: Schema.NonEmptyString,
   age: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => 0)
+    Schema.withConstructorDefault(() => 0),
   ),
   timestamp: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => new Date().getTime())
-  )
+    Schema.withConstructorDefault(() => new Date().getTime()),
+  ),
 })
 
 const AnotherSchema = Schema.Struct({
   foo: Schema.String,
-  age: Person.fields.age
+  age: Person.fields.age,
 })
 
 console.log(AnotherSchema.make({ foo: "bar" }))
@@ -429,12 +426,12 @@ class Person extends Schema.Class<Person>("Person")({
   name: Schema.NonEmptyString,
   age: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => 0)
+    Schema.withConstructorDefault(() => 0),
   ),
   timestamp: Schema.Number.pipe(
     Schema.propertySignature,
-    Schema.withConstructorDefault(() => new Date().getTime())
-  )
+    Schema.withConstructorDefault(() => new Date().getTime()),
+  ),
 }) {}
 
 console.log(new Person({ name: "name1" }))

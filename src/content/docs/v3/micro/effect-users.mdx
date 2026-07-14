@@ -8,8 +8,8 @@ sidebar:
 import { Aside } from "@astrojs/starlight/components"
 
 <Aside type="caution" title="Experimental Module">
-  The Micro module is currently in its experimental stages. We encourage
-  your feedback to further improve its features.
+  The Micro module is currently in its experimental stages. We encourage your feedback to further
+  improve its features.
 </Aside>
 
 The Micro module is designed as a lighter alternative to the standard Effect module, tailored for situations where it is beneficial to reduce the bundle size.
@@ -21,9 +21,8 @@ Micro also supports use cases where a client application uses Micro, and a serve
 Integrating Micro adds a minimal footprint to your bundle, starting at **5kb gzipped**, which may increase depending on the features you use.
 
 <Aside type="danger" title="Bundle Size">
-  Utilizing major Effect modules beyond basic data modules like `Option`,
-  `Either`, `Array`, will incorporate the Effect runtime into your bundle,
-  negating the benefits of Micro.
+  Utilizing major Effect modules beyond basic data modules like `Option`, `Either`, `Array`, will
+  incorporate the Effect runtime into your bundle, negating the benefits of Micro.
 </Aside>
 
 ## Importing Micro
@@ -289,7 +288,7 @@ const program = Micro.gen(function* () {
 })
 
 const runnable = Micro.provideService(program, Random, {
-  next: Micro.sync(() => Math.random())
+  next: Micro.sync(() => Math.random()),
 })
 
 Micro.runPromise(runnable)

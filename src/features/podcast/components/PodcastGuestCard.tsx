@@ -33,9 +33,7 @@ export function PodcastGuestCard() {
       <hr className="my-4 h-px border-0 bg-zinc-800" />
 
       <div>
-        <p className="mb-3 text-xs font-medium tracking-wider text-zinc-400 uppercase">
-          Listen on
-        </p>
+        <p className="mb-3 text-xs font-medium tracking-wider text-zinc-400 uppercase">Listen on</p>
 
         <div className="flex items-center justify-between">
           <a

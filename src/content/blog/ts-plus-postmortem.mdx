@@ -37,20 +37,20 @@ We proved that extending types with methods while maintaining optimal bundle siz
 // Traditional approach
 pipe(
   IO.succeed(0),
-  IO.map(n => n + 1),
-  IO.flatMap(r => IO.succeedWith(() => console.log(`result: ${r}`)))
+  IO.map((n) => n + 1),
+  IO.flatMap((r) => IO.succeedWith(() => console.log(`result: ${r}`))),
 )
 
 // TS+ fluent API - compiles to output similar to traditional approach
 const program = IO.succeed(0)
-  .map(n => n + 1)
-  .flatMap(r => 
+  .map((n) => n + 1)
+  .flatMap((r) =>
     IO.succeedWith(() => {
-      console.log(`result: ${r}`);
-    })
-  );
+      console.log(`result: ${r}`)
+    }),
+  )
 
-program.run();
+program.run()
 ```
 
 Perhaps most significantly, we successfully implemented automatic generation of runtime code from type definitions. Developers could define a data structure once and automatically derive codecs, serializers, and validators, eliminating the traditional duplication between type definitions and runtime behavior:
@@ -58,26 +58,26 @@ Perhaps most significantly, we successfully implemented automatic generation of 
 ```typescript
 // Define once, derive everything
 interface Person {
-  name: string;
-  age: Option<number>;
+  name: string
+  age: Option<number>
 }
 
 // TS+ approach - automatic derivation from type definition
-export const PersonEncoder: Encoder<Person> = Derive();
+export const PersonEncoder: Encoder<Person> = Derive()
 
 // Alternative: Using Effect Schema (modern approach)
 const PersonSchema = Schema.Struct({
   name: Schema.String,
   age: Schema.Option(Schema.Number),
-});
+})
 
-export const PersonEncoder = Schema.encodeSync(PersonSchema);
+export const PersonEncoder = Schema.encodeSync(PersonSchema)
 
 // Usage in practice
 const encoded = PersonEncoder({
   name: "Mike",
-  age: Option.some(30)
-});
+  age: Option.some(30),
+})
 ```
 
 We also created a revolutionary system for extensible method definitions that allowed developers to add methods to existing types without modifying original classes. The `@tsplus type IO` directive registers the `IO` type with TS+ under the name `IO`. Once that is done, other directives can be used to augment the `IO` type. For example, `@tsplus fluent IO map` registers the `map` function as a fluent method on the `IO` type, allowing APIs to be chained together without attaching them to the same runtime object:
@@ -94,20 +94,20 @@ export class IO<A> {
  * @tsplus fluent IO map
  */
 export function map<A, B>(self: IO<A>, f: (a: A) => B): IO<B> {
-  return new IO(() => f(self.io()));
+  return new IO(() => f(self.io()))
 }
 
 /**
  * @tsplus fluent IO flatMap
  */
 export function flatMap<A, B>(self: IO<A>, f: (a: A) => IO<B>): IO<B> {
-  return new IO(() => f(self.io()).io());
+  return new IO(() => f(self.io()).io())
 }
 
 // Usage is intuitive - fluent methods are discoverable via autocomplete:
 const result = IO.succeed(10)
-  .map(x => x * 2)
-  .flatMap(x => IO.succeed(x + 5));
+  .map((x) => x * 2)
+  .flatMap((x) => IO.succeed(x + 5))
 ```
 
 TS+ also demonstrated that TypeScript could support domain-specific operators, enabling mathematical and functional code to be written in more natural ways. Custom operators could be defined for any type, making complex operations feel intuitive:
@@ -118,11 +118,11 @@ TS+ also demonstrated that TypeScript could support domain-specific operators, e
  * @tsplus operator IO +
  */
 export function zip<A, B>(self: IO<A>, b: IO<B>): IO<[A, B]> {
-  return IO(() => [self.io(), b.io()]);
+  return IO(() => [self.io(), b.io()])
 }
 
 // Usage: combining IOs with natural operator syntax
-const zipped = IO.succeed(0) + IO.succeed(1);
+const zipped = IO.succeed(0) + IO.succeed(1)
 // Result: IO<[number, number]>
 ```
 
@@ -139,40 +139,40 @@ Effect.gen(function* () {
 
 // TS+ do syntax - same logic, cleaner syntax
 const effectExample = Do(($) => {
-  const user = $(getUser(id));
-  const profile = $(getProfile(user.id));
-  const settings = $(getSettings(user.id));
-  return { user, profile, settings };
-});
+  const user = $(getUser(id))
+  const profile = $(getProfile(user.id))
+  const settings = $(getSettings(user.id))
+  return { user, profile, settings }
+})
 ```
 
 Our global import system streamlined the developer experience by eliminating repetitive imports while maintaining tree-shaking capabilities. Types and functions could be made globally available through declaration files, and the compiler would automatically add the necessary imports only where they were actually used:
 
 ```typescript
 // Traditional approach: explicit imports in every file
-import { Chunk } from "@tsplus/stdlib/collections/Chunk/definition";
-import { Option } from "@tsplus/stdlib/data/Option/definition";
-import { IO } from "./IO";
+import { Chunk } from "@tsplus/stdlib/collections/Chunk/definition"
+import { Option } from "@tsplus/stdlib/data/Option/definition"
+import { IO } from "./IO"
 
 const processData = (items: Chunk<string>) => {
-  return items.map(item => Option.some(item));
-};
+  return items.map((item) => Option.some(item))
+}
 
 // In prelude.d.ts file - TS+ global imports: define once
 /**
  * @tsplus global
  */
-import { Chunk } from "@tsplus/stdlib/collections/Chunk/definition";
+import { Chunk } from "@tsplus/stdlib/collections/Chunk/definition"
 
 /**
  * @tsplus global
  */
-import { Option } from "@tsplus/stdlib/data/Option/definition";
+import { Option } from "@tsplus/stdlib/data/Option/definition"
 
 // Usage: no imports needed, types available globally
 const processData = (items: Chunk<string>) => {
-  return items.map(item => Option.some(item));
-};
+  return items.map((item) => Option.some(item))
+}
 
 // TS+ automatically adds imports only where types are used
 // Tree-shaking still works - unused globals aren't bundled
@@ -184,18 +184,19 @@ Finally, we implemented a native pipe operator that made data transformation pip
 // Traditional pipe function approach
 const result = pipe(
   Either.right({ xxx: 0 }),
-  Either.map(n => n.xxx),
-  Either.map(n => n + 1),
-  Either.map(n => `hello: ${n}`),
-  Either.map(s => s.length)
-);
+  Either.map((n) => n.xxx),
+  Either.map((n) => n + 1),
+  Either.map((n) => `hello: ${n}`),
+  Either.map((s) => s.length),
+)
 
 // TS+ native pipe operator using /
-const result = Either.right({ xxx: 0 }) 
-  / Either.map((n) => n.xxx) 
-  / Either.map((n) => n + 1) 
-  / Either.map((n) => `hello: ${n}`) 
-  / Either.map((s) => s.length);
+const result =
+  Either.right({ xxx: 0 }) /
+  Either.map((n) => n.xxx) /
+  Either.map((n) => n + 1) /
+  Either.map((n) => `hello: ${n}`) /
+  Either.map((s) => s.length)
 ```
 
 ## How Far We Went
@@ -253,4 +254,3 @@ New models like Claude Code 4 Sonnet are exceptionally good at understanding Eff
 The learning curve of new syntax or less-known standard syntax is smoothed out by prompting models to use tools like the [Effect MCP server](https://github.com/tim-smart/effect-mcp). This allows developers to work with Effect through natural language descriptions while the AI handles the specific syntax and patterns. Developers can describe what they want to accomplish in plain language, and the AI can translate that into proper Effect code with correct error handling, dependency management, and effect composition.
 
 All this added AI tooling can also play a role in potentially adopting new language tooling. The learning curve for an extension of TypeScript that supports JSX-enhanced capabilities isn't a far-fetched target for an AI to pick up instantly. Where human developers might struggle with new syntax or unfamiliar patterns, AI assistants can bridge that gap seamlessly. This AI capability fundamentally changes the cost-benefit analysis of custom language features. The traditional barrier of developer adoption and learning curves becomes much lower when AI can act as an intelligent interface between human intent and specialized syntax.
-

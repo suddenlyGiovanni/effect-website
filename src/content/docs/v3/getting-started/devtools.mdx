@@ -80,7 +80,9 @@ To install the Effect Language Service in your project:
    This step is critical for the language service to function properly. The plugin must run on the TypeScript version installed in your project, not the one bundled with your editor.
 
    <Aside type="tip">
-   In VS Code or Cursor, you can select the workspace TypeScript version by opening a TypeScript file, clicking on the TypeScript version number in the status bar, and selecting "Use Workspace Version".
+     In VS Code or Cursor, you can select the workspace TypeScript version by opening a TypeScript
+     file, clicking on the TypeScript version number in the status bar, and selecting "Use Workspace
+     Version".
    </Aside>
 
 4. You're ready to play!
@@ -95,7 +97,6 @@ To install the Effect Language Service in your project:
    ```
 
 </Steps>
-
 
 ### Features
 
@@ -171,11 +172,12 @@ To make this automatic for all developers, add it to your `package.json`:
 
 This ensures the language service runs during compilation with the standard `tsc` command.
 
-
 ## VS Code / Cursor Extension
 
 <Aside type="caution">
-The editor extension does not include the Effect LSP! Installation of that should be performed per-project, this allows fine grained control on when to load it, for which projects and with a version pinned with your repository lockfile.
+  The editor extension does not include the Effect LSP! Installation of that should be performed
+  per-project, this allows fine grained control on when to load it, for which projects and with a
+  version pinned with your repository lockfile.
 </Aside>
 
 The editor extension provides utilities in helping you debug your Effect applications.

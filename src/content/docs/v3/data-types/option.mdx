@@ -96,9 +96,8 @@ interface User {
 ```
 
 <Aside type="note" title="Property Key Always Present">
-  Optionality only applies to the value of the property. The key `"email"`
-  will always be present in the object, regardless of whether it has a
-  value or not.
+  Optionality only applies to the value of the property. The key `"email"` will always be present in
+  the object, regardless of whether it has a value or not.
 </Aside>
 
 Here are examples of how to create `User` instances with and without an email:
@@ -117,13 +116,13 @@ interface User {
 const withEmail: User = {
   id: 1,
   username: "john_doe",
-  email: Option.some("john.doe@example.com")
+  email: Option.some("john.doe@example.com"),
 }
 
 const withoutEmail: User = {
   id: 2,
   username: "jane_doe",
-  email: Option.none()
+  email: Option.none(),
 }
 ```
 
@@ -162,7 +161,7 @@ const foo = Option.some(1)
 
 const message = Option.match(foo, {
   onNone: () => "Option is empty",
-  onSome: (value) => `Option has a value: ${value}`
+  onSome: (value) => `Option has a value: ${value}`,
 })
 
 console.log(message)
@@ -246,14 +245,12 @@ const user: User = {
   email: Option.some("john.doe@example.com"),
   address: Option.some({
     city: "New York",
-    street: Option.some("123 Main St")
-  })
+    street: Option.some("123 Main St"),
+  }),
 }
 
 // Use flatMap to extract the street value
-const street = user.address.pipe(
-  Option.flatMap((address) => address.street)
-)
+const street = user.address.pipe(Option.flatMap((address) => address.street))
 
 console.log(street)
 // Output: { _id: 'Option', _tag: 'Some', value: '123 Main St' }
@@ -394,14 +391,12 @@ const alternativeComputation = (): Option.Option<number> =>
   Math.random() < 0.5 ? Option.some(20) : Option.none()
 
 // Attempt the first computation, then try an alternative if needed
-const program = computation().pipe(
-  Option.orElse(() => alternativeComputation())
-)
+const program = computation().pipe(Option.orElse(() => alternativeComputation()))
 
 const result = Option.match(program, {
   onNone: () => "Both computations resulted in None",
   // At least one computation succeeded
-  onSome: (value) => `Computed value: ${value}`
+  onSome: (value) => `Computed value: ${value}`,
 })
 
 console.log(result)
@@ -417,12 +412,7 @@ You can also use `Option.firstSomeOf` to get the first `Some` value from an iter
 ```ts twoslash
 import { Option } from "effect"
 
-const first = Option.firstSomeOf([
-  Option.none(),
-  Option.some(2),
-  Option.none(),
-  Option.some(3)
-])
+const first = Option.firstSomeOf([Option.none(), Option.some(2), Option.none(), Option.some(3)])
 
 console.log(first)
 // Output: { _id: 'Option', _tag: 'Some', value: 2 }
@@ -479,9 +469,7 @@ const head = <A>(array: ReadonlyArray<A>): Option.Option<A> =>
 // Simulated fetch function that returns Effect
 const fetchData = (): Effect.Effect<string, string> => {
   const success = Math.random() > 0.5
-  return success
-    ? Effect.succeed("some data")
-    : Effect.fail("Failed to fetch data")
+  return success ? Effect.succeed("some data") : Effect.fail("Failed to fetch data")
 }
 
 // Mixing Either and Effect
@@ -511,7 +499,7 @@ const maybeAge: Option.Option<number> = Option.some(25)
 // Combine the name and age into a person object
 const person = Option.zipWith(maybeName, maybeAge, (name, age) => ({
   name: name.toUpperCase(),
-  age
+  age,
 }))
 
 console.log(person)
@@ -534,7 +522,7 @@ const maybeAge: Option.Option<number> = Option.none()
 // Since maybeAge is a None, the result will also be None
 const person = Option.zipWith(maybeName, maybeAge, (name, age) => ({
   name: name.toUpperCase(),
-  age
+  age,
 }))
 
 console.log(person)
@@ -705,14 +693,14 @@ import { Option, Array, Order } from "effect"
 const items = [
   { data: Option.some(new Date(10)) },
   { data: Option.some(new Date(20)) },
-  { data: Option.none() }
+  { data: Option.none() },
 ]
 
 // Define the order to sort dates within Option values in reverse
 const sorted = Array.sortWith(
   items,
   (item) => item.data,
-  Order.reverse(Option.getOrder(Order.Date))
+  Order.reverse(Option.getOrder(Order.Date)),
 )
 
 console.log(sorted)

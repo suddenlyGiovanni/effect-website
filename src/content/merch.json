@@ -3,13 +3,7 @@
     "id": "hoodie",
     "name": "Unisex Eco Raglan Hoodie",
     "price": "$45.95",
-    "images": [
-      "hoodie-1.avif",
-      "hoodie-2.avif",
-      "hoodie-3.avif",
-      "hoodie-4.avif",
-      "hoodie-5.avif"
-    ],
+    "images": ["hoodie-1.avif", "hoodie-2.avif", "hoodie-3.avif", "hoodie-4.avif", "hoodie-5.avif"],
     "buyUrl": "https://www.printful.com/product-template/80907263/17fd3245439f4d243d967bd07bb607e0",
     "infoUrl": "https://www.printful.com/product-template/80907263/17fd3245439f4d243d967bd07bb607e0"
   },
@@ -17,13 +11,7 @@
     "id": "cap",
     "name": "Effect.orDie Vintage corduroy cap",
     "price": "$18.61",
-    "images": [
-      "cap-1.avif",
-      "cap-2.avif",
-      "cap-3.avif",
-      "cap-4.avif",
-      "cap-5.avif"
-    ],
+    "images": ["cap-1.avif", "cap-2.avif", "cap-3.avif", "cap-4.avif", "cap-5.avif"],
     "buyUrl": "https://www.printful.com/product-template/82771668/dd1d8e523b9981512c7bbf8ec174d751",
     "infoUrl": "https://www.printful.com/product-template/82771668/dd1d8e523b9981512c7bbf8ec174d751"
   },
@@ -59,13 +47,7 @@
     "id": "tote",
     "name": "All-Over Print Tote Bag",
     "price": "$24.95",
-    "images": [
-      "tote-1.avif",
-      "tote-2.avif",
-      "tote-3.avif",
-      "tote-4.avif",
-      "tote-5.avif"
-    ],
+    "images": ["tote-1.avif", "tote-2.avif", "tote-3.avif", "tote-4.avif", "tote-5.avif"],
     "buyUrl": "https://www.printful.com/product-template/80890506/f1d620aa18f4508a28faf8ebd398a477",
     "infoUrl": "https://www.printful.com/product-template/80890506/f1d620aa18f4508a28faf8ebd398a477"
   },
@@ -87,13 +69,7 @@
     "id": "tshirt",
     "name": "Unisex organic cotton t-shirt",
     "price": "$16.16",
-    "images": [
-      "tshirt-1.avif",
-      "tshirt-2.avif",
-      "tshirt-3.avif",
-      "tshirt-4.avif",
-      "tshirt-5.avif"
-    ],
+    "images": ["tshirt-1.avif", "tshirt-2.avif", "tshirt-3.avif", "tshirt-4.avif", "tshirt-5.avif"],
     "buyUrl": "https://www.printful.com/product-template/80928031/cf501382edfa7e44d626506d426b7f15",
     "infoUrl": "https://www.printful.com/product-template/80928031/cf501382edfa7e44d626506d426b7f15"
   },

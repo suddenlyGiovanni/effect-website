@@ -61,12 +61,7 @@ import { Data, Equal } from "effect"
 const nested = Data.struct({ name: "Alice", nested_field: { value: 42 } })
 
 // This will be false because the nested objects are compared by reference
-console.log(
-  Equal.equals(
-    nested,
-    Data.struct({ name: "Alice", nested_field: { value: 42 } })
-  )
-)
+console.log(Equal.equals(nested, Data.struct({ name: "Alice", nested_field: { value: 42 } })))
 // Output: false
 ```
 
@@ -79,7 +74,7 @@ import { Data, Equal } from "effect"
 
 const nested = Data.struct({
   name: "Alice",
-  nested_field: Data.struct({ value: 42 })
+  nested_field: Data.struct({ value: 42 }),
 })
 
 // Now, the comparison returns true
@@ -88,9 +83,9 @@ console.log(
     nested,
     Data.struct({
       name: "Alice",
-      nested_field: Data.struct({ value: 42 })
-    })
-  )
+      nested_field: Data.struct({ value: 42 }),
+    }),
+  ),
 )
 // Output: true
 ```
@@ -120,8 +115,8 @@ console.log(Equal.equals(alice, ["Alice", 30]))
 ```
 
 <Aside type="caution" title="Shallow Comparison">
-  `Equal.equals` only checks the top-level structure. Use `Data`
-  constructors for nested objects if you need deep comparisons.
+  `Equal.equals` only checks the top-level structure. Use `Data` constructors for nested objects if
+  you need deep comparisons.
 </Aside>
 
 ### array
@@ -149,8 +144,8 @@ console.log(Equal.equals(numbers, [1, 2, 3, 4, 5]))
 ```
 
 <Aside type="caution" title="Shallow Comparison">
-  `Equal.equals` only checks the top-level structure. Use `Data`
-  constructors for nested objects if you need deep comparisons.
+  `Equal.equals` only checks the top-level structure. Use `Data` constructors for nested objects if
+  you need deep comparisons.
 </Aside>
 
 ## Constructors
@@ -218,12 +213,12 @@ const Person = Data.case<Person>()
 
 const alice = Person({
   name: "Alice",
-  address: Address({ street: "123 Main St", city: "Wonderland" })
+  address: Address({ street: "123 Main St", city: "Wonderland" }),
 })
 
 const anotherAlice = Person({
   name: "Alice",
-  address: Address({ street: "123 Main St", city: "Wonderland" })
+  address: Address({ street: "123 Main St", city: "Wonderland" }),
 })
 
 console.log(Equal.equals(alice, anotherAlice))
@@ -250,12 +245,12 @@ const Person = Data.case<Person>()
 
 const alice = Person({
   name: "Alice",
-  address: Data.struct({ street: "123 Main St", city: "Wonderland" })
+  address: Data.struct({ street: "123 Main St", city: "Wonderland" }),
 })
 
 const anotherAlice = Person({
   name: "Alice",
-  address: Data.struct({ street: "123 Main St", city: "Wonderland" })
+  address: Data.struct({ street: "123 Main St", city: "Wonderland" }),
 })
 
 console.log(Equal.equals(alice, anotherAlice))
@@ -281,13 +276,13 @@ const BinaryTree = Data.case<BinaryTree<number>>()
 const tree1 = BinaryTree({
   value: 0,
   left: BinaryTree({ value: 1, left: null, right: null }),
-  right: null
+  right: null,
 })
 
 const tree2 = BinaryTree({
   value: 0,
   left: BinaryTree({ value: 1, left: null, right: null }),
-  right: null
+  right: null,
 })
 
 console.log(Equal.equals(tree1, tree2))
@@ -475,8 +470,8 @@ console.log(state4) // Output: { reason: 'not found', _tag: 'Failure' }
 ```
 
 <Aside type="note" title="Tag Field Naming Convention">
-  The tag field `"_tag"` is used to identify the type of each state,
-  following Effect's naming convention.
+  The tag field `"_tag"` is used to identify the type of each state, following Effect's naming
+  convention.
 </Aside>
 
 ### $is and $match
@@ -508,7 +503,7 @@ console.log(isLoading(Success({ data: "test" })))
 const matcher = $match({
   Loading: () => "this is a Loading",
   Success: ({ data }) => `this is a Success: ${data}`,
-  Failure: ({ reason }) => `this is a Failure: ${reason}`
+  Failure: ({ reason }) => `this is a Failure: ${reason}`,
 })
 
 console.log(matcher(Success({ data: "test" })))
@@ -537,8 +532,7 @@ interface RemoteDataDefinition extends Data.TaggedEnum.WithGenerics<2> {
 }
 
 // Create constructors for the generic RemoteData
-const { Loading, Failure, Success } =
-  Data.taggedEnum<RemoteDataDefinition>()
+const { Loading, Failure, Success } = Data.taggedEnum<RemoteDataDefinition>()
 
 // Instantiate each case with specific types
 const loading = Loading()
@@ -570,7 +564,7 @@ class NotFound extends Data.Error<{ message: string; file: string }> {}
 // Create an instance of the custom error
 const err = new NotFound({
   message: "Cannot find this file",
-  file: "foo.txt"
+  file: "foo.txt",
 })
 
 console.log(err instanceof Error)
@@ -599,7 +593,7 @@ class NotFound extends Data.Error<{ message: string; file: string }> {}
 const program = Effect.gen(function* () {
   yield* new NotFound({
     message: "Cannot find this file",
-    file: "foo.txt"
+    file: "foo.txt",
   })
 })
 
@@ -636,13 +630,11 @@ class NotFound extends Data.TaggedError("NotFound")<{
 const program = Effect.gen(function* () {
   yield* new NotFound({
     message: "Cannot find this file",
-    file: "foo.txt"
+    file: "foo.txt",
   })
 }).pipe(
   // Catch and handle the tagged error
-  Effect.catchTag("NotFound", (err) =>
-    Console.error(`${err.message} (${err.file})`)
-  )
+  Effect.catchTag("NotFound", (err) => Console.error(`${err.message} (${err.file})`)),
 )
 
 Effect.runPromise(program)
@@ -663,7 +655,7 @@ class MyError extends Data.Error<{ cause: Error }> {}
 
 const program = Effect.gen(function* () {
   yield* new MyError({
-    cause: new Error("Something went wrong")
+    cause: new Error("Something went wrong"),
   })
 })
 

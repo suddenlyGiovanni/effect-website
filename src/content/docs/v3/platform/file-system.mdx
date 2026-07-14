@@ -106,7 +106,7 @@ const program = Effect.gen(function* () {
 //      ▼
 const customMock = FileSystem.layerNoop({
   readFileString: () => Effect.succeed("mocked content"),
-  exists: (path) => Effect.succeed(path === "/some/path")
+  exists: (path) => Effect.succeed(path === "/some/path"),
 })
 
 // Provide the customized FileSystem mock implementation
