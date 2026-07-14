@@ -30,16 +30,6 @@
     "description": "Help American businesses get work authorization for their employees."
   },
   {
-    "id": "goblins",
-    "company": "Goblins",
-    "role": "Product Founding Engineer",
-    "location": "Brooklyn, NYC",
-    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1439740311277404231",
-    "note": "Posted on Discord #job-board",
-    "logo": "goblins-icon.png",
-    "description": "Build America's favorite teacher, starting with K–12 math."
-  },
-  {
     "id": "humanlayer",
     "company": "HumanLayer",
     "role": "Founding Product Engineer",
@@ -80,6 +70,15 @@
     "description": "AI-native platform for commercial real estate operators."
   },
   {
+    "id": "openrouter",
+    "company": "OpenRouter",
+    "role": "Effect Engineers",
+    "url": "https://x.com/louis_g_v/status/2067841625418588233",
+    "note": "Posted on X",
+    "logo": "open-router.svg",
+    "description": "Help build the unified interface for LLMs, processing trillions of tokens weekly."
+  },
+  {
     "id": "phosphor",
     "company": "PhosPhor",
     "role": "Engineers with Effect experience",
@@ -97,17 +96,6 @@
     "note": "Posted on Discord #job-board",
     "logo": "reap.png",
     "description": "Fintech using Effect as part of the stack — looking for strong engineers with a solid functional-programming background."
-  },
-  {
-    "id": "siworks",
-    "company": "SIWorks",
-    "role": "Senior Full-Stack Engineer",
-    "location": "Remote · Portland / Vancouver WA",
-    "type": "Part-time",
-    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1501997185309347840",
-    "note": "Posted on Discord #job-board",
-    "logo": "siworks.png",
-    "description": "Small profitable startup — mortgage marketing and transportation software."
   },
   {
     "id": "solid",
@@ -141,6 +129,16 @@
     "description": "If you're passionate about mobile apps and monetization, we'd love to chat."
   },
   {
+    "id": "syntwin",
+    "company": "SynTwin",
+    "role": "Product Engineer",
+    "location": "Munich, Germany",
+    "url": "https://syntwin.ai/careers/product-engineer",
+    "logo": "syntwyn-logo.jpg",
+    "payRange": "€90K – €120K depending on seniority",
+    "description": "Build digital twins of top performers that run personalised 1:1 conversations at scale."
+  },
+  {
     "id": "tranched",
     "company": "Tranched",
     "role": "Full-stack Engineer — Web3",
@@ -148,14 +146,5 @@
     "url": "https://tranched.fi/careers/fullstack-developer-web3",
     "logo": "tranched.png",
     "description": "Automating the structuring and management of complex securitisation transactions."
-  },
-  {
-    "id": "trellis-ai",
-    "company": "Trellis AI",
-    "role": "Product Engineer",
-    "location": "San Francisco",
-    "url": "https://www.ycombinator.com/companies/trellis-ai",
-    "logo": "trellis.png",
-    "description": "AI for automating healthcare paperwork."
   }
 ]
