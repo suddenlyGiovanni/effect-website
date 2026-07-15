@@ -240,13 +240,17 @@ const SearchDialogIsland = memo(function SearchDialogIsland() {
         className="relative mx-auto mt-24 w-[min(40rem,calc(100%-2rem))] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl"
         onKeyDown={handleDialogKeyDown}
       >
-        <div className="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
-          <Search className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden="true" />
+        <div className="group flex items-center gap-2 border-b border-zinc-800 px-4 py-3.5">
+          <label htmlFor="search-dialog-input" className="shrink-0 cursor-pointer text-zinc-500 transition-colors group-focus-within:text-zinc-300">
+            <Search className="h-4 w-4" aria-hidden="true" />
+          </label>
           <input
             ref={inputRef}
+            id="search-dialog-input"
             value={query}
             onChange={handleInputChange}
-            className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+            className="w-full rounded-md border-none bg-transparent py-1 px-2 text-sm text-white outline-none transition-colors placeholder:text-zinc-500 focus:bg-zinc-800/50"
+            style={{ outline: "none" }}
             placeholder="Search documentation..."
             aria-label="Search documentation"
             aria-describedby="search-instructions"
