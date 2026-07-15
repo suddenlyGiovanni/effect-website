@@ -9,7 +9,6 @@ export type Theme = typeof ThemeSchema.Type
 let transitionTimeout: number | undefined
 
 function applyThemeClass(theme: Theme) {
-  if (typeof window === "undefined") return
   const root = document.documentElement
   root.classList.add("theme-transition")
   clearTimeout(transitionTimeout)
@@ -43,8 +42,6 @@ export const selectThemeAtom = Atom.fnSync<Theme>()((theme, get) => {
 // ---------------------------------------------------------------------------
 
 export const isDarkAtom = Atom.make((get) => {
-  if (typeof window === "undefined") return true
-
   const theme = get(themeAtom)
 
   const mq = window.matchMedia("(prefers-color-scheme: dark)")

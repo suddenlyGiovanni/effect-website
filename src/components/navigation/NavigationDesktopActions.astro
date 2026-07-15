@@ -32,7 +32,7 @@ const { transparent = false, showThemeToggle = false } = Astro.props
         aria-hidden="true"
       ></div>
       <ThemeToggle
-        client:load
+        client:only="react"
         className={
           transparent
             ? "text-white hover:text-white/80"
