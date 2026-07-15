@@ -13,6 +13,7 @@ import svgr from "vite-plugin-svgr"
 import { twieRedirectList } from "./src/generated/twie-redirects"
 import { docsLegacyRedirectList } from "./src/generated/docs-legacy-redirects"
 import { monacoEditorPlugin } from "./src/features/playground/plugins/monaco-editor"
+import { pluginOpenInPlayground } from "./src/plugins/expressive-code/open-in-playground.ts"
 
 const GoogleFontProvider = fontProviders.google()
 
@@ -70,6 +71,7 @@ export default defineConfig({
       plugins: [
         pluginCollapsibleSections(),
         pluginLineNumbers(),
+        pluginOpenInPlayground(),
       ],
       themes: ["github-light", "github-dark"],
     }),
