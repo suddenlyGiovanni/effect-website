@@ -1,5 +1,5 @@
 import { Search, X } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useAtom, useAtomValue } from "@effect/atom-react"
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult"
 import type { SearchResult, SearchResultChunk } from "@/services/search/domain"
@@ -27,7 +27,7 @@ const syncSearchScrollLock = (open: boolean) => {
   body.removeAttribute("data-search-open")
 }
 
-export default function SearchDialogIsland() {
+const SearchDialogIsland = memo(function SearchDialogIsland() {
   const [state, setState] = useState<SearchDialogState>({ tag: "closed" })
   const [query, setQuery] = useAtom(searchQueryAtom)
   const debouncedQuery = useAtomValue(debouncedQueryAtom)
@@ -335,7 +335,9 @@ export default function SearchDialogIsland() {
       </div>
     </div>
   )
-}
+})
+
+export default SearchDialogIsland
 
 function SearchResultItem({ result }: { readonly result: SearchResult }) {
   return (

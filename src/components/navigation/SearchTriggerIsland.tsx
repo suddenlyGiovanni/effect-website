@@ -1,5 +1,5 @@
 import { Search } from "lucide-react"
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { NAVIGATION_EVENTS } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 
@@ -59,7 +59,7 @@ const detectSearchShortcut = (): SearchShortcut => {
   return isApplePlatform ? META_SHORTCUT : CONTROL_SHORTCUT
 }
 
-export default function SearchTriggerIsland({
+const SearchTriggerIsland = memo(function SearchTriggerIsland({
   mode,
   transparent = false,
   onTrigger,
@@ -128,4 +128,6 @@ export default function SearchTriggerIsland({
       </kbd>
     </button>
   )
-}
+})
+
+export default SearchTriggerIsland
