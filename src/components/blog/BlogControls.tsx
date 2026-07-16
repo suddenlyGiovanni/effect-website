@@ -11,7 +11,7 @@ type SortOrder = "newest" | "oldest"
 function readCategoryFromUrl(tags: SerializedTag[]): string {
   if (typeof window === "undefined") return "all"
   const param = new URLSearchParams(window.location.search).get("category")
-  if (param && tags.some((t) => t.id === param)) return param
+  if (param && tags.some((tag) => tag.id === param)) return param
   return "all"
 }
 
@@ -22,63 +22,63 @@ export default function BlogControls({
   posts: SerializedPost[]
   tags: SerializedTag[]
 }) {
-  const [tag, setTag] = useState<string>(() => readCategoryFromUrl(tags))
-  const [sort, setSort] = useState<SortOrder>("newest")
-  const [page, setPage] = useState(1)
-  const [catOpen, setCatOpen] = useState(false)
+  const [activeTagId, setActiveTagId] = useState<string>(() => readCategoryFromUrl(tags))
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [categoryOpen, setCategoryOpen] = useState(false)
 
   const gridRef = useRef<HTMLDivElement>(null)
-  const catRef = useRef<HTMLDivElement>(null)
+  const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
-  const activeTagName = useMemo(() => tags.find((t) => t.id === tag)?.name ?? "All", [tags, tag])
+  const activeTagName = useMemo(
+    () => tags.find((tag) => tag.id === activeTagId)?.name ?? "All",
+    [tags, activeTagId],
+  )
 
   const sortedTags = useMemo(
     () =>
-      [...tags].sort((a, b) => {
-        if (a.id === "all") return -1
-        if (b.id === "all") return 1
-        return b.count - a.count
+      [...tags].sort((tagA, tagB) => {
+        if (tagA.id === "all") return -1
+        if (tagB.id === "all") return 1
+        return tagB.count - tagA.count
       }),
     [tags],
   )
 
-  // ── Filter + sort pipeline ───────────────────────────────────────
   const filteredPosts = useMemo(() => {
-    const base =
-      tag === "all"
-        ? posts.filter((p) => !p.tags.some((t) => t.id === "this-week-in-effect"))
-        : posts.filter((p) => p.tags.some((t) => t.id === tag))
-    return [...base].sort((a, b) => {
-      const cmp = a.dateMs - b.dateMs
-      return sort === "newest" ? -cmp : cmp
+    const filteredByCategory =
+      activeTagId === "all"
+        ? posts.filter((post) => !post.tags.some((tag) => tag.id === "this-week-in-effect"))
+        : posts.filter((post) => post.tags.some((tag) => tag.id === activeTagId))
+    return [...filteredByCategory].sort((postA, postB) => {
+      const comparison = postA.dateMs - postB.dateMs
+      return sortOrder === "newest" ? -comparison : comparison
     })
-  }, [posts, tag, sort])
+  }, [posts, activeTagId, sortOrder])
 
   const totalPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE))
-  const safePage = Math.min(page, totalPages)
+  const safePage = Math.min(currentPage, totalPages)
   const paginatedPosts = useMemo(
     () => filteredPosts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE),
     [filteredPosts, safePage],
   )
 
-  // ── Dropdown click-outside + Escape ──────────────────────────────
   useEffect(() => {
-    if (!catOpen) return
-    const handleClick = (e: MouseEvent) => {
-      if (!catRef.current?.contains(e.target as Node)) setCatOpen(false)
+    if (!categoryOpen) return
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!categoryDropdownRef.current?.contains(event.target as Node)) setCategoryOpen(false)
     }
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setCatOpen(false)
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCategoryOpen(false)
     }
-    window.addEventListener("mousedown", handleClick)
-    window.addEventListener("keydown", handleKey)
+    window.addEventListener("mousedown", handleClickOutside)
+    window.addEventListener("keydown", handleEscapeKey)
     return () => {
-      window.removeEventListener("mousedown", handleClick)
-      window.removeEventListener("keydown", handleKey)
+      window.removeEventListener("mousedown", handleClickOutside)
+      window.removeEventListener("keydown", handleEscapeKey)
     }
-  }, [catOpen])
+  }, [categoryOpen])
 
-  // ── URL sync ─────────────────────────────────────────────────────
   const syncUrl = useCallback((tagId: string) => {
     if (typeof window === "undefined") return
     const url = new URL(window.location.href)
@@ -87,11 +87,10 @@ export default function BlogControls({
     window.history.pushState({ category: tagId }, "", url)
   }, [])
 
-  // Conditional smooth-scroll: only when grid header scrolled past navbar
   const maybeScrollToGrid = useCallback(() => {
-    const el = gridRef.current
-    if (!el) return
-    const { top } = el.getBoundingClientRect()
+    const element = gridRef.current
+    if (!element) return
+    const { top } = element.getBoundingClientRect()
     if (top < NAVBAR_HEIGHT) {
       window.scrollTo({ top: top + window.scrollY - NAVBAR_HEIGHT, behavior: "smooth" })
     }
@@ -99,8 +98,8 @@ export default function BlogControls({
 
   const handleTagChange = useCallback(
     (tagId: string) => {
-      setTag(tagId)
-      setPage(1)
+      setActiveTagId(tagId)
+      setCurrentPage(1)
       syncUrl(tagId)
       maybeScrollToGrid()
     },
@@ -108,14 +107,14 @@ export default function BlogControls({
   )
 
   const clearFilters = useCallback(() => {
-    setTag("all")
-    setPage(1)
+    setActiveTagId("all")
+    setCurrentPage(1)
     syncUrl("all")
   }, [syncUrl])
 
   const goToPage = useCallback(
-    (next: number) => {
-      setPage(next)
+    (page: number) => {
+      setCurrentPage(page)
       maybeScrollToGrid()
     },
     [maybeScrollToGrid],
@@ -123,24 +122,23 @@ export default function BlogControls({
 
   useEffect(() => {
     const handlePopState = () => {
-      setTag(readCategoryFromUrl(tags))
-      setPage(1)
+      setActiveTagId(readCategoryFromUrl(tags))
+      setCurrentPage(1)
     }
     window.addEventListener("popstate", handlePopState)
     return () => window.removeEventListener("popstate", handlePopState)
   }, [tags])
 
-  // ── Pagination window ────────────────────────────────────────────
   const pageItems = useMemo<Array<number | "ellipsis">>(() => {
     const items: Array<number | "ellipsis"> = []
     if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) items.push(i)
+      for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) items.push(pageNumber)
     } else {
       items.push(1)
       if (safePage > 3) items.push("ellipsis")
       const start = Math.max(2, safePage - 1)
       const end = Math.min(totalPages - 1, safePage + 1)
-      for (let i = start; i <= end; i++) items.push(i)
+      for (let pageNumber = start; pageNumber <= end; pageNumber++) items.push(pageNumber)
       if (safePage < totalPages - 2) items.push("ellipsis")
       items.push(totalPages)
     }
@@ -149,61 +147,56 @@ export default function BlogControls({
 
   return (
     <div className="min-w-0 pb-24">
-      {/* Header row: heading + Category filter + Sort + RSS */}
       <div
         ref={gridRef}
         className="mt-16 flex flex-wrap items-baseline justify-between gap-4 border-b border-zinc-700/80 pb-4 md:mt-20"
       >
         <h2 className="text-2xl font-semibold tracking-tight text-white">
-          {tag === "all" ? "All posts" : activeTagName}
+          {activeTagId === "all" ? "All posts" : activeTagName}
         </h2>
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-3 sm:gap-x-6">
-          {/* Category dropdown */}
-          <div ref={catRef} className="relative">
+          <div ref={categoryDropdownRef} className="relative">
             <button
               type="button"
-              onClick={() => setCatOpen((o) => !o)}
+              onClick={() => setCategoryOpen((isOpen) => !isOpen)}
               aria-haspopup="listbox"
-              aria-expanded={catOpen}
+              aria-expanded={categoryOpen}
               className="group inline-flex items-baseline gap-1.5 font-mono text-xs tracking-wider uppercase transition-colors"
             >
-              <span className="hidden text-zinc-500 group-hover:text-zinc-400 sm:inline">
-                Category:
-              </span>
               <span className="text-zinc-200 group-hover:text-white">{activeTagName}</span>
               <ChevronDown
                 aria-hidden="true"
                 className={`h-3.5 w-3.5 self-center text-zinc-500 transition-transform group-hover:text-zinc-300 ${
-                  catOpen ? "rotate-180" : ""
+                  categoryOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
-            {catOpen && (
+            {categoryOpen && (
               <ul
                 role="listbox"
                 className="absolute right-0 z-20 mt-2 w-64 rounded-md border border-zinc-700 bg-zinc-950 py-2 shadow-lg shadow-black/40"
               >
-                {sortedTags.map((cat) => {
-                  const isActive = tag === cat.id
+                {sortedTags.map((category) => {
+                  const isActive = activeTagId === category.id
                   return (
-                    <li key={cat.id}>
+                    <li key={category.id}>
                       <button
                         type="button"
                         role="option"
                         aria-selected={isActive}
                         onClick={() => {
-                          handleTagChange(cat.id)
-                          setCatOpen(false)
+                          handleTagChange(category.id)
+                          setCategoryOpen(false)
                         }}
                         className={`group/item relative flex w-full items-baseline justify-between gap-3 px-4 py-2 text-left font-mono text-xs tracking-wider uppercase transition-colors ${
                           isActive ? "text-white" : "text-zinc-300 hover:text-white"
                         }`}
                       >
-                        <span>{cat.name}</span>
+                        <span>{category.name}</span>
                         <span
                           className={`tabular-nums ${isActive ? "text-white" : "text-zinc-500"}`}
                         >
-                          {String(cat.count).padStart(3, "0")}
+                          {String(category.count).padStart(3, "0")}
                         </span>
                         <span
                           className={`pointer-events-none absolute right-4 bottom-1 left-4 h-px origin-left bg-white transition-transform duration-300 ease-out ${
@@ -217,22 +210,22 @@ export default function BlogControls({
               </ul>
             )}
           </div>
-          {/* Sort toggle */}
           <button
             type="button"
-            onClick={() => setSort((s) => (s === "newest" ? "oldest" : "newest"))}
-            aria-label={`Sort: ${sort === "newest" ? "Newest" : "Oldest"} first. Click to toggle.`}
+            onClick={() =>
+              setSortOrder((previous) => (previous === "newest" ? "oldest" : "newest"))
+            }
+            aria-label={`Sort: ${sortOrder === "newest" ? "Newest" : "Oldest"} first. Click to toggle.`}
             className="group inline-flex items-baseline gap-1.5 font-mono text-xs tracking-wider uppercase transition-colors"
           >
             <span className="text-zinc-200 group-hover:text-white">
-              {sort === "newest" ? "Newest" : "Oldest"}
+              {sortOrder === "newest" ? "Newest" : "Oldest"}
             </span>
             <ArrowUpDown
               aria-hidden="true"
               className="h-3.5 w-3.5 self-center text-zinc-500 group-hover:text-zinc-300"
             />
           </button>
-          {/* RSS feed */}
           <a
             href="/rss.xml"
             aria-label="RSS feed"
@@ -247,7 +240,6 @@ export default function BlogControls({
         </div>
       </div>
 
-      {/* Post grid */}
       {paginatedPosts.length > 0 ? (
         <>
           <div className="flex flex-col">
@@ -256,7 +248,6 @@ export default function BlogControls({
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <>
               <div className="mt-12 h-px bg-zinc-800" />
@@ -274,10 +265,10 @@ export default function BlogControls({
                   <ChevronLeft aria-hidden="true" className="h-4 w-4" />
                 </button>
 
-                {pageItems.map((item, idx) =>
+                {pageItems.map((item, index) =>
                   item === "ellipsis" ? (
                     <span
-                      key={`ellipsis-${idx}`}
+                      key={`ellipsis-${index}`}
                       className="px-1.5 font-mono text-xs text-zinc-500"
                     >
                       ⋯
@@ -331,7 +322,7 @@ export default function BlogControls({
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             {["release", "effect", "typescript"].map((suggestedId) => {
-              const suggested = tags.find((t) => t.id === suggestedId)
+              const suggested = tags.find((tag) => tag.id === suggestedId)
               if (!suggested) return null
               return (
                 <button
