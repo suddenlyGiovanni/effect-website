@@ -1,6 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/((?!ingest/).*)\\/$",
+      "destination": "/$1",
+      "statusCode": 308
+    }
+  ],
   "rewrites": [
     {
       "source": "/ingest/static/:match*",
@@ -11,8 +17,8 @@
       "destination": "https://us-assets.i.posthog.com/array/:match*"
     },
     {
-      "source": "/ingest/:match*",
-      "destination": "https://us.i.posthog.com/:match*"
+      "source": "/ingest/(.*)",
+      "destination": "https://us.i.posthog.com/$1"
     }
   ],
   "headers": [
