@@ -1,6 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/ingest/static/:match*",
+      "destination": "https://us-assets.i.posthog.com/static/:match*"
+    },
+    {
+      "source": "/ingest/array/:match*",
+      "destination": "https://us-assets.i.posthog.com/array/:match*"
+    },
+    {
+      "source": "/ingest/:match*",
+      "destination": "https://us.i.posthog.com/:match*"
+    }
+  ],
   "headers": [
     {
       "source": "/_astro/editor\\.worker-(.*)",

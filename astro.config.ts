@@ -69,6 +69,12 @@ export default defineConfig({
   env: {
     schema: {
       PUBLIC_POSTHOG_KEY: envField.string({ context: "client", access: "public", optional: true }),
+      PUBLIC_POSTHOG_API_HOST: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+        default: "https://us.i.posthog.com",
+      }),
     },
   },
 
