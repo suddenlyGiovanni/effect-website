@@ -8,7 +8,7 @@ import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-s
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers"
 import tailwindcss from "@tailwindcss/vite"
 import expressiveCode from "astro-expressive-code"
-import { defineConfig, fontProviders, svgoOptimizer } from "astro/config"
+import { defineConfig, envField, fontProviders, svgoOptimizer } from "astro/config"
 import svgr from "vite-plugin-svgr"
 import { twieRedirectList } from "./src/generated/twie-redirects"
 import { docsLegacyRedirectList } from "./src/generated/docs-legacy-redirects"
@@ -63,6 +63,18 @@ export default defineConfig({
       watch: {
         ignored: ["**/.astro/**", "**/.direnv/**", "**/repos/**", "**/.vercel/**"],
       },
+    },
+  },
+
+  env: {
+    schema: {
+      PUBLIC_POSTHOG_KEY: envField.string({ context: "client", access: "public", optional: true }),
+      PUBLIC_POSTHOG_API_HOST: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+        default: "https://us.i.posthog.com",
+      }),
     },
   },
 
