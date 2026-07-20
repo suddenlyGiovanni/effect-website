@@ -127,4 +127,5 @@ export const twieRedirectList: Record<string, RedirectConfig> = {
   "/blog/this-week-in-effect/2026/06/26": "/blog/this-week-in-effect/124/",
   "/blog/this-week-in-effect/2026/07/03": "/blog/this-week-in-effect/125/",
   "/blog/this-week-in-effect/2026/07/10": "/blog/this-week-in-effect/126/",
+  "/blog/this-week-in-effect/2026/07/17": "/blog/this-week-in-effect/127/",
 }
