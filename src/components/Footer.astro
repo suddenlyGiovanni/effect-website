@@ -129,16 +129,6 @@ const communityBorder = hideCommunityBorder
           <ul class="flex flex-col items-start gap-2">
             <li>
               <Link
-                href="/podcast/"
-                variant="footer"
-                active={activePath?.startsWith("/podcast")}
-                className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-              >
-                Podcast 🎙️
-              </Link>
-            </li>
-            <li>
-              <Link
                 href="https://luma.com/effect-community"
                 variant="footer"
                 className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
@@ -165,6 +155,16 @@ const communityBorder = hideCommunityBorder
                 className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 Effect Jobs
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/adoption-partners/"
+                variant="footer"
+                active={activePath?.startsWith("/adoption-partners")}
+                className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              >
+                Adoption Partners
               </Link>
             </li>
           </ul>
