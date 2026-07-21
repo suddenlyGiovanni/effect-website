@@ -3,8 +3,6 @@ import type { ImageMetadata } from "astro"
 import type { SvgComponent } from "astro/types"
 import { Copy, Check } from "@lucide/astro"
 
-import agentPromptRaw from "@/data/agent-prompt.md?raw"
-
 import {
   DEFAULT_PACKAGE_MANAGER,
   getInstallCommand,
@@ -31,35 +29,7 @@ const PM_ICONS: Record<
 
 <effect-hero-command
   class="relative block rounded-md bg-zinc-900/50 p-1 ring-1 ring-inset ring-zinc-700"
-  data-agent-prompt={agentPromptRaw}
-  data-agent-preview="Help me build an Effect app in TypeScript…"
 >
-  <div role="tablist" aria-label="Command mode" class="flex border-b border-zinc-800">
-    <button
-      type="button"
-      role="tab"
-      data-role="mode-tab"
-      data-mode="install"
-      aria-selected="true"
-      tabindex="0"
-      class="group relative flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wider text-white uppercase transition-colors cursor-pointer"
-    >
-      Install
-      <span data-role="mode-indicator" aria-hidden="true" class="absolute inset-x-0 bottom-0 h-px bg-white"></span>
-    </button>
-    <button
-      type="button"
-      role="tab"
-      data-role="mode-tab"
-      data-mode="prompt"
-      aria-selected="false"
-      tabindex="-1"
-      class="group relative flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wider text-zinc-500 uppercase transition-colors hover:text-zinc-300 cursor-pointer"
-    >
-      Prompt for AI agents
-      <span data-role="mode-indicator" aria-hidden="true" class="absolute inset-x-0 bottom-0 h-px bg-transparent"></span>
-    </button>
-  </div>
 
   <div
     data-role="copy"
@@ -165,14 +135,10 @@ const PM_ICONS: Record<
     return PACKAGE_MANAGER_SET.has(value)
   }
 
-  type Mode = "install" | "prompt"
-
   class EffectHeroCommandElement extends HTMLElement {
-    #mode: Mode = "install"
     #activePM: PackageManager = DEFAULT_PACKAGE_MANAGER
     #pmOpen = false
 
-    #modeTabs = new Map<Mode, HTMLButtonElement>()
     #pmDropdown: HTMLElement | null = null
     #pmChip: HTMLButtonElement | null = null
     #pmChevron: Element | null = null
@@ -210,15 +176,6 @@ const PM_ICONS: Record<
     }
 
     connectedCallback() {
-      const modeTabElements = this.querySelectorAll("[data-role='mode-tab']")
-      modeTabElements.forEach((el) => {
-        if (!(el instanceof HTMLButtonElement)) return
-        const mode = el.dataset.mode as Mode | undefined
-        if (!mode || (mode !== "install" && mode !== "prompt")) return
-        this.#modeTabs.set(mode, el)
-        el.addEventListener("click", this.#onModeTabClick)
-      })
-
       this.#pmDropdown = this.querySelector("[data-role='pm-dropdown']")
       this.#pmChip = this.querySelector("[data-role='pm-chip']")
       this.#pmChevron = this.querySelector("[data-role='pm-chevron']")
@@ -266,16 +223,10 @@ const PM_ICONS: Record<
       this.#copyElement.addEventListener("click", this.#onCopyClick)
       this.#copyElement.addEventListener("keydown", this.#onCopyKeyDown)
 
-      this.#setMode("install")
       this.#setActivePM(DEFAULT_PACKAGE_MANAGER)
     }
 
     disconnectedCallback() {
-      this.#modeTabs.forEach((el) => {
-        el.removeEventListener("click", this.#onModeTabClick)
-      })
-      this.#modeTabs.clear()
-
       if (this.#pmChip) {
         this.#pmChip.removeEventListener("click", this.#onPMChipClick)
       }
@@ -310,47 +261,10 @@ const PM_ICONS: Record<
       this.#copyResetTimeout = undefined
     }
 
-    #setMode = (mode: Mode) => {
-      this.#mode = mode
-      const isInstall = mode === "install"
-
-      this.#modeTabs.forEach((tabEl, tabMode) => {
-        const selected = tabMode === mode
-        tabEl.setAttribute("aria-selected", selected ? "true" : "false")
-        tabEl.tabIndex = selected ? 0 : -1
-        tabEl.classList.toggle("text-white", selected)
-        tabEl.classList.toggle("text-zinc-500", !selected)
-        tabEl.classList.toggle("hover:text-zinc-300", !selected)
-
-        const indicator = tabEl.querySelector("[data-role='mode-indicator']")
-        if (indicator instanceof Element) {
-          indicator.classList.toggle("bg-white", selected)
-          indicator.classList.toggle("bg-transparent", !selected)
-        }
-      })
-
-      if (this.#pmDropdown) {
-        this.#pmDropdown.classList.toggle("hidden", !isInstall)
-      }
-
-      if (this.#commandText) {
-        this.#commandText.textContent = isInstall
-          ? getInstallCommand(this.#activePM)
-          : this.dataset.agentPreview ?? ""
-      }
-
-      if (this.#copyElement) {
-        this.#copyElement.setAttribute(
-          "aria-label",
-          isInstall ? "Copy install command" : "Copy prompt for AI agents"
-        )
-      }
-    }
-
     #setActivePM = (pm: PackageManager) => {
       this.#activePM = pm
 
-      if (this.#mode === "install" && this.#commandText) {
+      if (this.#commandText) {
         this.#commandText.textContent = getInstallCommand(pm)
       }
 
@@ -407,14 +321,6 @@ const PM_ICONS: Record<
       }, COPY_RESET_TIMEOUT_MS)
     }
 
-    #onModeTabClick = (event: MouseEvent) => {
-      const target = event.currentTarget
-      if (!(target instanceof HTMLButtonElement)) return
-      const mode = target.dataset.mode as Mode | undefined
-      if (!mode || (mode !== "install" && mode !== "prompt")) return
-      this.#setMode(mode)
-    }
-
     #onPMChipClick = (event: MouseEvent) => {
       event.stopPropagation()
       this.#pmOpen = !this.#pmOpen
@@ -446,9 +352,7 @@ const PM_ICONS: Record<
         this.#setTemporaryCopyFeedback("error")
         return
       }
-      const text = this.#mode === "install"
-        ? getInstallCommand(this.#activePM)
-        : this.dataset.agentPrompt ?? ""
+      const text = getInstallCommand(this.#activePM)
       try {
         await clipboard.writeText(text)
         this.#setTemporaryCopyFeedback("copied")
