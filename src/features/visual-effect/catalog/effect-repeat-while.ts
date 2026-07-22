@@ -16,11 +16,8 @@ export const repeatWhileExample = defineExample({
     language: "typescript",
     source: String.stripMargin(
       `|const hotdog = eatHotdog()
-       |const schedule = Schedule.both( 
-       |  Schedule.spaced("400 millis"),
-       |  Schedule.while(Schedule.elapsed, (metadata) => 
-       |    Duration.isLessThan(metadata.output, Duration.seconds(10))
-       |  )
+       |const schedule = Schedule.spaced(Duration.millis(400)).pipe(
+       |  Schedule.upTo({ duration: Duration.seconds(10) })
        |)
        |const contest = Effect.repeat(hotdog, schedule)`,
     ),
@@ -45,11 +42,8 @@ export const repeatWhileExample = defineExample({
       addToTimeline: true,
     })
 
-    const schedule = Schedule.both(
-      Schedule.spaced("400 millis"),
-      Schedule.while(Schedule.elapsed, (metadata) =>
-        Duration.isLessThan(metadata.output, Duration.seconds(10)),
-      ),
+    const schedule = Schedule.spaced(Duration.millis(400)).pipe(
+      Schedule.upTo({ duration: Duration.seconds(10) }),
     )
 
     return Effect.repeat(checkPhoneStep, schedule).pipe(

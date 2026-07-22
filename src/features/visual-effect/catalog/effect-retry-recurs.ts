@@ -23,9 +23,8 @@ export const retryRecursExample = defineExample({
     language: "typescript",
     source: String.stripMargin(
       `|const wakeUp = attemptToWakeUp()
-       |const snoozeSchedule = Schedule.both(
-       |  Schedule.spaced("2 seconds"),
-       |  Schedule.recurs(4)
+       |const snoozeSchedule = Schedule.spaced("2 seconds").pipe(
+       |  Schedule.upTo({ times: 4 })
        |)
        |const result = Effect.retry(wakeUp, snoozeSchedule)`,
     ),
@@ -55,7 +54,7 @@ export const retryRecursExample = defineExample({
       addToTimeline: true,
     })
 
-    const snoozeSchedule = Schedule.both(Schedule.spaced("2 seconds"), Schedule.recurs(4))
+    const snoozeSchedule = Schedule.spaced("2 seconds").pipe(Schedule.upTo({ times: 4 }))
 
     return Effect.retry(wakeUp, snoozeSchedule)
   },
