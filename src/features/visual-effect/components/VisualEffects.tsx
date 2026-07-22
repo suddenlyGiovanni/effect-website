@@ -2,6 +2,7 @@ import { useAtomMount, useAtomSet } from "@effect/atom-react"
 import { useCallback, useState } from "react"
 import type { ExampleDefinition } from "@/features/visual-effect/model/example-definition"
 import { type ExampleCategory, EXAMPLES_CATALOG } from "@/features/visual-effect/catalog"
+import { useDragScroll } from "@/features/visual-effect/hooks/useDragScroll"
 import {
   prefersReducedMotionAtom,
   resetExampleSilentlyAtom,
@@ -33,9 +34,19 @@ export default function VisualEffects() {
     stopAllSounds(void 0)
   }, [resetExampleSilently, stopAllSounds])
 
+  const drag = useDragScroll<HTMLDivElement>()
+
   return (
     <div className="border-r border-zinc-800 shadow-2xl shadow-black/20">
-      <div className="scrollbar-hide relative flex overflow-x-auto bg-zinc-950/90">
+      <div
+        ref={drag.ref}
+        onPointerDown={drag.onPointerDown}
+        onPointerMove={drag.onPointerMove}
+        onPointerUp={drag.onPointerUp}
+        onPointerCancel={drag.onPointerCancel}
+        onClickCapture={drag.onClickCapture}
+        className="scrollbar-hide relative flex overflow-x-auto overscroll-x-contain bg-zinc-950/90 select-none"
+      >
         {ORDERED_CATEGORIES.map((cat) => {
           const entry = EXAMPLES_CATALOG[cat]
           const active = cat === category
@@ -47,10 +58,8 @@ export default function VisualEffects() {
                 reset()
                 setCategory(cat)
               }}
-              className={`flex-1 shrink-0 cursor-pointer px-4 py-3 font-mono text-sm tracking-wide whitespace-nowrap uppercase transition-colors md:px-6 md:text-base ${
-                active
-                  ? "bg-zinc-900 font-medium text-white"
-                  : "text-zinc-400 hover:text-white"
+              className={`min-w-fit flex-1 shrink-0 cursor-pointer px-4 py-3 font-mono text-sm tracking-wide whitespace-nowrap uppercase transition-colors md:px-6 md:text-base ${
+                active ? "bg-zinc-900 font-medium text-white" : "text-zinc-400 hover:text-white"
               }`}
             >
               {entry.label}
@@ -78,10 +87,19 @@ function SubTabs({
   if (examples.length === 0) return null
 
   const activeExample = examples.find((e) => e.key === activeKey) ?? examples[0]!
+  const drag = useDragScroll<HTMLDivElement>()
 
   return (
     <div className="flex flex-col">
-      <div className="scrollbar-hide flex items-center border-y border-zinc-800 bg-zinc-950">
+      <div
+        ref={drag.ref}
+        onPointerDown={drag.onPointerDown}
+        onPointerMove={drag.onPointerMove}
+        onPointerUp={drag.onPointerUp}
+        onPointerCancel={drag.onPointerCancel}
+        onClickCapture={drag.onClickCapture}
+        className="scrollbar-hide flex items-center overflow-x-auto overscroll-x-contain border-y border-zinc-800 bg-zinc-950 select-none"
+      >
         {examples.map((example) => {
           const isActive = example.key === activeKey
           return (
@@ -92,16 +110,14 @@ function SubTabs({
                 onTabChange()
                 setActiveKey(example.key)
               }}
-              className={`flex-1 cursor-pointer px-3 py-2 font-mono text-sm whitespace-nowrap transition-colors ${
+              className={`min-w-fit flex-1 shrink-0 cursor-pointer px-3 py-2 font-mono text-sm whitespace-nowrap transition-colors ${
                 isActive
                   ? "bg-zinc-900 text-white"
                   : "text-zinc-400 hover:bg-zinc-800/50 hover:text-white"
               }`}
             >
               <span>{example.title}</span>
-              {example.subtitle && (
-                <span className="ml-1 text-zinc-400">({example.subtitle})</span>
-              )}
+              {example.subtitle && <span className="ml-1 text-zinc-400">({example.subtitle})</span>}
             </button>
           )
         })}
