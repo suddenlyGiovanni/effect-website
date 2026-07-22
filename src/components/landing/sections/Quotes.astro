@@ -226,6 +226,7 @@ const copies = [0, 1, 2] as const
     #resumeTimeout: ReturnType<typeof setTimeout> | undefined = undefined
     #rafHandle: ReturnType<typeof requestAnimationFrame> | undefined = undefined
     #lastFrameTime: number = 0
+    #scrollPosition: number = 0
     #rail: HTMLDivElement | null = null
     #previousButton: HTMLButtonElement | null = null
     #nextButton: HTMLButtonElement | null = null
@@ -418,7 +419,7 @@ const copies = [0, 1, 2] as const
 
       if (this.#rail !== null && !this.#isPointerDragging) {
         const delta = Math.min(timestamp - this.#lastFrameTime, 100)
-        this.#setScrollLeft(this.#rail.scrollLeft + delta * AUTO_SCROLL_SPEED_PX_PER_MS)
+        this.#setScrollLeft(this.#scrollPosition + delta * AUTO_SCROLL_SPEED_PX_PER_MS)
         this.#normalizeLoopPosition()
       }
 
@@ -469,13 +470,13 @@ const copies = [0, 1, 2] as const
       const minimum = this.#singleSetWidth * 0.35
       const maximum = this.#singleSetWidth * 1.65
 
-      if (this.#rail.scrollLeft < minimum) {
-        this.#setScrollLeft(this.#rail.scrollLeft + this.#singleSetWidth)
+      if (this.#scrollPosition < minimum) {
+        this.#setScrollLeft(this.#scrollPosition + this.#singleSetWidth)
         return
       }
 
-      if (this.#rail.scrollLeft > maximum) {
-        this.#setScrollLeft(this.#rail.scrollLeft - this.#singleSetWidth)
+      if (this.#scrollPosition > maximum) {
+        this.#setScrollLeft(this.#scrollPosition - this.#singleSetWidth)
       }
     }
 
@@ -484,6 +485,7 @@ const copies = [0, 1, 2] as const
         return
       }
 
+      this.#scrollPosition = nextScrollLeft
       this.#ignoreScrollEventsUntil = performance.now() + PROGRAMMATIC_SCROLL_SUPPRESSION_MS
       this.#rail.scrollLeft = nextScrollLeft
     }
@@ -522,6 +524,10 @@ const copies = [0, 1, 2] as const
     #onScroll = () => {
       if (performance.now() < this.#ignoreScrollEventsUntil || this.#isPointerDragging) {
         return
+      }
+
+      if (this.#rail !== null) {
+        this.#scrollPosition = this.#rail.scrollLeft
       }
 
       this.#pauseAndScheduleResume()
