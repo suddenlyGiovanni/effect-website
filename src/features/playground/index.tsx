@@ -66,7 +66,7 @@ function CodeEditorPanels() {
       <ResizablePanel defaultSize={30} minSize={10} onResize={onResize} className="h-full">
         <div className="flex h-full flex-col border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
           <Tabs defaultValue="terminal" className="flex h-full w-full flex-col gap-0">
-            <TabsList className="!h-auto border-b border-zinc-200 gap-0 rounded-none bg-transparent p-0 dark:border-zinc-800">
+            <TabsList className="!h-auto w-full justify-start border-b border-zinc-200 gap-0 rounded-none bg-transparent p-0 dark:border-zinc-800">
               <TabsTrigger
                 value="terminal"
                 className="transition-none -mb-px h-auto flex-none rounded-none border-0 border-b-2 border-transparent px-4 py-2.5 font-mono text-xs tracking-wider uppercase text-zinc-500 hover:text-zinc-900 data-active:border-zinc-900 data-active:text-zinc-900 data-active:bg-transparent data-active:shadow-none dark:text-zinc-400 dark:hover:text-white dark:data-active:border-white dark:data-active:text-white"

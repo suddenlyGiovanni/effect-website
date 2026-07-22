@@ -1,6 +1,6 @@
 export const Dracula = {
   foreground: "#f8f8f2",
-  background: "#24272f",
+  background: "#18181b",
   cursor: "#bbbbbb",
   selectionBackground: "#44475a",
 
@@ -31,7 +31,7 @@ export const Dracula = {
 
 export const NightOwlishLight = {
   foreground: "#403f53",
-  background: "#f5f6f8",
+  background: "#f4f4f5",
   cursor: "#3f3f3f",
   selectionBackground: "#BAD6FD",
 

@@ -118,6 +118,16 @@ const communityBorder = hideCommunityBorder
                 <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </li>
+            <li>
+              <Link
+                href="https://github.com/Effect-TS/tsgo#lsp-based-linter"
+                variant="footer"
+                className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              >
+                Linting Rules
+                <ArrowUpRight size={14} aria-hidden="true" />
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -178,6 +188,16 @@ const communityBorder = hideCommunityBorder
             Other
           </h3>
           <ul class="flex flex-col items-start gap-2">
+            <li>
+              <Link
+                href="/podcast"
+                variant="footer"
+                active={activePath?.startsWith("/podcast")}
+                className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              >
+                Podcast 🎙️
+              </Link>
+            </li>
             <li>
               <Link
                 href="/blog/"

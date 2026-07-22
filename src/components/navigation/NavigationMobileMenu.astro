@@ -23,91 +23,140 @@ const actionButtonClass = cn(
 ---
 
 <effect-mobile-menu class="ml-auto">
-  <div class="flex items-center gap-1.5 md:hidden">
+  <button
+    type="button"
+    data-role="menu-button"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    class={actionButtonClass}
+  >
+    <Menu data-role="icon-open" class="h-6 w-6" />
+    <X data-role="icon-close" class="hidden h-6 w-6" />
+  </button>
+
+  <div data-role="menu-root" class="fixed inset-0 z-150 hidden">
     <button
       type="button"
-      data-role="search-button"
-      aria-label="Open search"
-      aria-keyshortcuts="Control+K Meta+K"
-      class={actionButtonClass}
+      data-role="backdrop"
+      class="fixed inset-0 bg-zinc-800/10 dark:bg-zinc-950/70"
+      aria-label="Close mobile menu"
+    ></button>
+    <div
+      data-role="panel"
+      class="fixed top-0 right-0 flex h-full w-full max-w-[64%] flex-col bg-white shadow-xl dark:bg-zinc-900"
+      style="transform: translateX(100%)"
     >
-      <Search class="h-5 w-5" aria-hidden="true" />
-    </button>
-
-    <button
-      type="button"
-      data-role="menu-button"
-      aria-label="Open navigation menu"
-      aria-controls="landing-mobile-menu"
-      aria-expanded="false"
-      class={actionButtonClass}
-    >
-      <Menu data-role="icon-open" class="h-6 w-6" />
-      <X data-role="icon-close" class="hidden h-6 w-6" />
-    </button>
-  </div>
-
-  <div data-role="menu-root" class="fixed inset-x-0 top-16 bottom-0 z-95 hidden md:hidden">
-    <nav
-      id="landing-mobile-menu"
-      class="h-full w-full overflow-y-auto border-t border-zinc-200 bg-white px-6 py-6 dark:border-zinc-800 dark:bg-zinc-950"
-    >
-      <div class="space-y-1">
-        {
-          primaryLinks.map((link) => (
-            <a
-              href={link.href}
-              target={link.kind === "external" ? link.target : undefined}
-              rel={link.kind === "external" ? link.rel : undefined}
-              data-role="menu-link"
-              aria-current={link.id === activeSlug ? "page" : undefined}
-              class:list={[
-                "block rounded-md px-3 py-2.5 text-[15px] no-underline transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white",
-                link.id === activeSlug
-                  ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white"
-                  : link.cta === "solid"
-                    ? "font-medium text-zinc-900 dark:text-white"
-                    : "text-zinc-600 dark:text-zinc-300",
-              ]}
-            >
-              {link.label}
-            </a>
-          ))
-        }
+      <div class="flex flex-shrink-0 items-center justify-between border-b border-zinc-200 py-3.5 pr-4 pl-8 dark:border-zinc-800">
+        <span class="text-sm font-medium text-zinc-900 dark:text-white">Menu</span>
+        <button
+          type="button"
+          data-role="close-button"
+          aria-label="Close navigation menu"
+          class="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white"
+        >
+          <X class="h-5 w-5" aria-hidden="true" />
+        </button>
       </div>
+      <nav class="flex-1 overflow-y-auto px-6 py-6">
+        <div class="space-y-1">
+          {
+            primaryLinks.map((link) => (
+              <a
+                href={link.href}
+                target={link.kind === "external" ? link.target : undefined}
+                rel={link.kind === "external" ? link.rel : undefined}
+                data-role="menu-link"
+                aria-current={link.id === activeSlug ? "page" : undefined}
+                class:list={[
+                  "block rounded-md px-3 py-2.5 text-[15px] no-underline transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white",
+                  link.id === activeSlug
+                    ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                    : link.cta === "solid"
+                      ? "font-medium text-zinc-900 dark:text-white"
+                      : "text-zinc-600 dark:text-zinc-300",
+                ]}
+              >
+                {link.label}
+              </a>
+            ))
+          }
+        </div>
 
-      <div class="my-4 h-px bg-zinc-200 dark:bg-zinc-800"></div>
+        <div class="my-4 h-px bg-zinc-200 dark:bg-zinc-800"></div>
 
-      <div class="space-y-1">
-        {
-          socialLinks.map((link) => (
-            <a
-              href={link.href}
-              target={link.kind === "external" ? link.target : undefined}
-              rel={link.kind === "external" ? link.rel : undefined}
-              data-role="menu-link"
-              class="flex items-center gap-3 rounded-md px-3 py-2.5 text-[15px] text-zinc-600 no-underline transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"
-            >
-              {link.icon === "discord" ? (
-                <DiscordIcon class="h-4.5 w-4.5" fill="currentColor" aria-hidden="true" />
-              ) : link.icon === "github" ? (
-                <GitHubIcon class="h-4.5 w-4.5" fill="currentColor" aria-hidden="true" />
-              ) : (
-                <TwitterIcon class="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />
-              )}
-              <span>{link.label}</span>
-            </a>
-          ))
-        }
-      </div>
-    </nav>
+        <div class="space-y-1">
+          {
+            socialLinks.map((link) => (
+              <a
+                href={link.href}
+                target={link.kind === "external" ? link.target : undefined}
+                rel={link.kind === "external" ? link.rel : undefined}
+                data-role="menu-link"
+                class="flex items-center gap-3 rounded-md px-3 py-2.5 text-[15px] text-zinc-600 no-underline transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+              >
+                {link.icon === "discord" ? (
+                  <DiscordIcon class="h-4.5 w-4.5" fill="currentColor" aria-hidden="true" />
+                ) : link.icon === "github" ? (
+                  <GitHubIcon class="h-4.5 w-4.5" fill="currentColor" aria-hidden="true" />
+                ) : (
+                  <TwitterIcon class="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />
+                )}
+                <span>{link.label}</span>
+              </a>
+            ))
+          }
+        </div>
+
+        <button
+          type="button"
+          data-role="menu-search-button"
+          aria-label="Open search"
+          class="mt-6 flex w-full appearance-none items-center gap-3 rounded-md border border-zinc-300 bg-transparent px-3 py-2.5 text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white"
+        >
+          <Search class="h-4.5 w-4.5" aria-hidden="true" />
+          <span class="text-sm">Search</span>
+          <kbd data-role="search-kbd" class="ml-auto inline-flex items-center gap-0.5 text-xs text-zinc-400/80 dark:text-zinc-500"></kbd>
+        </button>
+      </nav>
+    </div>
   </div>
 </effect-mobile-menu>
+
+<style>
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-menu-panel-enter,
+    .mobile-menu-panel-exit,
+    .mobile-menu-backdrop-enter,
+    .mobile-menu-backdrop-exit {
+      animation: none;
+    }
+  }
+</style>
 
 <script>
   import { NAVIGATION_EVENTS } from "@/lib/navigation"
 
   const MOBILE_BREAKPOINT = 768
+  const ANIMATION_DURATION_MS = 300
+
+  const isApplePlatform = (): boolean => {
+    const userAgentData = Reflect.get(navigator, "userAgentData") as {
+      platform?: string
+    } | undefined
+
+    const platform = (userAgentData?.platform ?? navigator.platform).toLowerCase()
+    const userAgent = navigator.userAgent.toLowerCase()
+
+    return (
+      platform.includes("mac") ||
+      platform.includes("iphone") ||
+      platform.includes("ipad") ||
+      platform.includes("ipod") ||
+      userAgent.includes("mac os") ||
+      userAgent.includes("iphone") ||
+      userAgent.includes("ipad")
+    )
+  }
 
   const syncScrollLock = (open: boolean) => {
     const body = document.body
@@ -125,46 +174,57 @@ const actionButtonClass = cn(
 
   class EffectMobileMenuElement extends HTMLElement {
     #open: boolean = false
+    #isAnimating: boolean = false
+    #prefersReducedMotion: boolean = false
     #menuRoot: HTMLDivElement | null = null
     #menuButton: HTMLButtonElement | null = null
-    #searchButton: HTMLButtonElement | null = null
+    #backdrop: HTMLButtonElement | null = null
+    #panel: HTMLDivElement | null = null
+    #closeButton: HTMLButtonElement | null = null
+    #menuSearchButton: HTMLButtonElement | null = null
     #iconOpen: SVGElement | null = null
     #iconClose: SVGElement | null = null
     #shouldRestoreFocus: boolean = false
     #pendingSearchTransition: boolean = false
 
     connectedCallback() {
+      this.#prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches
+
       const menuButton = this.querySelector("[data-role='menu-button']")
-      const searchButton = this.querySelector("[data-role='search-button']")
       const iconOpen = this.querySelector("[data-role='icon-open']")
       const iconClose = this.querySelector("[data-role='icon-close']")
       const menuRoot = this.querySelector("[data-role='menu-root']")
+      const backdrop = this.querySelector("[data-role='backdrop']")
+      const panel = this.querySelector("[data-role='panel']")
+      const closeButton = this.querySelector("[data-role='close-button']")
+      const menuSearchButton = this.querySelector("[data-role='menu-search-button']")
+      const searchKbd = this.querySelector("[data-role='search-kbd']")
 
-      if (!(menuButton instanceof HTMLButtonElement)) {
-        return
-      }
-
-      if (!(searchButton instanceof HTMLButtonElement)) {
-        return
-      }
-
-      if (!(iconOpen instanceof SVGElement)) {
-        return
-      }
-
-      if (!(iconClose instanceof SVGElement)) {
-        return
-      }
-
-      if (!(menuRoot instanceof HTMLDivElement)) {
-        return
-      }
+      if (!(menuButton instanceof HTMLButtonElement)) return
+      if (!(iconOpen instanceof SVGElement)) return
+      if (!(iconClose instanceof SVGElement)) return
+      if (!(menuRoot instanceof HTMLDivElement)) return
+      if (!(backdrop instanceof HTMLButtonElement)) return
+      if (!(panel instanceof HTMLDivElement)) return
+      if (!(closeButton instanceof HTMLButtonElement)) return
+      if (!(menuSearchButton instanceof HTMLButtonElement)) return
 
       this.#menuButton = menuButton
-      this.#searchButton = searchButton
       this.#iconOpen = iconOpen
       this.#iconClose = iconClose
       this.#menuRoot = menuRoot
+      this.#backdrop = backdrop
+      this.#panel = panel
+      this.#closeButton = closeButton
+      this.#menuSearchButton = menuSearchButton
+
+      if (searchKbd) {
+        const shortcut = isApplePlatform() ? "⌘K" : "Ctrl+K"
+        searchKbd.textContent = shortcut
+        this.#menuSearchButton.setAttribute("aria-keyshortcuts", shortcut)
+      }
 
       const menuLinks = menuRoot.querySelectorAll("[data-role='menu-link']")
 
@@ -175,7 +235,9 @@ const actionButtonClass = cn(
       document.body.append(menuRoot)
 
       this.#menuButton.addEventListener("click", this.#onMenuClick)
-      this.#searchButton.addEventListener("click", this.#onSearchClick)
+      this.#backdrop.addEventListener("click", this.#onCloseClick)
+      this.#closeButton.addEventListener("click", this.#onCloseClick)
+      this.#menuSearchButton.addEventListener("click", this.#onSearchClick)
       document.addEventListener("keydown", this.#onKeyDown)
       window.addEventListener("resize", this.#onResize)
       window.addEventListener(NAVIGATION_EVENTS.SEARCH_OPENED, this.#onSearchOpened)
@@ -186,8 +248,16 @@ const actionButtonClass = cn(
         this.#menuButton.removeEventListener("click", this.#onMenuClick)
       }
 
-      if (this.#searchButton) {
-        this.#searchButton.removeEventListener("click", this.#onSearchClick)
+      if (this.#backdrop) {
+        this.#backdrop.removeEventListener("click", this.#onCloseClick)
+      }
+
+      if (this.#closeButton) {
+        this.#closeButton.removeEventListener("click", this.#onCloseClick)
+      }
+
+      if (this.#menuSearchButton) {
+        this.#menuSearchButton.removeEventListener("click", this.#onSearchClick)
       }
 
       document.removeEventListener("keydown", this.#onKeyDown)
@@ -209,7 +279,18 @@ const actionButtonClass = cn(
     }
 
     #setOpen = (nextOpen: boolean, shouldRestoreFocus: boolean) => {
-      if (!this.#menuRoot || !this.#menuButton || !this.#iconOpen || !this.#iconClose) {
+      if (
+        !this.#menuRoot ||
+        !this.#menuButton ||
+        !this.#backdrop ||
+        !this.#panel ||
+        !this.#iconOpen ||
+        !this.#iconClose
+      ) {
+        return
+      }
+
+      if (this.#isAnimating) {
         return
       }
 
@@ -220,7 +301,6 @@ const actionButtonClass = cn(
         this.#pendingSearchTransition = false
       }
 
-      this.#menuRoot.classList.toggle("hidden", !nextOpen)
       this.#iconOpen.classList.toggle("hidden", nextOpen)
       this.#iconClose.classList.toggle("hidden", !nextOpen)
       this.#menuButton.setAttribute("aria-expanded", nextOpen ? "true" : "false")
@@ -230,6 +310,51 @@ const actionButtonClass = cn(
       )
 
       syncScrollLock(nextOpen)
+
+      if (this.#prefersReducedMotion) {
+        this.#menuRoot.classList.toggle("hidden", !nextOpen)
+        this.#panel.style.transform = nextOpen ? "translateX(0)" : "translateX(100%)"
+
+        if (!nextOpen && this.#shouldRestoreFocus) {
+          this.#menuButton.focus()
+          this.#shouldRestoreFocus = false
+        }
+
+        return
+      }
+
+      this.#isAnimating = true
+
+      if (nextOpen) {
+        this.#menuRoot.classList.remove("hidden")
+        this.#backdrop.classList.add("mobile-menu-backdrop-enter")
+        this.#panel.classList.add("mobile-menu-panel-enter")
+
+        window.setTimeout(() => {
+          this.#backdrop?.classList.remove("mobile-menu-backdrop-enter")
+          this.#panel?.classList.remove("mobile-menu-panel-enter")
+          if (this.#panel) {
+            this.#panel.style.transform = "translateX(0)"
+          }
+          this.#isAnimating = false
+        }, ANIMATION_DURATION_MS)
+      } else {
+        if (this.#panel) {
+          this.#panel.style.transform = ""
+        }
+        this.#backdrop.classList.add("mobile-menu-backdrop-exit")
+        this.#panel.classList.add("mobile-menu-panel-exit")
+
+        window.setTimeout(() => {
+          this.#menuRoot?.classList.add("hidden")
+          this.#backdrop?.classList.remove("mobile-menu-backdrop-exit")
+          this.#panel?.classList.remove("mobile-menu-panel-exit")
+          if (this.#panel) {
+            this.#panel.style.transform = "translateX(100%)"
+          }
+          this.#isAnimating = false
+        }, ANIMATION_DURATION_MS)
+      }
 
       if (!nextOpen && this.#shouldRestoreFocus) {
         this.#menuButton.focus()
@@ -262,16 +387,14 @@ const actionButtonClass = cn(
       this.#openMenu()
     }
 
-    #onSearchClick = () => {
-      if (this.#open) {
-        // Keep scroll lock while we swap menu -> search dialog.
-        document.documentElement.setAttribute("data-search-open", "true")
-        document.body.setAttribute("data-search-open", "true")
-        this.#pendingSearchTransition = true
-        window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPEN))
-        return
-      }
+    #onCloseClick = () => {
+      this.#closeMenu(true)
+    }
 
+    #onSearchClick = () => {
+      document.documentElement.setAttribute("data-search-open", "true")
+      document.body.setAttribute("data-search-open", "true")
+      this.#pendingSearchTransition = true
       window.dispatchEvent(new Event(NAVIGATION_EVENTS.SEARCH_OPEN))
     }
 
