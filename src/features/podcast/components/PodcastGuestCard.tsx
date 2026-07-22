@@ -3,6 +3,7 @@ import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
 import MasterclassLogo from "@/assets/logos/masterclass/Masterclass.svg?react"
 import OpenCodeLogo from "@/assets/logos/opencode/opencode.svg?react"
 import OpenRouterLogo from "@/assets/logos/openrouter/OpenRouter.svg?react"
+import FoldkitLogo from "@/assets/logos/foldkit/foldkit.png"
 import SpikoLogo from "@/assets/logos/spiko/Spiko.svg?react"
 import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg?react"
 import VercelLogo from "@/assets/logos/vercel/Vercel.svg?react"
@@ -97,6 +98,8 @@ function CompanyLogo({ company }: { readonly company: string }) {
       return <SpikoLogo className="h-4 w-auto" />
     case "vercel":
       return <VercelLogo className="h-4 w-auto" />
+    case "foldkit":
+      return <img src={FoldkitLogo.src} alt="Foldkit" className="h-4 w-auto" />
     case "warp":
       return <WarpLogo className="h-4 w-auto" />
     case "zendesk":
