@@ -8,7 +8,7 @@ import { EmojiResult } from "../ui/results/emoji"
 import { ErrorResult } from "../ui/results/error"
 
 export const catchExample = defineExample({
-  label: "Effect.catch",
+  label: "Effect.catchAll",
   description: "Try one effect, and if it fails, catch the error and run another effect",
   code: {
     language: "typescript",
@@ -16,11 +16,11 @@ export const catchExample = defineExample({
       `|const shoot = shootFirst()
        |const question = askQuestions()
        |
-       |const result = Effect.catch(shoot, (error) => question)`,
+       |const result = Effect.catchAll(shoot, (error) => question)`,
     ),
   },
   resultHighlight: HighlightSelector.Text({
-    text: "Effect.catch(shoot, (error) => question)",
+    text: "Effect.catchAll(shoot, (error) => question)",
   }),
   build: ({ addStep }) => {
     let attempt = 0
