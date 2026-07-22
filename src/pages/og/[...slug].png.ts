@@ -1,79 +1,104 @@
-import { readFile } from "node:fs/promises"
 import type { APIRoute } from "astro"
 import { getCollection } from "astro:content"
-import { loadAssets, renderDocsOg, type OgTemplateProps } from "@/services/OpenGraph"
+import * as Array from "effect/Array"
+import { pipe } from "effect/Function"
+import * as Function from "effect/Function"
+import * as Option from "effect/Option"
+import { readFile } from "node:fs/promises"
+import type { OgTemplateProps } from "@/services/OpenGraph"
+import { loadAssets, renderDocsOg } from "@/services/OpenGraph"
 
 // On-demand server endpoint: slugs derive from arbitrary page pathnames
 // (see BaseLayout.getOgImagePath), so the route cannot be enumerated at build
 // time. Run it as a Vercel serverless function instead of a static asset.
 export const prerender = false
 
-async function findDoc(slug: string): Promise<OgTemplateProps | null> {
-  const entryId = slug.slice("docs/".length)
-  const entries = await getCollection("docs")
-  const entry = entries.find(
-    (e) =>
-      e.id === entryId ||
-      e.id === `${entryId}.mdx` ||
-      e.id === `${entryId}/index.mdx`,
-  )
-  if (entry === undefined) {
-    return null
-  }
-  const cleanEntryId = entryId.replace(/\.mdx?$/, "")
-  const parts = cleanEntryId.split("/")
-  const category =
-    parts.length >= 3 ? parts[1].replace(/-/g, " ").toUpperCase() : undefined
-  return {
-    title: entry.data.title,
-    subtitle: category,
-  }
-}
+const notFound = Function.constant(new Response("Not Found", { status: 404 }))
 
-const pngResponse = (png: Uint8Array): Response =>
-  new Response(new Uint8Array(png), {
+const pngResponse = (imageData: Uint8Array): Response =>
+  new Response(new Uint8Array(imageData), {
     headers: {
       "Content-Type": "image/png",
       "Cache-Control": "public, max-age=31536000, immutable",
     },
   })
 
-async function readStaticPng(slug: string): Promise<Uint8Array | null> {
-  if (slug.includes("..")) {
-    return null
-  }
-  const base = "src/pages/og/_assets"
-  for (const candidate of [`${base}/${slug}.png`, `${base}/${slug}/index.png`]) {
-    try {
-      return await readFile(candidate)
-    } catch {
-      // file not present, try next candidate
-    }
-  }
-  return null
+const readCategory = (documentPath: string) =>
+  pipe(
+    documentPath.split("/"),
+    (segments) =>
+      pipe(
+        Array.get(segments, 1),
+        Option.filter(() => segments.length >= 3),
+        Option.map((segment) => segment.replace(/-/g, " ").toUpperCase()),
+      ),
+    Option.getOrUndefined,
+  )
+
+async function findDoc(documentPath: string) {
+  const entryId = documentPath.slice("docs/".length)
+  const entries = await getCollection("docs")
+  return pipe(
+    entries.find(
+      (entry) =>
+        entry.id === entryId ||
+        entry.id === `${entryId}.mdx` ||
+        entry.id === `${entryId}/index.mdx`,
+    ),
+    Option.fromNullishOr,
+    Option.map(
+      (entry) =>
+        ({
+          title: entry.data.title,
+          subtitle: readCategory(entryId.replace(/\.mdx?$/, "")),
+        }) satisfies OgTemplateProps,
+    ),
+  )
 }
 
-export const GET: APIRoute = async (ctx) => {
-  const slug = ctx.params.slug
-  if (slug === undefined) {
-    return new Response("Not Found", { status: 404 })
+const tryReadFile = async (filePath: string): Promise<Option.Option<Uint8Array>> => {
+  try {
+    return Option.some(await readFile(filePath))
+  } catch {
+    return Option.none()
+  }
+}
+
+async function readStaticPng(imagePath: string): Promise<Option.Option<Uint8Array>> {
+  if (imagePath.includes("..")) {
+    return Option.none()
   }
 
-  // Static PNGs — read from disk, no rendering needed.
-  const staticPng = await readStaticPng(slug)
-  if (staticPng !== null) {
-    return pngResponse(staticPng)
+  const base = "src/pages/og/_assets"
+  const firstAttempt = await tryReadFile(`${base}/${imagePath}.png`)
+
+  if (Option.isSome(firstAttempt)) {
+    return firstAttempt
   }
 
-  // Docs pages render on the fly via satori.
-  if (slug.startsWith("docs/")) {
-    const doc = await findDoc(slug)
-    if (doc !== null) {
-      const assets = await loadAssets()
-      const png = await renderDocsOg(doc, assets)
-      return pngResponse(png)
-    }
+  return tryReadFile(`${base}/${imagePath}/index.png`)
+}
+
+export const GET: APIRoute = async (context) => {
+  const maybeSlug = Option.fromNullishOr(context.params.slug)
+  if (Option.isNone(maybeSlug)) {
+    return notFound()
   }
 
-  return new Response("Not Found", { status: 404 })
+  const staticImage = await readStaticPng(maybeSlug.value)
+  if (Option.isSome(staticImage)) {
+    return pngResponse(staticImage.value)
+  }
+
+  if (!maybeSlug.value.startsWith("docs/")) {
+    return notFound()
+  }
+
+  const ogProps = await findDoc(maybeSlug.value)
+  if (Option.isNone(ogProps)) {
+    return notFound()
+  }
+
+  const ogAssets = await loadAssets()
+  return pngResponse(await renderDocsOg(ogProps.value, ogAssets))
 }
