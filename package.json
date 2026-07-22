@@ -76,6 +76,7 @@
     "astro-expressive-code": "^0.43.1",
     "oxfmt": "^0.55.0",
     "oxlint": "^1.70.0",
+    "playwright": "1.57.0",
     "prettier": "^3.8.4",
     "prettier-plugin-astro": "^0.14.1",
     "shadcn": "^4.11.0",
