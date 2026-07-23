@@ -26,6 +26,9 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
+      - name: Patch trailing-slash redirect into build output
+        run: node scripts/patch-vercel-trailing-slash.mjs
+
       - name: Deploy Project Artifacts to Vercel
         run: pnpm exec vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --scope=effect-ts
         env:

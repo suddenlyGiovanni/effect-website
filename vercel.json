@@ -1,12 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
-    {
-      "source": "/((?!ingest/).*)\\/$",
-      "destination": "/$1",
-      "statusCode": 308
-    }
-  ],
   "rewrites": [
     {
       "source": "/ingest/static/:match*",
