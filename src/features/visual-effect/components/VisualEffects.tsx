@@ -123,7 +123,7 @@ function SubTabs({
         })}
       </div>
 
-      <div className="overflow-x-auto p-4">
+      <div className="overflow-x-auto p-3 lg:p-4">
         <VisualEffect example={activeExample} />
       </div>
     </div>
