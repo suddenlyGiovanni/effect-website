@@ -34,7 +34,7 @@ export default defineConfig({
     ],
   }),
 
-  trailingSlash: "ignore",
+  trailingSlash: "never",
 
   compressHTML: true,
 
