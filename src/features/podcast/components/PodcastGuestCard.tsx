@@ -2,7 +2,7 @@ import _14AiLogo from "@/assets/logos/14ai/14ai.svg?react"
 import ApplePodcastsLogo from "@/assets/logos/apple-podcasts/ApplePodcasts.webp"
 import MasterclassLogo from "@/assets/logos/masterclass/Masterclass.svg?react"
 import OpenCodeLogo from "@/assets/logos/opencode/opencode.svg?react"
-import OpenRouterLogo from "@/assets/logos/openrouter/OpenRouter.svg?react"
+import OpenRouterLogo from "@/assets/logos/openrouter.png"
 import FoldkitLogo from "@/assets/logos/foldkit/foldkit.png"
 import SpikoLogo from "@/assets/logos/spiko/Spiko.svg?react"
 import SpotifyLogo from "@/assets/logos/spotify/Spotify.svg?react"
@@ -93,7 +93,7 @@ function CompanyLogo({ company }: { readonly company: string }) {
     case "opencode":
       return <OpenCodeLogo className="h-4 w-auto" />
     case "openrouter":
-      return <OpenRouterLogo className="h-4 w-auto" />
+      return <img src={OpenRouterLogo.src} alt="OpenRouter" className="h-4 w-auto" />
     case "spiko":
       return <SpikoLogo className="h-4 w-auto" />
     case "vercel":
