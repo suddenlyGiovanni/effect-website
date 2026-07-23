@@ -1,5 +1,5 @@
 ---
-import { Menu, Search, X } from "@lucide/astro"
+import { Search, X } from "@lucide/astro"
 import type { NavigationActiveSlug, NavigationLink } from "@/lib/navigation"
 import DiscordIcon from "@/assets/logos/discord/Discord.svg"
 import GitHubIcon from "@/assets/logos/github/GitHub.svg"
@@ -30,7 +30,9 @@ const actionButtonClass = cn(
     aria-expanded="false"
     class={actionButtonClass}
   >
-    <Menu data-role="icon-open" class="h-6 w-6" />
+    <svg data-role="icon-open" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M3 4H21V6H3V4ZM3 11H15V13H3V11ZM3 18H21V20H3V18Z" />
+    </svg>
     <X data-role="icon-close" class="hidden h-6 w-6" />
   </button>
 
