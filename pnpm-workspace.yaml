@@ -1,6 +1,14 @@
 patchedDependencies:
   astro-tweet@0.0.6: patches/astro-tweet.patch
 
+supportedArchitectures:
+  os:
+    - current
+  cpu:
+    - current
+  libc:
+    - current
+
 allowBuilds:
   esbuild: false
   msgpackr-extract: false
