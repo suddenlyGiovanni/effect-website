@@ -85,7 +85,7 @@ export function parseTimestampToSeconds(value: string): number {
 export function formatPodcastPublicationDate(publishedOn: DateTime.DateTime) {
   return DateTime.formatLocal(publishedOn, {
     locale: "en-US",
-    month: "short",
+    dateStyle: "medium",
     timeZone: "UTC",
   })
 }
