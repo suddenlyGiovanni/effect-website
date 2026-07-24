@@ -1,0 +1,55 @@
+---
+import CallToAction from "@/components/landing/sections/CallToAction.astro"
+import CodingWithAi from "@/components/landing/sections/CodingWithAi.astro"
+import Hero from "@/components/landing/sections/Hero.astro"
+import Examples from "@/components/landing/sections/Examples.astro"
+import FAQ from "@/components/landing/sections/FAQ.astro"
+import MentalModel from "@/components/landing/sections/MentalModel.astro"
+import ProblemStatement from "@/components/landing/sections/ProblemStatement.astro"
+import Quotes from "@/components/landing/sections/Quotes.astro"
+import Testimonials from "@/components/landing/sections/Testimonials.astro"
+import SectionDivider from "@/components/layout/SectionDivider.astro"
+import PageLayout from "../layouts/PageLayout.astro"
+---
+
+<PageLayout>
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-0 z-0 hidden lg:block"
+  >
+    <div class="mx-auto h-full w-full max-w-295">
+      <div
+        class="landing-rails-center absolute inset-y-0 left-1/2 w-px -translate-x-1/2"
+      ></div>
+    </div>
+  </div>
+  <Hero />
+  <SectionDivider />
+  <Examples />
+  <SectionDivider />
+  <Testimonials />
+  <SectionDivider />
+  <ProblemStatement />
+  <SectionDivider />
+  <MentalModel />
+  <SectionDivider />
+  <CodingWithAi />
+  <SectionDivider />
+  <Quotes />
+  <SectionDivider />
+  <FAQ />
+  <SectionDivider />
+  <CallToAction />
+</PageLayout>
+
+<style>
+  .landing-rails-center {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgb(39 39 42) 0,
+      rgb(39 39 42) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+  }
+</style>

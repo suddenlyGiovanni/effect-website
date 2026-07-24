@@ -1,17 +1,6 @@
 {
-  "tabWidth": 2,
-  "singleQuote": false,
+  "$schema": "https://www.schemastore.org/prettierrc.json",
+  "plugins": ["prettier-plugin-astro"],
   "semi": false,
-  "trailingComma": "none",
-  "bracketSpacing": true,
-  "arrowParens": "always",
-  "printWidth": 120,
-  "overrides": [
-    {
-      "files": "content/src/content/**/*",
-      "options": {
-        "printWidth": 74
-      }
-    }
-  ]
+  "printWidth": 100
 }

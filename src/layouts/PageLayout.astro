@@ -1,0 +1,32 @@
+---
+import DitheredOverlay from "@/components/DitheredOverlay.astro"
+import Footer from "@/components/Footer.astro"
+import GridRails from "@/components/GridRails.astro"
+import Navigation from "@/components/navigation/Navigation.astro"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import { PAGE_TITLE_ID } from "@/lib/constants/skip-link"
+import type { NavigationActiveSlug } from "@/lib/navigation"
+
+interface Props {
+  readonly title?: string | undefined
+  readonly description?: string | undefined
+  readonly activeSlug?: NavigationActiveSlug | undefined
+}
+
+const { title, description, activeSlug } = Astro.props
+---
+
+<BaseLayout {...title ? { title } : undefined} {...description ? { description } : undefined} forceDark>
+  <div class="relative min-h-screen bg-zinc-950 text-white antialiased">
+    <DitheredOverlay />
+    <GridRails />
+
+    <Navigation {...activeSlug ? { activeSlug } : undefined} />
+
+    <main id={PAGE_TITLE_ID} class="relative w-full pt-16">
+      <slot />
+    </main>
+
+    <Footer />
+  </div>
+</BaseLayout>

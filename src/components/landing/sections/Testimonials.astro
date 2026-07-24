@@ -1,0 +1,144 @@
+---
+import type { ImageMetadata } from "astro"
+import { Image } from "astro:assets"
+import { ArrowUpRight } from "@lucide/astro"
+import KitLangtonThumbnail from "@/assets/images/testimonials/kit-langton-banner-website.png"
+import DavidGolightlyThumbnail from "@/assets/images/testimonials/david-golightly-banner.webp"
+import LouisVichyThumbnail from "@/assets/images/testimonials/louis-vichy-banner_compressed.webp"
+
+type FeaturedCase = {
+  readonly headline: string
+  readonly description: string
+  readonly href: string
+  readonly alt: string
+  readonly thumbnail: ImageMetadata
+}
+
+const FEATURED_CASES: ReadonlyArray<FeaturedCase> = [
+  {
+    headline: "OpenCode uses Effect",
+    description:
+      "Kit Langton shows what it takes to migrate a large TypeScript codebase to Effect.",
+    href: "https://www.youtube.com/watch?v=-mL7VVvkLGM",
+    alt: "opencode",
+    thumbnail: KitLangtonThumbnail,
+  },
+  {
+    headline: "MasterClass Cortex powered by Effect",
+    description:
+      "Building a real-time voice AI orchestration layer that powers personalized conversations with celebrity instructors like Gordon Ramsay and Mark Cuban.",
+    href: "https://www.youtube.com/watch?v=x2bUuOZ-htU&list=PLDf3uQLaK2B_jaZ5Fy7IPNq0FIViV_CQl&index=6",
+    alt: "MasterClass",
+    thumbnail: DavidGolightlyThumbnail,
+  },
+  {
+    headline: "OpenRouter uses Effect",
+    description:
+      "Louis Vichy on how OpenRouter built their internal tooling and infrastructure with Effect.",
+    href: "https://youtu.be/AVJIqQi11lM",
+    alt: "OpenRouter",
+    thumbnail: LouisVichyThumbnail,
+  },
+]
+
+const secondaryLinkClass =
+  "inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:no-underline"
+---
+
+<section id="testimonials" class="relative w-full py-24 md:pt-40 md:pb-24">
+  <div class="mx-auto mb-12 w-full max-w-295 px-4">
+    <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
+      // Effect in the real world
+    </p>
+    <h2 class="text-2xl font-semibold leading-tighter text-white md:text-3xl">
+      Real-world production systems
+    </h2>
+
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <a
+        href="https://www.youtube.com/playlist?list=PLDf3uQLaK2lbPLQT6I6xkiV_W3NxnPXRE"
+        target="_blank"
+        rel="noopener noreferrer"
+        class={secondaryLinkClass}
+      >
+        Cause &amp; Effect Podcast
+        <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+      </a>
+      <a
+        href="https://www.youtube.com/playlist?list=PLDf3uQLaK2lY8cjMh4dmq3eFSGJVwPBPO"
+        target="_blank"
+        rel="noopener noreferrer"
+        class={secondaryLinkClass}
+      >
+        Effect Days 2024
+        <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+      </a>
+      <a
+        href="https://www.youtube.com/playlist?list=PLDf3uQLaK2lZoJQ7BVtIbKs2P8i-xVmhP"
+        target="_blank"
+        rel="noopener noreferrer"
+        class={secondaryLinkClass}
+      >
+        Effect Days 2025
+        <ArrowUpRight class="h-4 w-4" aria-hidden="true" />
+      </a>
+    </div>
+  </div>
+
+  <div class="mx-auto flex w-full max-w-295 flex-col gap-12 px-4 md:gap-16">
+    {
+      FEATURED_CASES.map((item, index) => {
+        const imageOnRight = index % 2 === 1
+        return (
+          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center">
+            <div
+              class:list={[
+                "flex w-full flex-col gap-5 lg:mx-auto lg:max-w-104",
+                imageOnRight ? "lg:order-1" : "lg:order-2",
+              ]}
+            >
+              <h3 class="text-xl font-semibold text-white leading-tighter md:text-2xl">
+                {item.headline}
+              </h3>
+              <p class="max-w-md text-base leading-relaxed text-zinc-300">
+                {item.description}
+              </p>
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group inline-flex w-fit items-center gap-1.5 text-sm font-medium text-white no-underline hover:no-underline"
+              >
+                Watch the talk
+                <ArrowUpRight
+                  class="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
+              </a>
+            </div>
+
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Watch ${item.headline}`}
+              class:list={[
+                "group relative",
+                imageOnRight ? "lg:order-2" : "lg:order-1",
+              ]}
+            >
+              <div class="relative aspect-video w-full overflow-hidden rounded-md border border-zinc-800 bg-zinc-900">
+                <Image
+                  src={item.thumbnail}
+                  alt={item.alt}
+                  class="h-full w-full object-cover"
+                />
+                <div class="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/20" />
+              </div>
+            </a>
+          </div>
+        )
+      })
+    }
+  </div>
+</section>

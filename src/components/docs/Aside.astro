@@ -1,0 +1,99 @@
+---
+import { Info, Lightbulb, TriangleAlert, OctagonAlert } from "@lucide/astro"
+
+type AsideType = "note" | "tip" | "caution" | "danger"
+
+interface Props {
+  type?: AsideType
+  title?: string
+}
+
+const { type = "note", title } = Astro.props
+
+const iconMap = {
+  note: Info,
+  tip: Lightbulb,
+  caution: TriangleAlert,
+  danger: OctagonAlert,
+}
+
+const defaultTitles: Record<AsideType, string> = {
+  note: "Note",
+  tip: "Tip",
+  caution: "Caution",
+  danger: "Danger",
+}
+
+const label = title ?? defaultTitles[type]
+const Icon = iconMap[type]
+---
+
+<aside class:list={["aside", `aside--${type}`]} aria-label={label}>
+  <p class="aside-title" aria-hidden="true">
+    <Icon aria-hidden="true" size={14} />
+    {label}
+  </p>
+  <div class="aside-content">
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .aside {
+    border-radius: 0.375rem;
+    border-left: 3px solid;
+    padding: 0.875rem 1.125rem;
+    margin-block: 1.5rem;
+  }
+
+  .aside-title {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0 0 0.625rem;
+  }
+
+  .aside-content :global(> :first-child) {
+    margin-top: 0;
+  }
+  .aside-content :global(> :last-child) {
+    margin-bottom: 0;
+  }
+
+  .aside--note {
+    background-color: color-mix(in srgb, #3b82f6 8%, transparent);
+    border-left-color: #3b82f6;
+  }
+  .aside--note .aside-title {
+    color: #3b82f6;
+  }
+
+  .aside--tip {
+    background-color: color-mix(in srgb, #10b981 8%, transparent);
+    border-left-color: #10b981;
+  }
+  .aside--tip .aside-title {
+    color: #10b981;
+  }
+
+  .aside--caution {
+    background-color: color-mix(in srgb, #f59e0b 8%, transparent);
+    border-left-color: #f59e0b;
+  }
+  .aside--caution .aside-title {
+    color: #f59e0b;
+  }
+
+  .aside--danger {
+    background-color: color-mix(in srgb, #ef4444 8%, transparent);
+    border-left-color: #ef4444;
+  }
+  .aside--danger .aside-title {
+    color: #ef4444;
+  }
+</style>

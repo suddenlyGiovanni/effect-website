@@ -1,0 +1,2 @@
+- The project has `direnv` configured for tooling
+- Always use `pnpm`

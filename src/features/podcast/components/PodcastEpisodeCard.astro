@@ -1,0 +1,64 @@
+---
+import * as DateTime from "effect/DateTime"
+import * as Duration from "effect/Duration"
+import type { PodcastEpisodeEntry } from "../collection"
+import {
+  formatPodcastDuration,
+  formatPodcastPublicationDate,
+  getPodcastThumbnail,
+  slugifyPodcast,
+} from "../utils"
+
+interface Props {
+  readonly podcast: PodcastEpisodeEntry
+}
+
+const { podcast } = Astro.props
+
+const slug = slugifyPodcast(podcast)
+const href = `/podcast/episodes/${slug}/`
+const publicationDate = formatPodcastPublicationDate(DateTime.makeUnsafe(podcast.date))
+const duration = formatPodcastDuration(Duration.seconds(podcast.duration))
+const episodeNumber = String(podcast.episodeNumber).padStart(2, "0")
+const thumbnailUrl = getPodcastThumbnail(podcast.youtubeId)
+---
+
+<div
+  class="group relative flex flex-col md:flex-row gap-8 my-4 p-4 hover:bg-zinc-900/60 transition-colors"
+>
+  <div class="w-full shrink-0 md:w-[40%] aspect-video overflow-hidden">
+    <img
+      class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+      src={thumbnailUrl}
+      alt={podcast.title}
+      decoding="async"
+      loading="lazy"
+    />
+  </div>
+
+  <div class="flex flex-col flex-1 justify-center pr-8">
+    <p
+      class="mb-2 text-sm text-zinc-400 group-hover:text-zinc-300 font-mono font-medium tracking-wider uppercase transition-colors duration-300"
+    >
+      // Episode #{episodeNumber}
+    </p>
+    <h2>
+      <a
+        href={href}
+        class="after:absolute after:content-[''] after:-inset-px after:z-1 no-underline"
+      >
+        <span class="text-lg md:text-xl text-white font-semibold">
+          {podcast.title}
+        </span>
+      </a>
+    </h2>
+    <p class="mt-2 text-sm md:text-base text-zinc-400 leading-relaxed line-clamp-3">
+      {podcast.description}
+    </p>
+    <div class="flex items-center gap-2 mt-4 text-sm text-zinc-400">
+      <span>{publicationDate}</span>
+      <span>&middot;</span>
+      <span>{duration}</span>
+    </div>
+  </div>
+</div>
