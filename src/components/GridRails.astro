@@ -1,0 +1,14 @@
+---
+interface Props {
+  readonly class?: string | undefined
+}
+
+const { class: className } = Astro.props
+---
+
+<div
+  aria-hidden="true"
+  class:list={["pointer-events-none absolute inset-0 z-60 hidden lg:block", className]}
+>
+  <div class="mx-auto h-full w-full max-w-295 border-x border-zinc-800"></div>
+</div>

@@ -1,0 +1,190 @@
+---
+import { ArrowUpRight } from "@lucide/astro"
+import BenDavisThumbnail from "@/assets/images/ben-davis-thumbnail.png"
+import BenDavisVideo from "@/assets/videos/ben-davis-video.mp4"
+---
+
+<section id="coding-with-ai" class="relative w-full overflow-hidden py-24 md:pt-40 md:pb-24">
+  <!-- Fade at bottom -->
+  <div class="absolute inset-0 bg-linear-to-b from-zinc-950/0 via-zinc-950/0 to-zinc-900/50" aria-hidden="true"></div>
+
+  <div class="relative mx-auto w-full max-w-295">
+    <div class="mb-12 grid grid-cols-1 gap-8 px-4 lg:grid-cols-2 lg:items-center">
+      <div>
+        <p class="mb-3 font-mono text-sm font-medium uppercase tracking-wider text-zinc-400">
+          // LLMs ❤️ Effect
+        </p>
+        <h2 class="max-w-2xl text-2xl leading-tighter font-semibold text-white md:text-3xl">
+          Write Effect code with AI
+        </h2>
+        <p class="mt-4 max-w-lg text-lg leading-snug text-zinc-400">
+          Effect's declarative patterns and strong type system make it easier for LLMs to generate correct, production-ready code.
+        </p>
+        <a
+          href="/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive"
+          target="_blank"
+          class="mt-6 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:border-zinc-500 hover:bg-zinc-800 hover:no-underline"
+        >
+          Quick start LLM guide
+          <ArrowUpRight class="size-4" aria-hidden="true" />
+        </a>
+      </div>
+
+      <video-poster-overlay
+        data-src={BenDavisVideo}
+        data-poster={BenDavisThumbnail.src}
+        class="relative block aspect-video w-full overflow-hidden rounded-lg border border-zinc-800 bg-black"
+      >
+        <video
+          data-role="video"
+          playsinline
+          preload="metadata"
+          class="h-full w-full object-contain"
+        >
+          <track kind="captions" />
+        </video>
+
+        <img
+          data-role="poster"
+          src={BenDavisThumbnail.src}
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 h-full w-full bg-black object-contain transition-opacity duration-300 ease-out opacity-100"
+        />
+
+        <button
+          type="button"
+          data-role="play-button"
+          aria-label="Play video"
+          class="group absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-300 ease-out hover:bg-black/40 opacity-100 cursor-pointer"
+        >
+          <span class="flex h-16 w-16 items-center justify-center rounded-full bg-white/80 text-zinc-900 backdrop-blur-sm transition-transform group-hover:scale-105">
+            <svg class="ml-0.5 size-8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5.14v14l11-7-11-7z"/>
+            </svg>
+          </span>
+        </button>
+      </video-poster-overlay>
+    </div>
+
+    <!-- Features grid -->
+    <div class="px-4">
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div class="flex flex-col gap-2">
+          <span class="font-mono text-sm text-zinc-400">01</span>
+          <p class="text-base leading-relaxed text-zinc-400">
+            <span class="font-medium text-white">Predictable structure: </span>
+            every operation follows a declarative pattern, no guesswork for LLMs.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="font-mono text-sm text-zinc-400">02</span>
+          <p class="text-base leading-relaxed text-zinc-400">
+            <span class="font-medium text-white">Typed feedback loop: </span>
+            detailed error traces show what failed, enabling precise self-repair.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="font-mono text-sm text-zinc-400">03</span>
+          <p class="text-base leading-relaxed text-zinc-400">
+            <span class="font-medium text-white">Built-in reliability: </span>
+            error handling, supervision, and recovery, production-ready by default.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="font-mono text-sm text-zinc-400">04</span>
+          <p class="text-base leading-relaxed text-zinc-400">
+            <span class="font-medium text-white">Rich toolbox: </span>
+            from schema validation to workflows, build in a language LLMs understand.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  class VideoPosterOverlayElement extends HTMLElement {
+    #video: HTMLVideoElement | null = null
+    #poster: HTMLImageElement | null = null
+    #playButton: HTMLButtonElement | null = null
+
+    #showOverlay = () => {
+      if (this.#poster) {
+        this.#poster.classList.add("opacity-100")
+        this.#poster.classList.remove("opacity-0")
+      }
+      if (this.#playButton) {
+        this.#playButton.classList.add("opacity-100")
+        this.#playButton.classList.remove("pointer-events-none", "opacity-0")
+        this.#playButton.tabIndex = 0
+        this.#playButton.setAttribute("aria-hidden", "false")
+      }
+      if (this.#video) this.#video.removeAttribute("controls")
+    }
+
+    #hideOverlay = () => {
+      if (this.#poster) {
+        this.#poster.classList.remove("opacity-100")
+        this.#poster.classList.add("opacity-0")
+      }
+      if (this.#playButton) {
+        this.#playButton.classList.remove("opacity-100")
+        this.#playButton.classList.add("pointer-events-none", "opacity-0")
+        this.#playButton.tabIndex = -1
+        this.#playButton.setAttribute("aria-hidden", "true")
+      }
+      if (this.#video) this.#video.setAttribute("controls", "")
+    }
+
+    #onEnded = () => {
+      if (this.#video) this.#video.currentTime = 0
+      this.#showOverlay()
+    }
+
+    #startPlayback = () => {
+      if (!this.#video) return
+      this.#hideOverlay()
+      void this.#video.play()
+    }
+
+    connectedCallback() {
+      this.#video = this.querySelector("[data-role='video']")
+      this.#poster = this.querySelector("[data-role='poster']")
+      this.#playButton = this.querySelector("[data-role='play-button']")
+
+      if (!(this.#video instanceof HTMLVideoElement)) return
+
+      const src = this.dataset.src
+      const poster = this.dataset.poster
+      if (src) this.#video.src = src
+      if (poster) this.#video.poster = poster
+
+      this.#video.addEventListener("play", this.#hideOverlay)
+      this.#video.addEventListener("pause", this.#showOverlay)
+      this.#video.addEventListener("ended", this.#onEnded)
+
+      if (this.#playButton) {
+        this.#playButton.addEventListener("click", this.#startPlayback)
+      }
+    }
+
+    disconnectedCallback() {
+      if (this.#video) {
+        this.#video.removeEventListener("play", this.#hideOverlay)
+        this.#video.removeEventListener("pause", this.#showOverlay)
+        this.#video.removeEventListener("ended", this.#onEnded)
+      }
+      if (this.#playButton) {
+        this.#playButton.removeEventListener("click", this.#startPlayback)
+      }
+      this.#video = null
+      this.#poster = null
+      this.#playButton = null
+    }
+  }
+
+  if (!customElements.get("video-poster-overlay")) {
+    customElements.define("video-poster-overlay", VideoPosterOverlayElement)
+  }
+</script>

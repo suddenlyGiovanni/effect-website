@@ -1,0 +1,32 @@
+{
+  "michael_arnaldi": {
+    "name": "Michael Arnaldi",
+    "title": "BDFL",
+    "url": "https://github.com/mikearnaldi"
+  },
+  "mirela_prifti": {
+    "name": "Mirela Prifti",
+    "title": "Community Manager",
+    "url": "https://x.com/MirelaPriftix"
+  },
+  "davide_scognamiglio": {
+    "name": "Davide Scognamiglio",
+    "title": "Project Manager",
+    "url": "https://x.com/DadeSkoTV"
+  },
+  "maxwell_brown": {
+    "name": "Maxwell Brown",
+    "title": "Founding Engineer",
+    "url": "https://github.com/IMax153"
+  },
+  "tim_smart": {
+    "name": "Tim Smart",
+    "title": "Founding Engineer",
+    "url": "https://github.com/tim-smart"
+  },
+  "giulio_canti": {
+    "name": "Giulio Canti",
+    "title": "Founding Engineer",
+    "url": "https://github.com/gcanti"
+  }
+}

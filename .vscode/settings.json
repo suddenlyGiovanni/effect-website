@@ -1,19 +1,22 @@
 {
-  "typescript.tsdk": "content/node_modules/typescript/lib",
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+  "[astro]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "js/ts.hover.maximumLength": 0,
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.preferences.autoImportFileExcludePatterns": [
+    "repos/**"
+  ],
+  "oxc.enable": true,
+  "oxc.requireConfig": true,
+  "files.exclude": {
+    "repos/**": true
   },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+  "files.watcherExclude": {
+    "repos/**": true
   },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+  "search.exclude": {
+    "repos/**": true
   }
 }

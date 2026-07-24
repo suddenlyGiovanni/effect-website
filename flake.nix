@@ -16,11 +16,14 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           packages = with pkgs; [
-            bun
-            corepack
-            nodejs-slim_24
-            nodePackages.json
+            corepack_24
+            nodejs_24
+            playwright-driver.browsers
           ];
+          shellHook = ''
+            export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
+            export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+          '';
         };
       });
     };

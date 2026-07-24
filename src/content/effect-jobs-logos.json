@@ -1,0 +1,103 @@
+[
+  {
+    "id": "masterclass",
+    "name": "MasterClass",
+    "logo": "masterclass-noM.svg",
+    "h": "16px"
+  },
+  {
+    "id": "vercel",
+    "name": "Vercel",
+    "logo": "vercel-logotype-dark.svg"
+  },
+  {
+    "id": "spiko",
+    "name": "Spiko",
+    "logo": "spiko-logo.svg"
+  },
+  {
+    "id": "opencode",
+    "name": "opencode",
+    "logo": "opencode-wordmark-dark.svg"
+  },
+  {
+    "id": "embedded-insurance",
+    "name": "Embedded Insurance",
+    "logo": "embedded-insurance-logo.svg"
+  },
+  {
+    "id": "inato",
+    "name": "Inato",
+    "logo": "inato.png"
+  },
+  {
+    "id": "interfere",
+    "name": "Interfere",
+    "logo": "intefere-white.svg",
+    "h": "16px"
+  },
+  {
+    "id": "manage-space",
+    "name": "Manage Space",
+    "logo": "manage-space.svg",
+    "h": "10px"
+  },
+  {
+    "id": "platonic-systems",
+    "name": "Platonic Systems",
+    "logo": "platonic-systems.svg",
+    "h": "16px"
+  },
+  {
+    "id": "precurion",
+    "name": "Precurion",
+    "logo": "precurion.png",
+    "h": "16px"
+  },
+  {
+    "id": "globe-commerce",
+    "name": "Globe Commerce",
+    "logo": "globe-commerce.png"
+  },
+  {
+    "id": "warp",
+    "name": "Warp",
+    "logo": "warp.svg"
+  },
+  {
+    "id": "samsung-food",
+    "name": "Samsung Food",
+    "logo": "samsung-food.svg",
+    "h": "16px"
+  },
+  {
+    "id": "tenzir",
+    "name": "Tenzir",
+    "logo": "tenzir.svg",
+    "h": "16px"
+  },
+  {
+    "id": "acemate",
+    "name": "Acemate",
+    "logo": "acemate.png",
+    "h": "16px",
+    "invert": true
+  },
+  {
+    "id": "wander",
+    "name": "Wander",
+    "logo": "wander.svg"
+  },
+  {
+    "id": "introw",
+    "name": "Introw",
+    "logo": "introw.svg",
+    "h": "16px"
+  },
+  {
+    "id": "magentus",
+    "name": "Magentus",
+    "logo": "magentus 1.svg",
+    "h": "16px"
+  }
+]

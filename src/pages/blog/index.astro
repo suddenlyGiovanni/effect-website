@@ -1,0 +1,204 @@
+---
+import { Struct } from "effect"
+import { Image } from "astro:assets"
+import { getCollection, getEntries, type CollectionEntry } from "astro:content"
+
+import BlogControls from "@/components/blog/BlogControls"
+import type { SerializedPost, SerializedTag } from "@/components/blog/PostCard"
+import { TWIEScrollRail } from "@/components/blog/TWIEScrollRail"
+import GridBackground from "@/components/GridBackground.astro"
+import PageLayout from "@/layouts/PageLayout.astro"
+
+const [blogCollection, tagCollection] = await Promise.all([
+  getCollection("blog"),
+  getCollection("blogTags"),
+])
+
+const allPosts = await Promise.all(
+  blogCollection.map(async (post) => {
+    const tags = await getEntries(post.data.tags)
+
+    return Struct.assign(post, {
+      tags: tags,
+    })
+  }),
+).then((posts) => posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()))
+
+const isTWIE = (tag: CollectionEntry<"blogTags">) => tag.id === "this-week-in-effect"
+
+const twiePosts = allPosts.filter((post) => post.tags.some(isTWIE))
+const nonTwiePosts = allPosts.filter((post) => !post.tags.some(isTWIE))
+
+const featuredCandidates = allPosts
+  .filter((post) => post.data.featured && !post.tags.some(isTWIE))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+
+if (import.meta.env.DEV && featuredCandidates.length > 1) {
+  console.warn(
+    `[blog] multiple posts marked featured (${featuredCandidates.length}): ` +
+      featuredCandidates.map((p) => p.id).join(", ") +
+      ` — using newest`,
+  )
+}
+
+const featuredPost = featuredCandidates[0]
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+}
+
+function tagCount(id: string): number {
+  if (id === "all") {
+    return nonTwiePosts.length
+  }
+  return allPosts.filter((post) => post.tags.some((tag) => tag.id === id)).length
+}
+
+const serializedTags: SerializedTag[] = tagCollection
+  .map((tag) => ({
+    id: tag.id,
+    name: tag.data.name,
+    color: tag.data.color,
+    count: tagCount(tag.id),
+  }))
+  .sort((a, b) => (a.id === "all" ? -1 : b.id === "all" ? 1 : b.count - a.count))
+
+const serializedTwiePosts: SerializedPost[] = twiePosts.map((post) => ({
+  id: post.id,
+  title: post.data.title,
+  excerpt: post.data.excerpt,
+  date: formatDate(post.data.date),
+  dateMs: post.data.date.getTime(),
+  href: `/blog/${post.id}`,
+  tags: post.tags.map((t) => ({ id: t.id, name: t.data.name })),
+}))
+
+const serializedPosts: SerializedPost[] = allPosts.map((post) => ({
+  id: post.id,
+  title: post.data.title,
+  excerpt: post.data.excerpt,
+  date: formatDate(post.data.date),
+  dateMs: post.data.date.getTime(),
+  href: `/blog/${post.id}`,
+  tags: post.tags.map((t) => ({ id: t.id, name: t.data.name })),
+}))
+---
+
+<PageLayout
+  title="Blog | Effect"
+  description="Get with the latest updates from the Effect ecosystem"
+  activeSlug="blog"
+>
+  <section class="relative overflow-hidden">
+    <GridBackground />
+
+    <div class="relative mx-auto w-full max-w-295 px-4">
+      <div class="pt-16 pb-8 md:pt-24 md:pb-12">
+        <p class="mb-4 font-mono text-sm font-medium tracking-wider text-zinc-400 uppercase">
+          // Effect Blog
+        </p>
+        <h1 class="max-w-2xl text-3xl font-semibold leading-tighter tracking-tight text-white">
+          Releases, write-ups, and notes
+          <br class="hidden md:block" />
+          from the Effect team
+        </h1>
+      </div>
+
+      {
+        featuredPost && (
+          <div class="border-t border-zinc-800 py-5 md:py-6">
+            <a
+              href={`/blog/${featuredPost.id}`}
+              class="group relative block overflow-hidden rounded-md border border-zinc-800 bg-zinc-900/40 transition-colors duration-200 hover:border-zinc-600 hover:bg-zinc-900/70"
+            >
+              <div class="relative grid grid-cols-1 gap-4 p-5 md:grid-cols-12 md:items-center md:gap-10 md:p-6">
+                <div class="min-w-0 md:col-span-7">
+                  <div class="mb-3 flex flex-wrap items-center gap-2">
+                    {featuredPost.tags.map((tag) => (
+                      <span class="inline-flex items-center rounded-md border border-zinc-400 px-2 py-0.5 font-mono text-[10px] tracking-[0.12em] text-zinc-200 uppercase">
+                        {tag.data.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  <h2 class="text-2xl font-semibold leading-tight tracking-tight text-white md:text-3xl">
+                    {featuredPost.data.title}
+                  </h2>
+
+                  <p class="mt-2 line-clamp-3 max-w-xl text-base text-zinc-300">
+                    {featuredPost.data.excerpt}
+                  </p>
+                </div>
+
+                <div class="hidden md:col-span-5 md:flex md:flex-col md:items-center md:gap-3">
+                  {featuredPost.data.featuredImage ? (
+                    <div class="relative aspect-2/1 w-full overflow-hidden rounded-md border border-zinc-800/50">
+                      <Image
+                        src={featuredPost.data.featuredImage}
+                        alt={featuredPost.data.title}
+                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                      <div class="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-zinc-900/60 to-transparent" />
+                    </div>
+                  ) : (
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 text-zinc-300 transition-colors duration-200 group-hover:border-white group-hover:text-white">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {featuredPost.data.featuredImage && (
+                  <div class="relative aspect-video overflow-hidden rounded-md border border-zinc-800/50 md:hidden">
+                    <Image
+                      src={featuredPost.data.featuredImage}
+                      alt={featuredPost.data.title}
+                      class="absolute inset-0 h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            </a>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <div class="h-px w-full bg-zinc-800"></div>
+
+  {
+    twiePosts.length > 0 && (
+      <>
+        <section class="relative">
+          <div class="mx-auto w-full max-w-295 px-4">
+            <TWIEScrollRail
+              client:load
+              posts={serializedTwiePosts}
+              viewAllHref="/blog?category=this-week-in-effect#blog-grid"
+            />
+          </div>
+        </section>
+        <div class="h-px w-full bg-zinc-800" />
+      </>
+    )
+  }
+
+  <section id="blog-grid" class="relative">
+    <div class="mx-auto w-full max-w-295 px-4">
+      <BlogControls client:load posts={serializedPosts} tags={serializedTags} />
+    </div>
+  </section>
+</PageLayout>

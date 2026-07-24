@@ -1,1 +1,0 @@
-# Effect Website - Landing Page
