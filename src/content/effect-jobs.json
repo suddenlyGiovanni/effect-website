@@ -1,5 +1,15 @@
 [
   {
+    "id": "datapizza",
+    "company": "Datapizza",
+    "role": "Software Engineer",
+    "location": "Milan, Italy",
+    "url": "https://discord.com/channels/795981131316985866/796153351372275743/1529802533521064062",
+    "note": "Posted on Discord #job-board",
+    "logo": "datapizza.svg",
+    "description": "Join the first AI Deployment company in Italy."
+  },
+  {
     "id": "expand-ai",
     "company": "Expand.ai",
     "role": "Founding Engineer",
