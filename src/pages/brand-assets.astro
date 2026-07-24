@@ -31,6 +31,16 @@ const logoSymbol = {
   <div class="relative min-h-screen bg-zinc-950 text-white">
     <DitheredOverlay />
     <GridRails />
+    <div
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0 z-0 hidden lg:block"
+    >
+      <div class="mx-auto h-full w-full max-w-295">
+        <div
+          class="landing-rails-center absolute inset-y-0 left-1/2 w-px -translate-x-1/2"
+        ></div>
+      </div>
+    </div>
 
     <Navigation transparent={false} />
 
@@ -56,7 +66,7 @@ const logoSymbol = {
       <section class="py-8">
         <div class="mx-auto w-full max-w-295 px-4">
           <div class="border-t border-zinc-800 pt-24">
-            <div class="grid grid-cols-1 gap-12 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
               <div>
                 <h2
                   class="leading-tighter mb-4 font-mono text-sm tracking-wide text-zinc-400 uppercase"
@@ -144,7 +154,7 @@ const logoSymbol = {
               // Ground rules
             </h2>
 
-            <div class="mb-24 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div class="mb-24 grid grid-cols-1 gap-8 md:grid-cols-3">
               <div class="flex flex-col gap-3">
                 <div
                   class="bg-zinc-950/50 flex h-52 items-center justify-center border border-zinc-700/75"
@@ -210,7 +220,7 @@ const logoSymbol = {
               </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-x-6 md:gap-y-16">
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-x-8 md:gap-y-16">
               <div class="flex flex-col gap-3">
                 <div
                   class="flex h-52 items-center justify-center gap-16 border border-zinc-800 bg-zinc-950"
@@ -317,7 +327,7 @@ const logoSymbol = {
         </div>
       </section>
 
-      <section class="border-b border-zinc-800 pb-12">
+      <section class="pb-12">
         <div class="mx-auto w-full max-w-295 px-4">
           <div class="py-24">
             <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -418,7 +428,7 @@ const logoSymbol = {
       </section>
     </main>
 
-    <Footer class="mt-12 md:mt-24" />
+    <Footer />
   </div>
 </BaseLayout>
 
@@ -431,5 +441,15 @@ const logoSymbol = {
 
   .hero-glow {
     background: var(--hero-glow-gradient);
+  }
+
+  .landing-rails-center {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgb(39 39 42) 0,
+      rgb(39 39 42) 2px,
+      transparent 2px,
+      transparent 4px
+    );
   }
 </style>
